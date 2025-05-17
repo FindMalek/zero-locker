@@ -41,7 +41,7 @@ export function DashboardRecentActivity({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Recent Activity</CardTitle>
+        <CardTitle className="font-mono">Recent Activity</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         {recentItems.length > 0 ? (
