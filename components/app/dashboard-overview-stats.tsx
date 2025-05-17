@@ -23,7 +23,7 @@ import { Icons } from "@/components/shared/icons"
 
 interface OverviewStatsProps {
   stats: {
-    accounts: number
+    credentials: number
     cards: number
     secrets: number
   }
@@ -36,7 +36,7 @@ export async function OverviewStats({ stats }: OverviewStatsProps) {
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
       <StatsCard
         title="Total Accounts"
-        value={stats.accounts}
+        value={stats.credentials}
         icon={<Icons.user className="text-muted-foreground h-4 w-4" />}
       />
       <StatsCard

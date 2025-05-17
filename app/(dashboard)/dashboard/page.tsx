@@ -7,50 +7,48 @@ import { OverviewStats } from "@/components/app/dashboard-overview-stats"
 import { DashboardRecentActivity } from "@/components/app/dashboard-recent-activity"
 
 import { listCards } from "@/actions/card"
+import { listCredentials } from "@/actions/credential"
 import { listSecrets } from "@/actions/secret"
-import { listUsers } from "@/actions/user"
 
 async function getRecentItems(): Promise<RecentItem[]> {
   const [usersResponse, cardsResponse, secretsResponse] = await Promise.all([
-    listUsers(1, 5),
+    listCredentials(1, 5),
     listCards(1, 5),
     listSecrets(1, 5),
   ])
 
-  const recentUsers: RecentItem[] = (usersResponse.users ?? []).map((user) => ({
-    ...mapItem(user),
-    type: RecentItemTypeEnum.CREDENTIAL,
-    entity: {
-      username: user.email,
-    },
-  }))
+  const recentCredentials: RecentItem[] = (usersResponse.credentials ?? []).map(
+    (user) => ({
+      ...mapItem(user, RecentItemTypeEnum.CREDENTIAL),
+      type: RecentItemTypeEnum.CREDENTIAL,
+      entity: user,
+    })
+  )
 
   const recentCards: RecentItem[] = (cardsResponse.cards ?? []).map((card) => ({
-    ...mapItem(card),
+    ...mapItem(card, RecentItemTypeEnum.CARD),
     type: RecentItemTypeEnum.CARD,
-    entity: {
-      type: card.type,
-      number: card.number,
-    },
+    entity: card,
   }))
 
   const recentSecrets: RecentItem[] = (secretsResponse.secrets ?? []).map(
     (secret) => ({
-      ...mapItem(secret),
+      ...mapItem(secret, RecentItemTypeEnum.SECRET),
       type: RecentItemTypeEnum.SECRET,
-      entity: {
-        name: secret.name,
-        value: secret.value,
-      },
+      entity: secret,
     })
   )
 
-  const allItems = [...recentUsers, ...recentCards, ...recentSecrets]
-  allItems.sort(
-    (a, b) =>
+  const allItems = [
+    ...recentCredentials,
+    ...recentCards,
+    ...recentSecrets,
+  ].sort((a, b) => {
+    return (
       new Date(b.lastActivityAt).getTime() -
       new Date(a.lastActivityAt).getTime()
-  )
+    )
+  })
 
   return allItems.slice(0, 5)
 }
@@ -60,14 +58,14 @@ export const metadata: Metadata = {
 }
 
 async function getStats() {
-  const [usersData, cardsData, secretsData] = await Promise.all([
-    listUsers(1, 1),
+  const [credentialsData, cardsData, secretsData] = await Promise.all([
+    listCredentials(1, 1),
     listCards(1, 1),
     listSecrets(1, 1),
   ])
 
   return {
-    accounts: usersData.users?.length ?? 0,
+    credentials: credentialsData.credentials?.length ?? 0,
     cards: cardsData.cards?.length ?? 0,
     secrets: secretsData.secrets?.length ?? 0,
   }

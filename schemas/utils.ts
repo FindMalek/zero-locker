@@ -1,6 +1,9 @@
-import { CardSimpleRoSchema } from "@/schemas/card"
-import { CredentialSimpleRoSchema } from "@/schemas/credential"
-import { SecretSimpleRoSchema } from "@/schemas/secret"
+import { CardSimpleRo, CardSimpleRoSchema } from "@/schemas/card"
+import {
+  CredentialSimpleRo,
+  CredentialSimpleRoSchema,
+} from "@/schemas/credential"
+import { SecretSimpleRo, SecretSimpleRoSchema } from "@/schemas/secret"
 import { z } from "zod"
 
 export const ActivityTypeSchema = z.enum(["CREATED", "UPDATED", "COPIED"])
@@ -56,3 +59,5 @@ export type RecentItem =
   | RecentCredentialItem
   | RecentCardItem
   | RecentSecretItem
+
+export type RawEntity = CredentialSimpleRo | CardSimpleRo | SecretSimpleRo

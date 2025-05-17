@@ -1,7 +1,10 @@
+import { CardSimpleRo } from "@/schemas/card"
+import { CredentialSimpleRo } from "@/schemas/credential"
+import { SecretSimpleRo } from "@/schemas/secret"
 import {
   ActivityType,
   ActivityTypeEnum,
-  RecentItem,
+  RawEntity,
   RecentItemBase,
   RecentItemType,
   RecentItemTypeEnum,
@@ -42,30 +45,35 @@ export function capitalizeFirstLetter(string: string): string {
 }
 
 export function sortByPriority(
-  potentialActivities: {
-    date: Date
-    type: ActivityType
-  }[]
+  activities: { date: Date; type: ActivityType }[]
 ) {
-  return potentialActivities.sort((a, b) => {
-    return PRIORITY_ACTIVITY_TYPE[b.type] - PRIORITY_ACTIVITY_TYPE[a.type]
+  return [...activities].sort((a, b) => {
+    const priorityA = PRIORITY_ACTIVITY_TYPE[a.type] ?? 99
+    const priorityB = PRIORITY_ACTIVITY_TYPE[b.type] ?? 99
+    if (priorityA !== priorityB) {
+      return priorityA - priorityB
+    }
+    return b.date.getTime() - a.date.getTime()
   })
 }
 
-export function getItemName(item: RecentItem): string {
-  switch (item.type) {
+export function getItemName(entity: RawEntity, type: RecentItemType): string {
+  switch (type) {
     case RecentItemTypeEnum.CREDENTIAL:
-      return item.entity.username
+      return (entity as CredentialSimpleRo).username
     case RecentItemTypeEnum.CARD:
-      return item.entity.name
+      return (entity as CardSimpleRo).name
     case RecentItemTypeEnum.SECRET:
-      return item.entity.name
+      return (entity as SecretSimpleRo).name
   }
 }
 
-export function mapItem(item: RecentItem): RecentItemBase {
-  const createdAtDate = new Date(item.createdAt)
-  const updatedAtDate = new Date(item.updatedAt)
+export function mapItem(
+  rawItem: RawEntity,
+  itemType: RecentItemType
+): RecentItemBase {
+  const createdAtDate = new Date(rawItem.createdAt)
+  const updatedAtDate = new Date(rawItem.updatedAt)
 
   const potentialActivities: {
     date: Date
@@ -77,14 +85,17 @@ export function mapItem(item: RecentItem): RecentItemBase {
 
   const sortedActivities = sortByPriority(potentialActivities)
 
-  const lastActivity = sortedActivities[0]
+  const lastActivity = sortedActivities[0] || {
+    date: updatedAtDate,
+    type: ActivityTypeEnum.UPDATED,
+  }
 
   return {
-    id: item.id,
+    id: rawItem.id,
     createdAt: createdAtDate,
     updatedAt: updatedAtDate,
+    name: getItemName(rawItem, itemType),
     lastActivityAt: lastActivity.date,
-    name: getItemName(item),
     activityType: lastActivity.type,
   }
 }
