@@ -4,8 +4,8 @@ import { useState } from "react"
 
 import { cn } from "@/lib/utils"
 
-import { DashboardAddAccountDialog } from "@/components/app/dashboard-add-account-dialog"
 import { DashboardAddCardDialog } from "@/components/app/dashboard-add-card-dialog"
+import { DashboardAddCredentialDialog } from "@/components/app/dashboard-add-credential-dialog"
 import { DashboardAddSecretDialog } from "@/components/app/dashboard-add-secret-dialog"
 import { Icons } from "@/components/shared/icons"
 import { Button } from "@/components/ui/button"
@@ -51,7 +51,7 @@ export function AddItemDropdown({ text, className }: AddItemDropdownProps) {
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <DashboardAddAccountDialog
+      <DashboardAddCredentialDialog
         open={accountDialogOpen}
         onOpenChange={setAccountDialogOpen}
       />
