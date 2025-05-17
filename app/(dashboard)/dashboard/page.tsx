@@ -11,13 +11,15 @@ import { listCards } from "@/actions/card"
 import { listCredentials } from "@/actions/credential"
 import { listSecrets } from "@/actions/secret"
 
-async function getRecentItems(): Promise<RecentItem[]> {
-  const [usersResponse, cardsResponse, secretsResponse] = await Promise.all([
-    listCredentials(1, MAX_RECENT_ITEMS),
-    listCards(1, MAX_RECENT_ITEMS),
-    listSecrets(1, MAX_RECENT_ITEMS),
-  ])
+type CardsResponse = Awaited<ReturnType<typeof listCards>>
+type SecretsResponse = Awaited<ReturnType<typeof listSecrets>>
+type CredentialsResponse = Awaited<ReturnType<typeof listCredentials>>
 
+async function getRecentItems(
+  usersResponse: CredentialsResponse,
+  cardsResponse: CardsResponse,
+  secretsResponse: SecretsResponse
+): Promise<RecentItem[]> {
   const recentCredentials: RecentItem[] = (usersResponse.credentials ?? []).map(
     (user) => ({
       ...mapItem(user, RecentItemTypeEnum.CREDENTIAL),
@@ -58,13 +60,11 @@ export const metadata: Metadata = {
   title: "Dashboard Overview",
 }
 
-async function getStats() {
-  const [credentialsData, cardsData, secretsData] = await Promise.all([
-    listCredentials(1, 1),
-    listCards(1, 1),
-    listSecrets(1, 1),
-  ])
-
+async function getStats(
+  credentialsData: CredentialsResponse,
+  cardsData: CardsResponse,
+  secretsData: SecretsResponse
+) {
   return {
     credentials: credentialsData.credentials?.length ?? 0,
     cards: cardsData.cards?.length ?? 0,
@@ -73,8 +73,23 @@ async function getStats() {
 }
 
 export default async function DashboardPage() {
-  const stats = await getStats()
-  const recentItems = await getRecentItems()
+  const [credentialsResponse, cardsResponse, secretsResponse] =
+    await Promise.all([
+      listCredentials(1, MAX_RECENT_ITEMS),
+      listCards(1, MAX_RECENT_ITEMS),
+      listSecrets(1, MAX_RECENT_ITEMS),
+    ])
+
+  const stats = await getStats(
+    credentialsResponse,
+    cardsResponse,
+    secretsResponse
+  )
+  const recentItems = await getRecentItems(
+    credentialsResponse,
+    cardsResponse,
+    secretsResponse
+  )
 
   return (
     <div className="space-y-6">
