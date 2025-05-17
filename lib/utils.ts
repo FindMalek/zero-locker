@@ -99,3 +99,21 @@ export function mapItem(
     activityType: lastActivity.type,
   }
 }
+
+export function checkIsActive(
+  currentPathname: string,
+  linkHref: string
+): boolean {
+  return currentPathname === linkHref
+}
+
+export function formatFullDate(date: Date | string | number): string {
+  return new Intl.DateTimeFormat(undefined, {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    hour: "numeric",
+    minute: "numeric",
+    second: "numeric",
+  }).format(new Date(date))
+}

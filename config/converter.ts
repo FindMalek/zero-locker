@@ -22,8 +22,8 @@ export function convertRecentItemTypeToString(
   recentItemType: RecentItemType
 ): string {
   switch (recentItemType) {
-    case RecentItemTypeEnum.ACCOUNT:
-      return "Account"
+    case RecentItemTypeEnum.CREDENTIAL:
+      return "Credential"
     case RecentItemTypeEnum.CARD:
       return "Card"
     case RecentItemTypeEnum.SECRET:

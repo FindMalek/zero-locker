@@ -38,6 +38,7 @@ import {
   HospitalIcon,
   Image as ImageIcon,
   Inbox,
+  Info,
   KeyIcon,
   Laptop,
   LayoutDashboardIcon,
@@ -182,6 +183,7 @@ export const Icons = {
   key: KeyIcon,
   home: HomeIcon,
   account: AtSignIcon,
+  info: Info,
 }
 
 export const getEntityIcon = (itemType: RecentItemType) => {

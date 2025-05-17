@@ -1,6 +1,7 @@
 import { Metadata } from "next"
 import { RecentItem, RecentItemTypeEnum } from "@/schemas/utils"
 
+import { MAX_RECENT_ITEMS } from "@/config/consts"
 import { mapItem } from "@/lib/utils"
 
 import { OverviewStats } from "@/components/app/dashboard-overview-stats"
@@ -12,9 +13,9 @@ import { listSecrets } from "@/actions/secret"
 
 async function getRecentItems(): Promise<RecentItem[]> {
   const [usersResponse, cardsResponse, secretsResponse] = await Promise.all([
-    listCredentials(1, 5),
-    listCards(1, 5),
-    listSecrets(1, 5),
+    listCredentials(1, MAX_RECENT_ITEMS),
+    listCards(1, MAX_RECENT_ITEMS),
+    listSecrets(1, MAX_RECENT_ITEMS),
   ])
 
   const recentCredentials: RecentItem[] = (usersResponse.credentials ?? []).map(
@@ -50,7 +51,7 @@ async function getRecentItems(): Promise<RecentItem[]> {
     )
   })
 
-  return allItems.slice(0, 5)
+  return allItems.slice(0, MAX_RECENT_ITEMS)
 }
 
 export const metadata: Metadata = {
