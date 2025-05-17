@@ -37,19 +37,25 @@ export async function OverviewStats({ stats }: OverviewStatsProps) {
       <StatsCard
         title="Total Accounts"
         value={stats.credentials}
-        icon={<Icons.user className="text-muted-foreground h-4 w-4 group-hover:text-primary transition-colors" />}
+        icon={
+          <Icons.user className="text-muted-foreground group-hover:text-primary h-4 w-4 transition-colors" />
+        }
         description="Total number of accounts"
       />
       <StatsCard
         title="Total Payment Cards"
         value={stats.cards}
-        icon={<Icons.creditCard className="text-muted-foreground h-4 w-4 group-hover:text-primary transition-colors" />}
+        icon={
+          <Icons.creditCard className="text-muted-foreground group-hover:text-primary h-4 w-4 transition-colors" />
+        }
         description="Total number of payment cards"
       />
       <StatsCard
         title="Total Secure Notes"
         value={stats.secrets}
-        icon={<Icons.key className="text-muted-foreground h-4 w-4 group-hover:text-primary transition-colors" />}
+        icon={
+          <Icons.key className="text-muted-foreground group-hover:text-primary h-4 w-4 transition-colors" />
+        }
         description="Total number of secure notes"
       />
     </div>

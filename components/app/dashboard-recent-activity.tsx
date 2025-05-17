@@ -30,11 +30,6 @@ interface DashboardRecentActivityProps {
   recentItems: RecentItem[]
 }
 
-function openAddItemDialog(itemType: "account" | "card" | "secret") {
-  console.log("Open add item dialog for:", itemType)
-  // In a real application, this would likely open a modal or navigate to a new page
-}
-
 export function DashboardRecentActivity({
   recentItems,
 }: DashboardRecentActivityProps) {
@@ -98,10 +93,7 @@ export function DashboardRecentActivity({
               Add your first item to get started with {siteConfig.name}
             </p>
             <div className="mt-4 w-[200px]">
-              <AddItemDropdown
-                text="Add your first item"
-                openAddItemDialog={openAddItemDialog}
-              />
+              <AddItemDropdown text="Add your first item" />
             </div>
           </div>
         )}

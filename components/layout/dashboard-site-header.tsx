@@ -20,7 +20,7 @@ export function DashboardSiteHeader() {
       </div>
       <DashboardSearchCombobox />
       <ModeToggle />
-      <AddItemDropdown openAddItemDialog={() => {}} className="w-fit" />
+      <AddItemDropdown className="w-fit" />
     </header>
   )
 }

@@ -13,7 +13,7 @@ export function StatsCard({ title, value, icon, description }: StatsCardProps) {
   return (
     <Card className="group">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-mono">{title}</CardTitle>
+        <CardTitle className="font-mono text-sm">{title}</CardTitle>
         {icon}
       </CardHeader>
       <CardContent>
