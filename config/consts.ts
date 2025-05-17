@@ -1,0 +1,5 @@
+export const PRIORITY_ACTIVITY_TYPE = {
+  CREATED: 1,
+  UPDATED: 2,
+  COPIED: 3,
+}

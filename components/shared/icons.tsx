@@ -1,3 +1,4 @@
+import { RecentItemType, RecentItemTypeEnum } from "@/schemas/utils"
 import {
   AlertTriangle,
   ArrowDown,
@@ -5,6 +6,7 @@ import {
   ArrowUp,
   ArrowUpCircleIcon,
   ArrowUpDown,
+  AtSignIcon,
   BadgeCheck,
   BarChart,
   Bell,
@@ -179,4 +181,16 @@ export const Icons = {
   arrowUpCircle: ArrowUpCircleIcon,
   key: KeyIcon,
   home: HomeIcon,
+  account: AtSignIcon,
+}
+
+export const getEntityIcon = (itemType: RecentItemType) => {
+  switch (itemType) {
+    case RecentItemTypeEnum.CREDENTIAL:
+      return <AtSignIcon className="h-4 w-4" />
+    case RecentItemTypeEnum.CARD:
+      return <CreditCard className="h-4 w-4" />
+    case RecentItemTypeEnum.SECRET:
+      return <KeyIcon className="h-4 w-4" />
+  }
 }

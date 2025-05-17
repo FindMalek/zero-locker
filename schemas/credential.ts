@@ -22,8 +22,6 @@ export const CredentialSimpleRoSchema = z.object({
   description: z.string().nullable(),
   loginUrl: z.string().nullable(),
 
-  lastCopied: z.date().nullable(),
-  lastViewed: z.date().nullable(),
   createdAt: z.date(),
   updatedAt: z.date(),
 

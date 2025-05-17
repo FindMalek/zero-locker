@@ -1,44 +1,58 @@
 import { Metadata } from "next"
+import { RecentItem, RecentItemTypeEnum } from "@/schemas/utils"
+
+import { mapItem } from "@/lib/utils"
 
 import { OverviewStats } from "@/components/app/dashboard-overview-stats"
+import { DashboardRecentActivity } from "@/components/app/dashboard-recent-activity"
+
 import { listCards } from "@/actions/card"
 import { listSecrets } from "@/actions/secret"
 import { listUsers } from "@/actions/user"
-import { DashboardRecentActivity } from "@/components/app/dashboard-recent-activity"
-import { RecentItem, mapItem } from "@/lib/utils"
 
 async function getRecentItems(): Promise<RecentItem[]> {
   const [usersResponse, cardsResponse, secretsResponse] = await Promise.all([
     listUsers(1, 5),
     listCards(1, 5),
     listSecrets(1, 5),
-  ]);
+  ])
 
   const recentUsers: RecentItem[] = (usersResponse.users ?? []).map((user) => ({
-    ...mapItem(user, "account"),
-    type: "account" as const,
-    username: user.email,
-  }));
+    ...mapItem(user),
+    type: RecentItemTypeEnum.CREDENTIAL,
+    entity: {
+      username: user.email,
+    },
+  }))
 
   const recentCards: RecentItem[] = (cardsResponse.cards ?? []).map((card) => ({
-    ...mapItem(card, "card"),
-    type: "card" as const,
-    cardType: card.type,
-    cardNumber: card.number,
-  }));
+    ...mapItem(card),
+    type: RecentItemTypeEnum.CARD,
+    entity: {
+      type: card.type,
+      number: card.number,
+    },
+  }))
 
   const recentSecrets: RecentItem[] = (secretsResponse.secrets ?? []).map(
     (secret) => ({
-      ...mapItem(secret, "secret"),
-      type: "secret" as const,
-      description: secret.value,
+      ...mapItem(secret),
+      type: RecentItemTypeEnum.SECRET,
+      entity: {
+        name: secret.name,
+        value: secret.value,
+      },
     })
-  );
+  )
 
-  const allItems = [...recentUsers, ...recentCards, ...recentSecrets];
-  allItems.sort((a, b) => new Date(b.lastActivityAt).getTime() - new Date(a.lastActivityAt).getTime());
+  const allItems = [...recentUsers, ...recentCards, ...recentSecrets]
+  allItems.sort(
+    (a, b) =>
+      new Date(b.lastActivityAt).getTime() -
+      new Date(a.lastActivityAt).getTime()
+  )
 
-  return allItems.slice(0, 5);
+  return allItems.slice(0, 5)
 }
 
 export const metadata: Metadata = {
@@ -70,5 +84,3 @@ export default async function DashboardPage() {
     </div>
   )
 }
-
-
