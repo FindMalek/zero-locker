@@ -5,13 +5,13 @@ import { CredentialSchemaDto, type CredentialDto } from "@/schemas/credential"
 import { PlatformSimpleRo } from "@/schemas/platform"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { AccountStatus } from "@prisma/client"
-import { Copy, RefreshCw } from "lucide-react"
-import { useForm, type FieldValues } from "react-hook-form"
-import * as z from "zod"
+import { useForm } from "react-hook-form"
 
 import { encryptData, exportKey, generateEncryptionKey } from "@/lib/encryption"
 import { checkPasswordStrength, generatePassword } from "@/lib/password"
+import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard"
 
+import { Icons } from "@/components/shared/icons"
 import { PasswordStrengthMeter } from "@/components/shared/password-strength-meter"
 import { Button } from "@/components/ui/button"
 import {
@@ -47,16 +47,6 @@ interface CredentialDialogProps {
   onOpenChange: (open: boolean) => void
 }
 
-type FormValues = {
-  username: string
-  password: string
-  platformId: string
-  status: AccountStatus
-  description?: string
-  loginUrl?: string
-  containerId?: string
-}
-
 export function DashboardAddCredentialDialog({
   open,
   onOpenChange,
@@ -68,7 +58,11 @@ export function DashboardAddCredentialDialog({
     feedback: string
   } | null>(null)
 
-  const form = useForm<FormValues>({
+  const { copy, isCopied } = useCopyToClipboard({
+    successDuration: 1500,
+  })
+
+  const form = useForm<CredentialDto>({
     resolver: zodResolver(CredentialSchemaDto) as any,
     defaultValues: {
       username: "",
@@ -97,29 +91,22 @@ export function DashboardAddCredentialDialog({
     setPasswordStrength(checkPasswordStrength(newPassword))
   }
 
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text)
-    // You could add a toast notification here
-  }
-
-  async function onSubmit(values: FormValues) {
+  async function onSubmit(values: CredentialDto) {
     try {
-      // Generate encryption key
       const key = await generateEncryptionKey()
-
-      // Encrypt the password
       const { encryptedData, iv } = await encryptData(values.password, key)
-
-      // Export the key for storage
       const keyString = await exportKey(key)
 
-      // TODO: Save the credential with encrypted data
-      console.log("Saving credential:", {
+      // Send the credential with all required encryption data
+      const credentialToSave: CredentialDto = {
         ...values,
         password: encryptedData,
         encryptionKey: keyString,
-        iv,
-      })
+        iv: iv,
+      }
+
+      // TODO: Implement the API call to save the credential
+      // Example: await saveCredential(credentialToSave)
 
       if (!createMore) {
         form.reset()
@@ -231,18 +218,20 @@ export function DashboardAddCredentialDialog({
                           onClick={handleGeneratePassword}
                           title="Generate secure password"
                         >
-                          <RefreshCw className="h-4 w-4" />
+                          <Icons.refresh className="h-4 w-4" />
                         </Button>
                         <Button
                           type="button"
                           variant="outline"
                           size="icon"
-                          onClick={() =>
-                            copyToClipboard(form.getValues("password"))
-                          }
+                          onClick={() => copy(form.getValues("password"))}
                           title="Copy password"
                         >
-                          <Copy className="h-4 w-4" />
+                          {isCopied ? (
+                            <Icons.check className="text-success h-4 w-4" />
+                          ) : (
+                            <Icons.copy className="h-4 w-4" />
+                          )}
                         </Button>
                       </div>
                       {passwordStrength && (

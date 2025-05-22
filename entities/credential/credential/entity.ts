@@ -11,6 +11,8 @@ export class CredentialEntity {
 
       // TODO: Consider masking or partial display for ROs if sensitive
       password: entity.password,
+      encryptionKey: entity.encryptionKey,
+      iv: entity.iv,
 
       status: entity.status,
 

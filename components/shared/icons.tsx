@@ -60,6 +60,7 @@ import {
   Pizza,
   Plus,
   PuzzleIcon,
+  RefreshCw,
   SaveIcon,
   Search,
   Settings,
@@ -184,6 +185,7 @@ export const Icons = {
   home: HomeIcon,
   account: AtSignIcon,
   info: Info,
+  refresh: RefreshCw,
 }
 
 export const getEntityIcon = (itemType: RecentItemType) => {

@@ -4,6 +4,8 @@ import { z } from "zod"
 export const CredentialSchemaDto = z.object({
   username: z.string().min(1, "Username is required"),
   password: z.string().min(1, "Password is required"),
+  encryptionKey: z.string().optional(),
+  iv: z.string().optional(),
   status: z.nativeEnum(AccountStatus).optional().default(AccountStatus.ACTIVE),
   description: z.string().optional(),
   loginUrl: z.string().url().optional(),
@@ -16,6 +18,8 @@ export const CredentialSimpleRoSchema = z.object({
 
   username: z.string(),
   password: z.string(),
+  encryptionKey: z.string(),
+  iv: z.string(),
 
   status: z.nativeEnum(AccountStatus),
 
@@ -66,6 +70,8 @@ export type CredentialMetadataSimpleRo = z.infer<
 export const CredentialHistoryDto = z.object({
   oldPassword: z.string(),
   newPassword: z.string(),
+  encryptionKey: z.string(),
+  iv: z.string(),
   credentialId: z.string(),
 })
 
@@ -74,6 +80,8 @@ export const CredentialHistorySimpleRo = z.object({
 
   oldPassword: z.string(),
   newPassword: z.string(),
+  encryptionKey: z.string(),
+  iv: z.string(),
 
   changedAt: z.date(),
 

@@ -2,6 +2,10 @@ import { AccountStatus, PrismaClient } from "@prisma/client"
 
 import { saltAndHashPassword } from "./users"
 
+// Mock encryption values for seeding purposes
+const MOCK_ENCRYPTION_KEY = "mock_encryption_key_for_development_only"
+const MOCK_IV = "mock_iv_value_for_development_only"
+
 async function seedCredentials(prisma: PrismaClient) {
   console.log("🌱 Seeding credentials...")
 
@@ -68,6 +72,8 @@ async function seedCredentials(prisma: PrismaClient) {
       id: googleCredId,
       username: user.email,
       password: googlePassword,
+      encryptionKey: MOCK_ENCRYPTION_KEY,
+      iv: MOCK_IV,
       status: AccountStatus.ACTIVE,
       description: "Google account",
       loginUrl: "https://accounts.google.com",
@@ -93,6 +99,8 @@ async function seedCredentials(prisma: PrismaClient) {
       id: githubCredId,
       username: `${user.name.replace(" ", "").toLowerCase()}`,
       password: githubPassword,
+      encryptionKey: MOCK_ENCRYPTION_KEY,
+      iv: MOCK_IV,
       status: AccountStatus.ACTIVE,
       description: "GitHub account",
       loginUrl: "https://github.com/login",
@@ -127,6 +135,8 @@ async function seedCredentials(prisma: PrismaClient) {
         id: awsCredId,
         username: `${user.name.replace(" ", ".").toLowerCase()}@company.com`,
         password: awsPassword,
+        encryptionKey: MOCK_ENCRYPTION_KEY,
+        iv: MOCK_IV,
         status: AccountStatus.ACTIVE,
         description: "AWS account",
         loginUrl: "https://console.aws.amazon.com",
