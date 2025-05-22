@@ -23,3 +23,13 @@ The format would be:
 
 - [ ] Finish editing the `DashboardAddCredentialDialog`
       Make sure there are 2 columns, one for the important fields, and one for the optional fields.
+
+- [ ] Create a responsive dialog for forms
+      This dialog should be smart to disguinish inputs of 1 or 2 columns
+      It should have a loading state, and handle the toast by default
+      It should refresh data automatically
+      Each input should have a position which should be 'right' or 'left'
+
+- [ ] Make the toast DX easier to use
+
+- [ ] Use Tanstack Query for reloading data

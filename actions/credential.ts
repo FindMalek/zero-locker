@@ -44,7 +44,17 @@ export async function createCredential(data: CredentialDtoType): Promise<{
       const credential = await database.credential.create({
         data: {
           id: crypto.randomUUID(),
-          ...validatedData,
+          username: validatedData.username,
+          password: validatedData.password,
+          encryptionKey: validatedData.encryptionKey,
+          iv: validatedData.iv,
+          status: validatedData.status,
+          platformId: validatedData.platformId,
+          description: validatedData.description,
+          loginUrl: validatedData.loginUrl,
+          ...(validatedData.containerId
+            ? { containerId: validatedData.containerId }
+            : {}),
           userId: session.user.id,
           createdAt: new Date(),
         },
@@ -172,6 +182,9 @@ export async function updateCredential(
             id: crypto.randomUUID(),
             oldPassword: existingCredential.password,
             newPassword: validatedData.password,
+            encryptionKey:
+              validatedData.encryptionKey || existingCredential.encryptionKey,
+            iv: validatedData.iv || existingCredential.iv,
             credentialId: id,
             userId: session.user.id,
             changedAt: new Date(),

@@ -9,7 +9,9 @@ import { useForm } from "react-hook-form"
 
 import { encryptData, exportKey, generateEncryptionKey } from "@/lib/encryption"
 import { checkPasswordStrength, generatePassword } from "@/lib/password"
+import { handleErrors } from "@/lib/utils"
 import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard"
+import { useToast } from "@/hooks/use-toast"
 
 import { Icons } from "@/components/shared/icons"
 import { PasswordStrengthMeter } from "@/components/shared/password-strength-meter"
@@ -40,6 +42,7 @@ import {
 } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
 
+import { createCredential } from "@/actions/credential"
 import { listPlatforms } from "@/actions/platform"
 
 interface CredentialDialogProps {
@@ -62,6 +65,8 @@ export function DashboardAddCredentialDialog({
     successDuration: 1500,
   })
 
+  const { toast, toastPromise, toastLoading, dismiss, dismissAll } = useToast()
+
   const form = useForm<CredentialDto>({
     resolver: zodResolver(CredentialSchemaDto) as any,
     defaultValues: {
@@ -72,6 +77,8 @@ export function DashboardAddCredentialDialog({
       status: AccountStatus.ACTIVE,
       platformId: "",
       containerId: "",
+      encryptionKey: "",
+      iv: "",
     },
   })
 
@@ -93,28 +100,98 @@ export function DashboardAddCredentialDialog({
 
   async function onSubmit(values: CredentialDto) {
     try {
-      const key = await generateEncryptionKey()
-      const { encryptedData, iv } = await encryptData(values.password, key)
-      const keyString = await exportKey(key)
+      // Show loading toast
+      const loadingToast = toastLoading("Saving credential...")
+
+      // Generate encryption data
+      let keyString = ""
+      let encryptedData = ""
+      let ivString = ""
+
+      try {
+        const key = await generateEncryptionKey()
+        const encryptResult = await encryptData(values.password, key)
+        encryptedData = encryptResult.encryptedData
+        ivString = encryptResult.iv
+        keyString = await exportKey(key)
+      } catch (error: unknown) {
+        console.error("Encryption error:", error)
+        // Dismiss loading toast before showing error
+        dismiss(loadingToast.id)
+
+        // Handle encryption errors and show toast
+        const { message, details } = handleErrors(error, "Encryption failed")
+        toast(
+          details
+            ? `${message}: ${Array.isArray(details) ? details.join(", ") : details}`
+            : message,
+          "error"
+        )
+        return // Stop form submission
+      }
 
       // Send the credential with all required encryption data
       const credentialToSave: CredentialDto = {
         ...values,
         password: encryptedData,
         encryptionKey: keyString,
-        iv: iv,
+        iv: ivString,
       }
 
-      // TODO: Implement the API call to save the credential
-      // Example: await saveCredential(credentialToSave)
+      // Save credential to database
+      const result = await createCredential(credentialToSave)
 
-      if (!createMore) {
-        form.reset()
-        setPasswordStrength(null)
+      // Dismiss loading toast
+      dismiss(loadingToast.id)
+
+      if (result.success) {
+        // Show success toast
+        toast("Credential saved successfully", "success")
+
+        if (!createMore) {
+          handleDialogOpenChange(false)
+        } else {
+          form.reset({
+            username: "",
+            password: "",
+            loginUrl: "",
+            description: "",
+            status: AccountStatus.ACTIVE,
+            platformId: values.platformId,
+            containerId: values.containerId,
+            encryptionKey: "",
+            iv: "",
+          })
+          setPasswordStrength(null)
+        }
+      } else {
+        // Handle errors
+        const errorDetails = result.issues
+          ? result.issues
+              .map((issue) => `${issue.path.join(".")}: ${issue.message}`)
+              .join(", ")
+          : result.error
+
+        toast(
+          `Failed to save credential: ${errorDetails || "Unknown error"}`,
+          "error"
+        )
       }
     } catch (error) {
-      console.error("Error encrypting password:", error)
-      // Handle error appropriately
+      // Dismiss all toasts before showing error
+      dismissAll()
+
+      // Handle unexpected errors
+      const { message, details } = handleErrors(
+        error,
+        "Failed to save credential"
+      )
+      toast(
+        details
+          ? `${message}: ${Array.isArray(details) ? details.join(", ") : details}`
+          : message,
+        "error"
+      )
     }
   }
 

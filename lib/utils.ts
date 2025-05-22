@@ -11,6 +11,7 @@ import {
 } from "@/schemas/utils"
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
+import { ZodError, ZodIssue } from "zod"
 
 import { User as UserType } from "@/types/dashboard"
 
@@ -116,4 +117,86 @@ export function formatFullDate(date: Date | string | number): string {
     minute: "numeric",
     second: "numeric",
   }).format(new Date(date))
+}
+
+/**
+ * Process different types of errors and return standardized error messages
+ *
+ * @param error The error to process (can be any type)
+ * @param defaultMessage Default message to show if error type is not recognized
+ * @returns Standardized error object with message and details
+ */
+export function handleErrors(
+  error: unknown,
+  defaultMessage = "An unexpected error occurred"
+): { message: string; details?: string | string[] } {
+  // Handle Zod validation errors
+  if (error instanceof ZodError) {
+    const details = error.issues.map((issue: ZodIssue) =>
+      issue.path.length > 0
+        ? `${issue.path.join(".")}: ${issue.message}`
+        : issue.message
+    )
+
+    return {
+      message: "Validation failed",
+      details: details.length === 1 ? details[0] : details,
+    }
+  }
+
+  // Handle API response errors that contain issues array
+  if (
+    error &&
+    typeof error === "object" &&
+    "issues" in error &&
+    Array.isArray(error.issues)
+  ) {
+    const issues = error.issues as ZodIssue[]
+    const details = issues.map((issue: ZodIssue) =>
+      issue.path.length > 0
+        ? `${issue.path.join(".")}: ${issue.message}`
+        : issue.message
+    )
+
+    return {
+      message: "Validation failed",
+      details: details.length === 1 ? details[0] : details,
+    }
+  }
+
+  // Handle standard Error objects
+  if (error instanceof Error) {
+    return {
+      message: error.message || defaultMessage,
+      details: error.stack ? error.stack.split("\n")[0] : undefined,
+    }
+  }
+
+  // Handle API response errors
+  if (
+    error &&
+    typeof error === "object" &&
+    "error" in error &&
+    typeof error.error === "string"
+  ) {
+    return {
+      message: error.error,
+      details:
+        "message" in error && typeof error.message === "string"
+          ? error.message
+          : undefined,
+    }
+  }
+
+  // Handle string errors
+  if (typeof error === "string") {
+    return {
+      message: error,
+    }
+  }
+
+  // Default case for unknown error types
+  return {
+    message: defaultMessage,
+  }
 }
