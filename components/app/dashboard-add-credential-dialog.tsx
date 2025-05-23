@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { CredentialSchemaDto, type CredentialDto } from "@/schemas/credential"
+import { TagDto, TagSimpleRo } from "@/schemas/tag"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { AccountStatus } from "@prisma/client"
 import { useForm } from "react-hook-form"
@@ -11,10 +12,15 @@ import { checkPasswordStrength, generatePassword } from "@/lib/password"
 import { getPlaceholderImage, handleErrors } from "@/lib/utils"
 import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard"
 import { usePlatforms } from "@/hooks/use-platforms"
+import { useTags } from "@/hooks/use-tags"
 import { useToast } from "@/hooks/use-toast"
 
 import { Icons } from "@/components/shared/icons"
 import { PasswordStrengthMeter } from "@/components/shared/password-strength-meter"
+import {
+  getRandomSoftColor,
+  TagSelector,
+} from "@/components/shared/tag-selector"
 import { Button } from "@/components/ui/button"
 import { ComboboxResponsive } from "@/components/ui/combobox-responsive"
 import {
@@ -49,6 +55,7 @@ export function DashboardAddCredentialDialog({
 }: CredentialDialogProps) {
   const [createMore, setCreateMore] = useState(false)
   const { platforms, error: platformsError } = usePlatforms()
+  const { tags: availableTags, error: tagsError } = useTags()
   const [passwordStrength, setPasswordStrength] = useState<{
     score: number
     feedback: string
@@ -71,6 +78,7 @@ export function DashboardAddCredentialDialog({
       containerId: "",
       encryptionKey: "",
       iv: "",
+      tags: [] as TagDto[],
     },
   })
 
@@ -80,7 +88,10 @@ export function DashboardAddCredentialDialog({
     if (platformsError) {
       toast(platformsError, "error")
     }
-  }, [platformsError, toast])
+    if (tagsError) {
+      toast(tagsError, "error")
+    }
+  }, [platformsError, tagsError, toast])
 
   const handleGeneratePassword = () => {
     const newPassword = generatePassword(16)
@@ -183,7 +194,7 @@ export function DashboardAddCredentialDialog({
     <Dialog open={open} onOpenChange={handleDialogOpenChange}>
       <DialogContent className="sm:max-w-[800px]">
         <DialogHeader>
-          <DialogTitle>Add New Credential</DialogTitle>
+          <DialogTitle className="font-mono">Add New Credential</DialogTitle>
           <DialogDescription>
             Add a new credential to your vault. All information is securely
             stored.
@@ -332,6 +343,35 @@ export function DashboardAddCredentialDialog({
                   <FormDescription>
                     Your secure password. Use the generate button for a strong
                     password.
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="tags"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Tags</FormLabel>
+                  <FormControl>
+                    <TagSelector<TagDto>
+                      availableTags={availableTags}
+                      selectedTags={field.value}
+                      onChange={field.onChange}
+                      getValue={(tag) => tag.name}
+                      getLabel={(tag) => tag.name}
+                      createTag={(name) => ({
+                        name,
+                        color: getRandomSoftColor(),
+                        userId: undefined,
+                        containerId: undefined,
+                      })}
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    Add tags to help organize your credentials.
                   </FormDescription>
                   <FormMessage />
                 </FormItem>

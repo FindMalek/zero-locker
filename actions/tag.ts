@@ -24,10 +24,24 @@ export async function createTag(data: TagDtoType): Promise<{
     const validatedData = TagDto.parse(data)
 
     try {
+      // Check if tag with same name already exists for this user
+      const existingTag = await database.tag.findFirst({
+        where: {
+          name: validatedData.name,
+          userId: session.user.id,
+        },
+      })
+
+      if (existingTag) {
+        return {
+          success: true,
+          tag: TagEntity.getSimpleRo(existingTag),
+        }
+      }
+
       // Create tag with Prisma
       const tag = await database.tag.create({
         data: {
-          id: crypto.randomUUID(),
           ...validatedData,
           userId: session.user.id,
         },

@@ -1,3 +1,4 @@
+import { TagDto } from "@/schemas/tag"
 import { AccountStatus } from "@prisma/client"
 import { z } from "zod"
 
@@ -7,6 +8,7 @@ export const CredentialSchemaDto = z.object({
   encryptionKey: z.string(),
   iv: z.string(),
   status: z.nativeEnum(AccountStatus).optional().default(AccountStatus.ACTIVE),
+  tags: z.array(TagDto),
   description: z.string().optional(),
   platformId: z.string(),
   containerId: z.string().optional(),

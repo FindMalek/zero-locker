@@ -13,6 +13,8 @@ import { z } from "zod"
 import { verifySession } from "@/lib/auth/verify"
 import { getOrReturnEmptyObject } from "@/lib/utils"
 
+import { createTag } from "@/actions/tag"
+
 /**
  * Create a new credential
  */
@@ -38,6 +40,25 @@ export async function createCredential(data: CredentialDtoType): Promise<{
         }
       }
 
+      // Create new tags if they don't exist
+      const tagPromises = validatedData.tags.map(async (tag) => {
+        console.log("tag", tag)
+        const result = await createTag({
+          name: tag.name,
+          color: tag.color,
+          userId: session.user.id,
+          // Only include containerId if it exists
+          ...(validatedData.containerId
+            ? { containerId: validatedData.containerId }
+            : {}),
+        })
+        return result.success ? result.tag : null
+      })
+
+      const createdTags = (await Promise.all(tagPromises)).filter(
+        (tag): tag is NonNullable<typeof tag> => tag !== null
+      )
+
       const credential = await database.credential.create({
         data: {
           username: validatedData.username,
@@ -49,6 +70,9 @@ export async function createCredential(data: CredentialDtoType): Promise<{
           description: validatedData.description,
           userId: session.user.id,
           ...getOrReturnEmptyObject(validatedData.containerId, "containerId"),
+          tags: {
+            connect: createdTags.map((tag) => ({ id: tag.id })),
+          },
         },
       })
 
@@ -183,10 +207,34 @@ export async function updateCredential(
         })
       }
 
+      // Create new tags if they exist in the update
+      let tagConnections = undefined
+      if (validatedData.tags) {
+        const tagPromises = validatedData.tags.map(async (tag) => {
+          const result = await createTag({
+            name: tag.name,
+            color: tag.color,
+            userId: session.user.id,
+            containerId: validatedData.containerId,
+          })
+          return result.success ? result.tag : null
+        })
+
+        const createdTags = (await Promise.all(tagPromises)).filter(
+          (tag): tag is NonNullable<typeof tag> => tag !== null
+        )
+        tagConnections = {
+          connect: createdTags.map((tag) => ({ id: tag.id })),
+        }
+      }
+
       // Update credential with Prisma
       const updatedCredential = await database.credential.update({
         where: { id },
-        data: validatedData,
+        data: {
+          ...validatedData,
+          tags: tagConnections,
+        },
       })
 
       return {
