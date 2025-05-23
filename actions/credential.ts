@@ -3,9 +3,11 @@
 import { CredentialEntity } from "@/entities/credential"
 import { database } from "@/prisma/client"
 import {
+  CredentialMetadataSchemaDto,
   CredentialSchemaDto,
   CredentialSimpleRo,
   type CredentialDto as CredentialDtoType,
+  type CredentialMetadataDto as CredentialMetadataDtoType,
 } from "@/schemas/credential"
 import { Prisma } from "@prisma/client"
 import { z } from "zod"
@@ -13,7 +15,7 @@ import { z } from "zod"
 import { verifySession } from "@/lib/auth/verify"
 import { getOrReturnEmptyObject } from "@/lib/utils"
 
-import { createTag } from "@/actions/tag"
+import { createTagsAndGetConnections } from "@/actions/tag"
 
 /**
  * Create a new credential
@@ -40,23 +42,10 @@ export async function createCredential(data: CredentialDtoType): Promise<{
         }
       }
 
-      // Create new tags if they don't exist
-      const tagPromises = validatedData.tags.map(async (tag) => {
-        console.log("tag", tag)
-        const result = await createTag({
-          name: tag.name,
-          color: tag.color,
-          userId: session.user.id,
-          // Only include containerId if it exists
-          ...(validatedData.containerId
-            ? { containerId: validatedData.containerId }
-            : {}),
-        })
-        return result.success ? result.tag : null
-      })
-
-      const createdTags = (await Promise.all(tagPromises)).filter(
-        (tag): tag is NonNullable<typeof tag> => tag !== null
+      const tagConnections = await createTagsAndGetConnections(
+        validatedData.tags,
+        session.user.id,
+        validatedData.containerId
       )
 
       const credential = await database.credential.create({
@@ -69,10 +58,8 @@ export async function createCredential(data: CredentialDtoType): Promise<{
           platformId: validatedData.platformId,
           description: validatedData.description,
           userId: session.user.id,
+          tags: tagConnections,
           ...getOrReturnEmptyObject(validatedData.containerId, "containerId"),
-          tags: {
-            connect: createdTags.map((tag) => ({ id: tag.id })),
-          },
         },
       })
 
@@ -207,26 +194,11 @@ export async function updateCredential(
         })
       }
 
-      // Create new tags if they exist in the update
-      let tagConnections = undefined
-      if (validatedData.tags) {
-        const tagPromises = validatedData.tags.map(async (tag) => {
-          const result = await createTag({
-            name: tag.name,
-            color: tag.color,
-            userId: session.user.id,
-            containerId: validatedData.containerId,
-          })
-          return result.success ? result.tag : null
-        })
-
-        const createdTags = (await Promise.all(tagPromises)).filter(
-          (tag): tag is NonNullable<typeof tag> => tag !== null
-        )
-        tagConnections = {
-          connect: createdTags.map((tag) => ({ id: tag.id })),
-        }
-      }
+      const tagConnections = await createTagsAndGetConnections(
+        validatedData.tags || [],
+        session.user.id,
+        validatedData.containerId
+      )
 
       // Update credential with Prisma
       const updatedCredential = await database.credential.update({
@@ -423,6 +395,94 @@ export async function copyCredentialPassword(id: string): Promise<{
       }
     }
     console.error("Copy credential password error:", error)
+    return {
+      success: false,
+      error: "Something went wrong. Please try again.",
+    }
+  }
+}
+
+/**
+ * Create a new credential with optional metadata
+ */
+export async function createCredentialWithMetadata(
+  credentialData: CredentialDtoType,
+  metadataData?: Omit<CredentialMetadataDtoType, "credentialId">
+): Promise<{
+  success: boolean
+  credential?: CredentialSimpleRo
+  error?: string
+  issues?: z.ZodIssue[]
+}> {
+  try {
+    const session = await verifySession()
+    const validatedCredentialData = CredentialSchemaDto.parse(credentialData)
+
+    try {
+      const tagConnections = await createTagsAndGetConnections(
+        validatedCredentialData.tags,
+        session.user.id,
+        validatedCredentialData.containerId
+      )
+
+      // Use a transaction to create both credential and metadata
+      const result = await database.$transaction(async (tx) => {
+        const credential = await tx.credential.create({
+          data: {
+            username: validatedCredentialData.username,
+            password: validatedCredentialData.password,
+            encryptionKey: validatedCredentialData.encryptionKey,
+            iv: validatedCredentialData.iv,
+            status: validatedCredentialData.status,
+            platformId: validatedCredentialData.platformId,
+            description: validatedCredentialData.description,
+            userId: session.user.id,
+            tags: tagConnections,
+            ...getOrReturnEmptyObject(
+              validatedCredentialData.containerId,
+              "containerId"
+            ),
+          },
+        })
+
+        // Create metadata if provided
+        if (metadataData) {
+          const validatedMetadataData = CredentialMetadataSchemaDto.parse({
+            ...metadataData,
+            credentialId: credential.id,
+          })
+
+          await tx.credentialMetadata.create({
+            data: validatedMetadataData,
+          })
+        }
+
+        return credential
+      })
+
+      return {
+        success: true,
+        credential: CredentialEntity.getSimpleRo(result),
+      }
+    } catch (error) {
+      throw error
+    }
+  } catch (error) {
+    if (error instanceof Error && error.message === "Not authenticated") {
+      return {
+        success: false,
+        error: "Not authenticated",
+      }
+    }
+    if (error instanceof z.ZodError) {
+      return {
+        success: false,
+        error: "Validation failed",
+        issues: error.issues,
+      }
+    }
+
+    console.error("Credential creation error:", error)
     return {
       success: false,
       error: "Something went wrong. Please try again.",

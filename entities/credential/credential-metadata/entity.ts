@@ -9,9 +9,7 @@ export class CredentialMetadataEntity {
     return {
       id: entity.id,
       recoveryEmail: entity.recoveryEmail,
-      accountId: entity.accountId,
-      iban: entity.iban,
-      bankName: entity.bankName,
+      phoneNumber: entity.phoneNumber,
       otherInfo: entity.otherInfo,
       has2FA: entity.has2FA,
       credentialId: entity.credentialId,

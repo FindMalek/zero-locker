@@ -7,7 +7,7 @@ export const CredentialSchemaDto = z.object({
   password: z.string().min(1, "Password is required"),
   encryptionKey: z.string(),
   iv: z.string(),
-  status: z.nativeEnum(AccountStatus).optional().default(AccountStatus.ACTIVE),
+  status: z.nativeEnum(AccountStatus),
   tags: z.array(TagDto),
   description: z.string().optional(),
   platformId: z.string(),
@@ -37,13 +37,11 @@ export const CredentialSimpleRoSchema = z.object({
 export type CredentialDto = z.infer<typeof CredentialSchemaDto>
 export type CredentialSimpleRo = z.infer<typeof CredentialSimpleRoSchema>
 
-export const CredentialMetadataDto = z.object({
+export const CredentialMetadataSchemaDto = z.object({
   recoveryEmail: z.string().email().optional(),
-  accountId: z.string().optional(),
-  iban: z.string().optional(),
-  bankName: z.string().optional(),
+  phoneNumber: z.string().optional(),
   otherInfo: z.string().optional(),
-  has2FA: z.boolean().optional().default(false),
+  has2FA: z.boolean(),
   credentialId: z.string(),
 })
 
@@ -52,9 +50,7 @@ export const CredentialMetadataSimpleRo = z.object({
 
   recoveryEmail: z.string().nullable(),
 
-  accountId: z.string().nullable(),
-  iban: z.string().nullable(),
-  bankName: z.string().nullable(),
+  phoneNumber: z.string().nullable(),
   otherInfo: z.string().nullable(),
 
   has2FA: z.boolean(),
@@ -62,7 +58,7 @@ export const CredentialMetadataSimpleRo = z.object({
   credentialId: z.string(),
 })
 
-export type CredentialMetadataDto = z.infer<typeof CredentialMetadataDto>
+export type CredentialMetadataDto = z.infer<typeof CredentialMetadataSchemaDto>
 export type CredentialMetadataSimpleRo = z.infer<
   typeof CredentialMetadataSimpleRo
 >

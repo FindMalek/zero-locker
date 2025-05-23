@@ -3,7 +3,7 @@
 import { CredentialMetadataEntity } from "@/entities/credential"
 import { database } from "@/prisma/client"
 import {
-  CredentialMetadataDto,
+  CredentialMetadataSchemaDto,
   CredentialMetadataSimpleRo,
   type CredentialMetadataDto as CredentialMetadataDtoType,
 } from "@/schemas/credential"
@@ -26,7 +26,7 @@ export async function createCredentialMetadata(
     const session = await verifySession()
 
     // Validate using our DTO schema
-    const validatedData = CredentialMetadataDto.parse(data)
+    const validatedData = CredentialMetadataSchemaDto.parse(data)
 
     try {
       // Check if credential exists and belongs to the user
@@ -188,7 +188,7 @@ export async function updateCredentialMetadata(
     }
 
     // Validate using our DTO schema (partial)
-    const partialMetadataSchema = CredentialMetadataDto.partial()
+    const partialMetadataSchema = CredentialMetadataSchemaDto.partial()
     const validatedData = partialMetadataSchema.parse(data)
 
     try {
