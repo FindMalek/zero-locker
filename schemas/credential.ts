@@ -8,7 +8,6 @@ export const CredentialSchemaDto = z.object({
   iv: z.string(),
   status: z.nativeEnum(AccountStatus).optional().default(AccountStatus.ACTIVE),
   description: z.string().optional(),
-  loginUrl: z.string().url().optional(),
   platformId: z.string(),
   containerId: z.string().optional(),
 })
@@ -24,7 +23,6 @@ export const CredentialSimpleRoSchema = z.object({
   status: z.nativeEnum(AccountStatus),
 
   description: z.string().nullable(),
-  loginUrl: z.string().nullable(),
 
   createdAt: z.date(),
   updatedAt: z.date(),

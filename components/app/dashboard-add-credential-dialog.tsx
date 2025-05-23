@@ -65,7 +65,6 @@ export function DashboardAddCredentialDialog({
     defaultValues: {
       username: "",
       password: "",
-      loginUrl: "",
       description: "",
       status: AccountStatus.ACTIVE,
       platformId: "",
@@ -119,7 +118,6 @@ export function DashboardAddCredentialDialog({
             form.reset({
               username: "",
               password: "",
-              loginUrl: "",
               description: "",
               status: AccountStatus.ACTIVE,
               platformId: values.platformId,
@@ -132,8 +130,8 @@ export function DashboardAddCredentialDialog({
         } else {
           const errorDetails = result.issues
             ? result.issues
-                .map((issue) => `${issue.path.join(".")}: ${issue.message}`)
-                .join(", ")
+              .map((issue) => `${issue.path.join(".")}: ${issue.message}`)
+              .join(", ")
             : result.error
 
           toast(
@@ -212,11 +210,11 @@ export function DashboardAddCredentialDialog({
                           selectedItem={
                             platforms.find((p) => p.id === field.value)
                               ? {
-                                  value: field.value,
-                                  label:
-                                    platforms.find((p) => p.id === field.value)
-                                      ?.name || "",
-                                }
+                                value: field.value,
+                                label:
+                                  platforms.find((p) => p.id === field.value)
+                                    ?.name || "",
+                              }
                               : null
                           }
                           onSelect={(item) => field.onChange(item?.value || "")}
@@ -233,43 +231,11 @@ export function DashboardAddCredentialDialog({
                   )}
                 />
 
-                <FormField
-                  control={form.control}
-                  name="username"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Username</FormLabel>
-                      <FormControl>
-                        <Input {...field} />
-                      </FormControl>
-                      <FormDescription>
-                        Your username or email for this account.
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+
               </div>
 
               {/* Right column - Optional fields */}
               <div className="space-y-4">
-                <FormField
-                  control={form.control}
-                  name="loginUrl"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Login URL</FormLabel>
-                      <FormControl>
-                        <Input {...field} />
-                      </FormControl>
-                      <FormDescription>
-                        The URL where you can log in to this account.
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
                 <FormField
                   control={form.control}
                   name="description"
@@ -288,6 +254,24 @@ export function DashboardAddCredentialDialog({
                 />
               </div>
             </div>
+
+            <FormField
+              control={form.control}
+              name="username"
+              render={({ field }) => (
+                <FormItem
+                >
+                  <FormLabel>Username</FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                  <FormDescription>
+                    Your username or email for this account.
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
             <FormField
               control={form.control}

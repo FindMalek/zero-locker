@@ -23,6 +23,7 @@ model Platform {
 
   name String
   logo String?
+  loginUrl String?
 
   status PlatformStatus @default(PENDING)
 

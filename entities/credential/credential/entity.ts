@@ -17,7 +17,6 @@ export class CredentialEntity {
       status: entity.status,
 
       description: entity.description,
-      loginUrl: entity.loginUrl,
 
       updatedAt: entity.updatedAt,
       createdAt: entity.createdAt,

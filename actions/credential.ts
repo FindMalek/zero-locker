@@ -47,7 +47,6 @@ export async function createCredential(data: CredentialDtoType): Promise<{
           status: validatedData.status,
           platformId: validatedData.platformId,
           description: validatedData.description,
-          loginUrl: validatedData.loginUrl,
           userId: session.user.id,
           ...getOrReturnEmptyObject(validatedData.containerId, "containerId"),
         },

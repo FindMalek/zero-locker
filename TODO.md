@@ -19,17 +19,9 @@ The format would be:
 - [x] Create a `verify` function for the `better-auth` library || High
       This would be used to verify the user session in the server actions. We could use this in the client as well.
 
-- [ ] We should change the `Credential`, like `loginUrl` is not neccesary. Because that could be stored in the `Platform` model.
+- [x] We should change the `Credential`, like `loginUrl` is not neccesary. Because that could be stored in the `Platform` model.
 
 - [ ] Finish editing the `DashboardAddCredentialDialog`
       Make sure there are 2 columns, one for the important fields, and one for the optional fields.
-
-- [ ] Create a responsive dialog for forms
-      This dialog should be smart to disguinish inputs of 1 or 2 columns
-      It should have a loading state, and handle the toast by default
-      It should refresh data automatically
-      Each input should have a position which should be 'right' or 'left'
-
-- [ ] Make the toast DX easier to use
 
 - [ ] Use Tanstack Query for reloading data
