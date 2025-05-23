@@ -130,8 +130,8 @@ export function DashboardAddCredentialDialog({
         } else {
           const errorDetails = result.issues
             ? result.issues
-              .map((issue) => `${issue.path.join(".")}: ${issue.message}`)
-              .join(", ")
+                .map((issue) => `${issue.path.join(".")}: ${issue.message}`)
+                .join(", ")
             : result.error
 
           toast(
@@ -206,18 +206,22 @@ export function DashboardAddCredentialDialog({
                           items={platforms.map((platform) => ({
                             value: platform.id,
                             label: platform.name,
-                            logo: getPlaceholderImage(platform.name, platform.logo),
+                            logo: getPlaceholderImage(
+                              platform.name,
+                              platform.logo
+                            ),
                           }))}
                           selectedItem={
                             platforms.find((p) => p.id === field.value)
                               ? {
-                                value: field.value,
-                                label:
-                                  platforms.find((p) => p.id === field.value)
-                                    ?.name || "",
-                                logo: platforms.find((p) => p.id === field.value)
-                                  ?.logo || undefined,
-                              }
+                                  value: field.value,
+                                  label:
+                                    platforms.find((p) => p.id === field.value)
+                                      ?.name || "",
+                                  logo:
+                                    platforms.find((p) => p.id === field.value)
+                                      ?.logo || undefined,
+                                }
                               : null
                           }
                           onSelect={(item) => field.onChange(item?.value || "")}
@@ -233,8 +237,6 @@ export function DashboardAddCredentialDialog({
                     </FormItem>
                   )}
                 />
-
-
               </div>
 
               {/* Right column - Optional fields */}
@@ -262,14 +264,14 @@ export function DashboardAddCredentialDialog({
               control={form.control}
               name="username"
               render={({ field }) => (
-                <FormItem
-                >
-                  <FormLabel>Username</FormLabel>
+                <FormItem>
+                  <FormLabel>Identifier</FormLabel>
                   <FormControl>
                     <Input {...field} />
                   </FormControl>
                   <FormDescription>
-                    Your username or email for this account.
+                    Your identifier for this account. This could be your
+                    username, email, phone number, etc.
                   </FormDescription>
                   <FormMessage />
                 </FormItem>

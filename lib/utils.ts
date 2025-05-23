@@ -214,7 +214,10 @@ export function getOrReturnEmptyObject<T>(
   return value ? { [key]: value } : {}
 }
 
-export function getPlaceholderImage(string: string, url: string | undefined | null): string {
+export function getPlaceholderImage(
+  string: string,
+  url: string | undefined | null
+): string {
   if (url && url !== null) {
     return url
   }

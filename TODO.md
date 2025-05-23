@@ -27,3 +27,6 @@ The format would be:
 - [ ] Use Tanstack Query for reloading data
 
 - [ ] Usage of 'logo.dev' for `Platforms` model
+
+- [ ] In the `Credential` model changes
+      Change the `username` to `identifier` to make it more clear that it could be anything.
