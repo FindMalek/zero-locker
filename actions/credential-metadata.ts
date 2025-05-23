@@ -59,7 +59,6 @@ export async function createCredentialMetadata(
       // Create metadata with Prisma
       const metadata = await database.credentialMetadata.create({
         data: {
-          id: crypto.randomUUID(),
           ...validatedData,
         },
       })
