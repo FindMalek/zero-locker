@@ -25,3 +25,5 @@ The format would be:
       Make sure there are 2 columns, one for the important fields, and one for the optional fields.
 
 - [ ] Use Tanstack Query for reloading data
+
+- [ ] Usage of 'logo.dev' for `Platforms` model

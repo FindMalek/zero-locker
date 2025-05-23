@@ -213,3 +213,11 @@ export function getOrReturnEmptyObject<T>(
 ): Record<string, T> {
   return value ? { [key]: value } : {}
 }
+
+export function getPlaceholderImage(string: string, url: string | undefined | null): string {
+  if (url && url !== null) {
+    return url
+  }
+
+  return `https://avatar.vercel.sh/${string}`
+}

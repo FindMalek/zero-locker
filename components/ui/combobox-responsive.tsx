@@ -26,6 +26,7 @@ import { Icons } from "@/components/shared/icons"
 export type ComboboxItem = {
   value: string
   label: string
+  logo?: string
 }
 
 interface ComboboxResponsiveProps {
@@ -60,7 +61,16 @@ export function ComboboxResponsive({
             aria-expanded={open}
             className={`w-full justify-between ${className}`}
           >
-            {selectedItem ? selectedItem.label : placeholder}
+            <div className="flex items-center gap-2">
+              {selectedItem?.logo && (
+                <img
+                  src={selectedItem.logo}
+                  alt={selectedItem.label}
+                  className="h-5 w-5 object-contain"
+                />
+              )}
+              {selectedItem ? selectedItem.label : placeholder}
+            </div>
             <Icons.chevronDown className="h-4 w-4" />
           </Button>
         </PopoverTrigger>
@@ -90,7 +100,16 @@ export function ComboboxResponsive({
           aria-expanded={open}
           className={`w-full justify-between ${className}`}
         >
-          {selectedItem ? selectedItem.label : placeholder}
+          <div className="flex items-center gap-2">
+            {selectedItem?.logo && (
+              <img
+                src={selectedItem.logo}
+                alt={selectedItem.label}
+                className="h-5 w-5 object-contain"
+              />
+            )}
+            {selectedItem ? selectedItem.label : placeholder}
+          </div>
           <Icons.chevronDown className="h-4 w-4" />
         </Button>
       </DrawerTrigger>
@@ -152,7 +171,16 @@ function ComboboxList({
                 setOpen(false)
               }}
             >
-              {item.label}
+              <div className="flex items-center gap-2">
+                {item.logo && (
+                  <img
+                    src={item.logo}
+                    alt={item.label}
+                    className="h-5 w-5 object-contain"
+                  />
+                )}
+                {item.label}
+              </div>
             </CommandItem>
           ))}
         </CommandGroup>

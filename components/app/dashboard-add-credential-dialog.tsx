@@ -8,7 +8,7 @@ import { useForm } from "react-hook-form"
 
 import { encryptData, exportKey, generateEncryptionKey } from "@/lib/encryption"
 import { checkPasswordStrength, generatePassword } from "@/lib/password"
-import { handleErrors } from "@/lib/utils"
+import { getPlaceholderImage, handleErrors } from "@/lib/utils"
 import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard"
 import { usePlatforms } from "@/hooks/use-platforms"
 import { useToast } from "@/hooks/use-toast"
@@ -206,6 +206,7 @@ export function DashboardAddCredentialDialog({
                           items={platforms.map((platform) => ({
                             value: platform.id,
                             label: platform.name,
+                            logo: getPlaceholderImage(platform.name, platform.logo),
                           }))}
                           selectedItem={
                             platforms.find((p) => p.id === field.value)
@@ -214,6 +215,8 @@ export function DashboardAddCredentialDialog({
                                 label:
                                   platforms.find((p) => p.id === field.value)
                                     ?.name || "",
+                                logo: platforms.find((p) => p.id === field.value)
+                                  ?.logo || undefined,
                               }
                               : null
                           }
