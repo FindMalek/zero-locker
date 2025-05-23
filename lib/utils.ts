@@ -207,6 +207,9 @@ export function handleErrors(
  * @param key The key to use in the returned object
  * @returns An object with the value if it exists, otherwise an empty object
  */
-export function getOrReturnEmptyObject<T>(value: T | undefined | null, key: string): Record<string, T> {
+export function getOrReturnEmptyObject<T>(
+  value: T | undefined | null,
+  key: string
+): Record<string, T> {
   return value ? { [key]: value } : {}
 }
