@@ -15,6 +15,7 @@ import { usePlatforms } from "@/hooks/use-platforms"
 import { useTags } from "@/hooks/use-tags"
 import { useToast } from "@/hooks/use-toast"
 
+import { AddItemDialog } from "@/components/shared/add-item-dialog"
 import { Icons } from "@/components/shared/icons"
 import { PasswordStrengthMeter } from "@/components/shared/password-strength-meter"
 import {
@@ -33,15 +34,6 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
-import {
-  ResponsiveDialog,
-  ResponsiveDialogBody,
-  ResponsiveDialogContent,
-  ResponsiveDialogDescription,
-  ResponsiveDialogHeader,
-  ResponsiveDialogTitle,
-} from "@/components/ui/responsive-dialog"
-import { Switch } from "@/components/ui/switch"
 
 import { createCredential } from "@/actions/credential"
 
@@ -192,226 +184,201 @@ export function DashboardAddCredentialDialog({
   }
 
   return (
-    <ResponsiveDialog open={open} onOpenChange={handleDialogOpenChange}>
-      <ResponsiveDialogContent className="sm:max-w-[800px]">
-        <ResponsiveDialogHeader>
-          <ResponsiveDialogTitle className="font-mono">
-            Add New Credential
-          </ResponsiveDialogTitle>
-          <ResponsiveDialogDescription>
-            Add a new credential to your vault. All information is securely
-            stored.
-          </ResponsiveDialogDescription>
-        </ResponsiveDialogHeader>
-
-        <ResponsiveDialogBody>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                {/* Left column - Important fields */}
-                <div className="space-y-4">
-                  <FormField
-                    control={form.control}
-                    name="platformId"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Platform</FormLabel>
-                        <FormControl>
-                          <ComboboxResponsive
-                            items={platforms.map((platform) => ({
-                              value: platform.id,
-                              label: platform.name,
-                              logo: getPlaceholderImage(
-                                platform.name,
-                                platform.logo
-                              ),
-                            }))}
-                            selectedItem={
-                              platforms.find((p) => p.id === field.value)
-                                ? {
-                                    value: field.value,
-                                    label:
-                                      platforms.find(
-                                        (p) => p.id === field.value
-                                      )?.name || "",
-                                    logo:
-                                      platforms.find(
-                                        (p) => p.id === field.value
-                                      )?.logo || undefined,
-                                  }
-                                : null
-                            }
-                            onSelect={(item) =>
-                              field.onChange(item?.value || "")
-                            }
-                            placeholder="Select a platform"
-                            searchPlaceholder="Search platforms..."
-                            emptyText="No platforms found."
-                          />
-                        </FormControl>
-                        <FormDescription>
-                          Select the platform for this credential.
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                {/* Right column - Optional fields */}
-                <div className="space-y-4">
-                  <FormField
-                    control={form.control}
-                    name="description"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Description</FormLabel>
-                        <FormControl>
-                          <Input {...field} />
-                        </FormControl>
-                        <FormDescription>
-                          Additional information about this account.
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              </div>
-
+    <AddItemDialog
+      open={open}
+      onOpenChange={handleDialogOpenChange}
+      title="Add New Credential"
+      description="Add a new credential to your vault. All information is securely stored."
+      isSubmitting={isSubmitting}
+      createMore={createMore}
+      onCreateMoreChange={setCreateMore}
+      createMoreText="Create another credential"
+      submitText="Save Credential"
+      formId="credential-form"
+      className="sm:max-w-[800px]"
+    >
+      <Form {...form}>
+        <form
+          id="credential-form"
+          onSubmit={form.handleSubmit(onSubmit)}
+          className="space-y-4"
+        >
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            {/* Left column - Important fields */}
+            <div className="space-y-4">
               <FormField
                 control={form.control}
-                name="username"
+                name="platformId"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Identifier</FormLabel>
+                    <FormLabel>Platform</FormLabel>
+                    <FormControl>
+                      <ComboboxResponsive
+                        items={platforms.map((platform) => ({
+                          value: platform.id,
+                          label: platform.name,
+                          logo: getPlaceholderImage(
+                            platform.name,
+                            platform.logo
+                          ),
+                        }))}
+                        selectedItem={
+                          platforms.find((p) => p.id === field.value)
+                            ? {
+                                value: field.value,
+                                label:
+                                  platforms.find((p) => p.id === field.value)
+                                    ?.name || "",
+                                logo:
+                                  platforms.find((p) => p.id === field.value)
+                                    ?.logo || undefined,
+                              }
+                            : null
+                        }
+                        onSelect={(item) => field.onChange(item?.value || "")}
+                        placeholder="Select a platform"
+                        searchPlaceholder="Search platforms..."
+                        emptyText="No platforms found."
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      Select the platform for this credential.
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            {/* Right column - Optional fields */}
+            <div className="space-y-4">
+              <FormField
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Description</FormLabel>
                     <FormControl>
                       <Input {...field} />
                     </FormControl>
                     <FormDescription>
-                      Your identifier for this account. This could be your
-                      username, email, phone number, etc.
+                      Additional information about this account.
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
               />
+            </div>
+          </div>
 
-              <FormField
-                control={form.control}
-                name="password"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Password</FormLabel>
-                    <div className="flex w-full gap-2">
-                      <FormControl className="min-w-0 flex-1">
-                        <Input
-                          variant="password"
-                          className="w-full"
-                          {...field}
-                          onChange={(e) => {
-                            field.onChange(e)
-                            setPasswordStrength(
-                              checkPasswordStrength(e.target.value)
-                            )
-                          }}
-                        />
-                      </FormControl>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="icon"
-                        onClick={handleGeneratePassword}
-                        title="Generate secure password"
-                      >
-                        <Icons.refresh className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="icon"
-                        onClick={() => copy(form.getValues("password"))}
-                        title="Copy password"
-                      >
-                        {isCopied ? (
-                          <Icons.check className="text-success h-4 w-4" />
-                        ) : (
-                          <Icons.copy className="h-4 w-4" />
-                        )}
-                      </Button>
-                    </div>
-                    {passwordStrength && (
-                      <div className="mt-2 space-y-2">
-                        <PasswordStrengthMeter score={passwordStrength.score} />
-                        <div className="text-muted-foreground text-sm">
-                          {passwordStrength.feedback}
-                        </div>
-                      </div>
-                    )}
-                    <FormDescription>
-                      Your secure password. Use the generate button for a strong
-                      password.
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+          <FormField
+            control={form.control}
+            name="username"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Identifier</FormLabel>
+                <FormControl>
+                  <Input {...field} />
+                </FormControl>
+                <FormDescription>
+                  Your identifier for this account. This could be your username,
+                  email, phone number, etc.
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-              <FormField
-                control={form.control}
-                name="tags"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Tags</FormLabel>
-                    <FormControl>
-                      <TagSelector<TagDto>
-                        availableTags={availableTags}
-                        selectedTags={field.value}
-                        onChange={field.onChange}
-                        getValue={(tag) => tag.name}
-                        getLabel={(tag) => tag.name}
-                        createTag={(name) => ({
-                          name,
-                          color: getRandomSoftColor(),
-                          userId: undefined,
-                          containerId: undefined,
-                        })}
-                      />
-                    </FormControl>
-                    <FormDescription>
-                      Add tags to help organize your credentials.
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <div className="mt-4 flex items-center justify-between border-t pt-6">
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    id="create-more"
-                    checked={createMore}
-                    onCheckedChange={setCreateMore}
-                  />
-                  <label
-                    htmlFor="create-more"
-                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+          <FormField
+            control={form.control}
+            name="password"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Password</FormLabel>
+                <div className="flex w-full gap-2">
+                  <FormControl className="min-w-0 flex-1">
+                    <Input
+                      variant="password"
+                      className="w-full"
+                      {...field}
+                      onChange={(e) => {
+                        field.onChange(e)
+                        setPasswordStrength(
+                          checkPasswordStrength(e.target.value)
+                        )
+                      }}
+                    />
+                  </FormControl>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    onClick={handleGeneratePassword}
+                    title="Generate secure password"
                   >
-                    Create another credential after saving
-                  </label>
+                    <Icons.refresh className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    onClick={() => copy(form.getValues("password"))}
+                    title="Copy password"
+                  >
+                    {isCopied ? (
+                      <Icons.check className="text-success h-4 w-4" />
+                    ) : (
+                      <Icons.copy className="h-4 w-4" />
+                    )}
+                  </Button>
                 </div>
+                {passwordStrength && (
+                  <div className="mt-2 space-y-2">
+                    <PasswordStrengthMeter score={passwordStrength.score} />
+                    <div className="text-muted-foreground text-sm">
+                      {passwordStrength.feedback}
+                    </div>
+                  </div>
+                )}
+                <FormDescription>
+                  Your secure password. Use the generate button for a strong
+                  password.
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-                <Button type="submit" disabled={isSubmitting}>
-                  {isSubmitting && (
-                    <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
-                  )}
-                  Save Credential
-                </Button>
-              </div>
-            </form>
-          </Form>
-        </ResponsiveDialogBody>
-      </ResponsiveDialogContent>
-    </ResponsiveDialog>
+          <FormField
+            control={form.control}
+            name="tags"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Tags</FormLabel>
+                <FormControl>
+                  <TagSelector<TagDto>
+                    availableTags={availableTags}
+                    selectedTags={field.value}
+                    onChange={field.onChange}
+                    getValue={(tag) => tag.name}
+                    getLabel={(tag) => tag.name}
+                    createTag={(name) => ({
+                      name,
+                      color: getRandomSoftColor(),
+                      userId: undefined,
+                      containerId: undefined,
+                    })}
+                  />
+                </FormControl>
+                <FormDescription>
+                  Add tags to help organize your credentials.
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </form>
+      </Form>
+    </AddItemDialog>
   )
 }

@@ -9,15 +9,9 @@ import * as z from "zod"
 import { encryptData, exportKey, generateEncryptionKey } from "@/lib/encryption"
 import { checkPasswordStrength, generatePassword } from "@/lib/password"
 
+import { AddItemDialog } from "@/components/shared/add-item-dialog"
 import { PasswordStrengthMeter } from "@/components/shared/password-strength-meter"
 import { Button } from "@/components/ui/button"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
 import {
   Form,
   FormControl,
@@ -28,7 +22,6 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
-import { Switch } from "@/components/ui/switch"
 
 // Define the form schema
 const cardFormSchema = z.object({
@@ -163,29 +156,64 @@ export function DashboardAddCardDialog({
   }
 
   return (
-    <Dialog open={open} onOpenChange={handleDialogOpenChange}>
-      <DialogContent className="sm:max-w-[550px]">
-        <DialogHeader>
-          <DialogTitle>Add New Card</DialogTitle>
-          <DialogDescription>
-            Add a new card to your vault. All information is securely stored.
-          </DialogDescription>
-        </DialogHeader>
+    <AddItemDialog
+      open={open}
+      onOpenChange={handleDialogOpenChange}
+      title="Add New Card"
+      description="Add a new card to your vault. All information is securely stored."
+      createMore={createMore}
+      onCreateMoreChange={setCreateMore}
+      createMoreText="Create another card"
+      submitText="Save Card"
+      formId="card-form"
+      className="sm:max-w-[550px]"
+    >
+      <Form {...form}>
+        <form
+          id="card-form"
+          onSubmit={form.handleSubmit(onSubmit)}
+          className="space-y-4"
+        >
+          <FormField
+            control={form.control}
+            name="name"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Card Name</FormLabel>
+                <FormControl>
+                  <Input {...field} />
+                </FormControl>
+                <FormDescription>A name to identify this card.</FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <FormField
+            control={form.control}
+            name="cardNumber"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Card Number</FormLabel>
+                <FormControl>
+                  <Input {...field} />
+                </FormControl>
+                <FormDescription>Your card number.</FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <div className="grid grid-cols-2 gap-4">
             <FormField
               control={form.control}
-              name="name"
+              name="expiryDate"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Card Name</FormLabel>
+                  <FormLabel>Expiry Date</FormLabel>
                   <FormControl>
-                    <Input {...field} />
+                    <Input placeholder="MM/YY" {...field} />
                   </FormControl>
-                  <FormDescription>
-                    A name to identify this card.
-                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
@@ -193,156 +221,109 @@ export function DashboardAddCardDialog({
 
             <FormField
               control={form.control}
-              name="cardNumber"
+              name="cvv"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Card Number</FormLabel>
+                  <FormLabel>CVV</FormLabel>
                   <FormControl>
-                    <Input {...field} />
+                    <Input type="password" {...field} />
                   </FormControl>
-                  <FormDescription>Your card number.</FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
             />
+          </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="expiryDate"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Expiry Date</FormLabel>
-                    <FormControl>
-                      <Input placeholder="MM/YY" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="cvv"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>CVV</FormLabel>
-                    <FormControl>
-                      <Input type="password" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            <FormField
-              control={form.control}
-              name="pin"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>PIN</FormLabel>
-                  <div className="flex gap-2">
-                    <FormControl>
-                      <Input
-                        type="password"
-                        {...field}
-                        onChange={(e) => {
-                          field.onChange(e)
-                          setPinStrength(checkPasswordStrength(e.target.value))
-                        }}
-                      />
-                    </FormControl>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="icon"
-                      onClick={handleGeneratePin}
-                      title="Generate secure PIN"
-                    >
-                      <RefreshCw className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="icon"
-                      onClick={() => {
-                        const pin = form.getValues("pin")
-                        if (pin) copyToClipboard(pin)
+          <FormField
+            control={form.control}
+            name="pin"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>PIN</FormLabel>
+                <div className="flex gap-2">
+                  <FormControl>
+                    <Input
+                      type="password"
+                      {...field}
+                      onChange={(e) => {
+                        field.onChange(e)
+                        setPinStrength(checkPasswordStrength(e.target.value))
                       }}
-                      title="Copy PIN"
-                    >
-                      <Copy className="h-4 w-4" />
-                    </Button>
-                  </div>
-                  {pinStrength && (
-                    <div className="mt-2 space-y-2">
-                      <PasswordStrengthMeter score={pinStrength.score} />
-                      <div className="text-muted-foreground text-sm">
-                        {pinStrength.feedback}
-                      </div>
+                    />
+                  </FormControl>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    onClick={handleGeneratePin}
+                    title="Generate secure PIN"
+                  >
+                    <RefreshCw className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    onClick={() => {
+                      const pin = form.getValues("pin")
+                      if (pin) copyToClipboard(pin)
+                    }}
+                    title="Copy PIN"
+                  >
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                </div>
+                {pinStrength && (
+                  <div className="mt-2 space-y-2">
+                    <PasswordStrengthMeter score={pinStrength.score} />
+                    <div className="text-muted-foreground text-sm">
+                      {pinStrength.feedback}
                     </div>
-                  )}
-                  <FormDescription>
-                    Your card PIN. Use the generate button for a secure PIN.
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                  </div>
+                )}
+                <FormDescription>
+                  Your card PIN. Use the generate button for a secure PIN.
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Description</FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
-                  <FormDescription>
-                    Additional information about this card.
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+          <FormField
+            control={form.control}
+            name="description"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Description</FormLabel>
+                <FormControl>
+                  <Input {...field} />
+                </FormControl>
+                <FormDescription>
+                  Additional information about this card.
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-            <FormField
-              control={form.control}
-              name="tags"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Tags</FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
-                  <FormDescription>
-                    Comma-separated tags to categorize this card.
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <div className="flex items-center space-x-2">
-              <Switch
-                id="create-more"
-                checked={createMore}
-                onCheckedChange={setCreateMore}
-              />
-              <label
-                htmlFor="create-more"
-                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-              >
-                Create another card after saving
-              </label>
-            </div>
-
-            <Button type="submit">Save Card</Button>
-          </form>
-        </Form>
-      </DialogContent>
-    </Dialog>
+          <FormField
+            control={form.control}
+            name="tags"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Tags</FormLabel>
+                <FormControl>
+                  <Input {...field} />
+                </FormControl>
+                <FormDescription>
+                  Comma-separated tags to categorize this card.
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </form>
+      </Form>
+    </AddItemDialog>
   )
 }

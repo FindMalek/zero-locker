@@ -10,6 +10,7 @@ import {
   DialogClose,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
@@ -18,6 +19,7 @@ import {
   DrawerClose,
   DrawerContent,
   DrawerDescription,
+  DrawerFooter,
   DrawerHeader,
   DrawerTitle,
 } from "@/components/ui/drawer"
@@ -55,6 +57,11 @@ interface ResponsiveDialogCloseProps {
 }
 
 interface ResponsiveDialogBodyProps {
+  className?: string
+  children: React.ReactNode
+}
+
+interface ResponsiveDialogFooterProps {
   className?: string
   children: React.ReactNode
 }
@@ -100,9 +107,7 @@ function ResponsiveDialogContent({ className, children }: ResponsiveDialogConten
   if (isMobile) {
     return (
       <DrawerContent className={cn("max-h-[90vh] flex flex-col", className)}>
-        <div className="flex-1 overflow-y-auto px-4 pb-4">
-          {children}
-        </div>
+        {children}
       </DrawerContent>
     )
   }
@@ -173,7 +178,7 @@ function ResponsiveDialogBody({ className, children }: ResponsiveDialogBodyProps
 
   if (isMobile) {
     return (
-      <div className={cn("space-y-4", className)}>
+      <div className={cn("flex-1 overflow-y-auto px-4 space-y-4", className)}>
         {children}
       </div>
     )
@@ -183,6 +188,24 @@ function ResponsiveDialogBody({ className, children }: ResponsiveDialogBodyProps
     <div className={className}>
       {children}
     </div>
+  )
+}
+
+function ResponsiveDialogFooter({ className, children }: ResponsiveDialogFooterProps) {
+  const { isMobile } = React.useContext(ResponsiveDialogContext)
+
+  if (isMobile) {
+    return (
+      <DrawerFooter className={cn("px-4 pb-4 pt-2 border-t", className)}>
+        {children}
+      </DrawerFooter>
+    )
+  }
+
+  return (
+    <DialogFooter className={className}>
+      {children}
+    </DialogFooter>
   )
 }
 
@@ -212,4 +235,5 @@ export {
   ResponsiveDialogDescription,
   ResponsiveDialogBody,
   ResponsiveDialogClose,
+  ResponsiveDialogFooter,
 } 

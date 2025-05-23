@@ -21,7 +21,7 @@ The format would be:
 
 - [x] We should change the `Credential`, like `loginUrl` is not neccesary. Because that could be stored in the `Platform` model.
 
-- [ ] Finish editing the `DashboardAddCredentialDialog`
+- [x] Finish editing the `DashboardAddCredentialDialog`
       Make sure there are 2 columns, one for the important fields, and one for the optional fields.
 
 - [ ] Use Tanstack Query for reloading data
