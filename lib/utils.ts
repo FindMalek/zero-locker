@@ -200,3 +200,13 @@ export function handleErrors(
     message: defaultMessage,
   }
 }
+
+/**
+ * Returns an object with the given value if it exists, otherwise returns an empty object
+ * @param value The value to check
+ * @param key The key to use in the returned object
+ * @returns An object with the value if it exists, otherwise an empty object
+ */
+export function getOrReturnEmptyObject<T>(value: T | undefined | null, key: string): Record<string, T> {
+  return value ? { [key]: value } : {}
+}

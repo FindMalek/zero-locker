@@ -11,6 +11,7 @@ import { Prisma } from "@prisma/client"
 import { z } from "zod"
 
 import { verifySession } from "@/lib/auth/verify"
+import { getOrReturnEmptyObject } from "@/lib/utils"
 
 /**
  * Create a new credential
@@ -23,12 +24,9 @@ export async function createCredential(data: CredentialDtoType): Promise<{
 }> {
   try {
     const session = await verifySession()
-
-    // Validate using our DTO schema
     const validatedData = CredentialSchemaDto.parse(data)
 
     try {
-      // Check if platform exists
       const platform = await database.platform.findUnique({
         where: { id: validatedData.platformId },
       })
@@ -40,10 +38,8 @@ export async function createCredential(data: CredentialDtoType): Promise<{
         }
       }
 
-      // Create credential with Prisma
       const credential = await database.credential.create({
         data: {
-          id: crypto.randomUUID(),
           username: validatedData.username,
           password: validatedData.password,
           encryptionKey: validatedData.encryptionKey,
@@ -52,11 +48,8 @@ export async function createCredential(data: CredentialDtoType): Promise<{
           platformId: validatedData.platformId,
           description: validatedData.description,
           loginUrl: validatedData.loginUrl,
-          ...(validatedData.containerId
-            ? { containerId: validatedData.containerId }
-            : {}),
           userId: session.user.id,
-          createdAt: new Date(),
+          ...getOrReturnEmptyObject(validatedData.containerId, "containerId"),
         },
       })
 
@@ -179,7 +172,6 @@ export async function updateCredential(
       if (validatedData.password) {
         await database.credentialHistory.create({
           data: {
-            id: crypto.randomUUID(),
             oldPassword: existingCredential.password,
             newPassword: validatedData.password,
             encryptionKey:
