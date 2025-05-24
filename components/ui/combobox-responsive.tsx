@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import Image from "next/image"
 import { useMediaQuery } from "@/hooks/use-media-query"
 import { Button } from "@/components/ui/button"
 import {
@@ -63,9 +64,11 @@ export function ComboboxResponsive({
           >
             <div className="flex items-center gap-2">
               {selectedItem?.logo && (
-                <img
+                <Image
                   src={selectedItem.logo}
                   alt={selectedItem.label}
+                  width={20}
+                  height={20}
                   className="h-5 w-5 object-contain"
                 />
               )}
@@ -102,9 +105,11 @@ export function ComboboxResponsive({
         >
           <div className="flex items-center gap-2">
             {selectedItem?.logo && (
-              <img
+              <Image
                 src={selectedItem.logo}
                 alt={selectedItem.label}
+                width={20}
+                height={20}
                 className="h-5 w-5 object-contain"
               />
             )}
@@ -173,9 +178,11 @@ function ComboboxList({
             >
               <div className="flex items-center gap-2">
                 {item.logo && (
-                  <img
+                  <Image
                     src={item.logo}
                     alt={item.label}
+                    width={20}
+                    height={20}
                     className="h-5 w-5 object-contain"
                   />
                 )}

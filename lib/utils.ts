@@ -13,6 +13,7 @@ import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 import { ZodError, ZodIssue } from "zod"
 
+import { env } from "@/env"
 import { User as UserType } from "@/types/dashboard"
 
 import { PRIORITY_ACTIVITY_TYPE } from "@/config/consts"
@@ -223,4 +224,16 @@ export function getPlaceholderImage(
   }
 
   return `https://avatar.vercel.sh/${string}`
+}
+
+export function getLogoURL(brand: string, size: number = 128) {
+  return `https://img.logo.dev/${brand}?token=${env.NEXT_PUBLIC_LOGO_DEV_TOKEN}&size=${size}&retina=true`
+}
+
+export function getLogoDevUrlWithToken(url: string | null) {
+  if (!url) {
+    return null
+  }
+
+  return `${url}?token=${env.NEXT_PUBLIC_LOGO_DEV_TOKEN}&format=png`
 }

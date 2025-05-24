@@ -7,7 +7,7 @@ async function seedPlatforms(prisma: PrismaClient) {
     {
       id: "platform_1",
       name: "Google",
-      logo: "https://www.google.com/favicon.ico",
+      logo: "https://img.logo.dev/google.com",
       loginUrl: "https://accounts.google.com",
       status: PlatformStatus.APPROVED,
       createdAt: new Date(),
@@ -16,7 +16,7 @@ async function seedPlatforms(prisma: PrismaClient) {
     {
       id: "platform_2",
       name: "GitHub",
-      logo: "https://github.com/favicon.ico",
+      logo: "https://img.logo.dev/github.com",
       loginUrl: "https://github.com/login",
       status: PlatformStatus.APPROVED,
       createdAt: new Date(),
@@ -25,7 +25,7 @@ async function seedPlatforms(prisma: PrismaClient) {
     {
       id: "platform_3",
       name: "AWS",
-      logo: "https://aws.amazon.com/favicon.ico",
+      logo: "https://img.logo.dev/aws.amazon.com",
       loginUrl: "https://console.aws.amazon.com",
       status: PlatformStatus.APPROVED,
       createdAt: new Date(),
@@ -34,7 +34,7 @@ async function seedPlatforms(prisma: PrismaClient) {
     {
       id: "platform_4",
       name: "Microsoft",
-      logo: "https://www.microsoft.com/favicon.ico",
+      logo: "https://img.logo.dev/microsoft.com",
       loginUrl: "https://account.microsoft.com",
       status: PlatformStatus.APPROVED,
       createdAt: new Date(),

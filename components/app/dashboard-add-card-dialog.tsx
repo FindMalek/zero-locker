@@ -6,7 +6,6 @@ import { Copy, RefreshCw } from "lucide-react"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
 
-import { encryptData, exportKey, generateEncryptionKey } from "@/lib/encryption"
 import { checkPasswordStrength, generatePassword } from "@/lib/password"
 
 import { AddItemDialog } from "@/components/shared/add-item-dialog"
@@ -89,7 +88,8 @@ export function DashboardAddCardDialog({
     // You could add a toast notification here
   }
 
-  async function onSubmit(values: CardFormValues) {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async function onSubmit(_values: CardFormValues) {
     try {
       // Generate encryption key
       // const key = await generateEncryptionKey()
@@ -136,23 +136,6 @@ export function DashboardAddCardDialog({
       setPinStrength(null)
     }
     onOpenChange(open)
-  }
-
-  // Add PIN strength indicator
-  const getPinStrengthColor = (score: number) => {
-    switch (score) {
-      case 0:
-      case 1:
-        return "text-red-500"
-      case 2:
-        return "text-orange-500"
-      case 3:
-        return "text-yellow-500"
-      case 4:
-        return "text-green-500"
-      default:
-        return "text-gray-500"
-    }
   }
 
   return (
