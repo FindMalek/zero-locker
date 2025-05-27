@@ -113,7 +113,7 @@ function ResponsiveDialogContent({ className, children }: ResponsiveDialogConten
   }
 
   return (
-    <DialogContent className={cn("sm:max-w-[800px] max-h-[90vh] overflow-y-auto", className)}>
+    <DialogContent className={cn("sm:max-w-[800px] max-h-[90vh] flex flex-col p-0", className)}>
       {children}
     </DialogContent>
   )
@@ -131,7 +131,7 @@ function ResponsiveDialogHeader({ className, children }: ResponsiveDialogHeaderP
   }
 
   return (
-    <DialogHeader className={className}>
+    <DialogHeader className={cn("p-4 pb-0", className)}>
       {children}
     </DialogHeader>
   )
@@ -185,7 +185,7 @@ function ResponsiveDialogBody({ className, children }: ResponsiveDialogBodyProps
   }
 
   return (
-    <div className={className}>
+    <div className={cn("flex-1 overflow-y-auto px-6 py-4", className)}>
       {children}
     </div>
   )
@@ -203,7 +203,7 @@ function ResponsiveDialogFooter({ className, children }: ResponsiveDialogFooterP
   }
 
   return (
-    <DialogFooter className={className}>
+    <DialogFooter className={cn("p-4 pt-0", className)}>
       {children}
     </DialogFooter>
   )
