@@ -2,12 +2,13 @@
 
 import { useEffect, useState } from "react"
 import { CardDto } from "@/schemas/card"
+import { TagDto } from "@/schemas/tag"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { CardProvider, CardStatus, CardType } from "@prisma/client"
 import { useForm } from "react-hook-form"
 
 import { encryptData, exportKey, generateEncryptionKey } from "@/lib/encryption"
-import { handleErrors } from "@/lib/utils"
+import { handleErrors, getOrReturnEmptyObject } from "@/lib/utils"
 import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard"
 import { useToast } from "@/hooks/use-toast"
 
@@ -16,15 +17,18 @@ import { AddItemDialog } from "@/components/shared/add-item-dialog"
 import { Form } from "@/components/ui/form"
 
 import { createCard } from "@/actions/card"
+import { createTagsAndGetConnections } from "@/actions/tag"
 
 interface CardDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
+  availableTags?: TagDto[]
 }
 
 export function DashboardAddCardDialog({
   open,
   onOpenChange,
+  availableTags = [],
 }: CardDialogProps) {
   const { toast } = useToast()
 
@@ -40,15 +44,19 @@ export function DashboardAddCardDialog({
     defaultValues: {
       name: "",
       description: "",
+      notes: "",
       type: CardType.CREDIT,
       provider: CardProvider.VISA,
       status: CardStatus.ACTIVE,
       number: "",
       expiryDate: new Date(),
       cvv: "",
+      encryptionKey: "",
+      iv: "",
       billingAddress: "",
       cardholderName: "",
       cardholderEmail: "",
+      tags: [],
     },
   })
 
@@ -60,7 +68,7 @@ export function DashboardAddCardDialog({
     try {
       setIsSubmitting(true)
 
-      const cardData = form.getValues() as CardDto
+      const cardData = form.getValues()
 
       // Validate form
       const isValid = await form.trigger()
@@ -77,11 +85,11 @@ export function DashboardAddCardDialog({
 
       // Create the card DTO with encrypted data
       const cardDto: CardDto = {
-        ...cardData,
+        ...(cardData as CardDto),
         number: encryptNumberResult.encryptedData,
         cvv: encryptCvvResult.encryptedData,
-        // Note: We'll need to add encryption fields to the schema
-        // For now, we'll store the key and IV in a way that works with the current schema
+        encryptionKey: keyString,
+        iv: encryptCvvResult.iv, // Use the IV from one of the encryptions
       }
 
       const result = await createCard(cardDto)
@@ -95,15 +103,19 @@ export function DashboardAddCardDialog({
           form.reset({
             name: "",
             description: "",
+            notes: "",
             type: CardType.CREDIT,
             provider: CardProvider.VISA,
             status: CardStatus.ACTIVE,
             number: "",
             expiryDate: new Date(),
             cvv: "",
+            encryptionKey: "",
+            iv: "",
             billingAddress: "",
             cardholderName: "",
             cardholderEmail: "",
+            tags: [],
           })
         }
       } else {
@@ -164,6 +176,7 @@ export function DashboardAddCardDialog({
         >
           <DashboardAddCardForm
             form={form}
+            availableTags={availableTags}
             onCopyCvv={handleCopyCvv}
             isCopied={isCopied}
           />

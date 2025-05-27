@@ -13,6 +13,9 @@ import { z } from "zod"
 
 import { auth } from "@/lib/auth/server"
 import { verifySession } from "@/lib/auth/verify"
+import { getOrReturnEmptyObject } from "@/lib/utils"
+
+import { createTagsAndGetConnections } from "@/actions/tag"
 
 /**
  * Create a new card
@@ -33,12 +36,35 @@ export async function createCard(data: CardDtoType): Promise<{
     const expiryDate = new Date(validatedData.expiryDate)
 
     try {
+      // Handle tags if provided
+      const tagConnections = validatedData.tags?.length 
+        ? await createTagsAndGetConnections(
+            validatedData.tags,
+            session.user.id,
+            validatedData.containerId
+          )
+        : { connect: [] }
+
       // Create card with Prisma
       const card = await database.card.create({
         data: {
-          ...validatedData,
+          name: validatedData.name,
+          description: validatedData.description,
+          notes: validatedData.notes,
+          type: validatedData.type,
+          provider: validatedData.provider,
+          status: validatedData.status,
+          number: validatedData.number,
           expiryDate,
+          cvv: validatedData.cvv,
+          encryptionKey: validatedData.encryptionKey || null,
+          iv: validatedData.iv || null,
+          billingAddress: validatedData.billingAddress,
+          cardholderName: validatedData.cardholderName,
+          cardholderEmail: validatedData.cardholderEmail,
           userId: session.user.id,
+          tags: tagConnections,
+          ...getOrReturnEmptyObject(validatedData.containerId, "containerId"),
         },
       })
 

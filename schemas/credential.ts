@@ -40,7 +40,7 @@ export type CredentialSimpleRo = z.infer<typeof CredentialSimpleRoSchema>
 export const CredentialMetadataSchemaDto = z.object({
   recoveryEmail: z.string().email().optional(),
   phoneNumber: z.string().optional(),
-  otherInfo: z.string().optional(),
+  otherInfo: z.array(z.any()).optional(),
   has2FA: z.boolean(),
   credentialId: z.string(),
 })
@@ -51,7 +51,7 @@ export const CredentialMetadataSimpleRo = z.object({
   recoveryEmail: z.string().nullable(),
 
   phoneNumber: z.string().nullable(),
-  otherInfo: z.string().nullable(),
+  otherInfo: z.array(z.any()).nullable(),
 
   has2FA: z.boolean(),
 

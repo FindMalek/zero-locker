@@ -40,11 +40,12 @@ model Platform {
 }
 
 /**
- * Represents a tag associated with a credential.
+ * Represents a tag associated with credentials and cards.
  * @property id - Unique identifier for the tag. Type: String. Generated using cuid().
  * @property name - Name of the tag. Type: String.
  * @property color - Color of the tag. Type: String. Optional.
  * @property credentials - Credentials associated with the tag. Type: Credential[]. Relation to Credential model.
+ * @property cards - Cards associated with the tag. Type: Card[]. Relation to Card model.
  */
 model Tag {
   id String @id @default(cuid())
@@ -53,6 +54,7 @@ model Tag {
   color String?
 
   credentials Credential[]
+  cards       Card[]
 
   userId String?
   user   User?   @relation(fields: [userId], references: [id])
