@@ -217,7 +217,7 @@ export function TagSelector<T>({
               <Badge
                 key={tagId}
                 variant="outline"
-                className="flex items-center gap-1"
+                className="flex items-center gap-1 text-black"
                 style={{ backgroundColor }}
               >
                 {getLabel(tag)}
