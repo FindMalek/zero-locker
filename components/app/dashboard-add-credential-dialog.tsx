@@ -7,44 +7,31 @@ import {
   CredentialMetadataSchemaDto,
   CredentialSchemaDto,
 } from "@/schemas/credential"
-import { TagDto } from "@/schemas/tag"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { AccountStatus } from "@prisma/client"
 import { useForm } from "react-hook-form"
 
 import { encryptData, exportKey, generateEncryptionKey } from "@/lib/encryption"
 import { checkPasswordStrength, generatePassword } from "@/lib/password"
-import {
-  getLogoDevUrlWithToken,
-  getPlaceholderImage,
-  handleErrors,
-} from "@/lib/utils"
+import { cn, handleErrors } from "@/lib/utils"
 import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard"
 import { usePlatforms } from "@/hooks/use-platforms"
 import { useTags } from "@/hooks/use-tags"
 import { useToast } from "@/hooks/use-toast"
 
+import { DashboardAddCredentialForm } from "@/components/app/dashboard-add-credential-form"
+import { DashboardAddCredentialMetadataForm } from "@/components/app/dashboard-add-credential-metadata-form"
 import { AddItemDialog } from "@/components/shared/add-item-dialog"
 import { Icons } from "@/components/shared/icons"
-import { PasswordStrengthMeter } from "@/components/shared/password-strength-meter"
-import {
-  getRandomSoftColor,
-  TagSelector,
-} from "@/components/shared/tag-selector"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Checkbox } from "@/components/ui/checkbox"
-import { ComboboxResponsive } from "@/components/ui/combobox-responsive"
 import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible"
+import { Form } from "@/components/ui/form"
+import { Separator } from "@/components/ui/separator"
 
 import { createCredentialWithMetadata } from "@/actions/credential"
 
@@ -57,11 +44,12 @@ export function DashboardAddCredentialDialog({
   open,
   onOpenChange,
 }: CredentialDialogProps) {
+  const { toast } = useToast()
   const { platforms, error: platformsError } = usePlatforms()
   const { tags: availableTags, error: tagsError } = useTags()
 
   const [createMore, setCreateMore] = useState(false)
-  const [activeTab, setActiveTab] = useState("credential")
+  const [showMetadata, setShowMetadata] = useState(false)
   const [passwordStrength, setPasswordStrength] = useState<{
     score: number
     feedback: string
@@ -70,8 +58,6 @@ export function DashboardAddCredentialDialog({
   const { copy, isCopied } = useCopyToClipboard({
     successDuration: 1500,
   })
-
-  const { toast, toastLoading, dismiss, dismissAll } = useToast()
 
   const credentialForm = useForm<CredentialDto>({
     resolver: zodResolver(CredentialSchemaDto),
@@ -116,46 +102,70 @@ export function DashboardAddCredentialDialog({
     setPasswordStrength(checkPasswordStrength(newPassword))
   }
 
-  // Handle credential form submission (navigate to metadata tab)
-  async function onCredentialSubmit(values: CredentialDto) {
-    try {
-      const key = await generateEncryptionKey()
-      const encryptResult = await encryptData(values.password, key)
-      const keyString = await exportKey(key)
-
-      const credentialToSave: CredentialDto = {
-        ...values,
-        password: encryptResult.encryptedData,
-        encryptionKey: keyString,
-        iv: encryptResult.iv,
-      }
-
-      credentialForm.reset(credentialToSave)
-      setActiveTab("metadata")
-    } catch (error: unknown) {
-      console.error("Encryption error:", error)
-      const { message, details } = handleErrors(error, "Encryption failed")
-      toast(
-        details
-          ? `${message}: ${Array.isArray(details) ? details.join(", ") : details}`
-          : message,
-        "error"
-      )
-    }
+  const handlePasswordChange = (password: string) => {
+    setPasswordStrength(checkPasswordStrength(password))
   }
 
-  async function onFinalSubmit(metadataValues: CredentialMetadataDto) {
+  const handleCopyPassword = () => {
+    copy(credentialForm.getValues("password"))
+  }
+
+  // Check if metadata form has any meaningful values
+  const hasMetadataValues = () => {
+    const values = metadataForm.getValues()
+    return (
+      values.recoveryEmail?.trim() ||
+      values.phoneNumber?.trim() ||
+      values.otherInfo?.trim() ||
+      values.has2FA
+    )
+  }
+
+  // Get labels for metadata fields that have values
+  const getMetadataLabels = () => {
+    const values = metadataForm.getValues()
+    const labels = []
+
+    if (values.recoveryEmail?.trim()) labels.push("Email")
+    if (values.phoneNumber?.trim()) labels.push("Phone")
+    if (values.has2FA) labels.push("2FA")
+    if (values.otherInfo?.trim()) labels.push("Notes")
+
+    return labels.join(", ")
+  }
+
+  async function onSubmit() {
     try {
       setIsSubmitting(true)
-      const loadingToast = toastLoading("Saving credential...")
+
+      // Validate credential form first
+      const credentialValid = await credentialForm.trigger()
+      if (!credentialValid) {
+        toast("Please fill in all required credential fields", "error")
+        return
+      }
+
+      // If metadata has values, validate it regardless of whether it's shown
+      if (hasMetadataValues()) {
+        const metadataValid = await metadataForm.trigger()
+        if (!metadataValid) {
+          toast("Please check the additional information fields", "error")
+          return
+        }
+      }
 
       const credentialData = credentialForm.getValues()
 
+      // Encrypt password
+      const key = await generateEncryptionKey()
+      const encryptResult = await encryptData(credentialData.password, key)
+      const keyString = await exportKey(key)
+
       const credentialDto: CredentialDto = {
         username: credentialData.username,
-        password: credentialData.password,
-        encryptionKey: credentialData.encryptionKey,
-        iv: credentialData.iv,
+        password: encryptResult.encryptedData,
+        encryptionKey: keyString,
+        iv: encryptResult.iv,
         status: credentialData.status,
         tags: credentialData.tags,
         description: credentialData.description,
@@ -163,40 +173,29 @@ export function DashboardAddCredentialDialog({
         containerId: credentialData.containerId,
       }
 
-      // Filter out empty metadata fields and convert to DTO format
-      const metadataDto: Omit<CredentialMetadataDto, "credentialId"> = {
-        has2FA: metadataValues.has2FA,
-      }
+      let metadataDto: Omit<CredentialMetadataDto, "credentialId"> | undefined
 
-      if (
-        metadataValues.recoveryEmail &&
-        metadataValues.recoveryEmail.trim() !== ""
-      ) {
-        metadataDto.recoveryEmail = metadataValues.recoveryEmail
-      }
-      if (
-        metadataValues.phoneNumber &&
-        metadataValues.phoneNumber.trim() !== ""
-      ) {
-        metadataDto.phoneNumber = metadataValues.phoneNumber
-      }
-      if (metadataValues.otherInfo && metadataValues.otherInfo.trim() !== "") {
-        metadataDto.otherInfo = metadataValues.otherInfo
-      }
+      if (hasMetadataValues()) {
+        const metadataValues = metadataForm.getValues()
+        metadataDto = {
+          has2FA: metadataValues.has2FA,
+        }
 
-      // Only send metadata if there are meaningful values (not just default has2FA)
-      const hasMetadata =
-        metadataDto.recoveryEmail ||
-        metadataDto.phoneNumber ||
-        metadataDto.otherInfo ||
-        metadataDto.has2FA
+        if (metadataValues.recoveryEmail?.trim()) {
+          metadataDto.recoveryEmail = metadataValues.recoveryEmail
+        }
+        if (metadataValues.phoneNumber?.trim()) {
+          metadataDto.phoneNumber = metadataValues.phoneNumber
+        }
+        if (metadataValues.otherInfo?.trim()) {
+          metadataDto.otherInfo = metadataValues.otherInfo
+        }
+      }
 
       const result = await createCredentialWithMetadata(
         credentialDto,
-        hasMetadata ? metadataDto : undefined
+        metadataDto
       )
-
-      dismiss(loadingToast.id)
 
       if (result.success) {
         toast("Credential saved successfully", "success")
@@ -204,7 +203,6 @@ export function DashboardAddCredentialDialog({
         if (!createMore) {
           handleDialogOpenChange(false)
         } else {
-          // Reset both forms for creating another credential
           credentialForm.reset({
             username: "",
             password: "",
@@ -223,7 +221,7 @@ export function DashboardAddCredentialDialog({
             has2FA: false,
           })
           setPasswordStrength(null)
-          setActiveTab("credential")
+          setShowMetadata(false)
         }
       } else {
         const errorDetails = result.issues
@@ -238,8 +236,6 @@ export function DashboardAddCredentialDialog({
         )
       }
     } catch (error) {
-      dismissAll()
-
       const { message, details } = handleErrors(
         error,
         "Failed to save credential"
@@ -260,8 +256,8 @@ export function DashboardAddCredentialDialog({
       credentialForm.reset()
       metadataForm.reset()
       setCreateMore(false)
+      setShowMetadata(false)
       setPasswordStrength(null)
-      setActiveTab("credential")
     }
     onOpenChange(open)
   }
@@ -276,291 +272,80 @@ export function DashboardAddCredentialDialog({
       createMore={createMore}
       onCreateMoreChange={setCreateMore}
       createMoreText="Create another credential"
-      submitText={
-        activeTab === "credential" ? "Continue to Metadata" : "Save Credential"
-      }
-      formId={activeTab === "credential" ? "credential-form" : "metadata-form"}
+      submitText="Save Credential"
+      formId="credential-form"
       className="sm:max-w-[800px]"
     >
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="credential">Credential</TabsTrigger>
-          <TabsTrigger value="metadata" disabled={activeTab === "credential"}>
-            Metadata
-          </TabsTrigger>
-        </TabsList>
+      <Form {...credentialForm}>
+        <form
+          id="credential-form"
+          onSubmit={(e) => {
+            e.preventDefault()
+            onSubmit()
+          }}
+          className="space-y-6"
+        >
+          <DashboardAddCredentialForm
+            form={credentialForm}
+            platforms={platforms}
+            availableTags={availableTags}
+            passwordStrength={passwordStrength}
+            onPasswordChange={handlePasswordChange}
+            onGeneratePassword={handleGeneratePassword}
+            onCopyPassword={handleCopyPassword}
+            isCopied={isCopied}
+          />
 
-        <TabsContent value="credential" className="space-y-4">
-          <Form {...credentialForm}>
-            <form
-              id="credential-form"
-              onSubmit={credentialForm.handleSubmit(onCredentialSubmit)}
-              className="space-y-4"
-            >
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                {/* Left column - Important fields */}
-                <div className="space-y-4">
-                  <FormField
-                    control={credentialForm.control}
-                    name="platformId"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Platform</FormLabel>
-                        <FormControl>
-                          <ComboboxResponsive
-                            items={platforms.map((platform) => ({
-                              value: platform.id,
-                              label: platform.name,
-                              logo: getPlaceholderImage(
-                                platform.name,
-                                getLogoDevUrlWithToken(platform.logo)
-                              ),
-                            }))}
-                            selectedItem={
-                              platforms.find((p) => p.id === field.value)
-                                ? {
-                                    value: field.value,
-                                    label:
-                                      platforms.find(
-                                        (p) => p.id === field.value
-                                      )?.name || "",
-                                  }
-                                : null
-                            }
-                            onSelect={(item) =>
-                              field.onChange(item?.value || "")
-                            }
-                            placeholder="Select a platform"
-                            searchPlaceholder="Search platforms..."
-                            emptyText="No platforms found."
-                          />
-                        </FormControl>
-                        <FormDescription>
-                          Select the platform for this credential.
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
+          <div className="space-y-4">
+            <Separator />
 
-                {/* Right column - Optional fields */}
-                <div className="space-y-4">
-                  <FormField
-                    control={credentialForm.control}
-                    name="description"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Description</FormLabel>
-                        <FormControl>
-                          <Input {...field} />
-                        </FormControl>
-                        <FormDescription>
-                          Additional information about this account.
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              </div>
-
-              <FormField
-                control={credentialForm.control}
-                name="username"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Identifier</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                    <FormDescription>
-                      Your identifier for this account. This could be your
-                      username, email, phone number, etc.
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={credentialForm.control}
-                name="password"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Password</FormLabel>
-                    <div className="flex w-full gap-2">
-                      <FormControl className="min-w-0 flex-1">
-                        <Input
-                          variant="password"
-                          className="w-full"
-                          {...field}
-                          onChange={(e) => {
-                            field.onChange(e)
-                            setPasswordStrength(
-                              checkPasswordStrength(e.target.value)
-                            )
-                          }}
-                        />
-                      </FormControl>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="icon"
-                        onClick={handleGeneratePassword}
-                        title="Generate secure password"
-                      >
-                        <Icons.refresh className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="icon"
-                        onClick={() =>
-                          copy(credentialForm.getValues("password"))
-                        }
-                        title="Copy password"
-                      >
-                        {isCopied ? (
-                          <Icons.check className="text-success h-4 w-4" />
-                        ) : (
-                          <Icons.copy className="h-4 w-4" />
-                        )}
-                      </Button>
-                    </div>
-                    {passwordStrength && (
-                      <div className="mt-2 space-y-2">
-                        <PasswordStrengthMeter score={passwordStrength.score} />
-                        <div className="text-muted-foreground text-sm">
-                          {passwordStrength.feedback}
-                        </div>
-                      </div>
-                    )}
-                    <FormDescription>
-                      Your secure password. Use the generate button for a strong
-                      password.
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={credentialForm.control}
-                name="tags"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Tags</FormLabel>
-                    <FormControl>
-                      <TagSelector<TagDto>
-                        availableTags={availableTags}
-                        selectedTags={field.value}
-                        onChange={field.onChange}
-                        getValue={(tag) => tag.name}
-                        getLabel={(tag) => tag.name}
-                        createTag={(name) => ({
-                          name,
-                          color: getRandomSoftColor(),
-                          userId: undefined,
-                          containerId: undefined,
-                        })}
-                      />
-                    </FormControl>
-                    <FormDescription>
-                      Add tags to help organize your credentials.
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </form>
-          </Form>
-        </TabsContent>
-
-        <TabsContent value="metadata" className="space-y-4">
-          <Form {...metadataForm}>
-            <form
-              id="metadata-form"
-              onSubmit={metadataForm.handleSubmit(onFinalSubmit)}
-              className="space-y-4"
-            >
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <FormField
-                  control={metadataForm.control}
-                  name="recoveryEmail"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Recovery Email</FormLabel>
-                      <FormControl>
-                        <Input type="email" {...field} />
-                      </FormControl>
-                      <FormDescription>
-                        Email address for account recovery.
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
+            <Collapsible open={showMetadata} onOpenChange={setShowMetadata}>
+              <CollapsibleTrigger asChild>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className={cn(
+                    "hover:bg-muted/50 flex w-full items-center justify-between p-4",
+                    showMetadata && "bg-muted/55"
                   )}
-                />
-
-                <FormField
-                  control={metadataForm.control}
-                  name="phoneNumber"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Phone Number</FormLabel>
-                      <FormControl>
-                        <Input type="tel" {...field} />
-                      </FormControl>
-                      <FormDescription>
-                        Phone number associated with this account.
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <FormField
-                control={metadataForm.control}
-                name="has2FA"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                    <FormControl>
-                      <Checkbox
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
-                    </FormControl>
-                    <div className="space-y-1 leading-none">
-                      <FormLabel>Two-Factor Authentication</FormLabel>
-                      <FormDescription>
-                        This account has two-factor authentication enabled.
-                      </FormDescription>
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2">
+                      <Icons.add className="h-4 w-4" />
+                      <span className="font-medium">
+                        Additional Information
+                      </span>
                     </div>
-                  </FormItem>
-                )}
-              />
+                    {hasMetadataValues() && (
+                      <Badge variant="secondary" className="text-xs">
+                        {getMetadataLabels()}
+                      </Badge>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-muted-foreground text-sm">
+                      {showMetadata ? "Hide" : "Optional"}
+                    </span>
+                    <Icons.chevronDown
+                      className={`h-4 w-4 transition-transform ${
+                        showMetadata ? "rotate-180" : ""
+                      }`}
+                    />
+                  </div>
+                </Button>
+              </CollapsibleTrigger>
 
-              <FormField
-                control={metadataForm.control}
-                name="otherInfo"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Additional Information</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                    <FormDescription>
-                      Any other relevant information about this credential.
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </form>
-          </Form>
-        </TabsContent>
-      </Tabs>
+              <CollapsibleContent className="space-y-4">
+                <div className="bg-muted/55 p-4">
+                  <Form {...metadataForm}>
+                    <DashboardAddCredentialMetadataForm form={metadataForm} />
+                  </Form>
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
+          </div>
+        </form>
+      </Form>
     </AddItemDialog>
   )
 }
