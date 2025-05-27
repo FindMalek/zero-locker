@@ -39,7 +39,6 @@ export async function createCard(data: CardDtoType): Promise<{
           ...validatedData,
           expiryDate,
           userId: session.user.id,
-          createdAt: new Date(),
         },
       })
 

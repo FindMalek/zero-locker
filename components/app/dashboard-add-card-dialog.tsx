@@ -1,53 +1,23 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
+import { CardDto } from "@/schemas/card"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { Copy, RefreshCw } from "lucide-react"
+import { CardProvider, CardStatus, CardType } from "@prisma/client"
 import { useForm } from "react-hook-form"
-import * as z from "zod"
 
-import { checkPasswordStrength, generatePassword } from "@/lib/password"
+import { encryptData, exportKey, generateEncryptionKey } from "@/lib/encryption"
+import { handleErrors } from "@/lib/utils"
+import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard"
+import { useToast } from "@/hooks/use-toast"
 
+import { DashboardAddCardForm } from "@/components/app/dashboard-add-card-form"
 import { AddItemDialog } from "@/components/shared/add-item-dialog"
-import { PasswordStrengthMeter } from "@/components/shared/password-strength-meter"
-import { Button } from "@/components/ui/button"
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
+import { Form } from "@/components/ui/form"
 
-// Define the form schema
-const cardFormSchema = z.object({
-  name: z.string().min(1, "Name is required"),
-  cardNumber: z.string().min(1, "Card number is required"),
-  expiryDate: z.string().min(1, "Expiry date is required"),
-  cvv: z.string().min(1, "CVV is required"),
-  pin: z.string().optional(),
-  description: z.string().optional(),
-  tags: z.string().optional(),
-  status: z.enum(["ACTIVE", "SUSPENDED", "DELETED"]),
-  platformId: z.string().min(1, "Platform is required"),
-})
+import { createCard } from "@/actions/card"
 
-// Define the form values type
-type CardFormValues = z.infer<typeof cardFormSchema>
-
-// Define the card data type that will be sent to the server
-// interface CardData extends Omit<CardFormValues, "tags" | "cvv" | "pin"> {
-//   cvv: string
-//   pin: string
-//   encryptionKey: string
-//   iv: string
-//   tags: string[]
-// }
-
-interface AddCardDialogProps {
+interface CardDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
 }
@@ -55,77 +25,109 @@ interface AddCardDialogProps {
 export function DashboardAddCardDialog({
   open,
   onOpenChange,
-}: AddCardDialogProps) {
-  const [createMore, setCreateMore] = useState(false)
-  const [pinStrength, setPinStrength] = useState<{
-    score: number
-    feedback: string
-  } | null>(null)
+}: CardDialogProps) {
+  const { toast } = useToast()
 
-  const form = useForm<CardFormValues>({
-    resolver: zodResolver(cardFormSchema),
+  const [createMore, setCreateMore] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
+  const { copy, isCopied } = useCopyToClipboard({
+    successDuration: 1500,
+  })
+
+  const form = useForm({
+    resolver: zodResolver(CardDto),
     defaultValues: {
       name: "",
-      cardNumber: "",
-      expiryDate: "",
-      cvv: "",
-      pin: "",
       description: "",
-      tags: "",
-      status: "ACTIVE" as const,
-      platformId: "",
+      type: CardType.CREDIT,
+      provider: CardProvider.VISA,
+      status: CardStatus.ACTIVE,
+      number: "",
+      expiryDate: new Date(),
+      cvv: "",
+      billingAddress: "",
+      cardholderName: "",
+      cardholderEmail: "",
     },
   })
 
-  const handleGeneratePin = () => {
-    const newPin = generatePassword(4)
-    form.setValue("pin", newPin)
-    setPinStrength(checkPasswordStrength(newPin))
+  const handleCopyCvv = () => {
+    copy(form.getValues("cvv"))
   }
 
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text)
-    // You could add a toast notification here
-  }
-
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async function onSubmit(_values: CardFormValues) {
+  async function onSubmit() {
     try {
-      // Generate encryption key
-      // const key = await generateEncryptionKey()
+      setIsSubmitting(true)
 
-      // // Encrypt sensitive data
-      // const { encryptedData: encryptedCvv, iv: cvvIv } = await encryptData(
-      //   values.cvv,
-      //   key
-      // )
-      // const { encryptedData: encryptedPin, iv: pinIv } = values.pin
-      //   ? await encryptData(values.pin, key)
-      //   : { encryptedData: "", iv: "" }
+      const cardData = form.getValues() as CardDto
 
-      // // Export the key for storage
-      // const keyString = await exportKey(key)
+      // Validate form
+      const isValid = await form.trigger()
+      if (!isValid) {
+        toast("Please fill in all required fields", "error")
+        return
+      }
 
-      // const tagsArray = values.tags
-      //   ? values.tags.split(",").map((tag) => tag.trim())
-      //   : []
+      // Encrypt sensitive data
+      const key = await generateEncryptionKey()
+      const encryptCvvResult = await encryptData(cardData.cvv, key)
+      const encryptNumberResult = await encryptData(cardData.number, key)
+      const keyString = await exportKey(key)
 
-      // onSave({
-      //   ...values,
-      //   cvv: encryptedCvv,
-      //   pin: encryptedPin,
-      //   encryptionKey: keyString,
-      //   iv: cvvIv, // Using CVV IV as the main IV
-      //   tags: tagsArray,
-      // })
+      // Create the card DTO with encrypted data
+      const cardDto: CardDto = {
+        ...cardData,
+        number: encryptNumberResult.encryptedData,
+        cvv: encryptCvvResult.encryptedData,
+        // Note: We'll need to add encryption fields to the schema
+        // For now, we'll store the key and IV in a way that works with the current schema
+      }
 
-      if (!createMore) {
-        form.reset()
-        setPinStrength(null)
+      const result = await createCard(cardDto)
+
+      if (result.success) {
+        toast("Card saved successfully", "success")
+
+        if (!createMore) {
+          handleDialogOpenChange(false)
+        } else {
+          form.reset({
+            name: "",
+            description: "",
+            type: CardType.CREDIT,
+            provider: CardProvider.VISA,
+            status: CardStatus.ACTIVE,
+            number: "",
+            expiryDate: new Date(),
+            cvv: "",
+            billingAddress: "",
+            cardholderName: "",
+            cardholderEmail: "",
+          })
+        }
+      } else {
+        const errorDetails = result.issues
+          ? result.issues
+              .map((issue) => `${issue.path.join(".")}: ${issue.message}`)
+              .join(", ")
+          : result.error
+
+        toast(
+          `Failed to save card: ${errorDetails || "Unknown error"}`,
+          "error"
+        )
       }
     } catch (error) {
-      console.error("Error encrypting card data:", error)
-      // Handle error appropriately
+      const { message, details } = handleErrors(error, "Failed to save card")
+      toast(
+        details
+          ? `${message}: ${Array.isArray(details) ? details.join(", ") : details}`
+          : message,
+        "error"
+      )
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -133,7 +135,6 @@ export function DashboardAddCardDialog({
     if (!open) {
       form.reset()
       setCreateMore(false)
-      setPinStrength(null)
     }
     onOpenChange(open)
   }
@@ -144,166 +145,27 @@ export function DashboardAddCardDialog({
       onOpenChange={handleDialogOpenChange}
       title="Add New Card"
       description="Add a new card to your vault. All information is securely stored."
+      isSubmitting={isSubmitting}
       createMore={createMore}
       onCreateMoreChange={setCreateMore}
       createMoreText="Create another card"
       submitText="Save Card"
       formId="card-form"
-      className="sm:max-w-[550px]"
+      className="sm:max-w-[800px]"
     >
       <Form {...form}>
         <form
           id="card-form"
-          onSubmit={form.handleSubmit(onSubmit)}
-          className="space-y-4"
+          onSubmit={(e) => {
+            e.preventDefault()
+            onSubmit()
+          }}
+          className="space-y-6"
         >
-          <FormField
-            control={form.control}
-            name="name"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Card Name</FormLabel>
-                <FormControl>
-                  <Input {...field} />
-                </FormControl>
-                <FormDescription>A name to identify this card.</FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="cardNumber"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Card Number</FormLabel>
-                <FormControl>
-                  <Input {...field} />
-                </FormControl>
-                <FormDescription>Your card number.</FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <div className="grid grid-cols-2 gap-4">
-            <FormField
-              control={form.control}
-              name="expiryDate"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Expiry Date</FormLabel>
-                  <FormControl>
-                    <Input placeholder="MM/YY" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="cvv"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>CVV</FormLabel>
-                  <FormControl>
-                    <Input type="password" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-
-          <FormField
-            control={form.control}
-            name="pin"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>PIN</FormLabel>
-                <div className="flex gap-2">
-                  <FormControl>
-                    <Input
-                      type="password"
-                      {...field}
-                      onChange={(e) => {
-                        field.onChange(e)
-                        setPinStrength(checkPasswordStrength(e.target.value))
-                      }}
-                    />
-                  </FormControl>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="icon"
-                    onClick={handleGeneratePin}
-                    title="Generate secure PIN"
-                  >
-                    <RefreshCw className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="icon"
-                    onClick={() => {
-                      const pin = form.getValues("pin")
-                      if (pin) copyToClipboard(pin)
-                    }}
-                    title="Copy PIN"
-                  >
-                    <Copy className="h-4 w-4" />
-                  </Button>
-                </div>
-                {pinStrength && (
-                  <div className="mt-2 space-y-2">
-                    <PasswordStrengthMeter score={pinStrength.score} />
-                    <div className="text-muted-foreground text-sm">
-                      {pinStrength.feedback}
-                    </div>
-                  </div>
-                )}
-                <FormDescription>
-                  Your card PIN. Use the generate button for a secure PIN.
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="description"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Description</FormLabel>
-                <FormControl>
-                  <Input {...field} />
-                </FormControl>
-                <FormDescription>
-                  Additional information about this card.
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="tags"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Tags</FormLabel>
-                <FormControl>
-                  <Input {...field} />
-                </FormControl>
-                <FormDescription>
-                  Comma-separated tags to categorize this card.
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
+          <DashboardAddCardForm
+            form={form}
+            onCopyCvv={handleCopyCvv}
+            isCopied={isCopied}
           />
         </form>
       </Form>

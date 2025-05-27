@@ -13,7 +13,6 @@ export const CardDto = z.object({
   billingAddress: z.string().min(1, "Billing address is required"),
   cardholderName: z.string().min(1, "Cardholder name is required"),
   cardholderEmail: z.string().email().optional(),
-  userId: z.string(), // Assuming userId is provided during creation
   containerId: z.string().optional(),
 })
 
