@@ -7,7 +7,6 @@ export const CardProviderSchema = z.enum([
   CardProvider.DISCOVER,
   CardProvider.MASTERCARD,
   CardProvider.VISA,
-  CardProvider.OTHER,
   CardProvider.JCB,
   CardProvider.UNIONPAY,
   CardProvider.DINERS_CLUB,
@@ -46,9 +45,9 @@ export const CardDtoSchema = z.object({
   provider: z.nativeEnum(CardProvider),
   status: z.nativeEnum(CardStatus),
   number: z.string().min(1, "Card number is required"),
-  expiryDate: z.coerce.date({ 
+  expiryDate: z.coerce.date({
     required_error: "Expiry date is required",
-    invalid_type_error: "Please enter a valid expiry date (MM/YY)" 
+    invalid_type_error: "Please enter a valid expiry date (MM/YY)",
   }),
   cvv: z.string().min(1, "CVV is required"),
   encryptionKey: z.string().optional(),

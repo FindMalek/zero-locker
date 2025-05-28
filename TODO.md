@@ -7,6 +7,9 @@ The format would be:
 - [ ] Task 2 || Priority
 - [ ] Task 3 || Priority
 
+> NOTE: The MVP is going to be released before the integration of oRPC and TanStack Query
+> So we can ship fast, and worry less about the DX
+
 ## Tasks
 
 - [ ] Implement oRPC instead of Next.js Server Actions || Low
@@ -32,6 +35,13 @@ The format would be:
       But for now the `Json` type is good enough.
       Make sure to create a component to enter the key / value pairs.
       TODO: Create a model for this. with encryption.
+
+- [ ] Update Login and Register page
+      Make a better UI for the login page
+      Make a cool looking register page with a split layout like Supabase
+
+- [ ] Update the landing page to be more responsive
+      Also make sure the data of the cards is actually correct
 
 ### Finished Tasks
 

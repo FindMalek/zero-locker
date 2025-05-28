@@ -17,7 +17,6 @@ export const CARD_PROVIDER_ICON_TYPE = {
   [CardProviderEnum.JCB]: "Jcb",
   [CardProviderEnum.UNIONPAY]: "Unionpay",
   [CardProviderEnum.DINERS_CLUB]: "Diners",
-  [CardProviderEnum.OTHER]: "Generic",
 } as const
 
 export const CARD_TYPE_MAPPING: Record<string, CardProviderInfer> = {

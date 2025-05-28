@@ -4,12 +4,10 @@ import React, { useId, useState } from "react"
 import { CardEntity } from "@/entities/card/entity"
 import { LIST_CARD_PROVIDERS, type CardProviderInfer } from "@/schemas/card"
 import { usePaymentInputs } from "react-payment-inputs"
-import images, { type CardImages } from "react-payment-inputs/images"
-import { PaymentIcon } from "react-svg-credit-card-payment-icons"
 
-import { CARD_PROVIDER_ICON_TYPE, CARD_TYPE_MAPPING } from "@/config/consts"
+import { CARD_TYPE_MAPPING } from "@/config/consts"
 
-import { Icons } from "@/components/shared/icons"
+import { CardIcon } from "@/components/shared/card-icon"
 import { Input } from "@/components/ui/input"
 import {
   Select,
@@ -39,51 +37,18 @@ export function CardPaymentInputs({
   const [manualCardType, setManualCardType] =
     useState<CardProviderInfer | null>(null)
 
-  const {
-    meta,
-    getCardNumberProps,
-    getExpiryDateProps,
-    getCVCProps,
-    getCardImageProps,
-  } = usePaymentInputs()
+  const { meta, getCardNumberProps, getExpiryDateProps, getCVCProps } =
+    usePaymentInputs()
 
-  // Convert react-payment-inputs card type to our enum
-  const convertCardType = (cardType: string | undefined): CardProviderInfer | null => {
+  const convertCardType = (
+    cardType: string | undefined
+  ): CardProviderInfer | null => {
     if (!cardType) return null
     return CARD_TYPE_MAPPING[cardType.toLowerCase()] || null
   }
 
   const effectiveCardType =
     manualCardType || convertCardType(meta.cardType?.type)
-
-  const renderCardImage = () => {
-    if (manualCardType) {
-      const iconType = CARD_PROVIDER_ICON_TYPE[manualCardType]
-      return (
-        <div className="relative">
-          <PaymentIcon
-            type={iconType}
-            format="flatRounded"
-            width={20}
-            height={12}
-          />
-          <div className="absolute -right-1 -top-1 h-2 w-2 rounded-full bg-orange-500"></div>
-        </div>
-      )
-    } else if (meta.cardType) {
-      return (
-        <svg
-          className="overflow-hidden rounded-sm"
-          {...getCardImageProps({
-            images: images as unknown as CardImages,
-          })}
-          width={20}
-        />
-      )
-    } else {
-      return <Icons.creditCard strokeWidth={2} className="h-5 w-5" />
-    }
-  }
 
   React.useEffect(() => {
     if (effectiveCardType) {
@@ -127,17 +92,18 @@ export function CardPaymentInputs({
                   className="h-auto w-auto border-0 bg-transparent p-0 shadow-none hover:bg-transparent focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 dark:bg-transparent dark:hover:bg-transparent"
                   hideIcon
                 >
-                  {renderCardImage()}
+                  <CardIcon
+                    manualCardType={manualCardType}
+                    detectedCardType={meta.cardType?.type}
+                  />
                 </SelectTrigger>
                 <SelectContent>
                   {LIST_CARD_PROVIDERS.map((provider) => (
                     <SelectItem key={provider} value={provider}>
                       <div className="flex items-center gap-2">
-                        <PaymentIcon
-                          type={CARD_PROVIDER_ICON_TYPE[provider]}
-                          format="flatRounded"
-                          width={20}
-                          height={12}
+                        <CardIcon
+                          manualCardType={provider}
+                          showManualIndicator={false}
                         />
                         {CardEntity.convertCardProviderToString(provider)}
                       </div>

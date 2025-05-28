@@ -62,8 +62,6 @@ export class CardEntity {
         return CardProviderEnum.UNIONPAY
       case CardProvider.DINERS_CLUB:
         return CardProviderEnum.DINERS_CLUB
-      case CardProvider.OTHER:
-        return CardProviderEnum.OTHER
     }
   }
 
@@ -85,8 +83,6 @@ export class CardEntity {
         return CardProvider.UNIONPAY
       case CardProviderEnum.DINERS_CLUB:
         return CardProvider.DINERS_CLUB
-      case CardProviderEnum.OTHER:
-        return CardProvider.OTHER
     }
   }
 
@@ -106,8 +102,6 @@ export class CardEntity {
         return "Unionpay"
       case CardProviderEnum.DINERS_CLUB:
         return "Dinersclub"
-      case CardProviderEnum.OTHER:
-        return "Other"
       default:
         return "OTHER"
     }

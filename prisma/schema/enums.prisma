@@ -5,7 +5,6 @@
  * @property DATABASE_URL - Database URL.
  * @property CLOUD_STORAGE_KEY - Cloud storage key.
  * @property THIRD_PARTY_API_KEY - Third-party API key.
- * @property OTHER - Other types of secrets.
  */
 enum SecretType {
   API_KEY
@@ -13,7 +12,7 @@ enum SecretType {
   DATABASE_URL
   CLOUD_STORAGE_KEY
   THIRD_PARTY_API_KEY
-  OTHER
+  
 }
 
 /**
@@ -65,7 +64,6 @@ enum SecretStatus {
  * @property DINERS_CLUB - Diners Club card.
  * @property JCB - JCB card.
  * @property UNIONPAY - UnionPay card.
- * @property OTHER - Other types of card providers.
  */
 enum CardProvider {
   VISA
@@ -75,7 +73,6 @@ enum CardProvider {
   DINERS_CLUB
   JCB
   UNIONPAY
-  OTHER
 }
 
 /**

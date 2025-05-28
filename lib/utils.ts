@@ -121,18 +121,6 @@ export function formatFullDate(date: Date | string | number): string {
 }
 
 /**
- * Format a Date object to MM/YY format for card expiry display
- * @param date The date to format
- * @returns Formatted string in MM/YY format or empty string if date is undefined
- */
-export function formatDateToMMYY(date: Date | undefined): string {
-  if (!date) return ""
-  const month = String(date.getMonth() + 1).padStart(2, "0")
-  const year = String(date.getFullYear()).slice(-2)
-  return `${month}/${year}`
-}
-
-/**
  * Parse MM/YY format string to Date object for card expiry dates
  * @param mmyy String in MM/YY format
  * @returns Date object set to the first day of the specified month/year, or undefined if invalid
@@ -140,17 +128,20 @@ export function formatDateToMMYY(date: Date | undefined): string {
 export function parseMMYYToDate(mmyy: string): Date | undefined {
   if (!mmyy || !mmyy.includes("/")) return undefined
   const [month, year] = mmyy.split("/")
-  
+
   // Validate month and year
   const monthNum = parseInt(month)
   const yearNum = parseInt(year)
-  
+
   if (isNaN(monthNum) || isNaN(yearNum) || monthNum < 1 || monthNum > 12) {
     return undefined
   }
-  
-  const fullYear = yearNum < 50 ? `20${yearNum.toString().padStart(2, '0')}` : `19${yearNum.toString().padStart(2, '0')}`
-  return new Date(`${fullYear}-${month.padStart(2, '0')}-01`)
+
+  const fullYear =
+    yearNum < 50
+      ? `20${yearNum.toString().padStart(2, "0")}`
+      : `19${yearNum.toString().padStart(2, "0")}`
+  return new Date(`${fullYear}-${month.padStart(2, "0")}-01`)
 }
 
 /**

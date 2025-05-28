@@ -8,12 +8,7 @@ import { CardStatus } from "@prisma/client"
 import { ChevronDown, Plus } from "lucide-react"
 import { UseFormReturn } from "react-hook-form"
 
-import {
-  cn,
-  formatDateToMMYY,
-  getMetadataLabels,
-  parseMMYYToDate,
-} from "@/lib/utils"
+import { cn, getMetadataLabels, parseMMYYToDate } from "@/lib/utils"
 
 import { CardPaymentInputs } from "@/components/shared/card-payment-inputs"
 import { CardStatusIndicator } from "@/components/shared/card-status-indicator"
