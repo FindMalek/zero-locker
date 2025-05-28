@@ -43,6 +43,7 @@ export function DashboardAddCardDialog({
       provider: CardProvider.VISA,
       status: CardStatus.ACTIVE,
       number: "",
+      expiryDate: "",
       cvv: "",
       encryptionKey: "",
       iv: "",
@@ -82,7 +83,7 @@ export function DashboardAddCardDialog({
         number: encryptNumberResult.encryptedData,
         cvv: encryptCvvResult.encryptedData,
         encryptionKey: keyString,
-        iv: encryptCvvResult.iv, // Use the IV from one of the encryptions
+        iv: encryptCvvResult.iv,
       }
 
       const result = await createCard(cardDto)
@@ -101,6 +102,7 @@ export function DashboardAddCardDialog({
             provider: CardProvider.VISA,
             status: CardStatus.ACTIVE,
             number: "",
+            expiryDate: "",
             cvv: "",
             encryptionKey: "",
             iv: "",

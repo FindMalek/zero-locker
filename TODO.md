@@ -43,6 +43,9 @@ The format would be:
 - [ ] Update the landing page to be more responsive
       Also make sure the data of the cards is actually correct
 
+- [ ] Automatic `CardSatuts` detection
+      e.g. if the date is due, then automatically its expired
+
 ### Finished Tasks
 
 - [x] Change return types of the Server Actions || High

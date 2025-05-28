@@ -8,7 +8,8 @@ import { CardStatus } from "@prisma/client"
 import { ChevronDown, Plus } from "lucide-react"
 import { UseFormReturn } from "react-hook-form"
 
-import { cn, getMetadataLabels, parseMMYYToDate } from "@/lib/utils"
+import { CardExpiryDateUtils } from "@/lib/card-expiry-utils"
+import { cn, getMetadataLabels } from "@/lib/utils"
 
 import { CardPaymentInputs } from "@/components/shared/card-payment-inputs"
 import { CardStatusIndicator } from "@/components/shared/card-status-indicator"
@@ -107,10 +108,15 @@ export function DashboardAddCardForm({ form, availableTags }: CardFormProps) {
             form.setValue("number", value)
           }}
           onExpiryChange={(value) => {
-            const date = parseMMYYToDate(value)
-            if (date) {
-              form.setValue("expiryDate", date)
-            }
+            CardExpiryDateUtils.handleFormExpiryChange(
+              value,
+              (fieldName, fieldValue) => {
+                if (fieldName === "expiryDate") {
+                  form.setValue("expiryDate", fieldValue)
+                }
+              },
+              "expiryDate"
+            )
           }}
           onCVCChange={(value) => {
             form.setValue("cvv", value)

@@ -2,6 +2,8 @@ import { TagDto } from "@/schemas/tag"
 import { CardProvider, CardStatus, CardType } from "@prisma/client"
 import { z } from "zod"
 
+import { CardExpiryDateUtils } from "@/lib/card-expiry-utils"
+
 export const CardProviderSchema = z.enum([
   CardProvider.AMEX,
   CardProvider.DISCOVER,
@@ -45,10 +47,20 @@ export const CardDtoSchema = z.object({
   provider: z.nativeEnum(CardProvider),
   status: z.nativeEnum(CardStatus),
   number: z.string().min(1, "Card number is required"),
-  expiryDate: z.coerce.date({
-    required_error: "Expiry date is required",
-    invalid_type_error: "Please enter a valid expiry date (MM/YY)",
-  }),
+  expiryDate: z
+    .union([z.date(), z.string().min(1, "Expiry date is required")])
+    .refine(
+      (val) => {
+        if (val instanceof Date) return !isNaN(val.getTime())
+        if (typeof val === "string") {
+          return CardExpiryDateUtils.isValidMMYYFormat(val)
+        }
+        return false
+      },
+      {
+        message: "Please enter a valid expiry date (MM/YY format)",
+      }
+    ),
   cvv: z.string().min(1, "CVV is required"),
   encryptionKey: z.string().optional(),
   iv: z.string().optional(),

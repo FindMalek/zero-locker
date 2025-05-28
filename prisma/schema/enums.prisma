@@ -12,7 +12,6 @@ enum SecretType {
   DATABASE_URL
   CLOUD_STORAGE_KEY
   THIRD_PARTY_API_KEY
-  
 }
 
 /**

@@ -11,6 +11,7 @@ import { Prisma } from "@prisma/client"
 import { z } from "zod"
 
 import { verifySession } from "@/lib/auth/verify"
+import { CardExpiryDateUtils } from "@/lib/card-expiry-utils"
 import { getOrReturnEmptyObject } from "@/lib/utils"
 
 import { createTagsAndGetConnections } from "@/actions/tag"
@@ -26,52 +27,44 @@ export async function createCard(data: CardDtoType): Promise<{
 }> {
   try {
     const session = await verifySession()
-
-    // Validate using our DTO schema
     const validatedData = CardDtoSchema.parse(data)
 
-    // Format expiry date
-    const expiryDate = new Date(validatedData.expiryDate)
+    // Handle expiry date using shared utility
+    const expiryDate = CardExpiryDateUtils.processServerExpiryDate(
+      validatedData.expiryDate
+    )
 
-    try {
-      // Handle tags if provided
-      const tagConnections = validatedData.tags?.length
-        ? await createTagsAndGetConnections(
-            validatedData.tags,
-            session.user.id,
-            validatedData.containerId
-          )
-        : { connect: [] }
+    const tagConnections = await createTagsAndGetConnections(
+      validatedData.tags,
+      session.user.id,
+      validatedData.containerId
+    )
 
-      // Create card with Prisma
-      const card = await database.card.create({
-        data: {
-          name: validatedData.name,
-          description: validatedData.description,
-          notes: validatedData.notes,
-          type: validatedData.type,
-          provider: validatedData.provider,
-          status: validatedData.status,
-          number: validatedData.number,
-          expiryDate,
-          cvv: validatedData.cvv,
-          encryptionKey: validatedData.encryptionKey || null,
-          iv: validatedData.iv || null,
-          billingAddress: validatedData.billingAddress,
-          cardholderName: validatedData.cardholderName,
-          cardholderEmail: validatedData.cardholderEmail,
-          userId: session.user.id,
-          tags: tagConnections,
-          ...getOrReturnEmptyObject(validatedData.containerId, "containerId"),
-        },
-      })
+    const card = await database.card.create({
+      data: {
+        name: validatedData.name,
+        description: validatedData.description,
+        notes: validatedData.notes,
+        type: validatedData.type,
+        provider: validatedData.provider,
+        status: validatedData.status,
+        number: validatedData.number,
+        expiryDate,
+        cvv: validatedData.cvv,
+        encryptionKey: validatedData.encryptionKey || null,
+        iv: validatedData.iv || null,
+        billingAddress: validatedData.billingAddress,
+        cardholderName: validatedData.cardholderName,
+        cardholderEmail: validatedData.cardholderEmail,
+        userId: session.user.id,
+        tags: tagConnections,
+        ...getOrReturnEmptyObject(validatedData.containerId, "containerId"),
+      },
+    })
 
-      return {
-        success: true,
-        card: CardEntity.getSimpleRo(card),
-      }
-    } catch (error) {
-      throw error
+    return {
+      success: true,
+      card: CardEntity.getSimpleRo(card),
     }
   } catch (error) {
     if (error instanceof Error && error.message === "Not authenticated") {
@@ -177,7 +170,9 @@ export async function updateCard(
     // Format expiry date if provided
     const updateData: any = { ...validatedData }
     if (validatedData.expiryDate) {
-      updateData.expiryDate = new Date(validatedData.expiryDate)
+      updateData.expiryDate = CardExpiryDateUtils.processServerExpiryDate(
+        validatedData.expiryDate
+      )
     }
 
     try {
