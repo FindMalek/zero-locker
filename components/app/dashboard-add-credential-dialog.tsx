@@ -13,7 +13,7 @@ import { useForm } from "react-hook-form"
 
 import { encryptData, exportKey, generateEncryptionKey } from "@/lib/encryption"
 import { checkPasswordStrength, generatePassword } from "@/lib/password"
-import { cn, handleErrors } from "@/lib/utils"
+import { cn, getMetadataLabels, handleErrors } from "@/lib/utils"
 import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard"
 import { usePlatforms } from "@/hooks/use-platforms"
 import { useTags } from "@/hooks/use-tags"
@@ -79,7 +79,7 @@ export function DashboardAddCredentialDialog({
     defaultValues: {
       recoveryEmail: "",
       phoneNumber: "",
-      otherInfo: "",
+      otherInfo: [],
       has2FA: false,
       credentialId: "",
     },
@@ -116,22 +116,21 @@ export function DashboardAddCredentialDialog({
     return (
       values.recoveryEmail?.trim() ||
       values.phoneNumber?.trim() ||
-      values.otherInfo?.trim() ||
+      (values.otherInfo && values.otherInfo.length > 0) ||
       values.has2FA
     )
   }
 
   // Get labels for metadata fields that have values
-  const getMetadataLabels = () => {
+  const getMetadataLabelsForCredential = () => {
     const values = metadataForm.getValues()
-    const labels = []
-
-    if (values.recoveryEmail?.trim()) labels.push("Email")
-    if (values.phoneNumber?.trim()) labels.push("Phone")
-    if (values.has2FA) labels.push("2FA")
-    if (values.otherInfo?.trim()) labels.push("Notes")
-
-    return labels.join(", ")
+    const fieldMappings = {
+      recoveryEmail: "Email",
+      phoneNumber: "Phone",
+      has2FA: "2FA",
+      otherInfo: "Notes",
+    }
+    return getMetadataLabels(values, fieldMappings, 4)
   }
 
   async function onSubmit() {
@@ -187,7 +186,7 @@ export function DashboardAddCredentialDialog({
         if (metadataValues.phoneNumber?.trim()) {
           metadataDto.phoneNumber = metadataValues.phoneNumber
         }
-        if (metadataValues.otherInfo?.trim()) {
+        if (metadataValues.otherInfo && metadataValues.otherInfo.length > 0) {
           metadataDto.otherInfo = metadataValues.otherInfo
         }
       }
@@ -217,7 +216,7 @@ export function DashboardAddCredentialDialog({
           metadataForm.reset({
             recoveryEmail: "",
             phoneNumber: "",
-            otherInfo: "",
+            otherInfo: [],
             has2FA: false,
           })
           setPasswordStrength(null)
@@ -318,7 +317,7 @@ export function DashboardAddCredentialDialog({
                     </div>
                     {hasMetadataValues() && (
                       <Badge variant="secondary" className="text-xs">
-                        {getMetadataLabels()}
+                        {getMetadataLabelsForCredential()}
                       </Badge>
                     )}
                   </div>

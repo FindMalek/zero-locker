@@ -9,10 +9,12 @@ import { z } from "zod"
 export const ActivityTypeSchema = z.enum(["CREATED", "UPDATED", "COPIED"])
 export const ActivityTypeEnum = ActivityTypeSchema.enum
 export type ActivityType = z.infer<typeof ActivityTypeSchema>
+export const LIST_ACTIVITY_TYPE = Object.values(ActivityTypeEnum)
 
 export const RecentItemTypeSchema = z.enum(["CREDENTIAL", "CARD", "SECRET"])
 export const RecentItemTypeEnum = RecentItemTypeSchema.enum
 export type RecentItemType = z.infer<typeof RecentItemTypeSchema>
+export const LIST_RECENT_ITEM_TYPE = Object.values(RecentItemTypeEnum)
 
 export const RecentItemBaseSchema = z.object({
   id: z.string(),

@@ -1,17 +1,15 @@
 "use server"
 
-import { headers } from "next/headers"
 import { CardEntity } from "@/entities/card"
 import { database } from "@/prisma/client"
 import {
-  CardDto,
+  CardDtoSchema,
   CardSimpleRo,
   type CardDto as CardDtoType,
 } from "@/schemas/card"
 import { Prisma } from "@prisma/client"
 import { z } from "zod"
 
-import { auth } from "@/lib/auth/server"
 import { verifySession } from "@/lib/auth/verify"
 import { getOrReturnEmptyObject } from "@/lib/utils"
 
@@ -30,14 +28,14 @@ export async function createCard(data: CardDtoType): Promise<{
     const session = await verifySession()
 
     // Validate using our DTO schema
-    const validatedData = CardDto.parse(data)
+    const validatedData = CardDtoSchema.parse(data)
 
     // Format expiry date
     const expiryDate = new Date(validatedData.expiryDate)
 
     try {
       // Handle tags if provided
-      const tagConnections = validatedData.tags?.length 
+      const tagConnections = validatedData.tags?.length
         ? await createTagsAndGetConnections(
             validatedData.tags,
             session.user.id,
@@ -173,7 +171,7 @@ export async function updateCard(
     }
 
     // Validate using our DTO schema (partial)
-    const partialCardSchema = CardDto.partial()
+    const partialCardSchema = CardDtoSchema.partial()
     const validatedData = partialCardSchema.parse(data)
 
     // Format expiry date if provided

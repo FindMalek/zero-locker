@@ -1,15 +1,14 @@
 "use client"
 
-import { useEffect, useState } from "react"
-import { CardDto } from "@/schemas/card"
+import { useState } from "react"
+import { CardDto, CardDtoSchema } from "@/schemas/card"
 import { TagDto } from "@/schemas/tag"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { CardProvider, CardStatus, CardType } from "@prisma/client"
 import { useForm } from "react-hook-form"
 
 import { encryptData, exportKey, generateEncryptionKey } from "@/lib/encryption"
-import { handleErrors, getOrReturnEmptyObject } from "@/lib/utils"
-import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard"
+import { handleErrors } from "@/lib/utils"
 import { useToast } from "@/hooks/use-toast"
 
 import { DashboardAddCardForm } from "@/components/app/dashboard-add-card-form"
@@ -17,7 +16,6 @@ import { AddItemDialog } from "@/components/shared/add-item-dialog"
 import { Form } from "@/components/ui/form"
 
 import { createCard } from "@/actions/card"
-import { createTagsAndGetConnections } from "@/actions/tag"
 
 interface CardDialogProps {
   open: boolean
@@ -35,12 +33,8 @@ export function DashboardAddCardDialog({
   const [createMore, setCreateMore] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const { copy, isCopied } = useCopyToClipboard({
-    successDuration: 1500,
-  })
-
   const form = useForm({
-    resolver: zodResolver(CardDto),
+    resolver: zodResolver(CardDtoSchema),
     defaultValues: {
       name: "",
       description: "",
@@ -59,10 +53,6 @@ export function DashboardAddCardDialog({
       tags: [],
     },
   })
-
-  const handleCopyCvv = () => {
-    copy(form.getValues("cvv"))
-  }
 
   async function onSubmit() {
     try {
@@ -174,12 +164,7 @@ export function DashboardAddCardDialog({
           }}
           className="space-y-6"
         >
-          <DashboardAddCardForm
-            form={form}
-            availableTags={availableTags}
-            onCopyCvv={handleCopyCvv}
-            isCopied={isCopied}
-          />
+          <DashboardAddCardForm form={form} availableTags={availableTags} />
         </form>
       </Form>
     </AddItemDialog>

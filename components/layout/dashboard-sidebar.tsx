@@ -14,11 +14,11 @@ import {
   SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
-  SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarSeparator,
 } from "@/components/ui/sidebar"
 
 interface DashboardSidebarProps extends React.ComponentProps<typeof Sidebar> {
@@ -47,14 +47,18 @@ export function DashboardSidebar({ user, ...props }: DashboardSidebarProps) {
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Items</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
+              <SidebarSeparator />
+
               <DashboardSidebarMenuItemComponent
                 href="/dashboard"
                 icon={<Icons.home className="h-4 w-4" />}
                 label="Overview"
               />
+
+              <SidebarSeparator />
+
               <DashboardSidebarMenuItemComponent
                 href="/dashboard/accounts"
                 icon={<Icons.user className="h-4 w-4" />}
@@ -70,10 +74,12 @@ export function DashboardSidebar({ user, ...props }: DashboardSidebarProps) {
                 icon={<Icons.key className="h-4 w-4" />}
                 label="Secure Notes"
               />
+
+              <SidebarSeparator />
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
-      </SidebarContent>{" "}
+      </SidebarContent>
       <SidebarFooter>
         <DashboardNavUser user={user} />
       </SidebarFooter>

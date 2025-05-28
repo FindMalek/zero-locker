@@ -121,6 +121,30 @@ export function formatFullDate(date: Date | string | number): string {
 }
 
 /**
+ * Format a Date object to MM/YY format for card expiry display
+ * @param date The date to format
+ * @returns Formatted string in MM/YY format or empty string if date is undefined
+ */
+export function formatDateToMMYY(date: Date | undefined): string {
+  if (!date) return ""
+  const month = String(date.getMonth() + 1).padStart(2, "0")
+  const year = String(date.getFullYear()).slice(-2)
+  return `${month}/${year}`
+}
+
+/**
+ * Parse MM/YY format string to Date object for card expiry dates
+ * @param mmyy String in MM/YY format
+ * @returns Date object set to the first day of the specified month/year
+ */
+export function parseMMYYToDate(mmyy: string): Date {
+  if (!mmyy || !mmyy.includes("/")) return new Date()
+  const [month, year] = mmyy.split("/")
+  const fullYear = parseInt(year) < 50 ? `20${year}` : `19${year}`
+  return new Date(`${fullYear}-${month}-01`)
+}
+
+/**
  * Process different types of errors and return standardized error messages
  *
  * @param error The error to process (can be any type)
@@ -236,4 +260,50 @@ export function getLogoDevUrlWithToken(url: string | null) {
   }
 
   return `${url}?token=${env.NEXT_PUBLIC_LOGO_DEV_TOKEN}&format=png`
+}
+
+/**
+ * Generate metadata labels from form values based on field mappings
+ * @param values The form values object
+ * @param fieldMappings Object mapping field names to their display labels
+ * @param maxLabels Maximum number of labels to show before truncating with "..."
+ * @returns Formatted string of labels
+ */
+export function getMetadataLabels(
+  values: Record<string, unknown>,
+  fieldMappings: Record<string, string>,
+  maxLabels: number = 2
+): string {
+  const labels: string[] = []
+
+  for (const [fieldName, label] of Object.entries(fieldMappings)) {
+    const value = values[fieldName]
+
+    // Check if field has a meaningful value
+    if (value !== undefined && value !== null && value !== "") {
+      // Handle arrays (like otherInfo)
+      if (Array.isArray(value) && value.length > 0) {
+        labels.push(label)
+      }
+      // Handle booleans (like has2FA)
+      else if (typeof value === "boolean" && value) {
+        labels.push(label)
+      }
+      // Handle strings (trim whitespace)
+      else if (typeof value === "string" && value.trim()) {
+        labels.push(label)
+      }
+      // Handle other truthy values
+      else if (value) {
+        labels.push(label)
+      }
+    }
+  }
+
+  if (labels.length === 0) return ""
+
+  const displayLabels = labels.slice(0, maxLabels)
+  const hasMore = labels.length > maxLabels
+
+  return displayLabels.join(", ") + (hasMore ? "..." : "")
 }

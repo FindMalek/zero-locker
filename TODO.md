@@ -14,13 +14,24 @@ The format would be:
 
 - [ ] Use Tanstack Query for reloading data
 
-- [ ] Usage of 'logo.dev' for `Platforms` model
-
 - [ ] In the `Credential` model changes
       Change the `username` to `identifier` to make it more clear that it could be anything.
 
 - [ ] In the `CredentialMetadata` model changes
       The `additionalInfo` field should be a JSON object, of the user's choice.
+
+- [ ] The `CardHistory` is not being used.
+      Please remove it and any use for it.
+
+- [ ] Encyption of values
+      I noticed a lot of use to these `iv`, `encryptionKey`, `VALUE` fields.
+      I would like to create a Model to store these values. and use it in the `Credential` and `Card` models, or anything that needs encryption.
+
+- [ ] For the `otherInfo` field in the `Credential` and `Card` models.
+      We should create a new model to store the information.
+      But for now the `Json` type is good enough.
+      Make sure to create a component to enter the key / value pairs.
+      TODO: Create a model for this. with encryption.
 
 ### Finished Tasks
 
@@ -34,3 +45,11 @@ The format would be:
 - [x] We should change the `Credential`, like `loginUrl` is not neccesary. Because that could be stored in the `Platform` model.
 
 - [x] Finish editing the `DashboardAddCredentialDialog`
+
+- [x] Usage of 'logo.dev' for `Platforms` model
+
+- [x] Create a list Zod Object for these: - [x] `CardProvider` - [x] `CardType` - [x] `CardStatus`
+
+- [x] The `CardPaymentInputs` component changes
+      I would like to move this component to `/shared` folder.
+      Also if we couldnt recognize the card type, we should make the image a Select component, with the options being the `CardProvider` enum, and the user could either select the provider, or enter a new Card Provider.

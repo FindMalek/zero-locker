@@ -2,13 +2,49 @@ import { TagDto } from "@/schemas/tag"
 import { CardProvider, CardStatus, CardType } from "@prisma/client"
 import { z } from "zod"
 
-export const CardDto = z.object({
+export const CardProviderSchema = z.enum([
+  CardProvider.AMEX,
+  CardProvider.DISCOVER,
+  CardProvider.MASTERCARD,
+  CardProvider.VISA,
+  CardProvider.OTHER,
+  CardProvider.JCB,
+  CardProvider.UNIONPAY,
+  CardProvider.DINERS_CLUB,
+])
+export const CardProviderEnum = CardProviderSchema.enum
+export type CardProviderInfer = z.infer<typeof CardProviderSchema>
+export const LIST_CARD_PROVIDERS = Object.values(CardProviderEnum)
+
+export const CardTypeSchema = z.enum([
+  CardType.CREDIT,
+  CardType.DEBIT,
+  CardType.PREPAID,
+  CardType.VIRTUAL,
+  CardType.NATIONAL,
+])
+export const CardTypeEnum = CardTypeSchema.enum
+export type CardTypeInfer = z.infer<typeof CardTypeSchema>
+export const LIST_CARD_TYPES = Object.values(CardTypeEnum)
+
+export const CardStatusSchema = z.enum([
+  CardStatus.ACTIVE,
+  CardStatus.EXPIRED,
+  CardStatus.INACTIVE,
+  CardStatus.BLOCKED,
+  CardStatus.LOST,
+])
+export const CardStatusEnum = CardStatusSchema.enum
+export type CardStatusInfer = z.infer<typeof CardStatusSchema>
+export const LIST_CARD_STATUSES = Object.values(CardStatusEnum)
+
+export const CardDtoSchema = z.object({
   name: z.string().min(1, "Name is required"),
   description: z.string().optional(),
   notes: z.string().optional(),
   type: z.nativeEnum(CardType),
   provider: z.nativeEnum(CardProvider),
-  status: z.nativeEnum(CardStatus).default(CardStatus.ACTIVE),
+  status: z.nativeEnum(CardStatus),
   number: z.string().min(1, "Card number is required"),
   expiryDate: z.coerce.date(),
   cvv: z.string().min(1, "CVV is required"),
@@ -17,7 +53,7 @@ export const CardDto = z.object({
   billingAddress: z.string().optional(),
   cardholderName: z.string().min(1, "Cardholder name is required"),
   cardholderEmail: z.string().email().optional(),
-  tags: z.array(TagDto).default([]),
+  tags: z.array(TagDto),
   containerId: z.string().optional(),
 })
 
@@ -91,7 +127,7 @@ export const CardSimpleRoSchema = z.object({
   containerId: z.string().nullable(),
 })
 
-export type CardDto = z.infer<typeof CardDto>
+export type CardDto = z.infer<typeof CardDtoSchema>
 export type CardSimpleRo = z.infer<typeof CardSimpleRoSchema>
 export type CardMetadataDto = z.infer<typeof CardMetadataDto>
 export type CardMetadataSimpleRo = z.infer<typeof CardMetadataSimpleRo>

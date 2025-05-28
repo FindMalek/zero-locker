@@ -22,14 +22,14 @@ enum SecretType {
  * @property EXPIRED - Card is expired.
  * @property INACTIVE - Card is inactive.
  * @property LOST - Card is lost.
- * @property STOLEN - Card is stolen.
+ * @property BLOCKED - Card is blocked.
  */
 enum CardStatus {
   ACTIVE
   EXPIRED
   INACTIVE
   LOST
-  STOLEN
+  BLOCKED
 }
 
 /**
@@ -84,14 +84,14 @@ enum CardProvider {
  * @property CREDIT - Credit card.
  * @property VIRTUAL - Virtual card.
  * @property NATIONAL - National card.
- * @property OTHER - Other types of cards.
+ * @property PREPAID - Prepaid card..
  */
 enum CardType {
   DEBIT
   CREDIT
   VIRTUAL
   NATIONAL
-  OTHER
+  PREPAID
 }
 
 /**
