@@ -93,21 +93,21 @@ export class CardEntity {
   static convertCardProviderToString(provider: CardProviderInfer): string {
     switch (provider) {
       case CardProviderEnum.VISA:
-        return "VISA"
+        return "Visa"
       case CardProviderEnum.MASTERCARD:
-        return "MASTERCARD"
+        return "Mastercard"
       case CardProviderEnum.AMEX:
-        return "AMEX"
+        return "Amex"
       case CardProviderEnum.DISCOVER:
-        return "DISCOVER"
+        return "Discover"
       case CardProviderEnum.JCB:
-        return "JCB"
+        return "Jcb"
       case CardProviderEnum.UNIONPAY:
-        return "UNIONPAY"
+        return "Unionpay"
       case CardProviderEnum.DINERS_CLUB:
-        return "DINERS_CLUB"
+        return "Dinersclub"
       case CardProviderEnum.OTHER:
-        return "OTHER"
+        return "Other"
       default:
         return "OTHER"
     }

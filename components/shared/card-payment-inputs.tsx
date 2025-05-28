@@ -2,18 +2,20 @@
 
 import React, { useId, useState } from "react"
 import { CardEntity } from "@/entities/card/entity"
-import { CardProviderInfer, LIST_CARD_PROVIDERS } from "@/schemas/card"
-import { CreditCard } from "lucide-react"
+import { LIST_CARD_PROVIDERS, type CardProviderInfer } from "@/schemas/card"
 import { usePaymentInputs } from "react-payment-inputs"
 import images, { type CardImages } from "react-payment-inputs/images"
+import { PaymentIcon } from "react-svg-credit-card-payment-icons"
 
+import { CARD_PROVIDER_ICON_TYPE } from "@/config/consts"
+
+import { Icons } from "@/components/shared/icons"
 import { Input } from "@/components/ui/input"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
 } from "@/components/ui/select"
 
 interface CardPaymentInputsProps {
@@ -42,6 +44,7 @@ export function CardPaymentInputs({
   const id = useId()
   const [manualCardType, setManualCardType] =
     useState<CardProviderInfer | null>(null)
+
   const {
     meta,
     getCardNumberProps,
@@ -50,22 +53,44 @@ export function CardPaymentInputs({
     getCardImageProps,
   } = usePaymentInputs()
 
-  // Determine if we should show manual selection
-  const shouldShowManualSelection =
-    !meta.cardType && cardNumber && cardNumber.length > 4
-
-  // Use manual selection if available, otherwise use detected type
   const effectiveCardType =
     manualCardType || (meta.cardType?.type as CardProviderInfer)
 
-  // Notify parent of card type changes
+  const renderCardImage = () => {
+    if (manualCardType) {
+      const iconType = CARD_PROVIDER_ICON_TYPE[manualCardType]
+      return (
+        <div className="relative">
+          <PaymentIcon
+            type={iconType}
+            format="flatRounded"
+            width={20}
+            height={12}
+          />
+          <div className="absolute -right-1 -top-1 h-2 w-2 rounded-full bg-orange-500"></div>
+        </div>
+      )
+    } else if (meta.cardType) {
+      return (
+        <svg
+          className="overflow-hidden rounded-sm"
+          {...getCardImageProps({
+            images: images as unknown as CardImages,
+          })}
+          width={20}
+        />
+      )
+    } else {
+      return <Icons.creditCard strokeWidth={2} className="h-5 w-5" />
+    }
+  }
+
   React.useEffect(() => {
     if (effectiveCardType) {
       onCardTypeChange?.(effectiveCardType)
     }
   }, [effectiveCardType, onCardTypeChange])
 
-  // Reset manual selection when card number changes and type is detected
   React.useEffect(() => {
     if (meta.cardType?.type && manualCardType) {
       setManualCardType(null)
@@ -93,36 +118,35 @@ export function CardPaymentInputs({
             value={cardNumber || ""}
           />
           <div className="text-muted-foreground/80 pointer-events-none absolute inset-y-0 end-0 flex items-center justify-center pe-3 peer-disabled:opacity-50">
-            {meta.cardType ? (
-              <svg
-                className="overflow-hidden rounded-sm"
-                {...getCardImageProps({
-                  images: images as unknown as CardImages,
-                })}
-                width={20}
-              />
-            ) : shouldShowManualSelection ? (
-              <div className="pointer-events-auto">
-                <Select
-                  value={manualCardType || ""}
-                  onValueChange={handleManualCardTypeChange}
-                  disabled={disabled}
+            <div className="pointer-events-auto relative">
+              <Select
+                value={manualCardType || ""}
+                onValueChange={handleManualCardTypeChange}
+                disabled={disabled}
+              >
+                <SelectTrigger
+                  className="h-auto w-auto border-0 bg-transparent p-0 shadow-none hover:bg-transparent focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 dark:bg-transparent dark:hover:bg-transparent"
+                  hideIcon
                 >
-                  <SelectTrigger className="h-6 w-16 border-0 bg-transparent p-0 text-xs shadow-none">
-                    <SelectValue placeholder="Type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {LIST_CARD_PROVIDERS.map((provider) => (
-                      <SelectItem key={provider} value={provider}>
+                  {renderCardImage()}
+                </SelectTrigger>
+                <SelectContent>
+                  {LIST_CARD_PROVIDERS.map((provider) => (
+                    <SelectItem key={provider} value={provider}>
+                      <div className="flex items-center gap-2">
+                        <PaymentIcon
+                          type={CARD_PROVIDER_ICON_TYPE[provider]}
+                          format="flatRounded"
+                          width={20}
+                          height={12}
+                        />
                         {CardEntity.convertCardProviderToString(provider)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            ) : (
-              <CreditCard size={16} strokeWidth={2} aria-hidden="true" />
-            )}
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </div>
         <div className="-mt-px flex">
