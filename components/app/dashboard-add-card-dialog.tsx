@@ -43,7 +43,6 @@ export function DashboardAddCardDialog({
       provider: CardProvider.VISA,
       status: CardStatus.ACTIVE,
       number: "",
-      expiryDate: new Date(),
       cvv: "",
       encryptionKey: "",
       iv: "",
@@ -54,11 +53,15 @@ export function DashboardAddCardDialog({
     },
   })
 
+  console.log(form.formState.errors)
+
   async function onSubmit() {
     try {
       setIsSubmitting(true)
 
       const cardData = form.getValues()
+
+      console.log(cardData)
 
       // Validate form
       const isValid = await form.trigger()
@@ -98,7 +101,6 @@ export function DashboardAddCardDialog({
             provider: CardProvider.VISA,
             status: CardStatus.ACTIVE,
             number: "",
-            expiryDate: new Date(),
             cvv: "",
             encryptionKey: "",
             iv: "",

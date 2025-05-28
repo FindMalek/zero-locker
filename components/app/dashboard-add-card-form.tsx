@@ -108,15 +108,14 @@ export function DashboardAddCardForm({ form, availableTags }: CardFormProps) {
       <div className="space-y-4">
         <FormLabel>Card Details</FormLabel>
         <CardPaymentInputs
-          cardNumber={form.watch("number")}
-          expiry={formatDateToMMYY(form.watch("expiryDate"))}
-          cvc={form.watch("cvv")}
           onCardNumberChange={(value) => {
             form.setValue("number", value)
           }}
           onExpiryChange={(value) => {
             const date = parseMMYYToDate(value)
-            form.setValue("expiryDate", date)
+            if (date) {
+              form.setValue("expiryDate", date)
+            }
           }}
           onCVCChange={(value) => {
             form.setValue("cvv", value)

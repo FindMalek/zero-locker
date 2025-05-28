@@ -46,13 +46,16 @@ export const CardDtoSchema = z.object({
   provider: z.nativeEnum(CardProvider),
   status: z.nativeEnum(CardStatus),
   number: z.string().min(1, "Card number is required"),
-  expiryDate: z.coerce.date(),
+  expiryDate: z.coerce.date({ 
+    required_error: "Expiry date is required",
+    invalid_type_error: "Please enter a valid expiry date (MM/YY)" 
+  }),
   cvv: z.string().min(1, "CVV is required"),
   encryptionKey: z.string().optional(),
   iv: z.string().optional(),
   billingAddress: z.string().optional(),
   cardholderName: z.string().min(1, "Cardholder name is required"),
-  cardholderEmail: z.string().email().optional(),
+  cardholderEmail: z.union([z.string().email(), z.literal("")]).optional(),
   tags: z.array(TagDto),
   containerId: z.string().optional(),
 })

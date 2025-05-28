@@ -7,7 +7,7 @@ import { usePaymentInputs } from "react-payment-inputs"
 import images, { type CardImages } from "react-payment-inputs/images"
 import { PaymentIcon } from "react-svg-credit-card-payment-icons"
 
-import { CARD_PROVIDER_ICON_TYPE } from "@/config/consts"
+import { CARD_PROVIDER_ICON_TYPE, CARD_TYPE_MAPPING } from "@/config/consts"
 
 import { Icons } from "@/components/shared/icons"
 import { Input } from "@/components/ui/input"
@@ -23,9 +23,6 @@ interface CardPaymentInputsProps {
   onExpiryChange?: (value: string) => void
   onCVCChange?: (value: string) => void
   onCardTypeChange?: (cardType: CardProviderInfer) => void
-  cardNumber?: string
-  expiry?: string
-  cvc?: string
   className?: string
   disabled?: boolean
 }
@@ -35,9 +32,6 @@ export function CardPaymentInputs({
   onExpiryChange,
   onCVCChange,
   onCardTypeChange,
-  cardNumber,
-  expiry,
-  cvc,
   className,
   disabled = false,
 }: CardPaymentInputsProps) {
@@ -53,8 +47,14 @@ export function CardPaymentInputs({
     getCardImageProps,
   } = usePaymentInputs()
 
+  // Convert react-payment-inputs card type to our enum
+  const convertCardType = (cardType: string | undefined): CardProviderInfer | null => {
+    if (!cardType) return null
+    return CARD_TYPE_MAPPING[cardType.toLowerCase()] || null
+  }
+
   const effectiveCardType =
-    manualCardType || (meta.cardType?.type as CardProviderInfer)
+    manualCardType || convertCardType(meta.cardType?.type)
 
   const renderCardImage = () => {
     if (manualCardType) {
@@ -115,7 +115,6 @@ export function CardPaymentInputs({
             id={`number-${id}`}
             disabled={disabled}
             placeholder="1234 5678 9012 3456"
-            value={cardNumber || ""}
           />
           <div className="text-muted-foreground/80 pointer-events-none absolute inset-y-0 end-0 flex items-center justify-center pe-3 peer-disabled:opacity-50">
             <div className="pointer-events-auto relative">
@@ -161,7 +160,6 @@ export function CardPaymentInputs({
               id={`expiry-${id}`}
               disabled={disabled}
               placeholder="MM/YY"
-              value={expiry || ""}
             />
           </div>
           <div className="-ms-px min-w-0 flex-1 focus-within:z-10">
@@ -175,7 +173,6 @@ export function CardPaymentInputs({
               id={`cvc-${id}`}
               disabled={disabled}
               placeholder="123"
-              value={cvc || ""}
             />
           </div>
         </div>

@@ -135,13 +135,22 @@ export function formatDateToMMYY(date: Date | undefined): string {
 /**
  * Parse MM/YY format string to Date object for card expiry dates
  * @param mmyy String in MM/YY format
- * @returns Date object set to the first day of the specified month/year
+ * @returns Date object set to the first day of the specified month/year, or undefined if invalid
  */
-export function parseMMYYToDate(mmyy: string): Date {
-  if (!mmyy || !mmyy.includes("/")) return new Date()
+export function parseMMYYToDate(mmyy: string): Date | undefined {
+  if (!mmyy || !mmyy.includes("/")) return undefined
   const [month, year] = mmyy.split("/")
-  const fullYear = parseInt(year) < 50 ? `20${year}` : `19${year}`
-  return new Date(`${fullYear}-${month}-01`)
+  
+  // Validate month and year
+  const monthNum = parseInt(month)
+  const yearNum = parseInt(year)
+  
+  if (isNaN(monthNum) || isNaN(yearNum) || monthNum < 1 || monthNum > 12) {
+    return undefined
+  }
+  
+  const fullYear = yearNum < 50 ? `20${yearNum.toString().padStart(2, '0')}` : `19${yearNum.toString().padStart(2, '0')}`
+  return new Date(`${fullYear}-${month.padStart(2, '0')}-01`)
 }
 
 /**
