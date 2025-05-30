@@ -46,6 +46,7 @@ model Platform {
  * @property color - Color of the tag. Type: String. Optional.
  * @property credentials - Credentials associated with the tag. Type: Credential[]. Relation to Credential model.
  * @property cards - Cards associated with the tag. Type: Card[]. Relation to Card model.
+ * @property secrets - Secrets associated with the tag. Type: Secret[]. Relation to Secret model.
  */
 model Tag {
   id String @id @default(cuid())
@@ -55,6 +56,7 @@ model Tag {
 
   credentials Credential[]
   cards       Card[]
+  secrets     Secret[]
 
   userId String?
   user   User?   @relation(fields: [userId], references: [id])

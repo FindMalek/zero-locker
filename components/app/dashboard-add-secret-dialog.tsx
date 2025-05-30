@@ -1,49 +1,35 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
+import { SecretDto } from "@/schemas/secret"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { Copy, RefreshCw } from "lucide-react"
+import { SecretStatus, SecretType } from "@prisma/client"
 import { useForm } from "react-hook-form"
-import * as z from "zod"
 
+import { encryptData, exportKey, generateEncryptionKey } from "@/lib/encryption"
 import { checkPasswordStrength, generatePassword } from "@/lib/password"
+import { cn, getMetadataLabels, handleErrors } from "@/lib/utils"
+import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard"
+import { usePlatforms } from "@/hooks/use-platforms"
+import { useToast } from "@/hooks/use-toast"
 
+import { DashboardAddSecretForm } from "@/components/app/dashboard-add-secret-form"
+import { DashboardAddSecretMetadataForm } from "@/components/app/dashboard-add-secret-metadata-form"
 import { AddItemDialog } from "@/components/shared/add-item-dialog"
-import { PasswordStrengthMeter } from "@/components/shared/password-strength-meter"
+import { Icons } from "@/components/shared/icons"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible"
+import { Form } from "@/components/ui/form"
+import { Separator } from "@/components/ui/separator"
 
-// Define the form schema
-const secretFormSchema = z.object({
-  name: z.string().min(1, "Name is required"),
-  value: z.string().min(1, "Secret value is required"),
-  description: z.string().optional(),
-  tags: z.string().optional(),
-  status: z.enum(["ACTIVE", "SUSPENDED", "DELETED"]),
-  platformId: z.string().min(1, "Platform is required"),
-})
+import { createSecret } from "@/actions/secret"
 
-// Define the form values type
-type SecretFormValues = z.infer<typeof secretFormSchema>
-
-// Define the secret data type that will be sent to the server
-// interface SecretData extends Omit<SecretFormValues, "tags" | "value"> {
-//   value: string
-//   encryptionKey: string
-//   iv: string
-//   tags: string[]
-// }
-
-interface AddSecretDialogProps {
+interface SecretDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
 }
@@ -51,24 +37,45 @@ interface AddSecretDialogProps {
 export function DashboardAddSecretDialog({
   open,
   onOpenChange,
-}: AddSecretDialogProps) {
+}: SecretDialogProps) {
+  const { toast } = useToast()
+  const { platforms, error: platformsError } = usePlatforms()
+
   const [createMore, setCreateMore] = useState(false)
+  const [showMetadata, setShowMetadata] = useState(false)
   const [secretStrength, setSecretStrength] = useState<{
     score: number
     feedback: string
   } | null>(null)
 
-  const form = useForm<SecretFormValues>({
-    resolver: zodResolver(secretFormSchema),
+  const { copy, isCopied } = useCopyToClipboard({
+    successDuration: 1500,
+  })
+
+  const form = useForm<SecretDto>({
+    resolver: zodResolver(SecretDto),
     defaultValues: {
       name: "",
       value: "",
       description: "",
-      tags: "",
-      status: "ACTIVE" as const,
+      type: SecretType.ENV_VARIABLE,
+      status: SecretStatus.ACTIVE,
+      expiresAt: undefined,
       platformId: "",
+      containerId: "",
+      encryptionKey: "",
+      iv: "",
+      userId: "",
     },
   })
+
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
+  useEffect(() => {
+    if (platformsError) {
+      toast(platformsError, "error")
+    }
+  }, [platformsError, toast])
 
   const handleGenerateSecret = () => {
     const newSecret = generatePassword(32) // Longer for secrets
@@ -76,42 +83,114 @@ export function DashboardAddSecretDialog({
     setSecretStrength(checkPasswordStrength(newSecret))
   }
 
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text)
-    // You could add a toast notification here
+  const handleSecretChange = (secret: string) => {
+    setSecretStrength(checkPasswordStrength(secret))
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async function onSubmit(_values: SecretFormValues) {
+  const handleCopySecret = () => {
+    copy(form.getValues("value"))
+  }
+
+  // Check if metadata form has any meaningful values
+  const hasMetadataValues = () => {
+    const values = form.getValues()
+    return !!(
+      values.expiresAt ||
+      values.status !== SecretStatus.ACTIVE
+    )
+  }
+
+  // Get labels for metadata fields that have values
+  const getMetadataLabelsForSecret = () => {
+    const values = form.getValues()
+    const fieldMappings = {
+      expiresAt: "Expires",
+      ...(values.status !== SecretStatus.ACTIVE && { status: "Status" }),
+    }
+    return getMetadataLabels(values, fieldMappings)
+  }
+
+  async function onSubmit() {
     try {
-      // Generate encryption key
-      // const key = await generateEncryptionKey()
+      setIsSubmitting(true)
 
-      // // Encrypt the secret value
-      // const { encryptedData, iv } = await encryptData(values.value, key)
+      // Validate form
+      const isValid = await form.trigger()
+      if (!isValid) {
+        toast("Please fill in all required fields", "error")
+        return
+      }
 
-      // // Export the key for storage
-      // const keyString = await exportKey(key)
+      const secretData = form.getValues()
 
-      // const tagsArray = values.tags
-      //   ? values.tags.split(",").map((tag) => tag.trim())
-      //   : []
+      // Encrypt secret value
+      const key = await generateEncryptionKey()
+      const encryptResult = await encryptData(secretData.value, key)
+      const keyString = await exportKey(key)
 
-      // onSave({
-      //   ...values,
-      //   value: encryptedData,
-      //   encryptionKey: keyString,
-      //   iv,
-      //   tags: tagsArray,
-      // })
+      const secretDto: SecretDto = {
+        name: secretData.name,
+        value: encryptResult.encryptedData,
+        description: secretData.description,
+        type: secretData.type,
+        status: secretData.status,
+        expiresAt: secretData.expiresAt,
+        encryptionKey: keyString,
+        iv: encryptResult.iv,
+        platformId: secretData.platformId,
+        containerId: secretData.containerId,
+        userId: secretData.userId,
+      }
 
-      if (!createMore) {
-        form.reset()
-        setSecretStrength(null)
+      const result = await createSecret(secretDto)
+
+      if (result.success) {
+        toast("Secret saved successfully", "success")
+
+        if (!createMore) {
+          handleDialogOpenChange(false)
+        } else {
+          form.reset({
+            name: "",
+            value: "",
+            description: "",
+            type: SecretType.ENV_VARIABLE,
+            status: SecretStatus.ACTIVE,
+            expiresAt: undefined,
+            platformId: secretData.platformId,
+            containerId: secretData.containerId,
+            encryptionKey: "",
+            iv: "",
+            userId: "",
+          })
+          setSecretStrength(null)
+          setShowMetadata(false)
+        }
+      } else {
+        const errorDetails = result.issues
+          ? result.issues
+              .map((issue) => `${issue.path.join(".")}: ${issue.message}`)
+              .join(", ")
+          : result.error
+
+        toast(
+          `Failed to save secret: ${errorDetails || "Unknown error"}`,
+          "error"
+        )
       }
     } catch (error) {
-      console.error("Error encrypting secret:", error)
-      // Handle error appropriately
+      const { message, details } = handleErrors(
+        error,
+        "Failed to save secret"
+      )
+      toast(
+        details
+          ? `${message}: ${Array.isArray(details) ? details.join(", ") : details}`
+          : message,
+        "error"
+      )
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -119,6 +198,7 @@ export function DashboardAddSecretDialog({
     if (!open) {
       form.reset()
       setCreateMore(false)
+      setShowMetadata(false)
       setSecretStrength(null)
     }
     onOpenChange(open)
@@ -130,125 +210,79 @@ export function DashboardAddSecretDialog({
       onOpenChange={handleDialogOpenChange}
       title="Add New Secret"
       description="Add a new secret to your vault. All information is securely stored."
+      isSubmitting={isSubmitting}
       createMore={createMore}
       onCreateMoreChange={setCreateMore}
       createMoreText="Create another secret"
       submitText="Save Secret"
       formId="secret-form"
-      className="sm:max-w-[550px]"
+      className="sm:max-w-[800px]"
     >
       <Form {...form}>
         <form
           id="secret-form"
-          onSubmit={form.handleSubmit(onSubmit)}
-          className="space-y-4"
+          onSubmit={(e) => {
+            e.preventDefault()
+            onSubmit()
+          }}
+          className="space-y-6"
         >
-          <FormField
-            control={form.control}
-            name="name"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Secret Name</FormLabel>
-                <FormControl>
-                  <Input {...field} />
-                </FormControl>
-                <FormDescription>
-                  A name to identify this secret.
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
+          <DashboardAddSecretForm
+            form={form}
+            platforms={platforms}
+            secretStrength={secretStrength}
+            onSecretChange={handleSecretChange}
+            onGenerateSecret={handleGenerateSecret}
+            onCopySecret={handleCopySecret}
+            isCopied={isCopied}
           />
 
-          <FormField
-            control={form.control}
-            name="value"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Secret Value</FormLabel>
-                <div className="flex gap-2">
-                  <FormControl>
-                    <Input
-                      type="password"
-                      {...field}
-                      onChange={(e) => {
-                        field.onChange(e)
-                        setSecretStrength(checkPasswordStrength(e.target.value))
-                      }}
-                    />
-                  </FormControl>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="icon"
-                    onClick={handleGenerateSecret}
-                    title="Generate secure secret"
-                  >
-                    <RefreshCw className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="icon"
-                    onClick={() => {
-                      const value = form.getValues("value")
-                      if (value) copyToClipboard(value)
-                    }}
-                    title="Copy secret"
-                  >
-                    <Copy className="h-4 w-4" />
-                  </Button>
-                </div>
-                {secretStrength && (
-                  <div className="mt-2 space-y-2">
-                    <PasswordStrengthMeter score={secretStrength.score} />
-                    <div className="text-muted-foreground text-sm">
-                      {secretStrength.feedback}
+          <div className="space-y-4">
+            <Separator />
+
+            <Collapsible open={showMetadata} onOpenChange={setShowMetadata}>
+              <CollapsibleTrigger asChild>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className={cn(
+                    "hover:bg-muted/50 flex w-full items-center justify-between p-4",
+                    showMetadata && "bg-muted/55"
+                  )}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2">
+                      <Icons.add className="h-4 w-4" />
+                      <span className="font-medium">
+                        Additional Information
+                      </span>
                     </div>
+                    {hasMetadataValues() && (
+                      <Badge variant="secondary" className="text-xs">
+                        {getMetadataLabelsForSecret()}
+                      </Badge>
+                    )}
                   </div>
-                )}
-                <FormDescription>
-                  Your secret value. Use the generate button for a strong
-                  secret.
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+                  <div className="flex items-center gap-2">
+                    <span className="text-muted-foreground text-sm">
+                      {showMetadata ? "Hide" : "Optional"}
+                    </span>
+                    <Icons.chevronDown
+                      className={`h-4 w-4 transition-transform ${
+                        showMetadata ? "rotate-180" : ""
+                      }`}
+                    />
+                  </div>
+                </Button>
+              </CollapsibleTrigger>
 
-          <FormField
-            control={form.control}
-            name="description"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Description</FormLabel>
-                <FormControl>
-                  <Input {...field} />
-                </FormControl>
-                <FormDescription>
-                  Additional information about this secret.
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="tags"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Tags</FormLabel>
-                <FormControl>
-                  <Input {...field} />
-                </FormControl>
-                <FormDescription>
-                  Comma-separated tags to categorize this secret.
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+              <CollapsibleContent className="space-y-4">
+                <div className="bg-muted/55 p-4">
+                  <DashboardAddSecretMetadataForm form={form} />
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
+          </div>
         </form>
       </Form>
     </AddItemDialog>

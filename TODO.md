@@ -46,6 +46,10 @@ The format would be:
 - [ ] Automatic `CardSatuts` detection
       e.g. if the date is due, then automatically its expired
 
+- [ ] Update dependecies:
+      1. Update `prisma`
+      2. Update `pnpm`
+
 ### Finished Tasks
 
 - [x] Change return types of the Server Actions || High

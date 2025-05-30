@@ -11,6 +11,7 @@ import { Prisma } from "@prisma/client"
 import { z } from "zod"
 
 import { verifySession } from "@/lib/auth/verify"
+import { getOrReturnEmptyObject } from "@/lib/utils"
 
 /**
  * Create a new secret
@@ -49,8 +50,15 @@ export async function createSecret(data: SecretDtoType): Promise<{
       // Create secret with Prisma
       const secret = await database.secret.create({
         data: {
-          ...secretData,
+          name: validatedData.name,
+          value: validatedData.value,
+          description: validatedData.description,
+          type: validatedData.type,
+          status: validatedData.status,
+          expiresAt: secretData.expiresAt,
+          platformId: validatedData.platformId,
           userId: session.user.id,
+          ...getOrReturnEmptyObject(validatedData.containerId, "containerId"),
           createdAt: new Date(),
           updatedAt: new Date(),
         },
