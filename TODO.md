@@ -48,6 +48,18 @@ The format would be:
 
 - [ ] Update dependecies: 1. Update `prisma` 2. Update `pnpm`
 
+- [ ] Update the `SecretMetadata` model
+      We need to have link to `Platform` model.
+
+- [ ] Update the `Secret` dialog
+      In each secret we should add a 'Pen' icon to edit more details about that secret
+
+- [ ] Update the `SecretMetadata` model
+      We need to have link to `Tags` model.
+
+- [ ] Refactor all of the database schemas
+      We need to refactor the database schemas to be more consistent.
+
 ### Finished Tasks
 
 - [x] Change return types of the Server Actions || High

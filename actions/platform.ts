@@ -219,12 +219,11 @@ export async function deletePlatform(id: string): Promise<{
     }
 
     // Check if platform is in use
-    const [credentialCount, secretCount] = await Promise.all([
-      database.credential.count({ where: { platformId: id } }),
-      database.secret.count({ where: { platformId: id } }),
-    ])
+    const credentialCount = await database.credential.count({
+      where: { platformId: id },
+    })
 
-    if (credentialCount > 0 || secretCount > 0) {
+    if (credentialCount > 0) {
       return {
         success: false,
         error:

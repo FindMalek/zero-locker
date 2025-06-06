@@ -15,6 +15,7 @@ import { CardExpiryDateUtils } from "@/lib/card-expiry-utils"
 import { getOrReturnEmptyObject } from "@/lib/utils"
 
 import { createTagsAndGetConnections } from "@/actions/tag"
+import { CardMetadataDto } from "@/actions/card-metadata"
 
 /**
  * Create a new card
@@ -312,6 +313,102 @@ export async function listCards(
       }
     }
     console.error("List cards error:", error)
+    return {
+      success: false,
+      error: "Something went wrong. Please try again.",
+    }
+  }
+}
+
+/**
+ * Create a new card with optional metadata
+ */
+export async function createCardWithMetadata(
+  cardData: CardDtoType,
+  metadataData?: Omit<CardMetadataDto, "cardId">
+): Promise<{
+  success: boolean
+  card?: CardSimpleRo
+  error?: string
+  issues?: z.ZodIssue[]
+}> {
+  try {
+    const session = await verifySession()
+    const validatedCardData = CardDtoSchema.parse(cardData)
+
+    // Handle expiry date using shared utility
+    const expiryDate = CardExpiryDateUtils.processServerExpiryDate(
+      validatedCardData.expiryDate
+    )
+
+    const tagConnections = await createTagsAndGetConnections(
+      validatedCardData.tags,
+      session.user.id,
+      validatedCardData.containerId
+    )
+
+    try {
+      // Use a transaction to create both card and metadata
+      const result = await database.$transaction(async (tx) => {
+        const card = await tx.card.create({
+          data: {
+            name: validatedCardData.name,
+            description: validatedCardData.description,
+            notes: validatedCardData.notes,
+            type: validatedCardData.type,
+            provider: validatedCardData.provider,
+            status: validatedCardData.status,
+            number: validatedCardData.number,
+            expiryDate,
+            cvv: validatedCardData.cvv,
+            encryptionKey: validatedCardData.encryptionKey || null,
+            iv: validatedCardData.iv || null,
+            billingAddress: validatedCardData.billingAddress,
+            cardholderName: validatedCardData.cardholderName,
+            cardholderEmail: validatedCardData.cardholderEmail,
+            userId: session.user.id,
+            tags: tagConnections,
+            ...getOrReturnEmptyObject(validatedCardData.containerId, "containerId"),
+          },
+        })
+
+        // Create metadata if provided
+        if (metadataData) {
+          await tx.cardMetadata.create({
+            data: {
+              ...metadataData,
+              cardId: card.id,
+              otherInfo: metadataData.otherInfo || [],
+            },
+          })
+        }
+
+        return card
+      })
+
+      return {
+        success: true,
+        card: CardEntity.getSimpleRo(result),
+      }
+    } catch (error) {
+      throw error
+    }
+  } catch (error) {
+    if (error instanceof Error && error.message === "Not authenticated") {
+      return {
+        success: false,
+        error: "Not authenticated",
+      }
+    }
+    if (error instanceof z.ZodError) {
+      return {
+        success: false,
+        error: "Validation failed",
+        issues: error.issues,
+      }
+    }
+
+    console.error("Card creation error:", error)
     return {
       success: false,
       error: "Something went wrong. Please try again.",

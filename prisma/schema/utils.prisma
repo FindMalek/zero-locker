@@ -27,7 +27,6 @@ model Platform {
 
   status PlatformStatus @default(PENDING)
 
-  secret     Secret[]
   credential Credential[]
 
   updatedAt DateTime @updatedAt
@@ -54,9 +53,8 @@ model Tag {
   name  String
   color String?
 
-  credentials Credential[]
   cards       Card[]
-  secrets     Secret[]
+  credentials Credential[]
 
   userId String?
   user   User?   @relation(fields: [userId], references: [id])
@@ -93,8 +91,8 @@ model Container {
 
   tags        Tag[]
   cards       Card[]
-  credentials Credential[]
   secrets     Secret[]
+  credentials Credential[]
 
   updatedAt DateTime @updatedAt
   createdAt DateTime @default(now())
