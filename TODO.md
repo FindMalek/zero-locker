@@ -46,9 +46,7 @@ The format would be:
 - [ ] Automatic `CardSatuts` detection
       e.g. if the date is due, then automatically its expired
 
-- [ ] Update dependecies:
-      1. Update `prisma`
-      2. Update `pnpm`
+- [ ] Update dependecies: 1. Update `prisma` 2. Update `pnpm`
 
 ### Finished Tasks
 
@@ -70,3 +68,6 @@ The format would be:
 - [x] The `CardPaymentInputs` component changes
       I would like to move this component to `/shared` folder.
       Also if we couldnt recognize the card type, we should make the image a Select component, with the options being the `CardProvider` enum, and the user could either select the provider, or enter a new Card Provider.
+
+- [x] Implement the new `Secret` model from v0.dev
+      Link: https://v0.dev/chat/secrets-management-form-kgsnkNa1gw8

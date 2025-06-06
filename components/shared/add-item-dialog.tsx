@@ -21,6 +21,7 @@ interface AddItemDialogProps {
   title: string
   description: string
   children: ReactNode
+  icon?: ReactNode
   isSubmitting?: boolean
   createMore?: boolean
   onCreateMoreChange?: (value: boolean) => void
@@ -36,6 +37,7 @@ export function AddItemDialog({
   title,
   description,
   children,
+  icon,
   isSubmitting = false,
   createMore = false,
   onCreateMoreChange,
@@ -47,8 +49,9 @@ export function AddItemDialog({
   return (
     <ResponsiveDialog open={open} onOpenChange={onOpenChange}>
       <ResponsiveDialogContent className={className}>
-        <ResponsiveDialogHeader>
-          <ResponsiveDialogTitle className="font-mono">
+        <ResponsiveDialogHeader className="border-b pb-4">
+          <ResponsiveDialogTitle className="flex items-center gap-2 font-mono">
+            {icon}
             {title}
           </ResponsiveDialogTitle>
           <ResponsiveDialogDescription>

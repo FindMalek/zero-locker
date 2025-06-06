@@ -267,6 +267,7 @@ export function DashboardAddCredentialDialog({
       onOpenChange={handleDialogOpenChange}
       title="Add New Credential"
       description="Add a new credential to your vault. All information is securely stored."
+      icon={<Icons.user className="size-5" />}
       isSubmitting={isSubmitting}
       createMore={createMore}
       onCreateMoreChange={setCreateMore}

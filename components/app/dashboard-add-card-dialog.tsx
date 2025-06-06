@@ -13,6 +13,7 @@ import { useToast } from "@/hooks/use-toast"
 
 import { DashboardAddCardForm } from "@/components/app/dashboard-add-card-form"
 import { AddItemDialog } from "@/components/shared/add-item-dialog"
+import { Icons } from "@/components/shared/icons"
 import { Form } from "@/components/ui/form"
 
 import { createCard } from "@/actions/card"
@@ -54,15 +55,11 @@ export function DashboardAddCardDialog({
     },
   })
 
-  console.log(form.formState.errors)
-
   async function onSubmit() {
     try {
       setIsSubmitting(true)
 
       const cardData = form.getValues()
-
-      console.log(cardData)
 
       // Validate form
       const isValid = await form.trigger()
@@ -151,6 +148,7 @@ export function DashboardAddCardDialog({
       onOpenChange={handleDialogOpenChange}
       title="Add New Card"
       description="Add a new card to your vault. All information is securely stored."
+      icon={<Icons.creditCard className="size-5" />}
       isSubmitting={isSubmitting}
       createMore={createMore}
       onCreateMoreChange={setCreateMore}
