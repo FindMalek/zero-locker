@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { TagDto } from "@/schemas/utils/tag"
 
-import { listTags } from "@/actions/tag"
+import { listTags } from "@/actions/utils"
 
 export function useTags(containerId?: string) {
   const [tags, setTags] = useState<TagDto[]>([])

@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 
-import { joinWaitlist } from "@/actions/waitlist"
+import { joinWaitlist } from "@/actions/user"
 
 export function MarketingWaitlistForm() {
   const [isLoading, setIsLoading] = useState(false)

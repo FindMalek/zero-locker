@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react"
 import { PlatformSimpleRo } from "@/schemas/utils/platform"
 
-import { listPlatforms } from "@/actions/platform"
+import { listPlatforms } from "@/actions/utils"
 
 export function usePlatforms() {
   const [platforms, setPlatforms] = useState<PlatformSimpleRo[]>([])

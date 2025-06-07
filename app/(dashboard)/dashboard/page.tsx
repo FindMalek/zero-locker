@@ -9,7 +9,7 @@ import { DashboardRecentActivity } from "@/components/app/dashboard-recent-activ
 
 import { listCards } from "@/actions/card"
 import { listCredentials } from "@/actions/credential"
-import { listSecrets } from "@/actions/secret"
+import { listSecrets } from "@/actions/secrets/secret"
 
 type CardsResponse = Awaited<ReturnType<typeof listCards>>
 type SecretsResponse = Awaited<ReturnType<typeof listSecrets>>
