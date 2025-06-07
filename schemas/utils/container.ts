@@ -1,6 +1,8 @@
 import { ContainerType } from "@prisma/client"
 import { z } from "zod"
 
+import { tagDtoSchema } from "./tag"
+
 export const containerDtoSchema = z.object({
   name: z.string().min(1, "Name is required"),
   icon: z.string().min(1, "Icon is required"),
@@ -8,6 +10,7 @@ export const containerDtoSchema = z.object({
   description: z.string().optional(),
 
   type: z.nativeEnum(ContainerType).default(ContainerType.MIXED),
+  tags: z.array(tagDtoSchema),
 })
 
 export type ContainerDto = z.infer<typeof containerDtoSchema>
