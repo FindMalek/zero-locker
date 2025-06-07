@@ -1,4 +1,4 @@
-import { TagSimpleRo } from "@/schemas/tag"
+import { TagSimpleRo } from "@/schemas/utils/tag"
 
 import { TagEntitySimpleDbData } from "./query"
 

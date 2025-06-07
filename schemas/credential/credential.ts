@@ -2,7 +2,7 @@ import {
   encryptedDataDtoSchema,
   encryptedDataSimpleRoSchema,
 } from "@/schemas/encrypted-data/encrypted-data"
-import { TagDto } from "@/schemas/tag"
+import { tagDtoSchema } from "@/schemas/utils/tag"
 import { AccountStatus } from "@prisma/client"
 import { z } from "zod"
 
@@ -22,7 +22,7 @@ export const credentialDtoSchema = z.object({
   status: z.nativeEnum(AccountStatus),
   description: z.string().optional(),
 
-  tags: z.array(TagDto),
+  tags: z.array(tagDtoSchema),
 
   platformId: z.string().min(1, "Platform is required"),
   containerId: z.string().optional(),

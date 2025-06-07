@@ -7,7 +7,7 @@ import {
   PlatformDto,
   PlatformSimpleRo,
   type PlatformDto as PlatformDtoType,
-} from "@/schemas/platform"
+} from "@/schemas/utils/platform"
 import { Prisma } from "@prisma/client"
 import { z } from "zod"
 

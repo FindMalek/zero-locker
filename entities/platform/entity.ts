@@ -1,4 +1,4 @@
-import { PlatformSimpleRo } from "@/schemas/platform"
+import { PlatformSimpleRo } from "@/schemas/utils/platform"
 
 import { PlatformEntitySimpleDbData } from "./query"
 

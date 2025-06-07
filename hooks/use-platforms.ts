@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { PlatformSimpleRo } from "@/schemas/platform"
+import { PlatformSimpleRo } from "@/schemas/utils/platform"
 
 import { listPlatforms } from "@/actions/platform"
 

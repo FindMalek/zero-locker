@@ -1,18 +1,21 @@
 import { PlatformStatus } from "@prisma/client"
 import { z } from "zod"
 
-export const PlatformDto = z.object({
+export const platformDtoSchema = z.object({
   name: z.string().min(1, "Name is required"),
+
   logo: z.string().optional(),
   loginUrl: z.string().optional(),
+
   status: z
     .nativeEnum(PlatformStatus)
     .optional()
     .default(PlatformStatus.PENDING),
-  userId: z.string().optional(), // Assuming userId can be set during creation or nullable
 })
 
-export const PlatformSimpleRoSchema = z.object({
+export type PlatformDto = z.infer<typeof platformDtoSchema>
+
+export const platformSimpleRoSchema = z.object({
   id: z.string(),
 
   name: z.string(),
@@ -28,5 +31,4 @@ export const PlatformSimpleRoSchema = z.object({
   userId: z.string().nullable(),
 })
 
-export type PlatformDto = z.infer<typeof PlatformDto>
-export type PlatformSimpleRo = z.infer<typeof PlatformSimpleRoSchema>
+export type PlatformSimpleRo = z.infer<typeof platformSimpleRoSchema>

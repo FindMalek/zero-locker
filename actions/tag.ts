@@ -2,7 +2,7 @@
 
 import { TagEntity } from "@/entities/tag"
 import { database } from "@/prisma/client"
-import { TagDto, TagSimpleRo, type TagDto as TagDtoType } from "@/schemas/tag"
+import { TagDto, TagSimpleRo, type TagDto as TagDtoType } from "@/schemas/utils/tag"
 import { Prisma } from "@prisma/client"
 import { z } from "zod"
 

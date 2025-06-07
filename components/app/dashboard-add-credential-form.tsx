@@ -1,7 +1,7 @@
 "use client"
 
 import { CredentialDto } from "@/schemas/credential"
-import { TagDto } from "@/schemas/tag"
+import { TagDto } from "@/schemas/utils/tag"
 import { useForm } from "react-hook-form"
 
 import { getLogoDevUrlWithToken, getPlaceholderImage } from "@/lib/utils"

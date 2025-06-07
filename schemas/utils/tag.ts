@@ -1,13 +1,14 @@
 import { z } from "zod"
 
-export const TagDto = z.object({
+export const tagDtoSchema = z.object({
   name: z.string().min(1, "Name is required"),
   color: z.string().optional(),
-  userId: z.string().optional(),
   containerId: z.string().optional(),
 })
 
-export const TagSimpleRoSchema = z.object({
+export type TagDto = z.infer<typeof tagDtoSchema>
+
+export const tagSimpleRoSchema = z.object({
   id: z.string(),
   name: z.string(),
 
@@ -17,5 +18,4 @@ export const TagSimpleRoSchema = z.object({
   containerId: z.string().nullable(),
 })
 
-export type TagDto = z.infer<typeof TagDto>
-export type TagSimpleRo = z.infer<typeof TagSimpleRoSchema>
+export type TagSimpleRo = z.infer<typeof tagSimpleRoSchema>

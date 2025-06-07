@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { TagDto } from "@/schemas/tag"
+import { TagDto } from "@/schemas/utils/tag"
 
 import { listTags } from "@/actions/tag"
 

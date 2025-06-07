@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { CardDto, CardDtoSchema } from "@/schemas/card"
-import { TagDto } from "@/schemas/tag"
+import { TagDto } from "@/schemas/utils/tag"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { CardProvider, CardStatus, CardType } from "@prisma/client"
 import { useForm } from "react-hook-form"
