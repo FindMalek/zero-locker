@@ -1,4 +1,4 @@
-import { SecretSimpleRo } from "@/schemas/secret"
+import { SecretSimpleRo } from "@/schemas/secrets/secrets"
 
 import { SecretEntitySimpleDbData } from "./query"
 

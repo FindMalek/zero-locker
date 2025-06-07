@@ -3,7 +3,7 @@ import {
   CredentialSimpleRo,
   credentialSimpleRoSchema,
 } from "@/schemas/credential"
-import { SecretSimpleRo, secretSimpleRoSchema } from "@/schemas/secret"
+import { SecretSimpleRo, secretSimpleRoSchema } from "@/schemas/secrets"
 import { z } from "zod"
 
 export const ActivityTypeSchema = z.enum(["CREATED", "UPDATED", "COPIED"])

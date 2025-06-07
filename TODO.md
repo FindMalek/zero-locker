@@ -20,9 +20,6 @@ The format would be:
 - [ ] In the `CredentialMetadata` model changes
       The `additionalInfo` field should be a JSON object, of the user's choice.
 
-- [ ] The `CardHistory` is not being used.
-      Please remove it and any use for it.
-
 - [ ] For the `otherInfo` field in the `Credential` and `Card` models.
       We should create a new model to store the information.
       But for now the `Json` type is good enough.
@@ -50,9 +47,6 @@ The format would be:
 - [ ] Update the `SecretMetadata` model
       We need to have link to `Tags` model.
 
-- [ ] Refactor all of the database schemas
-      We need to refactor the database schemas to be more consistent.
-
 - [ ] usage of `Metadata` aserver actions
 
 - [ ] Secret container must have these actions - [ ] Add a secret - [ ] Edit a secret - [ ] Delete a secret - [ ] View a secret - [ ] Copy a secret - [ ] Share a secret - [ ] Export .env file - [ ] Generate a .env.example file - [ ] Generate a env.ts file for the `t3-env` library
@@ -65,9 +59,10 @@ The format would be:
       For each `query.ts` file, that its entity uses the `EncryptedData` model, we should create a new function that gets the `EncryptedData` model, and one dosent
       We should think about it decrypting the data, in the server actions or entity.ts file or in the client.
 
-- [ ] Make sure the `seeder` uses `createMany` instead of `create` records
-
 - [ ] Sync `CardMetadata` with the `Card` Form
+
+- [ ] Update all the DTOs to include `metadata` fields
+      We want to have one call to create the data, not multiple calls from the client.
 
 ### Finished Tasks
 
@@ -97,19 +92,23 @@ The format would be:
       I noticed a lot of use to these `iv`, `encryptionKey`, `VALUE` fields.
       I would like to create a Model to store these values. and use it in the `Credential` and `Card` models, or anything that needs encryption.
 
-      **IMPLEMENTATION COMPLETED:**
-      - ✅ Created new `EncryptedData` model in `prisma/schema/encryption.prisma`
-      - ✅ Updated `Card` model to use `cvvEncryption` and `numberEncryption` relations
-      - ✅ Updated `CardHistory` model to use encrypted data for old/new values
-      - ✅ Updated `Credential` model to use `passwordEncryption` relation
-      - ✅ Updated `CredentialHistory` model to use encrypted data for old/new passwords
-      - ✅ Updated `Secret` model to use `valueEncryption` relation
-      - ✅ Created new schemas in `schemas/encrypted-data.ts`
-      - ✅ Created new entity in `entities/encrypted-data/`
-      - ✅ Updated all server actions to use the new EncryptedData structure
-      - ✅ Updated all seeders to create encrypted data properly
-      - ✅ Created and applied database migration
-      - ✅ All tests pass - database seeding works correctly
+        **IMPLEMENTATION COMPLETED:**
+        - ✅ Created new `EncryptedData` model in `prisma/schema/encryption.prisma`
+        - ✅ Updated `Card` model to use `cvvEncryption` and `numberEncryption` relations
+        - ✅ Updated `CardHistory` model to use encrypted data for old/new values
+        - ✅ Updated `Credential` model to use `passwordEncryption` relation
+        - ✅ Updated `CredentialHistory` model to use encrypted data for old/new password- [x] Refactor all of the database schemas
+        We need to refactor the database schemas to be more consistent.
+
+  s - ✅ Updated `Secret` model to use `valueEncryption` relation - ✅ Created new schemas in `schemas/encrypted-data.ts` - ✅ Created new entity in `entities/encrypted-data/` - ✅ Updated all server actions to use the new EncryptedData structure - ✅ Updated all seeders to create encrypted data properly - ✅ Created and applied database migration - ✅ All tests pass - database seeding works correctly
 
 - [x] In the `Credential` model changes
       Change the `username` to `identifier` to make it more clear that it could be anything.
+
+- [x] The `CardHistory` is not being used.
+      Please remove it and any use for it.
+
+- [x] Refactor all of the database schemas
+      We need to refactor the database schemas to be more consistent.
+
+- [x] Make sure the `seeder` uses `createMany` instead of `create` records

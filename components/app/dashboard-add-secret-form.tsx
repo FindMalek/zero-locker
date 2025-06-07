@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useState } from "react"
-import { SecretDto } from "@/schemas/secret"
+import { SecretDto } from "@/schemas/secrets/secrets"
 import { SecretStatus, SecretType } from "@prisma/client"
 import { useForm } from "react-hook-form"
 

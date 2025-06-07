@@ -3,7 +3,7 @@
 import { ContainerEntity } from "@/entities/container"
 import { SecretEntity } from "@/entities/secret"
 import { database } from "@/prisma/client"
-import { SecretSimpleRo } from "@/schemas/secret"
+import { SecretSimpleRo } from "@/schemas/secrets/secrets"
 import { EntityTypeEnum } from "@/schemas/utils"
 import { Prisma } from "@prisma/client"
 import { z } from "zod"

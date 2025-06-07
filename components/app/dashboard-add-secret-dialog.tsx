@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { SecretDto } from "@/schemas/secret"
+import { SecretDto } from "@/schemas/secrets/secrets"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { SecretStatus, SecretType } from "@prisma/client"
 import { useForm } from "react-hook-form"
