@@ -4,7 +4,7 @@ import { database } from "@/prisma/client"
 import {
   EncryptedDataDto,
   EncryptedDataSimpleRo,
-} from "@/schemas/encrypted-data"
+} from "@/schemas/encrypted-data/encrypted-data"
 import { z } from "zod"
 
 import { verifySession } from "@/lib/auth/verify"

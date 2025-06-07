@@ -1,7 +1,7 @@
 import {
   encryptedDataDtoSchema,
   encryptedDataSimpleRoSchema,
-} from "@/schemas/encrypted-data"
+} from "@/schemas/encrypted-data/encrypted-data"
 import { TagDto } from "@/schemas/tag"
 import { AccountStatus } from "@prisma/client"
 import { z } from "zod"
