@@ -174,13 +174,21 @@ export async function createContainer(data: ContainerDto): Promise<{
     const validatedData = containerDtoSchema.parse(data)
 
     try {
+      // Extract tags from validatedData
+      const { tags, ...containerData } = validatedData
+      
       // Create container with Prisma
       const container = await database.container.create({
         data: {
-          ...validatedData,
+          ...containerData,
           userId: session.user.id,
           createdAt: new Date(),
           updatedAt: new Date(),
+          ...(tags && tags.length > 0 && {
+            tags: {
+              create: tags
+            }
+          })
         },
       })
 
@@ -224,7 +232,7 @@ export async function updateContainer(data: UpdateContainerDto): Promise<{
   issues?: z.ZodIssue[]
 }> {
   try {
-    const _session = await verifySession()
+    const session = await verifySession()
     const validatedData = updateContainerDtoSchema.parse(data)
     const { id, ...updateData } = validatedData
 
@@ -239,12 +247,21 @@ export async function updateContainer(data: UpdateContainerDto): Promise<{
     const validatedUpdateData = partialContainerSchema.parse(updateData)
 
     try {
+      // Extract tags from validatedUpdateData
+      const { tags, ...containerUpdateData } = validatedUpdateData
+      
       // Update container with Prisma
       const updatedContainer = await database.container.update({
         where: { id },
         data: {
-          ...validatedUpdateData,
+          ...containerUpdateData,
           updatedAt: new Date(),
+          ...(tags && {
+            tags: {
+              deleteMany: {},
+              create: tags
+            }
+          })
         },
       })
 
@@ -287,7 +304,7 @@ export async function deleteContainer(data: DeleteContainerDto): Promise<{
   issues?: z.ZodIssue[]
 }> {
   try {
-    const _session = await verifySession()
+    const session = await verifySession()
     const validatedData = deleteContainerDtoSchema.parse(data)
 
     // Use getSimpleContainerById to check if container exists and belongs to user
@@ -416,7 +433,7 @@ export async function getContainerStats(id: string): Promise<{
   error?: string
 }> {
   try {
-    const _session = await verifySession()
+    const session = await verifySession()
 
     // Use getSimpleContainerById to check if container exists and belongs to user
     const containerResult = await getSimpleContainerById(id)

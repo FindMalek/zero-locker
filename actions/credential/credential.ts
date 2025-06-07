@@ -325,7 +325,7 @@ export async function deleteCredential(data: DeleteCredentialDto): Promise<{
   issues?: z.ZodIssue[]
 }> {
   try {
-    const _session = await verifySession()
+    const session = await verifySession()
     const validatedData = deleteCredentialDtoSchema.parse(data)
 
     // Use getSimpleCredentialById to check if credential exists and belongs to user
@@ -436,7 +436,7 @@ export async function copyCredentialPassword(id: string): Promise<{
   error?: string
 }> {
   try {
-    const _session = await verifySession()
+    const session = await verifySession()
 
     // Use getSimpleCredentialById to check if credential exists and belongs to user
     const credentialResult = await getSimpleCredentialById(id)

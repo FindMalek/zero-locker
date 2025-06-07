@@ -338,7 +338,7 @@ export async function deleteSecret(data: DeleteSecretDto): Promise<{
   issues?: z.ZodIssue[]
 }> {
   try {
-    const _session = await verifySession()
+    const session = await verifySession()
     const validatedData = deleteSecretDtoSchema.parse(data)
 
     // Use getSimpleSecretById to check if secret exists and belongs to user
