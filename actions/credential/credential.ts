@@ -39,9 +39,6 @@ export async function getSimpleCredentialById(id: string): Promise<{
         id,
         userId: session.user.id,
       },
-      include: {
-        passwordEncryption: true,
-      },
     })
 
     if (!credential) {
@@ -340,7 +337,10 @@ export async function deleteCredential(data: DeleteCredentialDto): Promise<{
     }
 
     await database.credential.delete({
-      where: { id: validatedData.id },
+      where: {
+        id: validatedData.id,
+        userId: session.user.id,
+      },
     })
 
     return {

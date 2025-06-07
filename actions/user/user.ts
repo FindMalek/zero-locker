@@ -19,6 +19,7 @@ import { verifySession } from "@/lib/auth/verify"
 
 /**
  * Get user by ID (Simple RO)
+ * @todo: Use the UserEntity instead of the UserRo
  */
 export async function getSimpleUserById(id: string): Promise<{
   success: boolean
@@ -52,6 +53,8 @@ export async function getSimpleUserById(id: string): Promise<{
 
 /**
  * Get user by ID (Full RO with relations)
+ * @deprecated: We won't use this
+ * @todo: Use the UserEntity instead of the UserRo
  */
 export async function getUserById(data: GetUserByIdDto): Promise<{
   success: boolean

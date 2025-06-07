@@ -51,6 +51,8 @@ export async function getCredentialPasswordEncryption(
       }
     }
 
+    // TODO: Update the 'lastViewed' field
+
     return {
       success: true,
       encryptedData: EncryptedDataEntity.getSimpleRo(encryptedData),

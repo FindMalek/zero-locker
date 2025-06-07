@@ -24,8 +24,6 @@ export async function createCredentialMetadata(
 }> {
   try {
     const session = await verifySession()
-
-    // Validate using our DTO schema
     const validatedData = credentialMetadataDtoSchema.parse(data)
 
     try {
@@ -104,7 +102,6 @@ export async function getCredentialMetadata(credentialId: string): Promise<{
   try {
     const session = await verifySession()
 
-    // Check if credential exists and belongs to the user
     const credential = await database.credential.findFirst({
       where: {
         id: credentialId,

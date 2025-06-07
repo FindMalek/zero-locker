@@ -1,6 +1,6 @@
 "use server"
 
-import { ContainerEntity } from "@/entities/utils/container"
+import { ContainerEntity, ContainerQuery } from "@/entities/utils/container"
 import { database } from "@/prisma/client"
 import {
   ContainerDto,
@@ -36,9 +36,7 @@ export async function containerSupportsEnvOperations(
         id: containerId,
         userId: session.user.id,
       },
-      include: {
-        secrets: true,
-      },
+      include: ContainerQuery.getSecretsInclude(),
     })
 
     if (!container) {
@@ -129,6 +127,7 @@ export async function getSimpleContainerById(id: string): Promise<{
 
 /**
  * Get container by ID (Full RO with relations)
+ * @todo: Please implement the logic for the full-ro
  */
 export async function getContainerById(data: GetContainerByIdDto): Promise<{
   success: boolean
@@ -176,7 +175,7 @@ export async function createContainer(data: ContainerDto): Promise<{
     try {
       // Extract tags from validatedData
       const { tags, ...containerData } = validatedData
-      
+
       // Create container with Prisma
       const container = await database.container.create({
         data: {
@@ -184,11 +183,12 @@ export async function createContainer(data: ContainerDto): Promise<{
           userId: session.user.id,
           createdAt: new Date(),
           updatedAt: new Date(),
-          ...(tags && tags.length > 0 && {
-            tags: {
-              create: tags
-            }
-          })
+          ...(tags &&
+            tags.length > 0 && {
+              tags: {
+                create: tags,
+              },
+            }),
         },
       })
 
@@ -249,7 +249,7 @@ export async function updateContainer(data: UpdateContainerDto): Promise<{
     try {
       // Extract tags from validatedUpdateData
       const { tags, ...containerUpdateData } = validatedUpdateData
-      
+
       // Update container with Prisma
       const updatedContainer = await database.container.update({
         where: { id },
@@ -259,9 +259,9 @@ export async function updateContainer(data: UpdateContainerDto): Promise<{
           ...(tags && {
             tags: {
               deleteMany: {},
-              create: tags
-            }
-          })
+              create: tags,
+            },
+          }),
         },
       })
 

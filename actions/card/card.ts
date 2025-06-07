@@ -23,6 +23,7 @@ import { getOrReturnEmptyObject } from "@/lib/utils"
 
 import { createEncryptedData } from "../encryption"
 import { createTagsAndGetConnections } from "../utils/tag"
+import { createCardMetadata } from "./card-metadata"
 
 /**
  * Get card by ID (Simple RO)
@@ -79,6 +80,9 @@ export async function getCardById(data: GetCardByIdDto): Promise<{
 }> {
   try {
     const validatedData = getCardByIdDtoSchema.parse(data)
+
+    // TODO: Placeholder for full RO with relations
+    // TODO: Update 'lastViewed' field
 
     const result = await getSimpleCardById(validatedData.id)
     return result
@@ -170,10 +174,6 @@ export async function createCard(data: CardDto): Promise<{
         cvvEncryptionId: cvvEncryptionResult.encryptedData.id,
         numberEncryptionId: numberEncryptionResult.encryptedData.id,
         ...getOrReturnEmptyObject(validatedData.containerId, "containerId"),
-      },
-      include: {
-        cvvEncryption: true,
-        numberEncryption: true,
       },
     })
 
@@ -341,7 +341,6 @@ export async function deleteCard(data: DeleteCardDto): Promise<{
   issues?: z.ZodIssue[]
 }> {
   try {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const session = await verifySession()
     const validatedData = deleteCardDtoSchema.parse(data)
 
@@ -355,7 +354,10 @@ export async function deleteCard(data: DeleteCardDto): Promise<{
     }
 
     await database.card.delete({
-      where: { id: validatedData.id },
+      where: {
+        id: validatedData.id,
+        userId: session.user.id,
+      },
     })
 
     return {
@@ -458,8 +460,6 @@ export async function createCardWithMetadata(
 
     // If metadata is provided, create it
     if (metadataData) {
-      const { createCardMetadata } = await import("./card-metadata")
-
       const metadataResult = await createCardMetadata({
         ...metadataData,
         cardId: cardResult.card.id,

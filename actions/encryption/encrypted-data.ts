@@ -126,6 +126,8 @@ export async function getEncryptedDataById(id: string): Promise<{
       }
     }
 
+    // TODO: Update the 'lastViewed' field
+
     return {
       success: true,
       encryptedData: {

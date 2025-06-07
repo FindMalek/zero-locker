@@ -25,7 +25,6 @@ export async function createTagsAndGetConnections(
     const result = await createTag({
       name: tag.name,
       color: tag.color,
-      userId,
       ...getOrReturnEmptyObject(containerId, "containerId"),
     })
     return result.success ? result.tag : null

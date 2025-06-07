@@ -8,4 +8,10 @@ export class ContainerQuery {
   static getSimpleInclude() {
     return {} satisfies Prisma.ContainerInclude
   }
+
+  static getSecretsInclude() {
+    return {
+      secrets: true,
+    } satisfies Prisma.ContainerInclude
+  }
 }

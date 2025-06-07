@@ -52,6 +52,8 @@ export async function getSimpleSecretById(id: string): Promise<{
       }
     }
 
+    // TODO: Update the 'lastViewed' field
+
     return {
       success: true,
       secret: SecretEntity.getSimpleRo(secret),
@@ -83,6 +85,7 @@ export async function getSecretById(data: GetSecretByIdDto): Promise<{
   try {
     const validatedData = getSecretByIdDtoSchema.parse(data)
 
+    // TODO: Add the full RO with relations
     const result = await getSimpleSecretById(validatedData.id)
 
     // Update last viewed timestamp if secret was found

@@ -49,6 +49,8 @@ export async function getSecretValueEncryption(secretId: string): Promise<{
       }
     }
 
+    // TODO: Update the 'lastViewed' field
+
     return {
       success: true,
       encryptedData: EncryptedDataEntity.getSimpleRo(encryptedData),

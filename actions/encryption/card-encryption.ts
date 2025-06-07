@@ -49,6 +49,8 @@ export async function getCardCvvEncryption(cardId: string): Promise<{
       }
     }
 
+    // TODO: Update 'lastViewed' field
+
     return {
       success: true,
       encryptedData: EncryptedDataEntity.getSimpleRo(encryptedData),
