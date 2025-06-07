@@ -62,6 +62,17 @@ The format would be:
 
 - [ ] usage of `Metadata` aserver actions
 
+- [ ] Secret container must have these actions
+      - [ ] Add a secret
+      - [ ] Edit a secret
+      - [ ] Delete a secret
+      - [ ] View a secret
+      - [ ] Copy a secret
+      - [ ] Share a secret
+      - [ ] Export .env file
+      - [ ] Generate a .env.example file
+      - [ ] Generate a env.ts file for the `t3-env` library
+
 ### Finished Tasks
 
 - [x] Change return types of the Server Actions || High
