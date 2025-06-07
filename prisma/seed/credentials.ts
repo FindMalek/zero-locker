@@ -32,7 +32,6 @@ async function seedCredentials(prisma: PrismaClient) {
   }
 
   // Prepare arrays for bulk insertion
-  const credentialsData = []
   const credentialTagConnections = [] // Store credential-tag connections for later
   const metadataData = [] // Store metadata for later
 
@@ -68,20 +67,30 @@ async function seedCredentials(prisma: PrismaClient) {
 
     // Google credential
     const googleCredId = `credential_google_${user.id}`
-    credentialsData.push({
-      id: googleCredId,
-      username: user.email,
-      password: googlePassword,
-      encryptionKey: MOCK_ENCRYPTION_KEY,
-      iv: MOCK_IV,
-      status: AccountStatus.ACTIVE,
-      description: "Google account",
-      lastViewed: new Date(),
-      updatedAt: new Date(),
-      createdAt: new Date(),
-      platformId: googlePlatform.id,
-      userId: user.id,
-      containerId: personalContainer?.id,
+    
+    // Create encrypted data for Google password
+    const googlePasswordEncryption = await prisma.encryptedData.create({
+      data: {
+        encryptedValue: googlePassword,
+        encryptionKey: MOCK_ENCRYPTION_KEY,
+        iv: MOCK_IV,
+      },
+    })
+
+    await prisma.credential.create({
+      data: {
+        id: googleCredId,
+        username: user.email,
+        passwordEncryptionId: googlePasswordEncryption.id,
+        status: AccountStatus.ACTIVE,
+        description: "Google account",
+        lastViewed: new Date(),
+        updatedAt: new Date(),
+        createdAt: new Date(),
+        platformId: googlePlatform.id,
+        userId: user.id,
+        containerId: personalContainer?.id,
+      },
     })
 
     // Store tag connections for Google credential
@@ -94,20 +103,30 @@ async function seedCredentials(prisma: PrismaClient) {
 
     // GitHub credential
     const githubCredId = `credential_github_${user.id}`
-    credentialsData.push({
-      id: githubCredId,
-      username: `${user.name.replace(" ", "").toLowerCase()}`,
-      password: githubPassword,
-      encryptionKey: MOCK_ENCRYPTION_KEY,
-      iv: MOCK_IV,
-      status: AccountStatus.ACTIVE,
-      description: "GitHub account",
-      lastViewed: new Date(),
-      updatedAt: new Date(),
-      createdAt: new Date(),
-      platformId: githubPlatform.id,
-      userId: user.id,
-      containerId: workContainer?.id,
+    
+    // Create encrypted data for GitHub password
+    const githubPasswordEncryption = await prisma.encryptedData.create({
+      data: {
+        encryptedValue: githubPassword,
+        encryptionKey: MOCK_ENCRYPTION_KEY,
+        iv: MOCK_IV,
+      },
+    })
+
+    await prisma.credential.create({
+      data: {
+        id: githubCredId,
+        username: `${user.name.replace(" ", "").toLowerCase()}`,
+        passwordEncryptionId: githubPasswordEncryption.id,
+        status: AccountStatus.ACTIVE,
+        description: "GitHub account",
+        lastViewed: new Date(),
+        updatedAt: new Date(),
+        createdAt: new Date(),
+        platformId: githubPlatform.id,
+        userId: user.id,
+        containerId: workContainer?.id,
+      },
     })
 
     // Store tag connections for GitHub credential
@@ -129,19 +148,29 @@ async function seedCredentials(prisma: PrismaClient) {
     // AWS credential if work container exists
     if (workContainer) {
       const awsCredId = `credential_aws_${user.id}`
-      credentialsData.push({
-        id: awsCredId,
-        username: `${user.name.replace(" ", ".").toLowerCase()}@company.com`,
-        password: awsPassword,
-        encryptionKey: MOCK_ENCRYPTION_KEY,
-        iv: MOCK_IV,
-        status: AccountStatus.ACTIVE,
-        description: "AWS account",
-        updatedAt: new Date(),
-        createdAt: new Date(),
-        platformId: awsPlatform.id,
-        userId: user.id,
-        containerId: workContainer.id,
+      
+      // Create encrypted data for AWS password
+      const awsPasswordEncryption = await prisma.encryptedData.create({
+        data: {
+          encryptedValue: awsPassword,
+          encryptionKey: MOCK_ENCRYPTION_KEY,
+          iv: MOCK_IV,
+        },
+      })
+
+      await prisma.credential.create({
+        data: {
+          id: awsCredId,
+          username: `${user.name.replace(" ", ".").toLowerCase()}@company.com`,
+          passwordEncryptionId: awsPasswordEncryption.id,
+          status: AccountStatus.ACTIVE,
+          description: "AWS account",
+          updatedAt: new Date(),
+          createdAt: new Date(),
+          platformId: awsPlatform.id,
+          userId: user.id,
+          containerId: workContainer.id,
+        },
       })
 
       // Store tag connections for AWS credential
@@ -154,10 +183,7 @@ async function seedCredentials(prisma: PrismaClient) {
     }
   }
 
-  // Bulk create all credentials
-  await prisma.credential.createMany({
-    data: credentialsData,
-  })
+  // Credentials are now created individually above
 
   // Bulk create all metadata
   await prisma.credentialMetadata.createMany({

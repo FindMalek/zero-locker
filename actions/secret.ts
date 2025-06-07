@@ -11,6 +11,7 @@ import { z } from "zod"
 import { verifySession } from "@/lib/auth/verify"
 
 import { containerSupportsEnvOperations } from "@/actions/container"
+import { createEncryptedData } from "@/actions/encrypted-data"
 import { SecretMetadataDto } from "@/actions/secret-metadata"
 
 // Define Secret DTO matching the actual Secret model
@@ -74,16 +75,31 @@ export async function createSecret(data: SecretDtoType): Promise<{
     // Secret data is ready to use directly
 
     try {
+      // Create encrypted data for secret value
+      const valueEncryptionResult = await createEncryptedData({
+        encryptedValue: validatedData.value,
+        encryptionKey: "temp_key", // TODO: Generate proper encryption key
+        iv: "temp_iv", // TODO: Generate proper IV
+      })
+
+      if (!valueEncryptionResult.success || !valueEncryptionResult.encryptedData) {
+        return {
+          success: false,
+          error: "Failed to encrypt secret value",
+        }
+      }
+
       // Create secret with Prisma - only using fields that exist in Secret model
       const secret = await database.secret.create({
         data: {
           name: validatedData.name,
-          value: validatedData.value,
-          iv: validatedData.iv || "",
-          encryptionKey: validatedData.encryptionKey || "",
+          valueEncryptionId: valueEncryptionResult.encryptedData.id,
           userId: session.user.id,
           containerId: validatedData.containerId || "",
           note: validatedData.note,
+        },
+        include: {
+          valueEncryption: true,
         },
       })
 
@@ -132,6 +148,9 @@ export async function getSecretById(id: string): Promise<{
       where: {
         id,
         userId: session.user.id,
+      },
+      include: {
+        valueEncryption: true,
       },
     })
 
@@ -203,6 +222,9 @@ export async function updateSecret(
       const updatedSecret = await database.secret.update({
         where: { id },
         data: updateData,
+        include: {
+          valueEncryption: true,
+        },
       })
 
       return {
@@ -321,6 +343,9 @@ export async function listSecrets(
         orderBy: {
           createdAt: "desc",
         },
+        include: {
+          valueEncryption: true,
+        },
       }),
       database.secret.count({ where }),
     ])
@@ -362,17 +387,32 @@ export async function createSecretWithMetadata(
     const validatedSecretData = SecretDto.parse(secretData)
 
     try {
+      // Create encrypted data for secret value
+      const valueEncryptionResult = await createEncryptedData({
+        encryptedValue: validatedSecretData.value,
+        encryptionKey: "temp_key", // TODO: Generate proper encryption key
+        iv: "temp_iv", // TODO: Generate proper IV
+      })
+
+      if (!valueEncryptionResult.success || !valueEncryptionResult.encryptedData) {
+        return {
+          success: false,
+          error: "Failed to encrypt secret value",
+        }
+      }
+
       // Use a transaction to create both secret and metadata
       const result = await database.$transaction(async (tx) => {
         const secret = await tx.secret.create({
           data: {
             name: validatedSecretData.name,
-            value: validatedSecretData.value,
-            iv: validatedSecretData.iv || "",
-            encryptionKey: validatedSecretData.encryptionKey || "",
+            valueEncryptionId: valueEncryptionResult.encryptedData!.id,
             userId: session.user.id,
             containerId: validatedSecretData.containerId || "",
             note: validatedSecretData.note,
+          },
+          include: {
+            valueEncryption: true,
           },
         })
 
@@ -448,6 +488,9 @@ export async function generateEnvFile(containerId: string): Promise<{
               },
             },
           },
+          include: {
+            valueEncryption: true,
+          },
         },
       },
     })
@@ -472,7 +515,8 @@ export async function generateEnvFile(containerId: string): Promise<{
     // Generate env content
     const envLines = container.secrets.map((secret) => {
       // In a real app, you'd decrypt the secret value here
-      return `${secret.name.toUpperCase().replace(/\s+/g, "_")}=${secret.value}`
+      const secretValue = secret.valueEncryption?.encryptedValue || "PLACEHOLDER_VALUE"
+      return `${secret.name.toUpperCase().replace(/\s+/g, "_")}=${secretValue}`
     })
 
     const envContent = envLines.join("\n")
@@ -517,6 +561,9 @@ export async function generateEnvExampleFile(containerId: string): Promise<{
                 status: "ACTIVE",
               },
             },
+          },
+          include: {
+            valueEncryption: true,
           },
         },
       },
@@ -592,6 +639,9 @@ export async function generateT3EnvFile(containerId: string): Promise<{
                 status: "ACTIVE",
               },
             },
+          },
+          include: {
+            valueEncryption: true,
           },
         },
       },

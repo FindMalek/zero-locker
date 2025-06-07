@@ -20,7 +20,6 @@ model User {
   containers          Container[]
   credentials         Credential[]
   credentialHistories CredentialHistory[]
-  cardHistories       CardHistory[]
 
   @@unique([email])
   @@map("user")

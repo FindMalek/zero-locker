@@ -62,8 +62,6 @@ export const CardDtoSchema = z.object({
       }
     ),
   cvv: z.string().min(1, "CVV is required"),
-  encryptionKey: z.string().optional(),
-  iv: z.string().optional(),
   billingAddress: z.string().optional(),
   cardholderName: z.string().min(1, "Cardholder name is required"),
   cardholderEmail: z.union([z.string().email(), z.literal("")]).optional(),
@@ -126,8 +124,6 @@ export const CardSimpleRoSchema = z.object({
   number: z.string(),
   expiryDate: z.date(),
   cvv: z.string(),
-  encryptionKey: z.string().nullable(),
-  iv: z.string().nullable(),
   billingAddress: z.string().nullable(),
   cardholderName: z.string(),
   cardholderEmail: z.string().nullable(),

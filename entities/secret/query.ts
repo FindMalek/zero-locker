@@ -6,6 +6,8 @@ export type SecretEntitySimpleDbData = Prisma.SecretGetPayload<{
 
 export class SecretQuery {
   static getSimpleInclude() {
-    return {} satisfies Prisma.SecretInclude
+    return {
+      valueEncryption: true,
+    } satisfies Prisma.SecretInclude
   }
 }

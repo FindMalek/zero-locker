@@ -10,20 +10,16 @@ export class SecretEntity {
       name: entity.name,
 
       // TODO: Consider masking or partial display for ROs if sensitive
-      value: entity.value,
+      value: entity.valueEncryption?.encryptedValue || "",
 
-      type: entity.type,
-      status: entity.status,
+      note: entity.note,
 
-      description: entity.description,
-
-      expiresAt: entity.expiresAt,
+      lastCopied: entity.lastCopied,
+      lastViewed: entity.lastViewed,
       updatedAt: entity.updatedAt,
       createdAt: entity.createdAt,
 
       userId: entity.userId,
-      platformId: entity.platformId,
-
       containerId: entity.containerId,
     }
   }

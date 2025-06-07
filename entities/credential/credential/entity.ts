@@ -10,9 +10,7 @@ export class CredentialEntity {
       username: entity.username,
 
       // TODO: Consider masking or partial display for ROs if sensitive
-      password: entity.password,
-      encryptionKey: entity.encryptionKey,
-      iv: entity.iv,
+      password: entity.passwordEncryption?.encryptedValue || "",
 
       status: entity.status,
 

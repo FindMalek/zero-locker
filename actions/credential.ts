@@ -15,6 +15,7 @@ import { z } from "zod"
 import { verifySession } from "@/lib/auth/verify"
 import { getOrReturnEmptyObject } from "@/lib/utils"
 
+import { createEncryptedData } from "@/actions/encrypted-data"
 import { createTagsAndGetConnections } from "@/actions/tag"
 
 /**
@@ -48,18 +49,33 @@ export async function createCredential(data: CredentialDtoType): Promise<{
         validatedData.containerId
       )
 
+      // Create encrypted data for password
+      const passwordEncryptionResult = await createEncryptedData({
+        encryptedValue: validatedData.password,
+        encryptionKey: "temp_key", // TODO: Generate proper encryption key
+        iv: "temp_iv", // TODO: Generate proper IV
+      })
+
+      if (!passwordEncryptionResult.success || !passwordEncryptionResult.encryptedData) {
+        return {
+          success: false,
+          error: "Failed to encrypt password",
+        }
+      }
+
       const credential = await database.credential.create({
         data: {
           username: validatedData.username,
-          password: validatedData.password,
-          encryptionKey: validatedData.encryptionKey,
-          iv: validatedData.iv,
+          passwordEncryptionId: passwordEncryptionResult.encryptedData.id,
           status: validatedData.status,
           platformId: validatedData.platformId,
           description: validatedData.description,
           userId: session.user.id,
           tags: tagConnections,
           ...getOrReturnEmptyObject(validatedData.containerId, "containerId"),
+        },
+        include: {
+          passwordEncryption: true,
         },
       })
 
@@ -108,6 +124,9 @@ export async function getCredentialById(id: string): Promise<{
       where: {
         id,
         userId: session.user.id,
+      },
+      include: {
+        passwordEncryption: true,
       },
     })
 
@@ -180,18 +199,31 @@ export async function updateCredential(
     try {
       // If password is being updated, create a history entry
       if (validatedData.password) {
-        await database.credentialHistory.create({
-          data: {
-            oldPassword: existingCredential.password,
-            newPassword: validatedData.password,
-            encryptionKey:
-              validatedData.encryptionKey || existingCredential.encryptionKey,
-            iv: validatedData.iv || existingCredential.iv,
-            credentialId: id,
-            userId: session.user.id,
-            changedAt: new Date(),
-          },
+        // Create encrypted data for old password
+        const oldPasswordEncryptionResult = await createEncryptedData({
+          encryptedValue: "old_password_placeholder", // TODO: Get actual old password
+          encryptionKey: "temp_key",
+          iv: "temp_iv",
         })
+
+        // Create encrypted data for new password
+        const newPasswordEncryptionResult = await createEncryptedData({
+          encryptedValue: validatedData.password,
+          encryptionKey: "temp_key",
+          iv: "temp_iv",
+        })
+
+        if (oldPasswordEncryptionResult.success && newPasswordEncryptionResult.success) {
+          await database.credentialHistory.create({
+            data: {
+              oldPasswordEncryptionId: oldPasswordEncryptionResult.encryptedData!.id,
+              newPasswordEncryptionId: newPasswordEncryptionResult.encryptedData!.id,
+              credentialId: id,
+              userId: session.user.id,
+              changedAt: new Date(),
+            },
+          })
+        }
       }
 
       const tagConnections = await createTagsAndGetConnections(
@@ -206,6 +238,9 @@ export async function updateCredential(
         data: {
           ...validatedData,
           tags: tagConnections,
+        },
+        include: {
+          passwordEncryption: true,
         },
       })
 
@@ -327,6 +362,9 @@ export async function listCredentials(
         orderBy: {
           createdAt: "desc",
         },
+        include: {
+          passwordEncryption: true,
+        },
       }),
       database.credential.count({ where }),
     ])
@@ -425,14 +463,26 @@ export async function createCredentialWithMetadata(
         validatedCredentialData.containerId
       )
 
+      // Create encrypted data for password
+      const passwordEncryptionResult = await createEncryptedData({
+        encryptedValue: validatedCredentialData.password,
+        encryptionKey: "temp_key", // TODO: Generate proper encryption key
+        iv: "temp_iv", // TODO: Generate proper IV
+      })
+
+      if (!passwordEncryptionResult.success || !passwordEncryptionResult.encryptedData) {
+        return {
+          success: false,
+          error: "Failed to encrypt password",
+        }
+      }
+
       // Use a transaction to create both credential and metadata
       const result = await database.$transaction(async (tx) => {
         const credential = await tx.credential.create({
           data: {
             username: validatedCredentialData.username,
-            password: validatedCredentialData.password,
-            encryptionKey: validatedCredentialData.encryptionKey,
-            iv: validatedCredentialData.iv,
+            passwordEncryptionId: passwordEncryptionResult.encryptedData!.id,
             status: validatedCredentialData.status,
             platformId: validatedCredentialData.platformId,
             description: validatedCredentialData.description,
@@ -442,6 +492,9 @@ export async function createCredentialWithMetadata(
               validatedCredentialData.containerId,
               "containerId"
             ),
+          },
+          include: {
+            passwordEncryption: true,
           },
         })
 

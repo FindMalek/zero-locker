@@ -6,7 +6,6 @@ async function seedSecrets(prisma: PrismaClient) {
   const users = await prisma.user.findMany()
   const containers = await prisma.container.findMany()
 
-  const secretsData = []
   const metadataData = []
 
   for (const user of users) {
@@ -61,17 +60,26 @@ async function seedSecrets(prisma: PrismaClient) {
       ]
 
       for (const secret of secrets) {
-        secretsData.push({
-          id: secret.id,
-          name: secret.name,
-          value: secret.value,
-          note: secret.note,
-          iv: "mock_iv_for_development",
-          encryptionKey: "mock_encryption_key_for_development",
-          updatedAt: new Date(),
-          createdAt: new Date(),
-          userId: user.id,
-          containerId: envContainer.id,
+        // Create encrypted data for secret value
+        const valueEncryption = await prisma.encryptedData.create({
+          data: {
+            encryptedValue: secret.value,
+            encryptionKey: "mock_encryption_key_for_development",
+            iv: "mock_iv_for_development",
+          },
+        })
+
+        await prisma.secret.create({
+          data: {
+            id: secret.id,
+            name: secret.name,
+            valueEncryptionId: valueEncryption.id,
+            note: secret.note,
+            updatedAt: new Date(),
+            createdAt: new Date(),
+            userId: user.id,
+            containerId: envContainer.id,
+          },
         })
 
         // Add metadata for each secret
@@ -105,17 +113,26 @@ async function seedSecrets(prisma: PrismaClient) {
       ]
 
       for (const secret of legacySecrets) {
-        secretsData.push({
-          id: secret.id,
-          name: secret.name,
-          value: secret.value,
-          note: secret.note,
-          iv: "mock_iv_for_development",
-          encryptionKey: "mock_encryption_key_for_development",
-          updatedAt: new Date(),
-          createdAt: new Date(),
-          userId: user.id,
-          containerId: workContainer.id,
+        // Create encrypted data for secret value
+        const valueEncryption = await prisma.encryptedData.create({
+          data: {
+            encryptedValue: secret.value,
+            encryptionKey: "mock_encryption_key_for_development",
+            iv: "mock_iv_for_development",
+          },
+        })
+
+        await prisma.secret.create({
+          data: {
+            id: secret.id,
+            name: secret.name,
+            valueEncryptionId: valueEncryption.id,
+            note: secret.note,
+            updatedAt: new Date(),
+            createdAt: new Date(),
+            userId: user.id,
+            containerId: workContainer.id,
+          },
         })
 
         // Add metadata for each secret
@@ -131,9 +148,7 @@ async function seedSecrets(prisma: PrismaClient) {
     }
   }
 
-  await prisma.secret.createMany({
-    data: secretsData,
-  })
+  // Secrets are now created individually above
 
   await prisma.secretMetadata.createMany({
     data: metadataData,

@@ -6,6 +6,9 @@ export type CardEntitySimpleDbData = Prisma.CardGetPayload<{
 
 export class CardQuery {
   static getSimpleInclude() {
-    return {} satisfies Prisma.CardInclude
+    return {
+      cvvEncryption: true,
+      numberEncryption: true,
+    } satisfies Prisma.CardInclude
   }
 }

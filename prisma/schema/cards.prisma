@@ -2,59 +2,46 @@
  * Represents a card stored in the system.
  * @property id - Unique identifier for the card. Type: String. Generated using cuid().
  * @property name - Name of the card. Type: String.
+ * @property description - Description of the card. Type: String. Optional.
  * @property type - Type of the card. Type: CardType.
  * @property provider - Provider of the card. Type: CardProvider.
- * @property number - Number of the card. Type: String.
- * @property expiryDate - Expiry date of the card. Type: DateTime.
- * @property cvv - CVV of the card. Type: String.
  * @property status - Status of the card. Type: CardStatus. Defaults to ACTIVE.
- * @property description - Description of the card. Type: String. Optional.
- * @property billingAddress - Billing address associated with the card. Type: String.
  * @property cardholderName - Name of the cardholder. Type: String.
+ * @property billingAddress - Billing address associated with the card. Type: String. Optional.
  * @property cardholderEmail - Email of the cardholder. Type: String. Optional.
- * @property encryptionKey - Encryption key for the card. Type: String.
- * @property iv - Initialization vector for the card. Type: String.
- * @property lastCopied - Timestamp when the card was last copied. Type: DateTime. Optional.
- * @property lastViewed - Timestamp when the card was last viewed. Type: DateTime. Optional.
- * @property createdAt - Timestamp when the card was created. Type: DateTime. Defaults to current time.
- * @property updatedAt - Timestamp when the card was last updated. Type: DateTime. Updated automatically.
- * @property user - User who owns the card. Type: User. Relation to User model.
- * @property userId - ID of the user who owns the card. Type: String.
- * @property container - Container where the card is stored. Type: Container. Optional. Relation to Container model.
- * @property containerId - ID of the container where the card is stored. Type: String. Optional.
+ * @property expiryDate - Expiry date of the card. Type: DateTime.
  * @property tags - Tags associated with the card. Type: Tag[]. Relation to Tag model.
- * @property history - History of changes to the card. Type: CardHistory[]. Relation to CardHistory model.
  * @property metadata - Metadata associated with the card. Type: CardMetadata[]. Relation to CardMetadata model.
+ * @property lastViewed - Timestamp when the card was last viewed. Type: DateTime. Optional.
+ * @property updatedAt - Timestamp when the card was last updated. Type: DateTime. Updated automatically.
+ * @property createdAt - Timestamp when the card was created. Type: DateTime. Defaults to current time.
+ * @property userId - ID of the user who owns the card. Type: String.
+ * @property user - User who owns the card. Type: User. Relation to User model.
+ * @property containerId - ID of the container where the card is stored. Type: String. Optional.
+ * @property container - Container where the card is stored. Type: Container. Optional. Relation to Container model.
+ * @property numberEncryptionId - ID of the encrypted card number data. Type: String.
+ * @property numberEncryption - Encrypted card number data. Type: EncryptedData. Relation to EncryptedData model.
+ * @property cvvEncryptionId - ID of the encrypted CVV data. Type: String.
+ * @property cvvEncryption - Encrypted CVV data. Type: EncryptedData. Relation to EncryptedData model.
  */
 model Card {
   id String @id @default(cuid())
 
   name        String
   description String?
-  notes       String?
 
   type     CardType
   provider CardProvider
   status   CardStatus   @default(ACTIVE)
 
-  number          String
-  expiryDate      DateTime
-  billingAddress  String?
   cardholderName  String
+  billingAddress  String?
   cardholderEmail String?
-
-  // Encrypted fields using EncryptedData model
-  cvvEncryptionId String?
-  cvvEncryption   EncryptedData? @relation("CardCvvEncryption", fields: [cvvEncryptionId], references: [id])
-
-  numberEncryptionId String?
-  numberEncryption   EncryptedData? @relation("CardNumberEncryption", fields: [numberEncryptionId], references: [id])
+  expiryDate      DateTime
 
   tags     Tag[]
-  history  CardHistory[]
   metadata CardMetadata[]
 
-  lastCopied DateTime?
   lastViewed DateTime?
   updatedAt  DateTime  @updatedAt
   createdAt  DateTime  @default(now())
@@ -65,6 +52,12 @@ model Card {
   containerId String?
   container   Container? @relation(fields: [containerId], references: [id])
 
+  numberEncryptionId String
+  numberEncryption   EncryptedData @relation("CardNumberEncryption", fields: [numberEncryptionId], references: [id])
+
+  cvvEncryptionId String
+  cvvEncryption   EncryptedData @relation("CardCvvEncryption", fields: [cvvEncryptionId], references: [id])
+
   @@index([userId])
   @@index([containerId])
   @@index([cvvEncryptionId])
@@ -72,62 +65,8 @@ model Card {
 }
 
 /**
- * Represents the history of changes to a card.
- * @property id - Unique identifier for the history entry. Type: String. Generated using cuid().
- * @property cardId - ID of the card. Type: String. Relation to Card model.
- * @property card - Card associated with the history entry. Type: Card. Relation to Card model.
- * @property oldNumber - Old card number. Type: String.
- * @property newNumber - New card number. Type: String.
- * @property oldCvv - Old CVV. Type: String.
- * @property newCvv - New CVV. Type: String.
- * @property oldExpiryDate - Old expiry date. Type: DateTime.
- * @property newExpiryDate - New expiry date. Type: DateTime.
- * @property encryptionKey - Encryption key for the card. Type: String.
- * @property iv - Initialization vector for the card. Type: String.
- * @property changedAt - Timestamp when the card was changed. Type: DateTime. Defaults to current time.
- * @property user - User who made the change. Type: User. Relation to User model.
- * @property userId - ID of the user who made the change. Type: String.
- */
-model CardHistory {
-  id String @id @default(cuid())
-
-  oldExpiryDate DateTime
-  newExpiryDate DateTime
-
-  // Encrypted fields using EncryptedData model
-  oldNumberEncryptionId String
-  oldNumberEncryption   EncryptedData @relation("CardHistoryOldNumber", fields: [oldNumberEncryptionId], references: [id])
-
-  newNumberEncryptionId String
-  newNumberEncryption   EncryptedData @relation("CardHistoryNewNumber", fields: [newNumberEncryptionId], references: [id])
-
-  oldCvvEncryptionId String
-  oldCvvEncryption   EncryptedData @relation("CardHistoryOldCvv", fields: [oldCvvEncryptionId], references: [id])
-
-  newCvvEncryptionId String
-  newCvvEncryption   EncryptedData @relation("CardHistoryNewCvv", fields: [newCvvEncryptionId], references: [id])
-
-  changedAt DateTime @default(now())
-
-  userId String
-  user   User   @relation(fields: [userId], references: [id])
-
-  cardId String
-  card   Card   @relation(fields: [cardId], references: [id], onDelete: Cascade)
-
-  @@index([cardId])
-  @@index([userId])
-  @@index([oldNumberEncryptionId])
-  @@index([newNumberEncryptionId])
-  @@index([oldCvvEncryptionId])
-  @@index([newCvvEncryptionId])
-}
-
-/**
  * Represents metadata associated with a card.
  * @property id - Unique identifier for the metadata. Type: String. Generated using cuid().
- * @property cardId - ID of the card. Type: String. Relation to Card model.
- * @property card - Card associated with the metadata. Type: Card. Relation to Card model.
  * @property creditLimit - Credit limit for the card. Type: Decimal. Optional.
  * @property availableCredit - Available credit for the card. Type: Decimal. Optional.
  * @property interestRate - Interest rate for the card. Type: Decimal. Optional.
@@ -138,19 +77,23 @@ model CardHistory {
  * @property internationalPaymentsEnabled - Whether international payments are enabled. Type: Boolean. Defaults to true.
  * @property pinSet - Whether a PIN is set for the card. Type: Boolean. Defaults to false.
  * @property otherInfo - Other information for the card. Type: Json[]. Optional.
+ * @property cardId - ID of the card. Type: String. Unique. Relation to Card model.
+ * @property card - Card associated with the metadata. Type: Card. Relation to Card model.
  */
 model CardMetadata {
   id String @id @default(cuid())
 
-  creditLimit                  Decimal?
-  availableCredit              Decimal?
-  interestRate                 Decimal?
-  annualFee                    Decimal?
-  rewardsProgram               String?
-  contactlessEnabled           Boolean  @default(false)
-  onlinePaymentsEnabled        Boolean  @default(true)
-  internationalPaymentsEnabled Boolean  @default(true)
-  pinSet                       Boolean  @default(false)
+  creditLimit     Decimal?
+  availableCredit Decimal?
+  interestRate    Decimal?
+  annualFee       Decimal?
+
+  rewardsProgram String?
+
+  contactlessEnabled           Boolean @default(false)
+  onlinePaymentsEnabled        Boolean @default(true)
+  internationalPaymentsEnabled Boolean @default(true)
+  pinSet                       Boolean @default(false)
 
   otherInfo Json[]
 

@@ -15,6 +15,7 @@ import { CardExpiryDateUtils } from "@/lib/card-expiry-utils"
 import { getOrReturnEmptyObject } from "@/lib/utils"
 
 import { CardMetadataDto } from "@/actions/card-metadata"
+import { createEncryptedData } from "@/actions/encrypted-data"
 import { createTagsAndGetConnections } from "@/actions/tag"
 
 /**
@@ -41,6 +42,34 @@ export async function createCard(data: CardDtoType): Promise<{
       validatedData.containerId
     )
 
+    // Create encrypted data for CVV
+    const cvvEncryptionResult = await createEncryptedData({
+      encryptedValue: validatedData.cvv,
+      encryptionKey: "temp_key", // TODO: Generate proper encryption key
+      iv: "temp_iv", // TODO: Generate proper IV
+    })
+
+    if (!cvvEncryptionResult.success || !cvvEncryptionResult.encryptedData) {
+      return {
+        success: false,
+        error: "Failed to encrypt CVV",
+      }
+    }
+
+    // Create encrypted data for card number
+    const numberEncryptionResult = await createEncryptedData({
+      encryptedValue: validatedData.number,
+      encryptionKey: "temp_key", // TODO: Generate proper encryption key
+      iv: "temp_iv", // TODO: Generate proper IV
+    })
+
+    if (!numberEncryptionResult.success || !numberEncryptionResult.encryptedData) {
+      return {
+        success: false,
+        error: "Failed to encrypt card number",
+      }
+    }
+
     const card = await database.card.create({
       data: {
         name: validatedData.name,
@@ -51,15 +80,18 @@ export async function createCard(data: CardDtoType): Promise<{
         status: validatedData.status,
         number: validatedData.number,
         expiryDate,
-        cvv: validatedData.cvv,
-        encryptionKey: validatedData.encryptionKey || null,
-        iv: validatedData.iv || null,
         billingAddress: validatedData.billingAddress,
         cardholderName: validatedData.cardholderName,
         cardholderEmail: validatedData.cardholderEmail,
         userId: session.user.id,
         tags: tagConnections,
+        cvvEncryptionId: cvvEncryptionResult.encryptedData.id,
+        numberEncryptionId: numberEncryptionResult.encryptedData.id,
         ...getOrReturnEmptyObject(validatedData.containerId, "containerId"),
+      },
+      include: {
+        cvvEncryption: true,
+        numberEncryption: true,
       },
     })
 
@@ -105,6 +137,10 @@ export async function getCardById(id: string): Promise<{
       where: {
         id,
         userId: session.user.id,
+      },
+      include: {
+        cvvEncryption: true,
+        numberEncryption: true,
       },
     })
 
@@ -181,6 +217,10 @@ export async function updateCard(
       const updatedCard = await database.card.update({
         where: { id },
         data: updateData,
+        include: {
+          cvvEncryption: true,
+          numberEncryption: true,
+        },
       })
 
       return {
@@ -296,6 +336,10 @@ export async function listCards(
         orderBy: {
           createdAt: "desc",
         },
+        include: {
+          cvvEncryption: true,
+          numberEncryption: true,
+        },
       }),
       database.card.count({ where }),
     ])
@@ -348,6 +392,34 @@ export async function createCardWithMetadata(
     )
 
     try {
+      // Create encrypted data for CVV
+      const cvvEncryptionResult = await createEncryptedData({
+        encryptedValue: validatedCardData.cvv,
+        encryptionKey: "temp_key", // TODO: Generate proper encryption key
+        iv: "temp_iv", // TODO: Generate proper IV
+      })
+
+      if (!cvvEncryptionResult.success || !cvvEncryptionResult.encryptedData) {
+        return {
+          success: false,
+          error: "Failed to encrypt CVV",
+        }
+      }
+
+      // Create encrypted data for card number
+      const numberEncryptionResult = await createEncryptedData({
+        encryptedValue: validatedCardData.number,
+        encryptionKey: "temp_key", // TODO: Generate proper encryption key
+        iv: "temp_iv", // TODO: Generate proper IV
+      })
+
+      if (!numberEncryptionResult.success || !numberEncryptionResult.encryptedData) {
+        return {
+          success: false,
+          error: "Failed to encrypt card number",
+        }
+      }
+
       // Use a transaction to create both card and metadata
       const result = await database.$transaction(async (tx) => {
         const card = await tx.card.create({
@@ -360,18 +432,21 @@ export async function createCardWithMetadata(
             status: validatedCardData.status,
             number: validatedCardData.number,
             expiryDate,
-            cvv: validatedCardData.cvv,
-            encryptionKey: validatedCardData.encryptionKey || null,
-            iv: validatedCardData.iv || null,
             billingAddress: validatedCardData.billingAddress,
             cardholderName: validatedCardData.cardholderName,
             cardholderEmail: validatedCardData.cardholderEmail,
             userId: session.user.id,
             tags: tagConnections,
+            cvvEncryptionId: cvvEncryptionResult.encryptedData!.id,
+            numberEncryptionId: numberEncryptionResult.encryptedData!.id,
             ...getOrReturnEmptyObject(
               validatedCardData.containerId,
               "containerId"
             ),
+          },
+          include: {
+            cvvEncryption: true,
+            numberEncryption: true,
           },
         })
 

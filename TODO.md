@@ -17,8 +17,6 @@ The format would be:
 
 - [ ] Use Tanstack Query for reloading data
 
-- [ ] In the `Credential` model changes
-      Change the `username` to `identifier` to make it more clear that it could be anything.
 
 - [ ] In the `CredentialMetadata` model changes
       The `additionalInfo` field should be a JSON object, of the user's choice.
@@ -64,6 +62,14 @@ The format would be:
       We should create a generic return type for the server actions.
       This would be used to return the data from the server actions.
 
+- [ ] Refactor the `EncryptedData` model
+      For each `query.ts` file, that its entity uses the `EncryptedData` model, we should create a new function that gets the `EncryptedData` model, and one dosent
+      We should think about it decrypting the data, in the server actions or entity.ts file or in the client.
+
+- [ ] Make sure the `seeder` uses `createMany` instead of `create` records
+
+- [ ] Sync `CardMetadata` with the `Card` Form
+
 ### Finished Tasks
 
 - [x] Change return types of the Server Actions || High
@@ -88,6 +94,23 @@ The format would be:
 - [x] Implement the new `Secret` model from v0.dev
       Link: https://v0.dev/chat/secrets-management-form-kgsnkNa1gw8
 
-- [x] Encyption of values
+- [x] Encyption of values ✅ COMPLETED
       I noticed a lot of use to these `iv`, `encryptionKey`, `VALUE` fields.
       I would like to create a Model to store these values. and use it in the `Credential` and `Card` models, or anything that needs encryption.
+      
+      **IMPLEMENTATION COMPLETED:**
+      - ✅ Created new `EncryptedData` model in `prisma/schema/encryption.prisma`
+      - ✅ Updated `Card` model to use `cvvEncryption` and `numberEncryption` relations
+      - ✅ Updated `CardHistory` model to use encrypted data for old/new values
+      - ✅ Updated `Credential` model to use `passwordEncryption` relation
+      - ✅ Updated `CredentialHistory` model to use encrypted data for old/new passwords
+      - ✅ Updated `Secret` model to use `valueEncryption` relation
+      - ✅ Created new schemas in `schemas/encrypted-data.ts`
+      - ✅ Created new entity in `entities/encrypted-data/`
+      - ✅ Updated all server actions to use the new EncryptedData structure
+      - ✅ Updated all seeders to create encrypted data properly
+      - ✅ Created and applied database migration
+      - ✅ All tests pass - database seeding works correctly
+
+- [x] In the `Credential` model changes
+      Change the `username` to `identifier` to make it more clear that it could be anything.

@@ -1,40 +1,34 @@
 /**
  * Represents encrypted data with its encryption metadata.
  * @property id - Unique identifier for the encrypted data. Type: String. Generated using cuid().
+ * @property iv - Initialization vector for encryption. Type: String.
  * @property encryptedValue - The encrypted value. Type: String.
  * @property encryptionKey - Encryption key used for the data. Type: String.
- * @property iv - Initialization vector for encryption. Type: String.
  * @property createdAt - Timestamp when the encryption was created. Type: DateTime. Defaults to current time.
  * @property updatedAt - Timestamp when the encryption was last updated. Type: DateTime. Updated automatically.
+ * @property cardCvv - Cards that use this encrypted data for CVV. Type: Card[]. Relation to Card model.
+ * @property cardNumber - Cards that use this encrypted data for card number. Type: Card[]. Relation to Card model.
+ * @property credentialPassword - Credentials that use this encrypted data for password. Type: Credential[]. Relation to Credential model.
+ * @property credentialHistoryPassword - Credential histories that use this encrypted data for password. Type: CredentialHistory[]. Relation to CredentialHistory model.
+ * @property secretValue - Secrets that use this encrypted data for value. Type: Secret[]. Relation to Secret model.
  */
 model EncryptedData {
   id String @id @default(cuid())
 
+  iv             String
   encryptedValue String
   encryptionKey  String
-  iv             String
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  // Relations back to models that use this encrypted data
   cardCvv    Card[] @relation("CardCvvEncryption")
   cardNumber Card[] @relation("CardNumberEncryption")
 
-  // CardHistory relations
-  cardHistoryOldNumber CardHistory[] @relation("CardHistoryOldNumber")
-  cardHistoryNewNumber CardHistory[] @relation("CardHistoryNewNumber")
-  cardHistoryOldCvv    CardHistory[] @relation("CardHistoryOldCvv")
-  cardHistoryNewCvv    CardHistory[] @relation("CardHistoryNewCvv")
-
-  // Credential relations
   credentialPassword Credential[] @relation("CredentialPassword")
 
-  // CredentialHistory relations
-  credentialHistoryOldPassword CredentialHistory[] @relation("CredentialHistoryOldPassword")
-  credentialHistoryNewPassword CredentialHistory[] @relation("CredentialHistoryNewPassword")
+  credentialHistoryPassword CredentialHistory[] @relation("CredentialHistoryPassword")
 
-  // Secret relations
   secretValue Secret[] @relation("SecretValue")
 
   @@index([createdAt])

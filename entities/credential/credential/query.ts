@@ -6,6 +6,8 @@ export type CredentialEntityDbData = Prisma.CredentialGetPayload<{
 
 export class CredentialQuery {
   static getSimpleInclude() {
-    return {} satisfies Prisma.CredentialInclude
+    return {
+      passwordEncryption: true,
+    } satisfies Prisma.CredentialInclude
   }
 }

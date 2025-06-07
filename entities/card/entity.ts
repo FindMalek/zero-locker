@@ -25,11 +25,9 @@ export class CardEntity {
       provider: entity.provider,
 
       // TODO: Consider masking or partial display for ROs if sensitive
-      number: entity.number,
+      number: entity.numberEncryption?.encryptedValue || entity.number,
       expiryDate: entity.expiryDate,
-      cvv: entity.cvv,
-      encryptionKey: entity.encryptionKey,
-      iv: entity.iv,
+      cvv: entity.cvvEncryption?.encryptedValue || "",
       billingAddress: entity.billingAddress,
       cardholderName: entity.cardholderName,
       cardholderEmail: entity.cardholderEmail,

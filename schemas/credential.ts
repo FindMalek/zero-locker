@@ -5,8 +5,6 @@ import { z } from "zod"
 export const CredentialSchemaDto = z.object({
   username: z.string().min(1, "Username is required"),
   password: z.string().min(1, "Password is required"),
-  encryptionKey: z.string(),
-  iv: z.string(),
   status: z.nativeEnum(AccountStatus),
   tags: z.array(TagDto),
   description: z.string().optional(),
@@ -19,8 +17,6 @@ export const CredentialSimpleRoSchema = z.object({
 
   username: z.string(),
   password: z.string(),
-  encryptionKey: z.string(),
-  iv: z.string(),
 
   status: z.nativeEnum(AccountStatus),
 
