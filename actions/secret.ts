@@ -1,9 +1,17 @@
 "use server"
 
+import { ContainerEntity } from "@/entities/container"
 import { SecretEntity } from "@/entities/secret"
 import { database } from "@/prisma/client"
+import { SecretSimpleRo } from "@/schemas/secret"
+import { EntityTypeEnum } from "@/schemas/utils"
 import { Prisma } from "@prisma/client"
 import { z } from "zod"
+
+import { verifySession } from "@/lib/auth/verify"
+
+import { containerSupportsEnvOperations } from "@/actions/container"
+import { SecretMetadataDto } from "@/actions/secret-metadata"
 
 // Define Secret DTO matching the actual Secret model
 const SecretDto = z.object({
@@ -16,15 +24,11 @@ const SecretDto = z.object({
 })
 
 export type SecretDtoType = z.infer<typeof SecretDto>
-export type SecretSimpleRo = any // Replace with proper type from entity
-
-import { verifySession } from "@/lib/auth/verify"
-import { getOrReturnEmptyObject } from "@/lib/utils"
-
-import { SecretMetadataDto } from "@/actions/secret-metadata"
 
 /**
  * Create a new secret
+ * If containerId is provided, it will validate if the secret can be added to the container
+ * @todo: If containerId is not provided, it will create a secret and a container with the same name
  */
 export async function createSecret(data: SecretDtoType): Promise<{
   success: boolean
@@ -37,6 +41,35 @@ export async function createSecret(data: SecretDtoType): Promise<{
 
     // Validate using our DTO schema
     const validatedData = SecretDto.parse(data)
+
+    // Validate container type if containerId is provided
+    if (validatedData.containerId) {
+      const container = await database.container.findFirst({
+        where: {
+          id: validatedData.containerId,
+          userId: session.user.id,
+        },
+      })
+
+      if (!container) {
+        return {
+          success: false,
+          error: "Container not found",
+        }
+      }
+
+      if (
+        !ContainerEntity.validateEntityForContainer(
+          container.type,
+          EntityTypeEnum.SECRET
+        )
+      ) {
+        return {
+          success: false,
+          error: `Cannot add secrets to ${container.type.toLowerCase().replace("_", " ")} container`,
+        }
+      }
+    }
 
     // Secret data is ready to use directly
 
@@ -383,6 +416,243 @@ export async function createSecretWithMetadata(
     return {
       success: false,
       error: "Something went wrong. Please try again.",
+    }
+  }
+}
+
+/**
+ * Generate .env file content from secrets in a container
+ * @todo: Implement this
+ */
+export async function generateEnvFile(containerId: string): Promise<{
+  success: boolean
+  envContent?: string
+  error?: string
+}> {
+  try {
+    const session = await verifySession()
+
+    // Get container and validate it supports env operations
+    const container = await database.container.findFirst({
+      where: {
+        id: containerId,
+        userId: session.user.id,
+      },
+      include: {
+        secrets: {
+          where: {
+            metadata: {
+              some: {
+                type: "ENV_VARIABLE",
+                status: "ACTIVE",
+              },
+            },
+          },
+        },
+      },
+    })
+
+    if (!container) {
+      return {
+        success: false,
+        error: "Container not found",
+      }
+    }
+
+    // Check if container supports env operations
+    const { supported, reason } =
+      await containerSupportsEnvOperations(containerId)
+    if (!supported) {
+      return {
+        success: false,
+        error: reason || "Container does not support environment operations",
+      }
+    }
+
+    // Generate env content
+    const envLines = container.secrets.map((secret) => {
+      // In a real app, you'd decrypt the secret value here
+      return `${secret.name.toUpperCase().replace(/\s+/g, "_")}=${secret.value}`
+    })
+
+    const envContent = envLines.join("\n")
+
+    return {
+      success: true,
+      envContent,
+    }
+  } catch (error) {
+    console.error("Generate env file error:", error)
+    return {
+      success: false,
+      error: "Failed to generate environment file",
+    }
+  }
+}
+
+/**
+ * Generate .env.example file content from secrets in a container
+ * @todo: Implement this
+ */
+export async function generateEnvExampleFile(containerId: string): Promise<{
+  success: boolean
+  envContent?: string
+  error?: string
+}> {
+  try {
+    const session = await verifySession()
+
+    // Get container and validate it supports env operations
+    const container = await database.container.findFirst({
+      where: {
+        id: containerId,
+        userId: session.user.id,
+      },
+      include: {
+        secrets: {
+          where: {
+            metadata: {
+              some: {
+                type: "ENV_VARIABLE",
+                status: "ACTIVE",
+              },
+            },
+          },
+        },
+      },
+    })
+
+    if (!container) {
+      return {
+        success: false,
+        error: "Container not found",
+      }
+    }
+
+    // Check if container supports env operations
+    const { supported, reason } =
+      await containerSupportsEnvOperations(containerId)
+    if (!supported) {
+      return {
+        success: false,
+        error: reason || "Container does not support environment operations",
+      }
+    }
+
+    // Generate env.example content with placeholder values
+    const envLines = container.secrets.map((secret) => {
+      const varName = secret.name.toUpperCase().replace(/\s+/g, "_")
+      return `${varName}=your_${varName.toLowerCase()}_here`
+    })
+
+    const envContent = [
+      "# Environment Variables",
+      "# Copy this file to .env and fill in your actual values",
+      "",
+      ...envLines,
+    ].join("\n")
+
+    return {
+      success: true,
+      envContent,
+    }
+  } catch (error) {
+    console.error("Generate env example file error:", error)
+    return {
+      success: false,
+      error: "Failed to generate environment example file",
+    }
+  }
+}
+
+/**
+ * Generate env.ts file for T3 stack from secrets in a container
+ * @todo: Implement this
+ */
+export async function generateT3EnvFile(containerId: string): Promise<{
+  success: boolean
+  envContent?: string
+  error?: string
+}> {
+  try {
+    const session = await verifySession()
+
+    // Get container and validate it supports env operations
+    const container = await database.container.findFirst({
+      where: {
+        id: containerId,
+        userId: session.user.id,
+      },
+      include: {
+        secrets: {
+          where: {
+            metadata: {
+              some: {
+                type: "ENV_VARIABLE",
+                status: "ACTIVE",
+              },
+            },
+          },
+        },
+      },
+    })
+
+    if (!container) {
+      return {
+        success: false,
+        error: "Container not found",
+      }
+    }
+
+    // Check if container supports env operations
+    const { supported, reason } =
+      await containerSupportsEnvOperations(containerId)
+    if (!supported) {
+      return {
+        success: false,
+        error: reason || "Container does not support environment operations",
+      }
+    }
+
+    // Generate T3 env.ts content
+    const serverVars = container.secrets
+      .map((secret) => {
+        const varName = secret.name.toUpperCase().replace(/\s+/g, "_")
+        return `    ${varName}: z.string().min(1),`
+      })
+      .join("\n")
+
+    const runtimeEnv = container.secrets
+      .map((secret) => {
+        const varName = secret.name.toUpperCase().replace(/\s+/g, "_")
+        return `    ${varName}: process.env.${varName},`
+      })
+      .join("\n")
+
+    const envContent = `import { createEnv } from "@t3-oss/env-nextjs"
+import { z } from "zod"
+
+export const env = createEnv({
+  server: {
+${serverVars}
+  },
+  client: {
+    // Add client-side env vars here if needed
+  },
+  runtimeEnv: {
+${runtimeEnv}
+  },
+})`
+
+    return {
+      success: true,
+      envContent,
+    }
+  } catch (error) {
+    console.error("Generate T3 env file error:", error)
+    return {
+      success: false,
+      error: "Failed to generate T3 environment file",
     }
   }
 }

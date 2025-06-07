@@ -62,16 +62,11 @@ The format would be:
 
 - [ ] usage of `Metadata` aserver actions
 
-- [ ] Secret container must have these actions
-      - [ ] Add a secret
-      - [ ] Edit a secret
-      - [ ] Delete a secret
-      - [ ] View a secret
-      - [ ] Copy a secret
-      - [ ] Share a secret
-      - [ ] Export .env file
-      - [ ] Generate a .env.example file
-      - [ ] Generate a env.ts file for the `t3-env` library
+- [ ] Secret container must have these actions - [ ] Add a secret - [ ] Edit a secret - [ ] Delete a secret - [ ] View a secret - [ ] Copy a secret - [ ] Share a secret - [ ] Export .env file - [ ] Generate a .env.example file - [ ] Generate a env.ts file for the `t3-env` library
+
+- [ ] Genenaric return type from server actions
+      We should create a generic return type for the server actions.
+      This would be used to return the data from the server actions.
 
 ### Finished Tasks
 

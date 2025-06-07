@@ -14,8 +14,8 @@ import { verifySession } from "@/lib/auth/verify"
 import { CardExpiryDateUtils } from "@/lib/card-expiry-utils"
 import { getOrReturnEmptyObject } from "@/lib/utils"
 
-import { createTagsAndGetConnections } from "@/actions/tag"
 import { CardMetadataDto } from "@/actions/card-metadata"
+import { createTagsAndGetConnections } from "@/actions/tag"
 
 /**
  * Create a new card
@@ -368,7 +368,10 @@ export async function createCardWithMetadata(
             cardholderEmail: validatedCardData.cardholderEmail,
             userId: session.user.id,
             tags: tagConnections,
-            ...getOrReturnEmptyObject(validatedCardData.containerId, "containerId"),
+            ...getOrReturnEmptyObject(
+              validatedCardData.containerId,
+              "containerId"
+            ),
           },
         })
 

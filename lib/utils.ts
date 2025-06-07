@@ -4,11 +4,14 @@ import { SecretSimpleRo } from "@/schemas/secret"
 import {
   ActivityType,
   ActivityTypeEnum,
+  EntityType,
+  EntityTypeEnum,
   RawEntity,
   RecentItemBase,
   RecentItemType,
   RecentItemTypeEnum,
 } from "@/schemas/utils"
+import { ContainerType } from "@prisma/client"
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 import { ZodError, ZodIssue } from "zod"
@@ -282,4 +285,47 @@ export function getMetadataLabels(
   const hasMore = labels.length > maxLabels
 
   return displayLabels.join(", ") + (hasMore ? "..." : "")
+}
+
+/**
+ * Validates if an entity type can be added to a container based on container type
+ */
+export function validateEntityForContainer(
+  containerType: ContainerType,
+  entityType: EntityType
+): boolean {
+  switch (containerType) {
+    case ContainerType.MIXED:
+      return true
+    case ContainerType.SECRETS_ONLY:
+      return entityType === EntityTypeEnum.SECRET
+    case ContainerType.CREDENTIALS_ONLY:
+      return entityType === EntityTypeEnum.CREDENTIAL
+    case ContainerType.CARDS_ONLY:
+      return entityType === EntityTypeEnum.CARD
+    default:
+      return false
+  }
+}
+
+/**
+ * Gets the allowed entity types for a container
+ */
+export function getAllowedEntityTypes(containerType: ContainerType): string[] {
+  switch (containerType) {
+    case ContainerType.MIXED:
+      return [
+        EntityTypeEnum.SECRET,
+        EntityTypeEnum.CREDENTIAL,
+        EntityTypeEnum.CARD,
+      ]
+    case ContainerType.SECRETS_ONLY:
+      return [EntityTypeEnum.SECRET]
+    case ContainerType.CREDENTIALS_ONLY:
+      return [EntityTypeEnum.CREDENTIAL]
+    case ContainerType.CARDS_ONLY:
+      return [EntityTypeEnum.CARD]
+    default:
+      return []
+  }
 }

@@ -8,7 +8,13 @@ import { verifySession } from "@/lib/auth/verify"
 // Define SecretMetadata DTO
 const SecretMetadataDto = z.object({
   secretId: z.string(),
-  type: z.enum(["API_KEY", "ENV_VARIABLE", "DATABASE_URL", "CLOUD_STORAGE_KEY", "THIRD_PARTY_API_KEY"]),
+  type: z.enum([
+    "API_KEY",
+    "ENV_VARIABLE",
+    "DATABASE_URL",
+    "CLOUD_STORAGE_KEY",
+    "THIRD_PARTY_API_KEY",
+  ]),
   status: z.enum(["ACTIVE", "EXPIRED", "REVOKED"]).default("ACTIVE"),
   otherInfo: z.array(z.any()).default([]),
   expiresAt: z.date().optional(),
@@ -19,9 +25,7 @@ export type SecretMetadataDto = z.infer<typeof SecretMetadataDto>
 /**
  * Create secret metadata
  */
-export async function createSecretMetadata(
-  data: SecretMetadataDto
-): Promise<{
+export async function createSecretMetadata(data: SecretMetadataDto): Promise<{
   success: boolean
   metadata?: any
   error?: string
@@ -272,4 +276,4 @@ export async function deleteSecretMetadata(id: string): Promise<{
       error: "Something went wrong. Please try again.",
     }
   }
-} 
+}

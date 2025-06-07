@@ -101,3 +101,17 @@ enum PlatformStatus {
   PENDING
   REJECTED
 }
+
+/**
+ * Represents the type of container and what entities it can hold.
+ * @property MIXED - Can contain any combination of secrets, credentials, and cards.
+ * @property SECRETS_ONLY - Can only contain secrets (enables env operations).
+ * @property CREDENTIALS_ONLY - Can only contain credentials.
+ * @property CARDS_ONLY - Can only contain cards.
+ */
+enum ContainerType {
+  MIXED
+  SECRETS_ONLY
+  CREDENTIALS_ONLY
+  CARDS_ONLY
+}

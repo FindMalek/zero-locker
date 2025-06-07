@@ -7,9 +7,59 @@ import {
   ContainerSimpleRo,
   type ContainerDto as ContainerDtoType,
 } from "@/schemas/container"
+import { ContainerType } from "@prisma/client"
 import { z } from "zod"
 
 import { verifySession } from "@/lib/auth/verify"
+
+/**
+ * Checks if container supports environment operations (only secrets-only or mixed with secrets)
+ */
+export async function containerSupportsEnvOperations(
+  containerId: string
+): Promise<{
+  supported: boolean
+  reason?: string
+}> {
+  try {
+    const session = await verifySession()
+
+    const container = await database.container.findFirst({
+      where: {
+        id: containerId,
+        userId: session.user.id,
+      },
+      include: {
+        secrets: true,
+      },
+    })
+
+    if (!container) {
+      return { supported: false, reason: "Container not found" }
+    }
+
+    if (container.type === ContainerType.SECRETS_ONLY) {
+      return { supported: true }
+    }
+
+    if (
+      container.type === ContainerType.MIXED &&
+      container.secrets.length > 0
+    ) {
+      return { supported: true }
+    }
+
+    return {
+      supported: false,
+      reason:
+        container.type === ContainerType.MIXED
+          ? "No secrets found in container"
+          : "Container type does not support environment operations",
+    }
+  } catch (error) {
+    return { supported: false, reason: "Failed to check container" }
+  }
+}
 
 /**
  * Create a new container

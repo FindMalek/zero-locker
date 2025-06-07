@@ -16,9 +16,7 @@ export type CardMetadataDto = z.infer<typeof CardMetadataDto>
 /**
  * Create card metadata
  */
-export async function createCardMetadata(
-  data: CardMetadataDto
-): Promise<{
+export async function createCardMetadata(data: CardMetadataDto): Promise<{
   success: boolean
   metadata?: any
   error?: string
@@ -269,4 +267,4 @@ export async function deleteCardMetadata(id: string): Promise<{
       error: "Something went wrong. Please try again.",
     }
   }
-} 
+}

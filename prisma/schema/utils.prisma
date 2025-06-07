@@ -72,6 +72,7 @@ model Tag {
  * @property name - Name of the container. Type: String.
  * @property description - Description of the container. Type: String. Optional.
  * @property icon - Icon of the container. Type: String. Optional.
+ * @property type - Type of the container defining what entities it can hold. Type: ContainerType. Defaults to MIXED.
  * @property createdAt - Timestamp when the container was created. Type: DateTime. Defaults to current time.
  * @property updatedAt - Timestamp when the container was last updated. Type: DateTime. Updated automatically.
  * @property user - User who owns the container. Type: User. Relation to User model.
@@ -89,6 +90,8 @@ model Container {
 
   description String?
 
+  type ContainerType @default(MIXED)
+
   tags        Tag[]
   cards       Card[]
   secrets     Secret[]
@@ -101,4 +104,5 @@ model Container {
   userId String
 
   @@index([userId])
+  @@index([type])
 }
