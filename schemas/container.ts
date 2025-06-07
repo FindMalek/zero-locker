@@ -1,15 +1,18 @@
 import { ContainerType } from "@prisma/client"
 import { z } from "zod"
 
-export const ContainerDto = z.object({
+export const containerDtoSchema = z.object({
   name: z.string().min(1, "Name is required"),
   icon: z.string().min(1, "Icon is required"),
+
   description: z.string().optional(),
+
   type: z.nativeEnum(ContainerType).default(ContainerType.MIXED),
-  userId: z.string(), // Assuming userId is provided during creation
 })
 
-export const ContainerSimpleRoSchema = z.object({
+export type ContainerDto = z.infer<typeof containerDtoSchema>
+
+export const containerSimpleRoSchema = z.object({
   id: z.string(),
 
   name: z.string(),
@@ -24,5 +27,4 @@ export const ContainerSimpleRoSchema = z.object({
   userId: z.string(),
 })
 
-export type ContainerDto = z.infer<typeof ContainerDto>
-export type ContainerSimpleRo = z.infer<typeof ContainerSimpleRoSchema>
+export type ContainerSimpleRo = z.infer<typeof containerSimpleRoSchema>
