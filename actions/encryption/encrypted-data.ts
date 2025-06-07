@@ -103,3 +103,94 @@ export async function updateEncryptedData(
     }
   }
 }
+
+/**
+ * Get encrypted data by ID
+ */
+export async function getEncryptedDataById(id: string): Promise<{
+  success: boolean
+  encryptedData?: EncryptedDataSimpleRo
+  error?: string
+}> {
+  try {
+    await verifySession()
+
+    const encryptedData = await database.encryptedData.findUnique({
+      where: { id },
+    })
+
+    if (!encryptedData) {
+      return {
+        success: false,
+        error: "Encrypted data not found",
+      }
+    }
+
+    return {
+      success: true,
+      encryptedData: {
+        id: encryptedData.id,
+        encryptedValue: encryptedData.encryptedValue,
+        encryptionKey: encryptedData.encryptionKey,
+        iv: encryptedData.iv,
+        createdAt: encryptedData.createdAt,
+        updatedAt: encryptedData.updatedAt,
+      },
+    }
+  } catch (error) {
+    if (error instanceof Error && error.message === "Not authenticated") {
+      return {
+        success: false,
+        error: "Not authenticated",
+      }
+    }
+    console.error("Get encrypted data error:", error)
+    return {
+      success: false,
+      error: "Something went wrong. Please try again.",
+    }
+  }
+}
+
+/**
+ * Delete encrypted data
+ */
+export async function deleteEncryptedData(id: string): Promise<{
+  success: boolean
+  error?: string
+}> {
+  try {
+    await verifySession()
+
+    const existingData = await database.encryptedData.findUnique({
+      where: { id },
+    })
+
+    if (!existingData) {
+      return {
+        success: false,
+        error: "Encrypted data not found",
+      }
+    }
+
+    await database.encryptedData.delete({
+      where: { id },
+    })
+
+    return {
+      success: true,
+    }
+  } catch (error) {
+    if (error instanceof Error && error.message === "Not authenticated") {
+      return {
+        success: false,
+        error: "Not authenticated",
+      }
+    }
+    console.error("Delete encrypted data error:", error)
+    return {
+      success: false,
+      error: "Something went wrong. Please try again.",
+    }
+  }
+}

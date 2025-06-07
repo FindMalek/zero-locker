@@ -1,9 +1,9 @@
 "use server"
 
-import { TagEntity } from "@/entities/tag"
+import { TagEntity } from "@/entities/utils/tag"
 import { database } from "@/prisma/client"
 import {
-  TagDto,
+  tagDtoSchema,
   TagSimpleRo,
   type TagDto as TagDtoType,
 } from "@/schemas/utils/tag"
@@ -53,7 +53,7 @@ export async function createTag(data: TagDtoType): Promise<{
     const session = await verifySession()
 
     // Validate using our DTO schema
-    const validatedData = TagDto.parse(data)
+    const validatedData = tagDtoSchema.parse(data)
 
     try {
       // Check if tag with same name already exists for this user
@@ -184,7 +184,7 @@ export async function updateTag(
     }
 
     // Validate using our DTO schema (partial)
-    const partialTagSchema = TagDto.partial()
+    const partialTagSchema = tagDtoSchema.partial()
     const validatedData = partialTagSchema.parse(data)
 
     try {

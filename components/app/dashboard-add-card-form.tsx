@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { CardEntity } from "@/entities/card/entity"
+import { CardEntity } from "@/entities"
 import { CardDto, LIST_CARD_STATUSES, LIST_CARD_TYPES } from "@/schemas/card"
 import { TagDto } from "@/schemas/utils/tag"
 import { CardStatus } from "@prisma/client"

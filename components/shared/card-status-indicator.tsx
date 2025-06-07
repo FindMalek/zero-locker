@@ -1,4 +1,4 @@
-import { CardEntity } from "@/entities/card/entity"
+import { CardEntity } from "@/entities"
 import { CardStatusEnum, CardStatusInfer } from "@/schemas/card"
 
 import { cn } from "@/lib/utils"

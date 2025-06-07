@@ -1,11 +1,17 @@
 "use server"
 
-import { ContainerEntity } from "@/entities/container"
+import { ContainerEntity } from "@/entities/utils/container"
 import { database } from "@/prisma/client"
 import {
   ContainerDto,
+  containerDtoSchema,
   ContainerSimpleRo,
-  type ContainerDto as ContainerDtoType,
+  DeleteContainerDto,
+  deleteContainerDtoSchema,
+  GetContainerByIdDto,
+  getContainerByIdDtoSchema,
+  UpdateContainerDto,
+  updateContainerDtoSchema,
 } from "@/schemas/utils/container"
 import { ContainerType } from "@prisma/client"
 import { z } from "zod"
@@ -18,8 +24,9 @@ import { verifySession } from "@/lib/auth/verify"
 export async function containerSupportsEnvOperations(
   containerId: string
 ): Promise<{
-  supported: boolean
-  reason?: string
+  success: boolean
+  supports?: boolean
+  error?: string
 }> {
   try {
     const session = await verifySession()
@@ -35,36 +42,126 @@ export async function containerSupportsEnvOperations(
     })
 
     if (!container) {
-      return { supported: false, reason: "Container not found" }
+      return {
+        success: false,
+        error: "Container not found",
+      }
     }
 
     if (container.type === ContainerType.SECRETS_ONLY) {
-      return { supported: true }
+      return {
+        success: true,
+        supports: true,
+      }
     }
 
     if (
       container.type === ContainerType.MIXED &&
       container.secrets.length > 0
     ) {
-      return { supported: true }
+      return {
+        success: true,
+        supports: true,
+      }
     }
 
     return {
-      supported: false,
-      reason:
-        container.type === ContainerType.MIXED
-          ? "No secrets found in container"
-          : "Container type does not support environment operations",
+      success: true,
+      supports: false,
     }
   } catch (error) {
-    return { supported: false, reason: "Failed to check container" }
+    if (error instanceof Error && error.message === "Not authenticated") {
+      return {
+        success: false,
+        error: "Not authenticated",
+      }
+    }
+    return {
+      success: false,
+      error: "Failed to check container",
+    }
+  }
+}
+
+/**
+ * Get container by ID (Simple RO)
+ */
+export async function getSimpleContainerById(id: string): Promise<{
+  success: boolean
+  container?: ContainerSimpleRo
+  error?: string
+}> {
+  try {
+    const session = await verifySession()
+
+    const container = await database.container.findFirst({
+      where: {
+        id,
+        userId: session.user.id,
+      },
+    })
+
+    if (!container) {
+      return {
+        success: false,
+        error: "Container not found",
+      }
+    }
+
+    return {
+      success: true,
+      container: ContainerEntity.getSimpleRo(container),
+    }
+  } catch (error) {
+    if (error instanceof Error && error.message === "Not authenticated") {
+      return {
+        success: false,
+        error: "Not authenticated",
+      }
+    }
+    console.error("Get simple container error:", error)
+    return {
+      success: false,
+      error: "Something went wrong. Please try again.",
+    }
+  }
+}
+
+/**
+ * Get container by ID (Full RO with relations)
+ */
+export async function getContainerById(data: GetContainerByIdDto): Promise<{
+  success: boolean
+  container?: ContainerSimpleRo
+  error?: string
+  issues?: z.ZodIssue[]
+}> {
+  try {
+    const validatedData = getContainerByIdDtoSchema.parse(data)
+
+    const result = await getSimpleContainerById(validatedData.id)
+    return result
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return {
+        success: false,
+        error: "Validation failed",
+        issues: error.issues,
+      }
+    }
+
+    console.error("Get container error:", error)
+    return {
+      success: false,
+      error: "Something went wrong. Please try again.",
+    }
   }
 }
 
 /**
  * Create a new container
  */
-export async function createContainer(data: ContainerDtoType): Promise<{
+export async function createContainer(data: ContainerDto): Promise<{
   success: boolean
   container?: ContainerSimpleRo
   error?: string
@@ -74,7 +171,7 @@ export async function createContainer(data: ContainerDtoType): Promise<{
     const session = await verifySession()
 
     // Validate using our DTO schema
-    const validatedData = ContainerDto.parse(data)
+    const validatedData = containerDtoSchema.parse(data)
 
     try {
       // Create container with Prisma
@@ -118,89 +215,35 @@ export async function createContainer(data: ContainerDtoType): Promise<{
 }
 
 /**
- * Get container by ID
- */
-export async function getContainerById(id: string): Promise<{
-  success: boolean
-  container?: ContainerSimpleRo
-  error?: string
-}> {
-  try {
-    const session = await verifySession()
-
-    const container = await database.container.findFirst({
-      where: {
-        id,
-        userId: session.user.id,
-      },
-    })
-
-    if (!container) {
-      return {
-        success: false,
-        error: "Container not found",
-      }
-    }
-
-    return {
-      success: true,
-      container: ContainerEntity.getSimpleRo(container),
-    }
-  } catch (error) {
-    if (error instanceof Error && error.message === "Not authenticated") {
-      return {
-        success: false,
-        error: "Not authenticated",
-      }
-    }
-    console.error("Get container error:", error)
-    return {
-      success: false,
-      error: "Something went wrong. Please try again.",
-    }
-  }
-}
-
-/**
  * Update a container
  */
-export async function updateContainer(
-  id: string,
-  data: Partial<ContainerDtoType>
-): Promise<{
+export async function updateContainer(data: UpdateContainerDto): Promise<{
   success: boolean
   container?: ContainerSimpleRo
   error?: string
   issues?: z.ZodIssue[]
 }> {
   try {
-    const session = await verifySession()
+    const _session = await verifySession()
+    const validatedData = updateContainerDtoSchema.parse(data)
+    const { id, ...updateData } = validatedData
 
-    // Make sure container exists and belongs to user
-    const existingContainer = await database.container.findFirst({
-      where: {
-        id,
-        userId: session.user.id,
-      },
-    })
-
-    if (!existingContainer) {
-      return {
-        success: false,
-        error: "Container not found",
-      }
+    // Use getSimpleContainerById to check if container exists and belongs to user
+    const existingContainerResult = await getSimpleContainerById(id)
+    if (!existingContainerResult.success) {
+      return existingContainerResult
     }
 
     // Validate using our DTO schema (partial)
-    const partialContainerSchema = ContainerDto.partial()
-    const validatedData = partialContainerSchema.parse(data)
+    const partialContainerSchema = containerDtoSchema.partial()
+    const validatedUpdateData = partialContainerSchema.parse(updateData)
 
     try {
       // Update container with Prisma
       const updatedContainer = await database.container.update({
         where: { id },
         data: {
-          ...validatedData,
+          ...validatedUpdateData,
           updatedAt: new Date(),
         },
       })
@@ -238,45 +281,49 @@ export async function updateContainer(
 /**
  * Delete a container
  */
-export async function deleteContainer(id: string): Promise<{
+export async function deleteContainer(data: DeleteContainerDto): Promise<{
   success: boolean
   error?: string
+  issues?: z.ZodIssue[]
 }> {
   try {
-    const session = await verifySession()
+    const _session = await verifySession()
+    const validatedData = deleteContainerDtoSchema.parse(data)
 
-    // Make sure container exists and belongs to user
-    const existingContainer = await database.container.findFirst({
-      where: {
-        id,
-        userId: session.user.id,
-      },
-    })
-
-    if (!existingContainer) {
+    // Use getSimpleContainerById to check if container exists and belongs to user
+    const existingContainerResult = await getSimpleContainerById(
+      validatedData.id
+    )
+    if (!existingContainerResult.success) {
       return {
         success: false,
-        error: "Container not found",
+        error: existingContainerResult.error,
       }
     }
 
-    // Check if container has any items
+    // Check if container has any entities before deletion
     const [credentialCount, secretCount, cardCount] = await Promise.all([
-      database.credential.count({ where: { containerId: id } }),
-      database.secret.count({ where: { containerId: id } }),
-      database.card.count({ where: { containerId: id } }),
+      database.credential.count({
+        where: { containerId: validatedData.id },
+      }),
+      database.secret.count({
+        where: { containerId: validatedData.id },
+      }),
+      database.card.count({
+        where: { containerId: validatedData.id },
+      }),
     ])
 
     if (credentialCount > 0 || secretCount > 0 || cardCount > 0) {
       return {
         success: false,
-        error: "Cannot delete container that contains items",
+        error:
+          "Cannot delete container with existing entities. Please move or delete all entities first.",
       }
     }
 
-    // Delete container with Prisma
     await database.container.delete({
-      where: { id },
+      where: { id: validatedData.id },
     })
 
     return {
@@ -289,6 +336,14 @@ export async function deleteContainer(id: string): Promise<{
         error: "Not authenticated",
       }
     }
+    if (error instanceof z.ZodError) {
+      return {
+        success: false,
+        error: "Validation failed",
+        issues: error.issues,
+      }
+    }
+
     console.error("Container deletion error:", error)
     return {
       success: false,
@@ -311,7 +366,6 @@ export async function listContainers(
 }> {
   try {
     const session = await verifySession()
-
     const skip = (page - 1) * limit
 
     const [containers, total] = await Promise.all([
@@ -319,11 +373,11 @@ export async function listContainers(
         where: { userId: session.user.id },
         skip,
         take: limit,
-        orderBy: {
-          createdAt: "desc",
-        },
+        orderBy: { createdAt: "desc" },
       }),
-      database.container.count({ where: { userId: session.user.id } }),
+      database.container.count({
+        where: { userId: session.user.id },
+      }),
     ])
 
     return {
@@ -362,30 +416,28 @@ export async function getContainerStats(id: string): Promise<{
   error?: string
 }> {
   try {
-    const session = await verifySession()
+    const _session = await verifySession()
 
-    // Make sure container exists and belongs to user
-    const existingContainer = await database.container.findFirst({
-      where: {
-        id,
-        userId: session.user.id,
-      },
-    })
-
-    if (!existingContainer) {
-      return {
-        success: false,
-        error: "Container not found",
-      }
+    // Use getSimpleContainerById to check if container exists and belongs to user
+    const containerResult = await getSimpleContainerById(id)
+    if (!containerResult.success) {
+      return containerResult
     }
 
-    // Get statistics
     const [credentialCount, secretCount, cardCount, tagCount] =
       await Promise.all([
-        database.credential.count({ where: { containerId: id } }),
-        database.secret.count({ where: { containerId: id } }),
-        database.card.count({ where: { containerId: id } }),
-        database.tag.count({ where: { containerId: id } }),
+        database.credential.count({
+          where: { containerId: id },
+        }),
+        database.secret.count({
+          where: { containerId: id },
+        }),
+        database.card.count({
+          where: { containerId: id },
+        }),
+        database.tag.count({
+          where: { containerId: id },
+        }),
       ])
 
     return {

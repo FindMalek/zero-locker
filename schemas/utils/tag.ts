@@ -19,3 +19,21 @@ export const tagSimpleRoSchema = z.object({
 })
 
 export type TagSimpleRo = z.infer<typeof tagSimpleRoSchema>
+
+export const getTagByIdDtoSchema = z.object({
+  id: z.string().min(1, "Tag ID is required"),
+})
+
+export type GetTagByIdDto = z.infer<typeof getTagByIdDtoSchema>
+
+export const updateTagDtoSchema = tagDtoSchema.partial().extend({
+  id: z.string().min(1, "Tag ID is required"),
+})
+
+export type UpdateTagDto = z.infer<typeof updateTagDtoSchema>
+
+export const deleteTagDtoSchema = z.object({
+  id: z.string().min(1, "Tag ID is required"),
+})
+
+export type DeleteTagDto = z.infer<typeof deleteTagDtoSchema>

@@ -31,3 +31,21 @@ export const containerSimpleRoSchema = z.object({
 })
 
 export type ContainerSimpleRo = z.infer<typeof containerSimpleRoSchema>
+
+export const getContainerByIdDtoSchema = z.object({
+  id: z.string().min(1, "Container ID is required"),
+})
+
+export type GetContainerByIdDto = z.infer<typeof getContainerByIdDtoSchema>
+
+export const updateContainerDtoSchema = containerDtoSchema.partial().extend({
+  id: z.string().min(1, "Container ID is required"),
+})
+
+export type UpdateContainerDto = z.infer<typeof updateContainerDtoSchema>
+
+export const deleteContainerDtoSchema = z.object({
+  id: z.string().min(1, "Container ID is required"),
+})
+
+export type DeleteContainerDto = z.infer<typeof deleteContainerDtoSchema>

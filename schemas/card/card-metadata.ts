@@ -32,3 +32,28 @@ export const cardMetadataSimpleRoSchema = z.object({
 })
 
 export type CardMetadataSimpleRo = z.infer<typeof cardMetadataSimpleRoSchema>
+
+export const getCardMetadataDtoSchema = z.object({
+  cardId: z.string().min(1, "Card ID is required"),
+})
+
+export type GetCardMetadataDto = z.infer<typeof getCardMetadataDtoSchema>
+
+export const updateCardMetadataDtoSchema = z.object({
+  id: z.string().min(1, "Metadata ID is required"),
+  data: cardMetadataDtoSchema.partial(),
+})
+
+export type UpdateCardMetadataDto = z.infer<typeof updateCardMetadataDtoSchema>
+
+export const deleteCardMetadataDtoSchema = z.object({
+  id: z.string().min(1, "Metadata ID is required"),
+})
+
+export type DeleteCardMetadataDto = z.infer<typeof deleteCardMetadataDtoSchema>
+
+export const listCardMetadataDtoSchema = z.object({
+  cardId: z.string().min(1, "Card ID is required"),
+})
+
+export type ListCardMetadataDto = z.infer<typeof listCardMetadataDtoSchema>

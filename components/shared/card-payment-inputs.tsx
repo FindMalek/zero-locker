@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useId, useState } from "react"
-import { CardEntity } from "@/entities/card/entity"
+import { CardEntity } from "@/entities"
 import { LIST_CARD_PROVIDERS, type CardProviderInfer } from "@/schemas/card"
 import { usePaymentInputs } from "react-payment-inputs"
 

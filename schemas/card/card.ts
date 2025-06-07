@@ -106,3 +106,21 @@ export const cardSimpleRoSchema = z.object({
 })
 
 export type CardSimpleRo = z.infer<typeof cardSimpleRoSchema>
+
+export const getCardByIdDtoSchema = z.object({
+  id: z.string().min(1, "Card ID is required"),
+})
+
+export type GetCardByIdDto = z.infer<typeof getCardByIdDtoSchema>
+
+export const updateCardDtoSchema = cardDtoSchema.partial().extend({
+  id: z.string().min(1, "Card ID is required"),
+})
+
+export type UpdateCardDto = z.infer<typeof updateCardDtoSchema>
+
+export const deleteCardDtoSchema = z.object({
+  id: z.string().min(1, "Card ID is required"),
+})
+
+export type DeleteCardDto = z.infer<typeof deleteCardDtoSchema>

@@ -1,7 +1,20 @@
 "use server"
 
+import { CardMetadataEntity } from "@/entities/card/card-metadata"
 import { database } from "@/prisma/client"
-import { CardMetadataDto } from "@/schemas/card/card-metadata"
+import {
+  cardMetadataDtoSchema,
+  deleteCardMetadataDtoSchema,
+  getCardMetadataDtoSchema,
+  listCardMetadataDtoSchema,
+  updateCardMetadataDtoSchema,
+  type CardMetadataDto,
+  type CardMetadataSimpleRo,
+  type DeleteCardMetadataDto,
+  type GetCardMetadataDto,
+  type ListCardMetadataDto,
+  type UpdateCardMetadataDto,
+} from "@/schemas/card/card-metadata"
 import { z } from "zod"
 
 import { verifySession } from "@/lib/auth/verify"
@@ -11,13 +24,13 @@ import { verifySession } from "@/lib/auth/verify"
  */
 export async function createCardMetadata(data: CardMetadataDto): Promise<{
   success: boolean
-  metadata?: any
+  metadata?: CardMetadataSimpleRo
   error?: string
   issues?: z.ZodIssue[]
 }> {
   try {
     const session = await verifySession()
-    const validatedData = CardMetadataDto.parse(data)
+    const validatedData = cardMetadataDtoSchema.parse(data)
 
     // Check if card exists and belongs to the user
     const card = await database.card.findFirst({
@@ -53,7 +66,7 @@ export async function createCardMetadata(data: CardMetadataDto): Promise<{
 
     return {
       success: true,
-      metadata,
+      metadata: CardMetadataEntity.getSimpleRo(metadata),
     }
   } catch (error) {
     if (error instanceof Error && error.message === "Not authenticated") {
@@ -81,18 +94,20 @@ export async function createCardMetadata(data: CardMetadataDto): Promise<{
 /**
  * Get card metadata
  */
-export async function getCardMetadata(cardId: string): Promise<{
+export async function getCardMetadata(data: GetCardMetadataDto): Promise<{
   success: boolean
-  metadata?: any
+  metadata?: CardMetadataSimpleRo
   error?: string
+  issues?: z.ZodIssue[]
 }> {
   try {
     const session = await verifySession()
+    const validatedData = getCardMetadataDtoSchema.parse(data)
 
     // Check if card exists and belongs to the user
     const card = await database.card.findFirst({
       where: {
-        id: cardId,
+        id: validatedData.cardId,
         userId: session.user.id,
       },
     })
@@ -106,7 +121,7 @@ export async function getCardMetadata(cardId: string): Promise<{
 
     // Get metadata
     const metadata = await database.cardMetadata.findFirst({
-      where: { cardId },
+      where: { cardId: validatedData.cardId },
     })
 
     if (!metadata) {
@@ -118,13 +133,20 @@ export async function getCardMetadata(cardId: string): Promise<{
 
     return {
       success: true,
-      metadata,
+      metadata: CardMetadataEntity.getSimpleRo(metadata),
     }
   } catch (error) {
     if (error instanceof Error && error.message === "Not authenticated") {
       return {
         success: false,
         error: "Not authenticated",
+      }
+    }
+    if (error instanceof z.ZodError) {
+      return {
+        success: false,
+        error: "Validation failed",
+        issues: error.issues,
       }
     }
     console.error("Get card metadata error:", error)
@@ -138,21 +160,19 @@ export async function getCardMetadata(cardId: string): Promise<{
 /**
  * Update card metadata
  */
-export async function updateCardMetadata(
-  id: string,
-  data: Partial<CardMetadataDto>
-): Promise<{
+export async function updateCardMetadata(data: UpdateCardMetadataDto): Promise<{
   success: boolean
-  metadata?: any
+  metadata?: CardMetadataSimpleRo
   error?: string
   issues?: z.ZodIssue[]
 }> {
   try {
     const session = await verifySession()
+    const validatedData = updateCardMetadataDtoSchema.parse(data)
 
     // Get metadata
     const existingMetadata = await database.cardMetadata.findUnique({
-      where: { id },
+      where: { id: validatedData.id },
       include: { card: true },
     })
 
@@ -171,19 +191,15 @@ export async function updateCardMetadata(
       }
     }
 
-    // Validate data
-    const partialSchema = CardMetadataDto.partial()
-    const validatedData = partialSchema.parse(data)
-
     // Update metadata
     const updatedMetadata = await database.cardMetadata.update({
-      where: { id },
-      data: validatedData,
+      where: { id: validatedData.id },
+      data: validatedData.data,
     })
 
     return {
       success: true,
-      metadata: updatedMetadata,
+      metadata: CardMetadataEntity.getSimpleRo(updatedMetadata),
     }
   } catch (error) {
     if (error instanceof Error && error.message === "Not authenticated") {
@@ -211,16 +227,18 @@ export async function updateCardMetadata(
 /**
  * Delete card metadata
  */
-export async function deleteCardMetadata(id: string): Promise<{
+export async function deleteCardMetadata(data: DeleteCardMetadataDto): Promise<{
   success: boolean
   error?: string
+  issues?: z.ZodIssue[]
 }> {
   try {
     const session = await verifySession()
+    const validatedData = deleteCardMetadataDtoSchema.parse(data)
 
     // Get metadata
     const existingMetadata = await database.cardMetadata.findUnique({
-      where: { id },
+      where: { id: validatedData.id },
       include: { card: true },
     })
 
@@ -241,7 +259,7 @@ export async function deleteCardMetadata(id: string): Promise<{
 
     // Delete metadata
     await database.cardMetadata.delete({
-      where: { id },
+      where: { id: validatedData.id },
     })
 
     return {
@@ -254,7 +272,73 @@ export async function deleteCardMetadata(id: string): Promise<{
         error: "Not authenticated",
       }
     }
+    if (error instanceof z.ZodError) {
+      return {
+        success: false,
+        error: "Validation failed",
+        issues: error.issues,
+      }
+    }
     console.error("Delete card metadata error:", error)
+    return {
+      success: false,
+      error: "Something went wrong. Please try again.",
+    }
+  }
+}
+
+/**
+ * List card metadata by card ID
+ */
+export async function listCardMetadata(data: ListCardMetadataDto): Promise<{
+  success: boolean
+  metadata?: CardMetadataSimpleRo[]
+  error?: string
+  issues?: z.ZodIssue[]
+}> {
+  try {
+    const session = await verifySession()
+    const validatedData = listCardMetadataDtoSchema.parse(data)
+
+    // Check if card exists and belongs to the user
+    const card = await database.card.findFirst({
+      where: {
+        id: validatedData.cardId,
+        userId: session.user.id,
+      },
+    })
+
+    if (!card) {
+      return {
+        success: false,
+        error: "Card not found",
+      }
+    }
+
+    // Get all metadata for this card
+    const metadata = await database.cardMetadata.findMany({
+      where: { cardId: validatedData.cardId },
+    })
+
+    return {
+      success: true,
+      metadata: metadata.map((item) => CardMetadataEntity.getSimpleRo(item)),
+    }
+  } catch (error) {
+    if (error instanceof Error && error.message === "Not authenticated") {
+      return {
+        success: false,
+        error: "Not authenticated",
+      }
+    }
+    if (error instanceof z.ZodError) {
+      return {
+        success: false,
+        error: "Validation failed",
+        issues: error.issues,
+      }
+    }
+    console.error("List card metadata error:", error)
     return {
       success: false,
       error: "Something went wrong. Please try again.",

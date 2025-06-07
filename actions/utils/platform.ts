@@ -1,10 +1,10 @@
 "use server"
 
 import { headers } from "next/headers"
-import { PlatformEntity } from "@/entities/platform"
+import { PlatformEntity } from "@/entities/utils/platform"
 import { database } from "@/prisma/client"
 import {
-  PlatformDto,
+  platformDtoSchema,
   PlatformSimpleRo,
   type PlatformDto as PlatformDtoType,
 } from "@/schemas/utils/platform"
@@ -27,7 +27,7 @@ export async function createPlatform(data: PlatformDtoType): Promise<{
     const session = await verifySession()
 
     // Validate using our DTO schema
-    const validatedData = PlatformDto.parse(data)
+    const validatedData = platformDtoSchema.parse(data)
 
     try {
       // Create platform with Prisma
@@ -142,7 +142,7 @@ export async function updatePlatform(
     }
 
     // Validate using our DTO schema (partial)
-    const partialPlatformSchema = PlatformDto.partial()
+    const partialPlatformSchema = platformDtoSchema.partial()
     const validatedData = partialPlatformSchema.parse(data)
 
     try {

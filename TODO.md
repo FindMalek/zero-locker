@@ -62,6 +62,9 @@ The format would be:
 
 - [ ] Sync `CardMetadata` with the `Card` Form
 
+- [ ] In each model that uses CRUD actions, implement `isDeleted`
+      This would help in recovery and undo actions
+
 ### Finished Tasks
 
 - [x] Change return types of the Server Actions || High

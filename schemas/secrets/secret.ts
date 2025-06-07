@@ -30,3 +30,21 @@ export const secretSimpleRoSchema = z.object({
 })
 
 export type SecretSimpleRo = z.infer<typeof secretSimpleRoSchema>
+
+export const getSecretByIdDtoSchema = z.object({
+  id: z.string().min(1, "Secret ID is required"),
+})
+
+export type GetSecretByIdDto = z.infer<typeof getSecretByIdDtoSchema>
+
+export const updateSecretDtoSchema = secretDtoSchema.partial().extend({
+  id: z.string().min(1, "Secret ID is required"),
+})
+
+export type UpdateSecretDto = z.infer<typeof updateSecretDtoSchema>
+
+export const deleteSecretDtoSchema = z.object({
+  id: z.string().min(1, "Secret ID is required"),
+})
+
+export type DeleteSecretDto = z.infer<typeof deleteSecretDtoSchema>

@@ -1,9 +1,9 @@
 "use server"
 
-import { CredentialMetadataEntity } from "@/entities/credential"
+import { CredentialMetadataEntity } from "@/entities/credential/credential-metadata"
 import { database } from "@/prisma/client"
 import {
-  CredentialMetadataSchemaDto,
+  credentialMetadataDtoSchema,
   CredentialMetadataSimpleRo,
   type CredentialMetadataDto as CredentialMetadataDtoType,
 } from "@/schemas/credential"
@@ -26,7 +26,7 @@ export async function createCredentialMetadata(
     const session = await verifySession()
 
     // Validate using our DTO schema
-    const validatedData = CredentialMetadataSchemaDto.parse(data)
+    const validatedData = credentialMetadataDtoSchema.parse(data)
 
     try {
       // Check if credential exists and belongs to the user
@@ -187,7 +187,7 @@ export async function updateCredentialMetadata(
     }
 
     // Validate using our DTO schema (partial)
-    const partialMetadataSchema = CredentialMetadataSchemaDto.partial()
+    const partialMetadataSchema = credentialMetadataDtoSchema.partial()
     const validatedData = partialMetadataSchema.parse(data)
 
     try {
@@ -274,6 +274,58 @@ export async function deleteCredentialMetadata(id: string): Promise<{
       }
     }
     console.error("Delete credential metadata error:", error)
+    return {
+      success: false,
+      error: "Something went wrong. Please try again.",
+    }
+  }
+}
+
+/**
+ * List credential metadata by credential ID
+ */
+export async function listCredentialMetadata(credentialId: string): Promise<{
+  success: boolean
+  metadata?: CredentialMetadataSimpleRo[]
+  error?: string
+}> {
+  try {
+    const session = await verifySession()
+
+    // Check if credential exists and belongs to the user
+    const credential = await database.credential.findFirst({
+      where: {
+        id: credentialId,
+        userId: session.user.id,
+      },
+    })
+
+    if (!credential) {
+      return {
+        success: false,
+        error: "Credential not found",
+      }
+    }
+
+    // Get all metadata for this credential
+    const metadata = await database.credentialMetadata.findMany({
+      where: { credentialId },
+    })
+
+    return {
+      success: true,
+      metadata: metadata.map((item) =>
+        CredentialMetadataEntity.getSimpleRo(item)
+      ),
+    }
+  } catch (error) {
+    if (error instanceof Error && error.message === "Not authenticated") {
+      return {
+        success: false,
+        error: "Not authenticated",
+      }
+    }
+    console.error("List credential metadata error:", error)
     return {
       success: false,
       error: "Something went wrong. Please try again.",

@@ -32,3 +32,21 @@ export const platformSimpleRoSchema = z.object({
 })
 
 export type PlatformSimpleRo = z.infer<typeof platformSimpleRoSchema>
+
+export const getPlatformByIdDtoSchema = z.object({
+  id: z.string().min(1, "Platform ID is required"),
+})
+
+export type GetPlatformByIdDto = z.infer<typeof getPlatformByIdDtoSchema>
+
+export const updatePlatformDtoSchema = platformDtoSchema.partial().extend({
+  id: z.string().min(1, "Platform ID is required"),
+})
+
+export type UpdatePlatformDto = z.infer<typeof updatePlatformDtoSchema>
+
+export const deletePlatformDtoSchema = z.object({
+  id: z.string().min(1, "Platform ID is required"),
+})
+
+export type DeletePlatformDto = z.infer<typeof deletePlatformDtoSchema>

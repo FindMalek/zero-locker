@@ -48,3 +48,21 @@ export const credentialSimpleRoSchema = z.object({
 })
 
 export type CredentialSimpleRo = z.infer<typeof credentialSimpleRoSchema>
+
+export const getCredentialByIdDtoSchema = z.object({
+  id: z.string().min(1, "Credential ID is required"),
+})
+
+export type GetCredentialByIdDto = z.infer<typeof getCredentialByIdDtoSchema>
+
+export const updateCredentialDtoSchema = credentialDtoSchema.partial().extend({
+  id: z.string().min(1, "Credential ID is required"),
+})
+
+export type UpdateCredentialDto = z.infer<typeof updateCredentialDtoSchema>
+
+export const deleteCredentialDtoSchema = z.object({
+  id: z.string().min(1, "Credential ID is required"),
+})
+
+export type DeleteCredentialDto = z.infer<typeof deleteCredentialDtoSchema>
