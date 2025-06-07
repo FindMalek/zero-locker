@@ -1,3 +1,4 @@
+import { encryptedDataDtoSchema } from "@/schemas/encrypted-data"
 import { TagDto } from "@/schemas/tag"
 import { CardProvider, CardStatus, CardType } from "@prisma/client"
 import { z } from "zod"
@@ -59,15 +60,19 @@ export type CardExpiryDate = z.infer<typeof cardExpiryDateSchema>
 export const cardDtoSchema = z.object({
   name: z.string().min(1, "Name is required"),
   description: z.string().optional(),
+
   type: z.nativeEnum(CardType),
   provider: z.nativeEnum(CardProvider),
   status: z.nativeEnum(CardStatus),
-  number: z.string().min(1, "Card number is required"),
-  expiryDate: cardExpiryDateSchema,
-  cvv: z.string().min(1, "CVV is required"),
-  billingAddress: z.string().optional(),
+
+  numberEncryption: encryptedDataDtoSchema,
+  cvvEncryption: encryptedDataDtoSchema,
+
   cardholderName: z.string().min(1, "Cardholder name is required"),
+  billingAddress: z.string().optional(),
   cardholderEmail: z.union([z.string().email(), z.literal("")]).optional(),
+  expiryDate: cardExpiryDateSchema,
+
   tags: z.array(TagDto),
   containerId: z.string().optional(),
 })
@@ -84,9 +89,7 @@ export const cardSimpleRoSchema = z.object({
   status: z.nativeEnum(CardStatus),
   provider: z.nativeEnum(CardProvider),
 
-  number: z.string(),
   expiryDate: z.date(),
-  cvv: z.string(),
   billingAddress: z.string().nullable(),
   cardholderName: z.string(),
   cardholderEmail: z.string().nullable(),
@@ -97,6 +100,8 @@ export const cardSimpleRoSchema = z.object({
 
   userId: z.string(),
   containerId: z.string().nullable(),
+  numberEncryptionId: z.string(),
+  cvvEncryptionId: z.string(),
 })
 
 export type CardSimpleRo = z.infer<typeof cardSimpleRoSchema>
