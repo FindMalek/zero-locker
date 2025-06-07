@@ -1,5 +1,5 @@
 import { encryptedDataDtoSchema } from "@/schemas/encryption/encryption"
-import { secretMetadataDtoSchema } from "@/schemas/secrets"
+import { secretMetadataDtoSchema } from "./secret-metadata"
 import { z } from "zod"
 
 export const secretDtoSchema = z.object({
