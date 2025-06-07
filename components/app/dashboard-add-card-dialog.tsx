@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { CardDto, CardDtoSchema } from "@/schemas/card"
+import { CardDto, cardDtoSchema } from "@/schemas/card"
 import { TagDto } from "@/schemas/utils/tag"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { CardProvider, CardStatus, CardType } from "@prisma/client"
@@ -34,24 +34,34 @@ export function DashboardAddCardDialog({
   const [createMore, setCreateMore] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
+  const [sensitiveData, setSensitiveData] = useState({
+    number: "",
+    cvv: "",
+  })
+
   const form = useForm({
-    resolver: zodResolver(CardDtoSchema),
+    resolver: zodResolver(cardDtoSchema),
     defaultValues: {
       name: "",
       description: "",
-      notes: "",
       type: CardType.CREDIT,
       provider: CardProvider.VISA,
       status: CardStatus.ACTIVE,
-      number: "",
       expiryDate: "",
-      cvv: "",
-      encryptionKey: "",
-      iv: "",
       billingAddress: "",
       cardholderName: "",
       cardholderEmail: "",
       tags: [],
+      numberEncryption: {
+        encryptedValue: "",
+        iv: "",
+        encryptionKey: "",
+      },
+      cvvEncryption: {
+        encryptedValue: "",
+        iv: "",
+        encryptionKey: "",
+      },
     },
   })
 
@@ -68,22 +78,39 @@ export function DashboardAddCardDialog({
         return
       }
 
-      // Encrypt sensitive data
-      const key = await generateEncryptionKey()
-      const encryptCvvResult = await encryptData(cardData.cvv, key)
-      const encryptNumberResult = await encryptData(cardData.number, key)
-      const keyString = await exportKey(key)
-
-      // Create the card DTO with encrypted data
-      const cardDto: CardDto = {
-        ...(cardData as CardDto),
-        number: encryptNumberResult.encryptedData,
-        cvv: encryptCvvResult.encryptedData,
-        encryptionKey: keyString,
-        iv: encryptCvvResult.iv,
+      // Validate sensitive data
+      if (!sensitiveData.number.trim()) {
+        toast("Card number is required", "error")
+        return
       }
 
-      const result = await createCard(cardDto)
+      if (!sensitiveData.cvv.trim()) {
+        toast("CVV is required", "error")
+        return
+      }
+
+      // Encrypt sensitive data
+      const key = await generateEncryptionKey()
+      const encryptCvvResult = await encryptData(sensitiveData.cvv, key)
+      const encryptNumberResult = await encryptData(sensitiveData.number, key)
+      const keyString = await exportKey(key as CryptoKey)
+
+      // Update the form data with encrypted values
+      const cardDataWithEncryption: CardDto = {
+        ...cardData,
+        numberEncryption: {
+          encryptedValue: encryptNumberResult.encryptedData,
+          iv: encryptNumberResult.iv,
+          encryptionKey: keyString,
+        },
+        cvvEncryption: {
+          encryptedValue: encryptCvvResult.encryptedData,
+          iv: encryptCvvResult.iv,
+          encryptionKey: keyString,
+        },
+      }
+
+      const result = await createCard(cardDataWithEncryption)
 
       if (result.success) {
         toast("Card saved successfully", "success")
@@ -94,20 +121,26 @@ export function DashboardAddCardDialog({
           form.reset({
             name: "",
             description: "",
-            notes: "",
             type: CardType.CREDIT,
             provider: CardProvider.VISA,
             status: CardStatus.ACTIVE,
-            number: "",
             expiryDate: "",
-            cvv: "",
-            encryptionKey: "",
-            iv: "",
             billingAddress: "",
             cardholderName: "",
             cardholderEmail: "",
             tags: [],
+            numberEncryption: {
+              encryptedValue: "",
+              iv: "",
+              encryptionKey: "",
+            },
+            cvvEncryption: {
+              encryptedValue: "",
+              iv: "",
+              encryptionKey: "",
+            },
           })
+          setSensitiveData({ number: "", cvv: "" })
         }
       } else {
         const errorDetails = result.issues
@@ -137,6 +170,7 @@ export function DashboardAddCardDialog({
   const handleDialogOpenChange = (open: boolean) => {
     if (!open) {
       form.reset()
+      setSensitiveData({ number: "", cvv: "" })
       setCreateMore(false)
     }
     onOpenChange(open)
@@ -166,7 +200,12 @@ export function DashboardAddCardDialog({
           }}
           className="space-y-6"
         >
-          <DashboardAddCardForm form={form} availableTags={availableTags} />
+          <DashboardAddCardForm
+            form={form}
+            availableTags={availableTags}
+            sensitiveData={sensitiveData}
+            setSensitiveData={setSensitiveData}
+          />
         </form>
       </Form>
     </AddItemDialog>

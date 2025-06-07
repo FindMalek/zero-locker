@@ -3,9 +3,9 @@
 import { useEffect, useState } from "react"
 import {
   CredentialDto,
+  credentialDtoSchema,
   CredentialMetadataDto,
-  CredentialMetadataSchemaDto,
-  CredentialSchemaDto,
+  credentialMetadataDtoSchema,
 } from "@/schemas/credential"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { AccountStatus } from "@prisma/client"
@@ -55,27 +55,36 @@ export function DashboardAddCredentialDialog({
     feedback: string
   } | null>(null)
 
+  // Temporary state for sensitive data before encryption
+  const [sensitiveData, setSensitiveData] = useState({
+    identifier: "",
+    password: "",
+  })
+
   const { copy, isCopied } = useCopyToClipboard({
     successDuration: 1500,
   })
 
   const credentialForm = useForm<CredentialDto>({
-    resolver: zodResolver(CredentialSchemaDto),
+    resolver: zodResolver(credentialDtoSchema),
     defaultValues: {
-      username: "",
-      password: "",
+      identifier: "",
       description: "",
       status: AccountStatus.ACTIVE,
       platformId: "",
       containerId: "",
-      encryptionKey: "",
-      iv: "",
+      passwordEncryption: {
+        encryptedValue: "",
+        iv: "",
+        encryptionKey: "",
+      },
       tags: [],
+      metadata: [],
     },
   })
 
   const metadataForm = useForm<CredentialMetadataDto>({
-    resolver: zodResolver(CredentialMetadataSchemaDto),
+    resolver: zodResolver(credentialMetadataDtoSchema),
     defaultValues: {
       recoveryEmail: "",
       phoneNumber: "",
@@ -98,16 +107,17 @@ export function DashboardAddCredentialDialog({
 
   const handleGeneratePassword = () => {
     const newPassword = generatePassword(16)
-    credentialForm.setValue("password", newPassword)
+    setSensitiveData((prev) => ({ ...prev, password: newPassword }))
     setPasswordStrength(checkPasswordStrength(newPassword))
   }
 
   const handlePasswordChange = (password: string) => {
+    setSensitiveData((prev) => ({ ...prev, password }))
     setPasswordStrength(checkPasswordStrength(password))
   }
 
   const handleCopyPassword = () => {
-    copy(credentialForm.getValues("password"))
+    copy(sensitiveData.password)
   }
 
   // Check if metadata form has any meaningful values
@@ -144,6 +154,17 @@ export function DashboardAddCredentialDialog({
         return
       }
 
+      // Validate sensitive data
+      if (!sensitiveData.identifier.trim()) {
+        toast("Identifier is required", "error")
+        return
+      }
+
+      if (!sensitiveData.password.trim()) {
+        toast("Password is required", "error")
+        return
+      }
+
       // If metadata has values, validate it regardless of whether it's shown
       if (hasMetadataValues()) {
         const metadataValid = await metadataForm.trigger()
@@ -157,16 +178,19 @@ export function DashboardAddCredentialDialog({
 
       // Encrypt password
       const key = await generateEncryptionKey()
-      const encryptResult = await encryptData(credentialData.password, key)
-      const keyString = await exportKey(key)
+      const encryptResult = await encryptData(sensitiveData.password, key)
+      const keyString = await exportKey(key as CryptoKey)
 
       const credentialDto: CredentialDto = {
-        username: credentialData.username,
-        password: encryptResult.encryptedData,
-        encryptionKey: keyString,
-        iv: encryptResult.iv,
+        identifier: sensitiveData.identifier,
+        passwordEncryption: {
+          encryptedValue: encryptResult.encryptedData,
+          iv: encryptResult.iv,
+          encryptionKey: keyString,
+        },
         status: credentialData.status,
         tags: credentialData.tags,
+        metadata: credentialData.metadata,
         description: credentialData.description,
         platformId: credentialData.platformId,
         containerId: credentialData.containerId,
@@ -203,15 +227,18 @@ export function DashboardAddCredentialDialog({
           handleDialogOpenChange(false)
         } else {
           credentialForm.reset({
-            username: "",
-            password: "",
+            identifier: "",
             description: "",
             status: AccountStatus.ACTIVE,
             platformId: credentialData.platformId,
             containerId: credentialData.containerId,
-            encryptionKey: "",
-            iv: "",
+            passwordEncryption: {
+              encryptedValue: "",
+              iv: "",
+              encryptionKey: "",
+            },
             tags: [],
+            metadata: [],
           })
           metadataForm.reset({
             recoveryEmail: "",
@@ -219,6 +246,7 @@ export function DashboardAddCredentialDialog({
             otherInfo: [],
             has2FA: false,
           })
+          setSensitiveData({ identifier: "", password: "" })
           setPasswordStrength(null)
           setShowMetadata(false)
         }
@@ -254,6 +282,7 @@ export function DashboardAddCredentialDialog({
     if (!open) {
       credentialForm.reset()
       metadataForm.reset()
+      setSensitiveData({ identifier: "", password: "" })
       setCreateMore(false)
       setShowMetadata(false)
       setPasswordStrength(null)
@@ -290,6 +319,8 @@ export function DashboardAddCredentialDialog({
             platforms={platforms}
             availableTags={availableTags}
             passwordStrength={passwordStrength}
+            sensitiveData={sensitiveData}
+            setSensitiveData={setSensitiveData}
             onPasswordChange={handlePasswordChange}
             onGeneratePassword={handleGeneratePassword}
             onCopyPassword={handleCopyPassword}

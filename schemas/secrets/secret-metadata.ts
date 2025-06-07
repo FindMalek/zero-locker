@@ -3,11 +3,11 @@ import { z } from "zod"
 
 export const secretMetadataDtoSchema = z.object({
   type: z.nativeEnum(SecretType),
-  status: z.nativeEnum(SecretStatus).default(SecretStatus.ACTIVE),
+  status: z.nativeEnum(SecretStatus),
 
   expiresAt: z.date().optional(),
 
-  otherInfo: z.array(z.any()).default([]),
+  otherInfo: z.array(z.any()),
 
   secretId: z.string(),
 })

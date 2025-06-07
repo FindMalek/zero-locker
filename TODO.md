@@ -56,10 +56,6 @@ The format would be:
       We should create a generic return type for the server actions.
       This would be used to return the data from the server actions.
 
-- [ ] Refactor the `EncryptedData` model
-      For each `query.ts` file, that its entity uses the `EncryptedData` model, we should create a new function that gets the `EncryptedData` model, and one dosent
-      We should think about it decrypting the data, in the server actions or entity.ts file or in the client.
-
 - [ ] Sync `CardMetadata` with the `Card` Form
 
 - [ ] In each model that uses CRUD actions, implement `isDeleted`
@@ -116,3 +112,7 @@ The format would be:
 
 - [x] Update - [x] Update all the DTOs to include `metadata` fields
       We want to have one call to create the data, not multiple calls from the client.t to have one call to create the data, not multiple calls from the client.
+
+- [x] Refactor the `EncryptedData` model
+      For each `query.ts` file, that its entity uses the `EncryptedData` model, we should create a new function that gets the `EncryptedData` model, and one dosent
+      We should think about it decrypting the data, in the server actions or entity.ts file or in the client.

@@ -1,4 +1,4 @@
-import { CardProviderEnum } from "@/schemas/card"
+import { cardProviderEnum } from "@/schemas/card"
 import type { CardProviderInfer } from "@/schemas/card"
 
 export const PRIORITY_ACTIVITY_TYPE = {
@@ -10,22 +10,22 @@ export const PRIORITY_ACTIVITY_TYPE = {
 export const MAX_RECENT_ITEMS = 10
 
 export const CARD_PROVIDER_ICON_TYPE = {
-  [CardProviderEnum.VISA]: "Visa",
-  [CardProviderEnum.MASTERCARD]: "Mastercard",
-  [CardProviderEnum.AMEX]: "Amex",
-  [CardProviderEnum.DISCOVER]: "Discover",
-  [CardProviderEnum.JCB]: "Jcb",
-  [CardProviderEnum.UNIONPAY]: "Unionpay",
-  [CardProviderEnum.DINERS_CLUB]: "Diners",
+  [cardProviderEnum.VISA]: "Visa",
+  [cardProviderEnum.MASTERCARD]: "Mastercard",
+  [cardProviderEnum.AMEX]: "Amex",
+  [cardProviderEnum.DISCOVER]: "Discover",
+  [cardProviderEnum.JCB]: "Jcb",
+  [cardProviderEnum.UNIONPAY]: "Unionpay",
+  [cardProviderEnum.DINERS_CLUB]: "Diners",
 } as const
 
 export const CARD_TYPE_MAPPING: Record<string, CardProviderInfer> = {
-  visa: CardProviderEnum.VISA,
-  mastercard: CardProviderEnum.MASTERCARD,
-  amex: CardProviderEnum.AMEX,
-  discover: CardProviderEnum.DISCOVER,
-  jcb: CardProviderEnum.JCB,
-  unionpay: CardProviderEnum.UNIONPAY,
-  diners: CardProviderEnum.DINERS_CLUB,
-  dinersclub: CardProviderEnum.DINERS_CLUB,
+  visa: cardProviderEnum.VISA,
+  mastercard: cardProviderEnum.MASTERCARD,
+  amex: cardProviderEnum.AMEX,
+  discover: cardProviderEnum.DISCOVER,
+  jcb: cardProviderEnum.JCB,
+  unionpay: cardProviderEnum.UNIONPAY,
+  diners: cardProviderEnum.DINERS_CLUB,
+  dinersclub: cardProviderEnum.DINERS_CLUB,
 }

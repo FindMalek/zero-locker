@@ -1,5 +1,5 @@
 import { CardEntity } from "@/entities"
-import { CardStatusEnum, CardStatusInfer } from "@/schemas/card"
+import { cardStatusEnum, CardStatusInfer } from "@/schemas/card"
 
 import { cn } from "@/lib/utils"
 
@@ -16,15 +16,15 @@ export function CardStatusIndicator({
 }: CardStatusIndicatorProps) {
   const getStatusColor = (status: CardStatusInfer): string => {
     switch (status) {
-      case CardStatusEnum.ACTIVE:
+      case cardStatusEnum.ACTIVE:
         return "bg-green-500"
-      case CardStatusEnum.INACTIVE:
+      case cardStatusEnum.INACTIVE:
         return "bg-gray-500"
-      case CardStatusEnum.EXPIRED:
+      case cardStatusEnum.EXPIRED:
         return "bg-orange-500"
-      case CardStatusEnum.BLOCKED:
+      case cardStatusEnum.BLOCKED:
         return "bg-red-500"
-      case CardStatusEnum.LOST:
+      case cardStatusEnum.LOST:
         return "bg-red-600"
       default:
         return "bg-gray-400"

@@ -3,7 +3,7 @@ import { z } from "zod"
 export const credentialMetadataDtoSchema = z.object({
   recoveryEmail: z.string().email().optional(),
   phoneNumber: z.string().optional(),
-  has2FA: z.boolean().default(false),
+  has2FA: z.boolean(),
 
   otherInfo: z.array(z.any()).optional(),
 

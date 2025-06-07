@@ -29,6 +29,16 @@ interface CredentialFormProps {
   platforms: Array<{ id: string; name: string; logo?: string | null }>
   availableTags: TagDto[]
   passwordStrength: { score: number; feedback: string } | null
+  sensitiveData: {
+    identifier: string
+    password: string
+  }
+  setSensitiveData: React.Dispatch<
+    React.SetStateAction<{
+      identifier: string
+      password: string
+    }>
+  >
   onPasswordChange: (password: string) => void
   onGeneratePassword: () => void
   onCopyPassword: () => void
@@ -40,6 +50,8 @@ export function DashboardAddCredentialForm({
   platforms,
   availableTags,
   passwordStrength,
+  sensitiveData,
+  setSensitiveData,
   onPasswordChange,
   onGeneratePassword,
   onCopyPassword,
@@ -109,77 +121,83 @@ export function DashboardAddCredentialForm({
         />
       </div>
 
-      <FormField
-        control={form.control}
-        name="username"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Identifier</FormLabel>
-            <FormControl>
-              <Input {...field} placeholder="username, email, phone..." />
-            </FormControl>
-            <FormDescription>
-              Your login identifier (username, email, phone number, etc.)
-            </FormDescription>
-            <FormMessage />
-          </FormItem>
+      {/* Identifier Field */}
+      <FormItem>
+        <FormLabel>Identifier</FormLabel>
+        <FormControl>
+          <Input
+            value={sensitiveData.identifier}
+            onChange={(e) =>
+              setSensitiveData((prev) => ({
+                ...prev,
+                identifier: e.target.value,
+              }))
+            }
+            placeholder="username, email, phone..."
+          />
+        </FormControl>
+        <FormDescription>
+          Your login identifier (username, email, phone number, etc.)
+        </FormDescription>
+        {!sensitiveData.identifier.trim() && (
+          <p className="text-destructive text-sm">Identifier is required</p>
         )}
-      />
+      </FormItem>
 
-      <FormField
-        control={form.control}
-        name="password"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Password</FormLabel>
-            <div className="flex w-full gap-2">
-              <FormControl className="min-w-0 flex-1">
-                <Input
-                  variant="password"
-                  className="w-full"
-                  {...field}
-                  onChange={(e) => {
-                    field.onChange(e)
-                    onPasswordChange(e.target.value)
-                  }}
-                  placeholder="Enter or generate a secure password"
-                />
-              </FormControl>
-              <Button
-                type="button"
-                variant="outline"
-                size="icon"
-                onClick={onGeneratePassword}
-                title="Generate secure password"
-              >
-                <Icons.refresh className="h-4 w-4" />
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                size="icon"
-                onClick={onCopyPassword}
-                title="Copy password"
-              >
-                {isCopied ? (
-                  <Icons.check className="text-success h-4 w-4" />
-                ) : (
-                  <Icons.copy className="h-4 w-4" />
-                )}
-              </Button>
-            </div>
-            {passwordStrength && (
-              <div className="mt-2 space-y-2">
-                <PasswordStrengthMeter score={passwordStrength.score} />
-                <div className="text-muted-foreground text-sm">
-                  {passwordStrength.feedback}
-                </div>
-              </div>
+      {/* Password Field */}
+      <FormItem>
+        <FormLabel>Password</FormLabel>
+        <div className="flex w-full gap-2">
+          <FormControl className="min-w-0 flex-1">
+            <Input
+              variant="password"
+              className="w-full"
+              value={sensitiveData.password}
+              onChange={(e) => {
+                setSensitiveData((prev) => ({
+                  ...prev,
+                  password: e.target.value,
+                }))
+                onPasswordChange(e.target.value)
+              }}
+              placeholder="Enter or generate a secure password"
+            />
+          </FormControl>
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            onClick={onGeneratePassword}
+            title="Generate secure password"
+          >
+            <Icons.refresh className="h-4 w-4" />
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            onClick={onCopyPassword}
+            title="Copy password"
+          >
+            {isCopied ? (
+              <Icons.check className="text-success h-4 w-4" />
+            ) : (
+              <Icons.copy className="h-4 w-4" />
             )}
-            <FormMessage />
-          </FormItem>
+          </Button>
+        </div>
+        {passwordStrength && (
+          <div className="mt-2 space-y-2">
+            <PasswordStrengthMeter score={passwordStrength.score} />
+            <div className="text-muted-foreground text-sm">
+              {passwordStrength.feedback}
+            </div>
+          </div>
         )}
-      />
+        {!sensitiveData.password.trim() && (
+          <p className="text-destructive text-sm">Password is required</p>
+        )}
+      </FormItem>
 
       {/* Tags */}
       <FormField

@@ -1,14 +1,12 @@
 "use client"
 
-import { useEffect, useState } from "react"
-import { SecretDto } from "@/schemas/secrets/secrets"
+import { useState } from "react"
+import { SecretDto, secretDtoSchema } from "@/schemas/secrets/secret"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { SecretStatus, SecretType } from "@prisma/client"
 import { useForm } from "react-hook-form"
 
 import { encryptData, exportKey, generateEncryptionKey } from "@/lib/encryption"
 import { handleErrors } from "@/lib/utils"
-import { usePlatforms } from "@/hooks/use-platforms"
 import { useToast } from "@/hooks/use-toast"
 
 import { DashboardAddSecretForm } from "@/components/app/dashboard-add-secret-form"
@@ -16,7 +14,7 @@ import { AddItemDialog } from "@/components/shared/add-item-dialog"
 import { Icons } from "@/components/shared/icons"
 import { Form } from "@/components/ui/form"
 
-import { createSecret } from "@/actions/secret"
+import { createSecret } from "@/actions/secrets/secret"
 
 interface SecretDialogProps {
   open: boolean
@@ -28,35 +26,31 @@ export function DashboardAddSecretDialog({
   onOpenChange,
 }: SecretDialogProps) {
   const { toast } = useToast()
-  const { platforms, error: platformsError } = usePlatforms()
 
   const [title, setTitle] = useState("")
   const [createMore, setCreateMore] = useState(false)
 
+  // Temporary state for sensitive data before encryption
+  const [sensitiveData, setSensitiveData] = useState({
+    value: "",
+  })
+
   const form = useForm<SecretDto>({
-    resolver: zodResolver(SecretDto),
+    resolver: zodResolver(secretDtoSchema),
     defaultValues: {
       name: "",
-      value: "",
-      description: "",
-      type: SecretType.ENV_VARIABLE,
-      status: SecretStatus.ACTIVE,
-      expiresAt: undefined,
-      platformId: "",
+      note: "",
+      valueEncryption: {
+        encryptedValue: "",
+        iv: "",
+        encryptionKey: "",
+      },
+      metadata: [],
       containerId: "",
-      encryptionKey: "",
-      iv: "",
-      userId: "",
     },
   })
 
   const [isSubmitting, setIsSubmitting] = useState(false)
-
-  useEffect(() => {
-    if (platformsError) {
-      toast(platformsError, "error")
-    }
-  }, [platformsError, toast])
 
   async function onSubmit() {
     try {
@@ -69,30 +63,34 @@ export function DashboardAddSecretDialog({
         return
       }
 
+      // Validate sensitive data
+      if (!sensitiveData.value.trim()) {
+        toast("Secret value is required", "error")
+        return
+      }
+
       const secretData = form.getValues()
 
-      // Use title as description if no description provided
-      if (title && !secretData.description) {
-        secretData.description = title
+      // Use title as name if no name provided
+      if (title && !secretData.name) {
+        secretData.name = title
       }
 
       // Encrypt secret value
       const key = await generateEncryptionKey()
-      const encryptResult = await encryptData(secretData.value, key)
-      const keyString = await exportKey(key)
+      const encryptResult = await encryptData(sensitiveData.value, key)
+      const keyString = await exportKey(key as CryptoKey)
 
       const secretDto: SecretDto = {
         name: secretData.name,
-        value: encryptResult.encryptedData,
-        description: secretData.description,
-        type: secretData.type,
-        status: secretData.status,
-        expiresAt: secretData.expiresAt,
-        encryptionKey: keyString,
-        iv: encryptResult.iv,
-        platformId: secretData.platformId,
+        valueEncryption: {
+          encryptedValue: encryptResult.encryptedData,
+          iv: encryptResult.iv,
+          encryptionKey: keyString,
+        },
+        note: secretData.note,
+        metadata: secretData.metadata,
         containerId: secretData.containerId,
-        userId: secretData.userId,
       }
 
       const result = await createSecret(secretDto)
@@ -105,17 +103,16 @@ export function DashboardAddSecretDialog({
         } else {
           form.reset({
             name: "",
-            value: "",
-            description: "",
-            type: SecretType.ENV_VARIABLE,
-            status: SecretStatus.ACTIVE,
-            expiresAt: undefined,
-            platformId: secretData.platformId,
+            note: "",
+            valueEncryption: {
+              encryptedValue: "",
+              iv: "",
+              encryptionKey: "",
+            },
+            metadata: [],
             containerId: secretData.containerId,
-            encryptionKey: "",
-            iv: "",
-            userId: "",
           })
+          setSensitiveData({ value: "" })
           setTitle("")
         }
       } else {
@@ -146,6 +143,7 @@ export function DashboardAddSecretDialog({
   const handleDialogOpenChange = (open: boolean) => {
     if (!open) {
       form.reset()
+      setSensitiveData({ value: "" })
       setTitle("")
       setCreateMore(false)
     }
@@ -178,9 +176,10 @@ export function DashboardAddSecretDialog({
         >
           <DashboardAddSecretForm
             form={form}
-            platforms={platforms}
             title={title}
             onTitleChange={setTitle}
+            sensitiveData={sensitiveData}
+            setSensitiveData={setSensitiveData}
           />
         </form>
       </Form>

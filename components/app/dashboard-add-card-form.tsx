@@ -43,9 +43,24 @@ import {
 interface CardFormProps {
   form: UseFormReturn<CardDto>
   availableTags: TagDto[]
+  sensitiveData: {
+    number: string
+    cvv: string
+  }
+  setSensitiveData: React.Dispatch<
+    React.SetStateAction<{
+      number: string
+      cvv: string
+    }>
+  >
 }
 
-export function DashboardAddCardForm({ form, availableTags }: CardFormProps) {
+export function DashboardAddCardForm({
+  form,
+  availableTags,
+  sensitiveData,
+  setSensitiveData,
+}: CardFormProps) {
   const [showMetadata, setShowMetadata] = useState(false)
 
   const hasMetadataValues = () => {
@@ -53,7 +68,6 @@ export function DashboardAddCardForm({ form, availableTags }: CardFormProps) {
     return !!(
       values.billingAddress ||
       values.cardholderEmail ||
-      values.notes ||
       values.status !== CardStatus.ACTIVE
     )
   }
@@ -63,7 +77,6 @@ export function DashboardAddCardForm({ form, availableTags }: CardFormProps) {
     const fieldMappings = {
       billingAddress: "Address",
       cardholderEmail: "Email",
-      notes: "Notes",
       ...(values.status !== CardStatus.ACTIVE && { status: "Status" }),
     }
     return getMetadataLabels(values, fieldMappings)
@@ -105,7 +118,7 @@ export function DashboardAddCardForm({ form, availableTags }: CardFormProps) {
         <FormLabel>Card Details</FormLabel>
         <CardPaymentInputs
           onCardNumberChange={(value) => {
-            form.setValue("number", value)
+            setSensitiveData((prev) => ({ ...prev, number: value }))
           }}
           onExpiryChange={(value) => {
             CardExpiryDateUtils.handleFormExpiryChange(
@@ -119,7 +132,7 @@ export function DashboardAddCardForm({ form, availableTags }: CardFormProps) {
             )
           }}
           onCVCChange={(value) => {
-            form.setValue("cvv", value)
+            setSensitiveData((prev) => ({ ...prev, cvv: value }))
           }}
           onCardTypeChange={(cardType) => {
             form.setValue("provider", cardType)
@@ -127,13 +140,8 @@ export function DashboardAddCardForm({ form, availableTags }: CardFormProps) {
         />
         {/* Display form errors for card fields */}
         <div className="space-y-1">
-          {form.formState.errors.number && (
-            <p className="text-destructive text-sm">
-              {String(
-                form.formState.errors.number.message ||
-                  form.formState.errors.number
-              )}
-            </p>
+          {!sensitiveData.number.trim() && (
+            <p className="text-destructive text-sm">Card number is required</p>
           )}
           {form.formState.errors.expiryDate && (
             <p className="text-destructive text-sm">
@@ -143,12 +151,8 @@ export function DashboardAddCardForm({ form, availableTags }: CardFormProps) {
               )}
             </p>
           )}
-          {form.formState.errors.cvv && (
-            <p className="text-destructive text-sm">
-              {String(
-                form.formState.errors.cvv.message || form.formState.errors.cvv
-              )}
-            </p>
+          {!sensitiveData.cvv.trim() && (
+            <p className="text-destructive text-sm">CVV is required</p>
           )}
         </div>
       </div>
@@ -312,9 +316,7 @@ export function DashboardAddCardForm({ form, availableTags }: CardFormProps) {
                         {LIST_CARD_STATUSES.map((status) => (
                           <SelectItem key={status} value={status}>
                             <CardStatusIndicator
-                              status={CardEntity.convertCardStatusToPrisma(
-                                status
-                              )}
+                              status={status}
                               showText={true}
                             />
                           </SelectItem>
@@ -326,23 +328,6 @@ export function DashboardAddCardForm({ form, availableTags }: CardFormProps) {
                 )}
               />
             </div>
-
-            <FormField
-              control={form.control}
-              name="notes"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Notes</FormLabel>
-                  <FormControl>
-                    <Input
-                      {...field}
-                      placeholder="Additional notes about this card..."
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
           </div>
         </CollapsibleContent>
       </Collapsible>

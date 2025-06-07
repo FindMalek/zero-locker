@@ -1,16 +1,11 @@
 "use client"
 
 import { useCallback, useEffect, useState } from "react"
-import { SecretDto } from "@/schemas/secrets/secrets"
-import { SecretStatus, SecretType } from "@prisma/client"
+import { SecretDto } from "@/schemas/secrets/secret"
+import { SecretType } from "@prisma/client"
 import { useForm } from "react-hook-form"
 
-import {
-  cn,
-  getLogoDevUrlWithToken,
-  getMetadataLabels,
-  getPlaceholderImage,
-} from "@/lib/utils"
+import { cn } from "@/lib/utils"
 
 import { Icons } from "@/components/shared/icons"
 import { Alert, AlertDescription } from "@/components/ui/alert"
@@ -21,7 +16,6 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible"
-import { ComboboxResponsive } from "@/components/ui/combobox-responsive"
 import {
   FormControl,
   FormDescription,
@@ -32,26 +26,17 @@ import {
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
 
 const SECRET_TYPES = [
   { value: SecretType.API_KEY, label: "API Key" },
-  { value: SecretType.ENV_VARIABLE, label: "Environment Variable" },
   { value: SecretType.DATABASE_URL, label: "Database URL" },
   { value: SecretType.CLOUD_STORAGE_KEY, label: "Cloud Storage Key" },
-  { value: SecretType.THIRD_PARTY_API_KEY, label: "Third-party API Key" },
-]
-
-const SECRET_STATUSES = [
-  { value: SecretStatus.ACTIVE, label: "Active" },
-  { value: SecretStatus.EXPIRED, label: "Expired" },
-  { value: SecretStatus.REVOKED, label: "Revoked" },
+  { value: SecretType.SSH_KEY, label: "SSH Key" },
+  { value: SecretType.JWT_SECRET, label: "JWT Secret" },
+  { value: SecretType.OAUTH_TOKEN, label: "OAuth Token" },
+  { value: SecretType.WEBHOOK_SECRET, label: "Webhook Secret" },
+  { value: SecretType.ENCRYPTION_KEY, label: "Encryption Key" },
+  { value: SecretType.TOKEN, label: "Token" },
 ]
 
 interface SecretKeyValue {
@@ -62,16 +47,24 @@ interface SecretKeyValue {
 
 interface SecretFormProps {
   form: ReturnType<typeof useForm<SecretDto>>
-  platforms: Array<{ id: string; name: string; logo?: string | null }>
   title?: string
   onTitleChange?: (title: string) => void
+  sensitiveData: {
+    value: string
+  }
+  setSensitiveData: React.Dispatch<
+    React.SetStateAction<{
+      value: string
+    }>
+  >
 }
 
 export function DashboardAddSecretForm({
   form,
-  platforms,
   title = "",
   onTitleChange,
+  sensitiveData,
+  setSensitiveData,
 }: SecretFormProps) {
   const [showMetadata, setShowMetadata] = useState(false)
   const [keyValuePairs, setKeyValuePairs] = useState<SecretKeyValue[]>([
@@ -197,17 +190,18 @@ export function DashboardAddSecretForm({
           .join("\n")
       }
 
-      const currentValue = form.getValues("value")
+      // Update sensitive data instead of form value
+      const currentValue = sensitiveData.value
       if (currentValue !== formattedValue) {
-        form.setValue("value", formattedValue)
+        setSensitiveData({ value: formattedValue })
       }
     }
-  }, [keyValuePairs, form])
+  }, [keyValuePairs, form, sensitiveData.value, setSensitiveData])
 
   // Initialize from form values if they exist (only on mount)
   useEffect(() => {
     const currentName = form.getValues("name")
-    const currentValue = form.getValues("value")
+    const currentValue = sensitiveData.value
 
     if (
       (currentName || currentValue) &&
@@ -224,46 +218,31 @@ export function DashboardAddSecretForm({
         ])
       }
     }
-  }, [form, keyValuePairs, parseMultipleEnvLines])
+  }, [form, keyValuePairs, sensitiveData.value, parseMultipleEnvLines])
 
   const hasMetadataValues = () => {
     const values = form.getValues()
-    return !!(
-      values.expiresAt ||
-      values.status !== SecretStatus.ACTIVE ||
-      values.platformId ||
-      values.type !== SecretType.ENV_VARIABLE ||
-      values.description
-    )
+    return !!(values.metadata && values.metadata.length > 0)
   }
 
   const getMetadataLabelsForSecret = () => {
     const values = form.getValues()
-    const fieldMappings: Record<string, string> = {}
-
-    if (values.expiresAt) {
-      fieldMappings.expiresAt = "Expires"
+    if (!values.metadata || values.metadata.length === 0) {
+      return ""
     }
 
-    const platform = platforms.find((p) => p.id === values.platformId)
-    if (platform) {
-      fieldMappings.platformId = platform.name
+    const labels = values.metadata
+      .map((meta) => {
+        const secretType = SECRET_TYPES.find((t) => t.value === meta.type)
+        return secretType?.label || meta.type
+      })
+      .slice(0, 3)
+
+    if (values.metadata.length > 3) {
+      return `${labels.join(", ")} +${values.metadata.length - 3}`
     }
 
-    const secretType = SECRET_TYPES.find((t) => t.value === values.type)
-    if (secretType && values.type !== SecretType.ENV_VARIABLE) {
-      fieldMappings.type = secretType.label
-    }
-
-    if (values.status !== SecretStatus.ACTIVE) {
-      fieldMappings.status = "Status"
-    }
-
-    if (values.description) {
-      fieldMappings.description = "Description"
-    }
-
-    return getMetadataLabels(values, fieldMappings)
+    return labels.join(", ")
   }
 
   return (
@@ -386,6 +365,26 @@ export function DashboardAddSecretForm({
         </Alert>
       </div>
 
+      <FormField
+        control={form.control}
+        name="note"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Note</FormLabel>
+            <FormControl>
+              <Input
+                {...field}
+                placeholder="Optional note about this secret..."
+              />
+            </FormControl>
+            <FormDescription>
+              Optional description to help identify this secret
+            </FormDescription>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
       {/* Metadata Section */}
       <Collapsible open={showMetadata} onOpenChange={setShowMetadata}>
         <CollapsibleTrigger asChild>
@@ -423,166 +422,10 @@ export function DashboardAddSecretForm({
 
         <CollapsibleContent className="space-y-4">
           <div className="bg-muted/55 space-y-4 p-4">
-            {/* Platform and Type */}
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              <FormField
-                control={form.control}
-                name="platformId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Platform</FormLabel>
-                    <FormControl>
-                      <ComboboxResponsive
-                        items={platforms.map((platform) => ({
-                          value: platform.id,
-                          label: platform.name,
-                          logo: getPlaceholderImage(
-                            platform.name,
-                            getLogoDevUrlWithToken(platform.logo || null)
-                          ),
-                        }))}
-                        selectedItem={
-                          platforms.find((p) => p.id === field.value)
-                            ? {
-                                value: field.value,
-                                label:
-                                  platforms.find((p) => p.id === field.value)
-                                    ?.name || "",
-                              }
-                            : null
-                        }
-                        onSelect={(item) => field.onChange(item?.value || "")}
-                        placeholder="Select a platform"
-                        searchPlaceholder="Search platforms..."
-                        emptyText="No platforms found."
-                      />
-                    </FormControl>
-                    <FormDescription>
-                      Choose the platform or service for this secret
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="type"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Secret Type</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select secret type" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {SECRET_TYPES.map((type) => (
-                          <SelectItem key={type.value} value={type.value}>
-                            {type.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormDescription>
-                      The type of secret you&apos;re storing
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            {/* Description */}
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Description</FormLabel>
-                  <FormControl>
-                    <Input
-                      {...field}
-                      placeholder="e.g., Used for API integrations..."
-                    />
-                  </FormControl>
-                  <FormDescription>
-                    Optional description to help identify this secret
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {/* Expiry Date and Status */}
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              <FormField
-                control={form.control}
-                name="expiresAt"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Expiry Date</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="datetime-local"
-                        {...field}
-                        value={
-                          field.value
-                            ? new Date(field.value).toISOString().slice(0, 16)
-                            : ""
-                        }
-                        onChange={(e) => {
-                          field.onChange(
-                            e.target.value
-                              ? new Date(e.target.value)
-                              : undefined
-                          )
-                        }}
-                      />
-                    </FormControl>
-                    <FormDescription>
-                      When this secret expires (optional)
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="status"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Status</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select status" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {SECRET_STATUSES.map((status) => (
-                          <SelectItem key={status.value} value={status.value}>
-                            {status.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormDescription>
-                      Current status of this secret
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+            <p className="text-muted-foreground text-sm">
+              Additional metadata fields would be managed separately through the
+              new secret metadata system.
+            </p>
           </div>
         </CollapsibleContent>
       </Collapsible>
