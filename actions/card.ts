@@ -7,6 +7,7 @@ import {
   CardSimpleRo,
   type CardDto as CardDtoType,
 } from "@/schemas/card"
+import { CardMetadataDto } from "@/schemas/card/card-metadata"
 import { Prisma } from "@prisma/client"
 import { z } from "zod"
 
@@ -14,7 +15,6 @@ import { verifySession } from "@/lib/auth/verify"
 import { CardExpiryDateUtils } from "@/lib/card-expiry-utils"
 import { getOrReturnEmptyObject } from "@/lib/utils"
 
-import { CardMetadataDto } from "@/actions/card-metadata"
 import { createEncryptedData } from "@/actions/encrypted-data"
 import { createTagsAndGetConnections } from "@/actions/tag"
 

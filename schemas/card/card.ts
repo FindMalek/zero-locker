@@ -1,0 +1,102 @@
+import { TagDto } from "@/schemas/tag"
+import { CardProvider, CardStatus, CardType } from "@prisma/client"
+import { z } from "zod"
+
+import { CardExpiryDateUtils } from "@/lib/card-expiry-utils"
+
+export const cardProviderSchema = z.enum([
+  CardProvider.AMEX,
+  CardProvider.DISCOVER,
+  CardProvider.MASTERCARD,
+  CardProvider.VISA,
+  CardProvider.JCB,
+  CardProvider.UNIONPAY,
+  CardProvider.DINERS_CLUB,
+])
+export const cardProviderEnum = cardProviderSchema.enum
+export const LIST_CARD_PROVIDERS = Object.values(cardProviderEnum)
+export type CardProviderInfer = z.infer<typeof cardProviderSchema>
+
+export const cardTypeSchema = z.enum([
+  CardType.CREDIT,
+  CardType.DEBIT,
+  CardType.PREPAID,
+  CardType.VIRTUAL,
+  CardType.NATIONAL,
+])
+export const cardTypeEnum = cardTypeSchema.enum
+export const LIST_CARD_TYPES = Object.values(cardTypeEnum)
+export type CardTypeInfer = z.infer<typeof cardTypeSchema>
+
+export const cardStatusSchema = z.enum([
+  CardStatus.ACTIVE,
+  CardStatus.EXPIRED,
+  CardStatus.INACTIVE,
+  CardStatus.BLOCKED,
+  CardStatus.LOST,
+])
+export const cardStatusEnum = cardStatusSchema.enum
+export const LIST_CARD_STATUSES = Object.values(cardStatusEnum)
+export type CardStatusInfer = z.infer<typeof cardStatusSchema>
+
+export const cardExpiryDateSchema = z
+  .union([z.date(), z.string().min(1, "Expiry date is required")])
+  .refine(
+    (val) => {
+      if (val instanceof Date) return !isNaN(val.getTime())
+      if (typeof val === "string") {
+        return CardExpiryDateUtils.isValidMMYYFormat(val)
+      }
+      return false
+    },
+    {
+      message: "Please enter a valid expiry date (MM/YY format)",
+    }
+  )
+
+export type CardExpiryDate = z.infer<typeof cardExpiryDateSchema>
+
+export const cardDtoSchema = z.object({
+  name: z.string().min(1, "Name is required"),
+  description: z.string().optional(),
+  type: z.nativeEnum(CardType),
+  provider: z.nativeEnum(CardProvider),
+  status: z.nativeEnum(CardStatus),
+  number: z.string().min(1, "Card number is required"),
+  expiryDate: cardExpiryDateSchema,
+  cvv: z.string().min(1, "CVV is required"),
+  billingAddress: z.string().optional(),
+  cardholderName: z.string().min(1, "Cardholder name is required"),
+  cardholderEmail: z.union([z.string().email(), z.literal("")]).optional(),
+  tags: z.array(TagDto),
+  containerId: z.string().optional(),
+})
+
+export type CardDto = z.infer<typeof cardDtoSchema>
+
+export const cardSimpleRoSchema = z.object({
+  id: z.string(),
+
+  name: z.string(),
+  description: z.string().nullable(),
+
+  type: z.nativeEnum(CardType),
+  status: z.nativeEnum(CardStatus),
+  provider: z.nativeEnum(CardProvider),
+
+  number: z.string(),
+  expiryDate: z.date(),
+  cvv: z.string(),
+  billingAddress: z.string().nullable(),
+  cardholderName: z.string(),
+  cardholderEmail: z.string().nullable(),
+
+  lastViewed: z.date().nullable(),
+  createdAt: z.date(),
+  updatedAt: z.date(),
+
+  userId: z.string(),
+  containerId: z.string().nullable(),
+})
+
+export type CardSimpleRo = z.infer<typeof cardSimpleRoSchema>

@@ -1,17 +1,10 @@
 "use server"
 
 import { database } from "@/prisma/client"
+import { CardMetadataDto } from "@/schemas/card/card-metadata"
 import { z } from "zod"
 
 import { verifySession } from "@/lib/auth/verify"
-
-// Define CardMetadata DTO
-const CardMetadataDto = z.object({
-  cardId: z.string(),
-  otherInfo: z.array(z.any()).default([]),
-})
-
-export type CardMetadataDto = z.infer<typeof CardMetadataDto>
 
 /**
  * Create card metadata
