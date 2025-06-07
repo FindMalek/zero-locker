@@ -26,10 +26,6 @@ The format would be:
 - [ ] The `CardHistory` is not being used.
       Please remove it and any use for it.
 
-- [ ] Encyption of values
-      I noticed a lot of use to these `iv`, `encryptionKey`, `VALUE` fields.
-      I would like to create a Model to store these values. and use it in the `Credential` and `Card` models, or anything that needs encryption.
-
 - [ ] For the `otherInfo` field in the `Credential` and `Card` models.
       We should create a new model to store the information.
       But for now the `Json` type is good enough.
@@ -91,3 +87,7 @@ The format would be:
 
 - [x] Implement the new `Secret` model from v0.dev
       Link: https://v0.dev/chat/secrets-management-form-kgsnkNa1gw8
+
+- [x] Encyption of values
+      I noticed a lot of use to these `iv`, `encryptionKey`, `VALUE` fields.
+      I would like to create a Model to store these values. and use it in the `Credential` and `Card` models, or anything that needs encryption.

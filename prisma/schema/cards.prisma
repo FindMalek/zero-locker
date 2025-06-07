@@ -39,12 +39,16 @@ model Card {
 
   number          String
   expiryDate      DateTime
-  cvv             String
-  encryptionKey   String?
-  iv              String?
   billingAddress  String?
   cardholderName  String
   cardholderEmail String?
+
+  // Encrypted fields using EncryptedData model
+  cvvEncryptionId String?
+  cvvEncryption   EncryptedData? @relation("CardCvvEncryption", fields: [cvvEncryptionId], references: [id])
+
+  numberEncryptionId String?
+  numberEncryption   EncryptedData? @relation("CardNumberEncryption", fields: [numberEncryptionId], references: [id])
 
   tags     Tag[]
   history  CardHistory[]
@@ -63,6 +67,8 @@ model Card {
 
   @@index([userId])
   @@index([containerId])
+  @@index([cvvEncryptionId])
+  @@index([numberEncryptionId])
 }
 
 /**
@@ -85,14 +91,21 @@ model Card {
 model CardHistory {
   id String @id @default(cuid())
 
-  oldNumber     String
-  newNumber     String
-  oldCvv        String
-  newCvv        String
   oldExpiryDate DateTime
   newExpiryDate DateTime
-  encryptionKey String
-  iv            String
+
+  // Encrypted fields using EncryptedData model
+  oldNumberEncryptionId String
+  oldNumberEncryption   EncryptedData @relation("CardHistoryOldNumber", fields: [oldNumberEncryptionId], references: [id])
+
+  newNumberEncryptionId String
+  newNumberEncryption   EncryptedData @relation("CardHistoryNewNumber", fields: [newNumberEncryptionId], references: [id])
+
+  oldCvvEncryptionId String
+  oldCvvEncryption   EncryptedData @relation("CardHistoryOldCvv", fields: [oldCvvEncryptionId], references: [id])
+
+  newCvvEncryptionId String
+  newCvvEncryption   EncryptedData @relation("CardHistoryNewCvv", fields: [newCvvEncryptionId], references: [id])
 
   changedAt DateTime @default(now())
 
@@ -104,6 +117,10 @@ model CardHistory {
 
   @@index([cardId])
   @@index([userId])
+  @@index([oldNumberEncryptionId])
+  @@index([newNumberEncryptionId])
+  @@index([oldCvvEncryptionId])
+  @@index([newCvvEncryptionId])
 }
 
 /**
