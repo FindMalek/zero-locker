@@ -10,9 +10,9 @@ export class ContainerEntity {
       id: entity.id,
 
       name: entity.name,
-      icon: entity.icon,
-
       description: entity.description,
+
+      icon: entity.icon,
       type: entity.type,
 
       updatedAt: entity.updatedAt,
@@ -38,8 +38,6 @@ export class ContainerEntity {
         return entityType === EntityTypeEnum.CREDENTIAL
       case ContainerType.CARDS_ONLY:
         return entityType === EntityTypeEnum.CARD
-      default:
-        return false
     }
   }
 
@@ -60,8 +58,6 @@ export class ContainerEntity {
         return [EntityTypeEnum.CREDENTIAL]
       case ContainerType.CARDS_ONLY:
         return [EntityTypeEnum.CARD]
-      default:
-        return []
     }
   }
 }

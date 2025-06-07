@@ -8,10 +8,13 @@ export class CredentialMetadataEntity {
   ): CredentialMetadataSimpleRo {
     return {
       id: entity.id,
+
       recoveryEmail: entity.recoveryEmail,
       phoneNumber: entity.phoneNumber,
-      otherInfo: entity.otherInfo as any,
       has2FA: entity.has2FA,
+
+      otherInfo: Array.isArray(entity.otherInfo) ? entity.otherInfo : null,
+
       credentialId: entity.credentialId,
     }
   }

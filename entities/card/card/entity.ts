@@ -1,10 +1,10 @@
 import {
-  CardProviderEnum,
+  cardProviderEnum,
   CardProviderInfer,
   CardSimpleRo,
-  CardStatusEnum,
+  cardStatusEnum,
   CardStatusInfer,
-  CardTypeEnum,
+  cardTypeEnum,
   CardTypeInfer,
 } from "@/schemas/card"
 import { CardProvider, CardStatus, CardType } from "@prisma/client"
@@ -18,27 +18,25 @@ export class CardEntity {
 
       name: entity.name,
       description: entity.description,
-      notes: entity.notes,
 
       type: entity.type,
       status: entity.status,
       provider: entity.provider,
 
-      // TODO: Consider masking or partial display for ROs if sensitive
-      number: entity.numberEncryption?.encryptedValue || entity.number,
       expiryDate: entity.expiryDate,
-      cvv: entity.cvvEncryption?.encryptedValue || "",
       billingAddress: entity.billingAddress,
       cardholderName: entity.cardholderName,
       cardholderEmail: entity.cardholderEmail,
 
-      lastCopied: entity.lastCopied,
       lastViewed: entity.lastViewed,
       createdAt: entity.createdAt,
       updatedAt: entity.updatedAt,
 
       userId: entity.userId,
       containerId: entity.containerId,
+
+      numberEncryptionId: entity.numberEncryptionId,
+      cvvEncryptionId: entity.cvvEncryptionId,
     }
   }
 
@@ -47,19 +45,19 @@ export class CardEntity {
   ): CardProviderInfer {
     switch (provider) {
       case CardProvider.VISA:
-        return CardProviderEnum.VISA
+        return cardProviderEnum.VISA
       case CardProvider.MASTERCARD:
-        return CardProviderEnum.MASTERCARD
+        return cardProviderEnum.MASTERCARD
       case CardProvider.AMEX:
-        return CardProviderEnum.AMEX
+        return cardProviderEnum.AMEX
       case CardProvider.DISCOVER:
-        return CardProviderEnum.DISCOVER
+        return cardProviderEnum.DISCOVER
       case CardProvider.JCB:
-        return CardProviderEnum.JCB
+        return cardProviderEnum.JCB
       case CardProvider.UNIONPAY:
-        return CardProviderEnum.UNIONPAY
+        return cardProviderEnum.UNIONPAY
       case CardProvider.DINERS_CLUB:
-        return CardProviderEnum.DINERS_CLUB
+        return cardProviderEnum.DINERS_CLUB
     }
   }
 
@@ -67,38 +65,38 @@ export class CardEntity {
     provider: CardProviderInfer
   ): CardProvider {
     switch (provider) {
-      case CardProviderEnum.VISA:
+      case cardProviderEnum.VISA:
         return CardProvider.VISA
-      case CardProviderEnum.MASTERCARD:
+      case cardProviderEnum.MASTERCARD:
         return CardProvider.MASTERCARD
-      case CardProviderEnum.AMEX:
+      case cardProviderEnum.AMEX:
         return CardProvider.AMEX
-      case CardProviderEnum.DISCOVER:
+      case cardProviderEnum.DISCOVER:
         return CardProvider.DISCOVER
-      case CardProviderEnum.JCB:
+      case cardProviderEnum.JCB:
         return CardProvider.JCB
-      case CardProviderEnum.UNIONPAY:
+      case cardProviderEnum.UNIONPAY:
         return CardProvider.UNIONPAY
-      case CardProviderEnum.DINERS_CLUB:
+      case cardProviderEnum.DINERS_CLUB:
         return CardProvider.DINERS_CLUB
     }
   }
 
   static convertCardProviderToString(provider: CardProviderInfer): string {
     switch (provider) {
-      case CardProviderEnum.VISA:
+      case cardProviderEnum.VISA:
         return "Visa"
-      case CardProviderEnum.MASTERCARD:
+      case cardProviderEnum.MASTERCARD:
         return "Mastercard"
-      case CardProviderEnum.AMEX:
+      case cardProviderEnum.AMEX:
         return "Amex"
-      case CardProviderEnum.DISCOVER:
+      case cardProviderEnum.DISCOVER:
         return "Discover"
-      case CardProviderEnum.JCB:
+      case cardProviderEnum.JCB:
         return "Jcb"
-      case CardProviderEnum.UNIONPAY:
+      case cardProviderEnum.UNIONPAY:
         return "Unionpay"
-      case CardProviderEnum.DINERS_CLUB:
+      case cardProviderEnum.DINERS_CLUB:
         return "Dinersclub"
       default:
         return "OTHER"
@@ -108,44 +106,44 @@ export class CardEntity {
   static convertPrismaToCardType(type: CardType): CardTypeInfer {
     switch (type) {
       case CardType.CREDIT:
-        return CardTypeEnum.CREDIT
+        return cardTypeEnum.CREDIT
       case CardType.DEBIT:
-        return CardTypeEnum.DEBIT
+        return cardTypeEnum.DEBIT
       case CardType.VIRTUAL:
-        return CardTypeEnum.VIRTUAL
+        return cardTypeEnum.VIRTUAL
       case CardType.NATIONAL:
-        return CardTypeEnum.NATIONAL
+        return cardTypeEnum.NATIONAL
       case CardType.PREPAID:
-        return CardTypeEnum.PREPAID
+        return cardTypeEnum.PREPAID
     }
   }
 
   static convertCardTypeToPrisma(type: CardTypeInfer): CardType {
     switch (type) {
-      case CardTypeEnum.CREDIT:
+      case cardTypeEnum.CREDIT:
         return CardType.CREDIT
-      case CardTypeEnum.DEBIT:
+      case cardTypeEnum.DEBIT:
         return CardType.DEBIT
-      case CardTypeEnum.VIRTUAL:
+      case cardTypeEnum.VIRTUAL:
         return CardType.VIRTUAL
-      case CardTypeEnum.NATIONAL:
+      case cardTypeEnum.NATIONAL:
         return CardType.NATIONAL
-      case CardTypeEnum.PREPAID:
+      case cardTypeEnum.PREPAID:
         return CardType.PREPAID
     }
   }
 
   static convertCardTypeToString(type: CardTypeInfer): string {
     switch (type) {
-      case CardTypeEnum.CREDIT:
+      case cardTypeEnum.CREDIT:
         return "Credit"
-      case CardTypeEnum.DEBIT:
+      case cardTypeEnum.DEBIT:
         return "Debit"
-      case CardTypeEnum.VIRTUAL:
+      case cardTypeEnum.VIRTUAL:
         return "Virtual"
-      case CardTypeEnum.NATIONAL:
+      case cardTypeEnum.NATIONAL:
         return "National"
-      case CardTypeEnum.PREPAID:
+      case cardTypeEnum.PREPAID:
         return "Prepaid"
       default:
         return "Other"
@@ -155,44 +153,46 @@ export class CardEntity {
   static convertPrismaToCardStatus(status: CardStatus): CardStatusInfer {
     switch (status) {
       case CardStatus.ACTIVE:
-        return CardStatusEnum.ACTIVE
+        return cardStatusEnum.ACTIVE
       case CardStatus.BLOCKED:
-        return CardStatusEnum.BLOCKED
+        return cardStatusEnum.BLOCKED
       case CardStatus.EXPIRED:
-        return CardStatusEnum.EXPIRED
+        return cardStatusEnum.EXPIRED
       case CardStatus.INACTIVE:
-        return CardStatusEnum.INACTIVE
+        return cardStatusEnum.INACTIVE
       case CardStatus.LOST:
-        return CardStatusEnum.LOST
+        return cardStatusEnum.LOST
+      default:
+        return cardStatusEnum.ACTIVE
     }
   }
 
   static convertCardStatusToPrisma(status: CardStatusInfer): CardStatus {
     switch (status) {
-      case CardStatusEnum.ACTIVE:
+      case cardStatusEnum.ACTIVE:
         return CardStatus.ACTIVE
-      case CardStatusEnum.BLOCKED:
+      case cardStatusEnum.BLOCKED:
         return CardStatus.BLOCKED
-      case CardStatusEnum.EXPIRED:
+      case cardStatusEnum.EXPIRED:
         return CardStatus.EXPIRED
-      case CardStatusEnum.INACTIVE:
+      case cardStatusEnum.INACTIVE:
         return CardStatus.INACTIVE
-      case CardStatusEnum.LOST:
+      case cardStatusEnum.LOST:
         return CardStatus.LOST
     }
   }
 
   static convertCardStatusToString(status: CardStatusInfer): string {
     switch (status) {
-      case CardStatusEnum.ACTIVE:
+      case cardStatusEnum.ACTIVE:
         return "Active"
-      case CardStatusEnum.BLOCKED:
+      case cardStatusEnum.BLOCKED:
         return "Blocked"
-      case CardStatusEnum.EXPIRED:
+      case cardStatusEnum.EXPIRED:
         return "Expired"
-      case CardStatusEnum.INACTIVE:
+      case cardStatusEnum.INACTIVE:
         return "Inactive"
-      case CardStatusEnum.LOST:
+      case cardStatusEnum.LOST:
         return "Lost"
       default:
         return "Other"

@@ -1,4 +1,4 @@
-import { EncryptedDataSimpleRo } from "@/schemas/encryption/encryption"
+import { EncryptedDataSimpleRo } from "@/schemas/encryption"
 
 import { EncryptedDataEntitySimpleDbData } from "./query"
 
@@ -8,9 +8,11 @@ export class EncryptedDataEntity {
   ): EncryptedDataSimpleRo {
     return {
       id: entity.id,
+
+      iv: entity.iv,
       encryptedValue: entity.encryptedValue,
       encryptionKey: entity.encryptionKey,
-      iv: entity.iv,
+
       createdAt: entity.createdAt,
       updatedAt: entity.updatedAt,
     }

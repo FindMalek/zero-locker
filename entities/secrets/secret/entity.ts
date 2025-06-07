@@ -1,4 +1,4 @@
-import { SecretSimpleRo } from "@/schemas/secrets/secrets"
+import { SecretSimpleRo } from "@/schemas/secrets"
 
 import { SecretEntitySimpleDbData } from "./query"
 
@@ -8,19 +8,16 @@ export class SecretEntity {
       id: entity.id,
 
       name: entity.name,
-
-      // TODO: Consider masking or partial display for ROs if sensitive
-      value: entity.valueEncryption?.encryptedValue || "",
-
       note: entity.note,
 
-      lastCopied: entity.lastCopied,
       lastViewed: entity.lastViewed,
       updatedAt: entity.updatedAt,
       createdAt: entity.createdAt,
 
       userId: entity.userId,
       containerId: entity.containerId,
+
+      valueEncryptionId: entity.valueEncryptionId,
     }
   }
 }
