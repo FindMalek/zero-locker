@@ -1,4 +1,4 @@
-import { ContainerSimpleRo } from "@/schemas/container"
+import { ContainerSimpleRo } from "@/schemas/utils/container"
 import { EntityType, EntityTypeEnum } from "@/schemas/utils"
 import { ContainerType } from "@prisma/client"
 

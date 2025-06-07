@@ -2,7 +2,7 @@ import { TagDto } from "@/schemas/tag"
 import { AccountStatus } from "@prisma/client"
 import { z } from "zod"
 
-export const CredentialSchemaDto = z.object({
+export const credentialDtoSchema = z.object({
   username: z.string().min(1, "Username is required"),
   password: z.string().min(1, "Password is required"),
   status: z.nativeEnum(AccountStatus),
@@ -12,7 +12,9 @@ export const CredentialSchemaDto = z.object({
   containerId: z.string().optional(),
 })
 
-export const CredentialSimpleRoSchema = z.object({
+export type CredentialDto = z.infer<typeof credentialDtoSchema>
+
+export const credentialSimpleRoSchema = z.object({
   id: z.string(),
 
   username: z.string(),
@@ -30,10 +32,9 @@ export const CredentialSimpleRoSchema = z.object({
   containerId: z.string().nullable(),
 })
 
-export type CredentialDto = z.infer<typeof CredentialSchemaDto>
-export type CredentialSimpleRo = z.infer<typeof CredentialSimpleRoSchema>
+export type CredentialSimpleRo = z.infer<typeof credentialSimpleRoSchema>
 
-export const CredentialMetadataSchemaDto = z.object({
+export const credentialMetadataDtoSchema = z.object({
   recoveryEmail: z.string().email().optional(),
   phoneNumber: z.string().optional(),
   otherInfo: z.array(z.any()).optional(),
@@ -41,7 +42,9 @@ export const CredentialMetadataSchemaDto = z.object({
   credentialId: z.string(),
 })
 
-export const CredentialMetadataSimpleRo = z.object({
+export type CredentialMetadataDto = z.infer<typeof credentialMetadataDtoSchema>
+
+export const credentialMetadataSimpleRoSchema = z.object({
   id: z.string(),
 
   recoveryEmail: z.string().nullable(),
@@ -54,12 +57,11 @@ export const CredentialMetadataSimpleRo = z.object({
   credentialId: z.string(),
 })
 
-export type CredentialMetadataDto = z.infer<typeof CredentialMetadataSchemaDto>
 export type CredentialMetadataSimpleRo = z.infer<
-  typeof CredentialMetadataSimpleRo
+  typeof credentialMetadataSimpleRoSchema
 >
 
-export const CredentialHistoryDto = z.object({
+export const credentialHistoryDtoSchema = z.object({
   oldPassword: z.string(),
   newPassword: z.string(),
   encryptionKey: z.string(),
@@ -67,7 +69,9 @@ export const CredentialHistoryDto = z.object({
   credentialId: z.string(),
 })
 
-export const CredentialHistorySimpleRo = z.object({
+export type CredentialHistoryDto = z.infer<typeof credentialHistoryDtoSchema>
+
+export const credentialHistorySimpleRoSchema = z.object({
   id: z.string(),
 
   oldPassword: z.string(),
@@ -81,7 +85,6 @@ export const CredentialHistorySimpleRo = z.object({
   credentialId: z.string(),
 })
 
-export type CredentialHistoryDto = z.infer<typeof CredentialHistoryDto>
 export type CredentialHistorySimpleRo = z.infer<
-  typeof CredentialHistorySimpleRo
+  typeof credentialHistorySimpleRoSchema
 >

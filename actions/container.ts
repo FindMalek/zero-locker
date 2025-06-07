@@ -6,7 +6,7 @@ import {
   ContainerDto,
   ContainerSimpleRo,
   type ContainerDto as ContainerDtoType,
-} from "@/schemas/container"
+} from "@/schemas/utils/container"
 import { ContainerType } from "@prisma/client"
 import { z } from "zod"
 
