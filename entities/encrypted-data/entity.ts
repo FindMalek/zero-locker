@@ -1,4 +1,4 @@
-import { EncryptedDataSimpleRo } from "@/schemas/encrypted-data/encrypted-data"
+import { EncryptedDataSimpleRo } from "@/schemas/encryption/encryption"
 
 import { EncryptedDataEntitySimpleDbData } from "./query"
 

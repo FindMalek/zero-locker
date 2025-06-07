@@ -46,6 +46,7 @@ The format would be:
 
 - [ ] Update the `SecretMetadata` model
       We need to have link to `Tags` model.
+      Should we really do this ?
 
 - [ ] usage of `Metadata` aserver actions
 
@@ -60,9 +61,6 @@ The format would be:
       We should think about it decrypting the data, in the server actions or entity.ts file or in the client.
 
 - [ ] Sync `CardMetadata` with the `Card` Form
-
-- [ ] Update all the DTOs to include `metadata` fields
-      We want to have one call to create the data, not multiple calls from the client.
 
 ### Finished Tasks
 
@@ -112,3 +110,6 @@ The format would be:
       We need to refactor the database schemas to be more consistent.
 
 - [x] Make sure the `seeder` uses `createMany` instead of `create` records
+
+- [x] Update - [x] Update all the DTOs to include `metadata` fields
+      We want to have one call to create the data, not multiple calls from the client.t to have one call to create the data, not multiple calls from the client.

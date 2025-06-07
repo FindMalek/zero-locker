@@ -1,7 +1,9 @@
-import { encryptedDataDtoSchema } from "@/schemas/encrypted-data/encrypted-data"
+import { encryptedDataDtoSchema } from "@/schemas/encryption/encryption"
 import { tagDtoSchema } from "@/schemas/utils/tag"
 import { AccountStatus } from "@prisma/client"
 import { z } from "zod"
+
+import { credentialMetadataDtoSchema } from "./credential-metadata"
 
 export const accountStatusSchema = z.enum([
   AccountStatus.ACTIVE,
@@ -20,6 +22,7 @@ export const credentialDtoSchema = z.object({
   description: z.string().optional(),
 
   tags: z.array(tagDtoSchema),
+  metadata: z.array(credentialMetadataDtoSchema),
 
   platformId: z.string().min(1, "Platform is required"),
   containerId: z.string().optional(),

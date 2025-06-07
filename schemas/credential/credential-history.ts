@@ -1,4 +1,4 @@
-import { encryptedDataDtoSchema } from "@/schemas/encrypted-data/encrypted-data"
+import { encryptedDataDtoSchema } from "@/schemas/encryption/encryption"
 import { z } from "zod"
 
 export const credentialHistoryDtoSchema = z.object({

@@ -1,9 +1,10 @@
-import { encryptedDataDtoSchema } from "@/schemas/encrypted-data/encrypted-data"
-import { TagDto } from "@/schemas/utils/tag"
+import { encryptedDataDtoSchema } from "@/schemas/encryption/encryption"
 import { CardProvider, CardStatus, CardType } from "@prisma/client"
 import { z } from "zod"
 
 import { CardExpiryDateUtils } from "@/lib/card-expiry-utils"
+
+import { tagDtoSchema } from "../utils/tag"
 
 export const cardProviderSchema = z.enum([
   CardProvider.AMEX,
@@ -73,7 +74,7 @@ export const cardDtoSchema = z.object({
   cardholderEmail: z.union([z.string().email(), z.literal("")]).optional(),
   expiryDate: cardExpiryDateSchema,
 
-  tags: z.array(TagDto),
+  tags: z.array(tagDtoSchema),
   containerId: z.string().optional(),
 })
 
