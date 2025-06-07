@@ -1,5 +1,13 @@
+// Check if we're in Node.js or browser environment
+const isNode = typeof window === "undefined"
+
 // Generate a random encryption key
-export async function generateEncryptionKey(): Promise<CryptoKey> {
+export async function generateEncryptionKey(): Promise<CryptoKey | string> {
+  if (isNode) {
+    const crypto = await import("crypto")
+    return crypto.randomBytes(32).toString("base64")
+  }
+
   return await window.crypto.subtle.generateKey(
     {
       name: "AES-GCM",
@@ -10,28 +18,52 @@ export async function generateEncryptionKey(): Promise<CryptoKey> {
   )
 }
 
-// Convert string to ArrayBuffer
+// Convert string to ArrayBuffer (browser only)
 function stringToArrayBuffer(str: string): Uint8Array {
   const encoder = new TextEncoder()
   return encoder.encode(str)
 }
 
-// Convert ArrayBuffer to string
+// Convert ArrayBuffer to string (browser only)
 function arrayBufferToString(buffer: ArrayBuffer): string {
   const decoder = new TextDecoder()
   return decoder.decode(buffer)
 }
 
-// Encrypt data
+// Encrypt data - works in both Node.js and browser
 export async function encryptData(
   data: string,
-  key: CryptoKey
+  key: CryptoKey | string,
+  iv?: string
 ): Promise<{
   encryptedData: string
   iv: string
 }> {
+  if (isNode) {
+    // Node.js encryption
+    const crypto = await import("crypto")
+    const keyString = typeof key === "string" ? key : ""
+    const ivString = iv || crypto.randomBytes(16).toString("base64")
+
+    const keyBuffer = Buffer.from(keyString, "base64")
+    const ivBuffer = Buffer.from(ivString, "base64")
+
+    const cipher = crypto.createCipheriv("aes-256-cbc", keyBuffer, ivBuffer)
+
+    let encrypted = cipher.update(data, "utf8", "base64")
+    encrypted += cipher.final("base64")
+
+    return {
+      encryptedData: encrypted,
+      iv: ivString,
+    }
+  }
+
+  // Browser encryption
+  const cryptoKey = key as CryptoKey
+
   // Generate a random initialization vector
-  const iv = window.crypto.getRandomValues(new Uint8Array(12))
+  const ivArray = window.crypto.getRandomValues(new Uint8Array(12))
 
   // Convert data to ArrayBuffer
   const dataBuffer = stringToArrayBuffer(data)
@@ -40,9 +72,9 @@ export async function encryptData(
   const encryptedBuffer = await window.crypto.subtle.encrypt(
     {
       name: "AES-GCM",
-      iv,
+      iv: ivArray,
     },
-    key,
+    cryptoKey,
     dataBuffer
   )
 
@@ -50,7 +82,7 @@ export async function encryptData(
   const encryptedData = btoa(
     String.fromCharCode(...new Uint8Array(encryptedBuffer))
   )
-  const ivString = btoa(String.fromCharCode(...iv))
+  const ivString = btoa(String.fromCharCode(...ivArray))
 
   return {
     encryptedData,
@@ -58,12 +90,31 @@ export async function encryptData(
   }
 }
 
-// Decrypt data
+// Decrypt data - works in both Node.js and browser
 export async function decryptData(
   encryptedData: string,
   iv: string,
-  key: CryptoKey
+  key: CryptoKey | string
 ): Promise<string> {
+  if (isNode) {
+    // Node.js decryption
+    const crypto = await import("crypto")
+    const keyString = typeof key === "string" ? key : ""
+
+    const keyBuffer = Buffer.from(keyString, "base64")
+    const ivBuffer = Buffer.from(iv, "base64")
+
+    const decipher = crypto.createDecipheriv("aes-256-cbc", keyBuffer, ivBuffer)
+
+    let decrypted = decipher.update(encryptedData, "base64", "utf8")
+    decrypted += decipher.final("utf8")
+
+    return decrypted
+  }
+
+  // Browser decryption
+  const cryptoKey = key as CryptoKey
+
   // Convert base64 strings back to ArrayBuffers
   const encryptedBuffer = Uint8Array.from(atob(encryptedData), (c) =>
     c.charCodeAt(0)
@@ -76,7 +127,7 @@ export async function decryptData(
       name: "AES-GCM",
       iv: ivBuffer,
     },
-    key,
+    cryptoKey,
     encryptedBuffer
   )
 
@@ -84,14 +135,22 @@ export async function decryptData(
   return arrayBufferToString(decryptedBuffer)
 }
 
-// Export key to string
+// Export key to string (browser only)
 export async function exportKey(key: CryptoKey): Promise<string> {
+  if (isNode) {
+    throw new Error("exportKey is only available in browser environments")
+  }
+
   const exported = await window.crypto.subtle.exportKey("raw", key)
   return btoa(String.fromCharCode(...new Uint8Array(exported)))
 }
 
-// Import key from string
+// Import key from string (browser only)
 export async function importKey(keyString: string): Promise<CryptoKey> {
+  if (isNode) {
+    throw new Error("importKey is only available in browser environments")
+  }
+
   const keyData = Uint8Array.from(atob(keyString), (c) => c.charCodeAt(0))
   return await window.crypto.subtle.importKey(
     "raw",
@@ -103,4 +162,38 @@ export async function importKey(keyString: string): Promise<CryptoKey> {
     true,
     ["encrypt", "decrypt"]
   )
+}
+
+// Generate consistent encryption keys for seeding (Node.js only)
+export const SEED_ENCRYPTION_CONFIG = {
+  // Main encryption key for all sensitive data (32 bytes base64 encoded)
+  MASTER_KEY: "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=", // 32 bytes of zeros, base64 encoded
+
+  // Different IVs for different data types to ensure uniqueness (16 bytes base64 encoded)
+  CARD_NUMBER_IV: "AAAAAAAAAAAAAAAAAAAAAA==", // 16 bytes of zeros, base64 encoded
+  CARD_CVV_IV: "AQEBAQEBAQEBAQEBAQEBAQ==", // 16 bytes of 0x01, base64 encoded
+  CREDENTIAL_PASSWORD_IV: "AgICAgICAgICAgICAgICAg==", // 16 bytes of 0x02, base64 encoded
+  SECRET_VALUE_IV: "AwMDAwMDAwMDAwMDAwMDAw==", // 16 bytes of 0x03, base64 encoded
+}
+
+// Simple encryption function for seeding (Node.js only)
+export async function encryptDataSync(
+  plaintext: string,
+  key: string,
+  iv: string
+): Promise<string> {
+  if (!isNode) {
+    throw new Error("encryptDataSync is only available in Node.js environments")
+  }
+
+  const crypto = await import("crypto")
+  const keyBuffer = Buffer.from(key, "base64")
+  const ivBuffer = Buffer.from(iv, "base64")
+
+  const cipher = crypto.createCipheriv("aes-256-cbc", keyBuffer, ivBuffer)
+
+  let encrypted = cipher.update(plaintext, "utf8", "base64")
+  encrypted += cipher.final("base64")
+
+  return encrypted
 }

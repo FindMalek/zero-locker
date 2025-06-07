@@ -56,7 +56,10 @@ export async function createCredential(data: CredentialDtoType): Promise<{
         iv: "temp_iv", // TODO: Generate proper IV
       })
 
-      if (!passwordEncryptionResult.success || !passwordEncryptionResult.encryptedData) {
+      if (
+        !passwordEncryptionResult.success ||
+        !passwordEncryptionResult.encryptedData
+      ) {
         return {
           success: false,
           error: "Failed to encrypt password",
@@ -213,11 +216,16 @@ export async function updateCredential(
           iv: "temp_iv",
         })
 
-        if (oldPasswordEncryptionResult.success && newPasswordEncryptionResult.success) {
+        if (
+          oldPasswordEncryptionResult.success &&
+          newPasswordEncryptionResult.success
+        ) {
           await database.credentialHistory.create({
             data: {
-              oldPasswordEncryptionId: oldPasswordEncryptionResult.encryptedData!.id,
-              newPasswordEncryptionId: newPasswordEncryptionResult.encryptedData!.id,
+              oldPasswordEncryptionId:
+                oldPasswordEncryptionResult.encryptedData!.id,
+              newPasswordEncryptionId:
+                newPasswordEncryptionResult.encryptedData!.id,
               credentialId: id,
               userId: session.user.id,
               changedAt: new Date(),
@@ -470,7 +478,10 @@ export async function createCredentialWithMetadata(
         iv: "temp_iv", // TODO: Generate proper IV
       })
 
-      if (!passwordEncryptionResult.success || !passwordEncryptionResult.encryptedData) {
+      if (
+        !passwordEncryptionResult.success ||
+        !passwordEncryptionResult.encryptedData
+      ) {
         return {
           success: false,
           error: "Failed to encrypt password",

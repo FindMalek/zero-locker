@@ -17,7 +17,6 @@ The format would be:
 
 - [ ] Use Tanstack Query for reloading data
 
-
 - [ ] In the `CredentialMetadata` model changes
       The `additionalInfo` field should be a JSON object, of the user's choice.
 
@@ -97,7 +96,7 @@ The format would be:
 - [x] Encyption of values ✅ COMPLETED
       I noticed a lot of use to these `iv`, `encryptionKey`, `VALUE` fields.
       I would like to create a Model to store these values. and use it in the `Credential` and `Card` models, or anything that needs encryption.
-      
+
       **IMPLEMENTATION COMPLETED:**
       - ✅ Created new `EncryptedData` model in `prisma/schema/encryption.prisma`
       - ✅ Updated `Card` model to use `cvvEncryption` and `numberEncryption` relations

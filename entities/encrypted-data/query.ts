@@ -8,4 +8,4 @@ export class EncryptedDataQuery {
   static getSimpleInclude() {
     return {} satisfies Prisma.EncryptedDataInclude
   }
-} 
+}

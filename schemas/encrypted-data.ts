@@ -16,4 +16,4 @@ export const EncryptedDataSimpleRoSchema = z.object({
 })
 
 export type EncryptedDataDto = z.infer<typeof EncryptedDataDto>
-export type EncryptedDataSimpleRo = z.infer<typeof EncryptedDataSimpleRoSchema> 
+export type EncryptedDataSimpleRo = z.infer<typeof EncryptedDataSimpleRoSchema>

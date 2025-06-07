@@ -1,10 +1,7 @@
-import { AccountStatus, PrismaClient } from "@prisma/client"
+import { AccountStatus, Prisma, PrismaClient } from "@prisma/client"
 
-import { saltAndHashPassword } from "./users"
-
-// Mock encryption values for seeding purposes
-const MOCK_ENCRYPTION_KEY = "mock_encryption_key_for_development_only"
-const MOCK_IV = "mock_iv_value_for_development_only"
+import { saltAndHashPassword } from "../../lib/auth/password"
+import { encryptDataSync, SEED_ENCRYPTION_CONFIG } from "../../lib/encryption"
 
 async function seedCredentials(prisma: PrismaClient) {
   console.log("🌱 Seeding credentials...")
@@ -32,8 +29,11 @@ async function seedCredentials(prisma: PrismaClient) {
   }
 
   // Prepare arrays for bulk insertion
-  const credentialTagConnections = [] // Store credential-tag connections for later
-  const metadataData = [] // Store metadata for later
+  const encryptedDataToCreate: Prisma.EncryptedDataCreateManyInput[] = []
+  const credentialsToCreate: Prisma.CredentialCreateManyInput[] = []
+  const credentialTagConnections: { credentialId: string; tagIds: string[] }[] =
+    []
+  const metadataData: Prisma.CredentialMetadataCreateManyInput[] = []
 
   // Hash passwords in parallel to speed up seeding
   const googlePasswordPromise = saltAndHashPassword("GooglePass123!")
@@ -65,32 +65,42 @@ async function seedCredentials(prisma: PrismaClient) {
     )
     const workTag = tags.find((t) => t.userId === user.id && t.name === "Work")
 
-    // Google credential
+    // Prepare credential IDs
     const googleCredId = `credential_google_${user.id}`
-    
-    // Create encrypted data for Google password
-    const googlePasswordEncryption = await prisma.encryptedData.create({
-      data: {
-        encryptedValue: googlePassword,
-        encryptionKey: MOCK_ENCRYPTION_KEY,
-        iv: MOCK_IV,
-      },
+    const githubCredId = `credential_github_${user.id}`
+    const awsCredId = `credential_aws_${user.id}`
+
+    // Prepare encrypted data IDs
+    const googlePasswordEncId = `enc_google_pass_${user.id}`
+    const githubPasswordEncId = `enc_github_pass_${user.id}`
+    const awsPasswordEncId = `enc_aws_pass_${user.id}`
+
+    // Prepare encrypted data for Google password
+    const googlePasswordEncrypted = await encryptDataSync(
+      googlePassword,
+      SEED_ENCRYPTION_CONFIG.MASTER_KEY,
+      SEED_ENCRYPTION_CONFIG.CREDENTIAL_PASSWORD_IV
+    )
+    encryptedDataToCreate.push({
+      id: googlePasswordEncId,
+      encryptedValue: googlePasswordEncrypted,
+      encryptionKey: SEED_ENCRYPTION_CONFIG.MASTER_KEY,
+      iv: SEED_ENCRYPTION_CONFIG.CREDENTIAL_PASSWORD_IV,
     })
 
-    await prisma.credential.create({
-      data: {
-        id: googleCredId,
-        username: user.email,
-        passwordEncryptionId: googlePasswordEncryption.id,
-        status: AccountStatus.ACTIVE,
-        description: "Google account",
-        lastViewed: new Date(),
-        updatedAt: new Date(),
-        createdAt: new Date(),
-        platformId: googlePlatform.id,
-        userId: user.id,
-        containerId: personalContainer?.id,
-      },
+    // Prepare Google credential
+    credentialsToCreate.push({
+      id: googleCredId,
+      identifier: user.email,
+      passwordEncryptionId: googlePasswordEncId,
+      status: AccountStatus.ACTIVE,
+      description: "Google account",
+      lastViewed: new Date(),
+      updatedAt: new Date(),
+      createdAt: new Date(),
+      platformId: googlePlatform.id,
+      userId: user.id,
+      containerId: personalContainer?.id,
     })
 
     // Store tag connections for Google credential
@@ -101,32 +111,32 @@ async function seedCredentials(prisma: PrismaClient) {
       })
     }
 
-    // GitHub credential
-    const githubCredId = `credential_github_${user.id}`
-    
-    // Create encrypted data for GitHub password
-    const githubPasswordEncryption = await prisma.encryptedData.create({
-      data: {
-        encryptedValue: githubPassword,
-        encryptionKey: MOCK_ENCRYPTION_KEY,
-        iv: MOCK_IV,
-      },
+    // Prepare encrypted data for GitHub password
+    const githubPasswordEncrypted = await encryptDataSync(
+      githubPassword,
+      SEED_ENCRYPTION_CONFIG.MASTER_KEY,
+      SEED_ENCRYPTION_CONFIG.CREDENTIAL_PASSWORD_IV
+    )
+    encryptedDataToCreate.push({
+      id: githubPasswordEncId,
+      encryptedValue: githubPasswordEncrypted,
+      encryptionKey: SEED_ENCRYPTION_CONFIG.MASTER_KEY,
+      iv: SEED_ENCRYPTION_CONFIG.CREDENTIAL_PASSWORD_IV,
     })
 
-    await prisma.credential.create({
-      data: {
-        id: githubCredId,
-        username: `${user.name.replace(" ", "").toLowerCase()}`,
-        passwordEncryptionId: githubPasswordEncryption.id,
-        status: AccountStatus.ACTIVE,
-        description: "GitHub account",
-        lastViewed: new Date(),
-        updatedAt: new Date(),
-        createdAt: new Date(),
-        platformId: githubPlatform.id,
-        userId: user.id,
-        containerId: workContainer?.id,
-      },
+    // Prepare GitHub credential
+    credentialsToCreate.push({
+      id: githubCredId,
+      identifier: `${user.name.replace(" ", "").toLowerCase()}`,
+      passwordEncryptionId: githubPasswordEncId,
+      status: AccountStatus.ACTIVE,
+      description: "GitHub account",
+      lastViewed: new Date(),
+      updatedAt: new Date(),
+      createdAt: new Date(),
+      platformId: githubPlatform.id,
+      userId: user.id,
+      containerId: workContainer?.id,
     })
 
     // Store tag connections for GitHub credential
@@ -147,30 +157,31 @@ async function seedCredentials(prisma: PrismaClient) {
 
     // AWS credential if work container exists
     if (workContainer) {
-      const awsCredId = `credential_aws_${user.id}`
-      
-      // Create encrypted data for AWS password
-      const awsPasswordEncryption = await prisma.encryptedData.create({
-        data: {
-          encryptedValue: awsPassword,
-          encryptionKey: MOCK_ENCRYPTION_KEY,
-          iv: MOCK_IV,
-        },
+      // Prepare encrypted data for AWS password
+      const awsPasswordEncrypted = await encryptDataSync(
+        awsPassword,
+        SEED_ENCRYPTION_CONFIG.MASTER_KEY,
+        SEED_ENCRYPTION_CONFIG.CREDENTIAL_PASSWORD_IV
+      )
+      encryptedDataToCreate.push({
+        id: awsPasswordEncId,
+        encryptedValue: awsPasswordEncrypted,
+        encryptionKey: SEED_ENCRYPTION_CONFIG.MASTER_KEY,
+        iv: SEED_ENCRYPTION_CONFIG.CREDENTIAL_PASSWORD_IV,
       })
 
-      await prisma.credential.create({
-        data: {
-          id: awsCredId,
-          username: `${user.name.replace(" ", ".").toLowerCase()}@company.com`,
-          passwordEncryptionId: awsPasswordEncryption.id,
-          status: AccountStatus.ACTIVE,
-          description: "AWS account",
-          updatedAt: new Date(),
-          createdAt: new Date(),
-          platformId: awsPlatform.id,
-          userId: user.id,
-          containerId: workContainer.id,
-        },
+      // Prepare AWS credential
+      credentialsToCreate.push({
+        id: awsCredId,
+        identifier: `${user.name.replace(" ", ".").toLowerCase()}@company.com`,
+        passwordEncryptionId: awsPasswordEncId,
+        status: AccountStatus.ACTIVE,
+        description: "AWS account",
+        updatedAt: new Date(),
+        createdAt: new Date(),
+        platformId: awsPlatform.id,
+        userId: user.id,
+        containerId: workContainer.id,
       })
 
       // Store tag connections for AWS credential
@@ -183,11 +194,28 @@ async function seedCredentials(prisma: PrismaClient) {
     }
   }
 
-  // Credentials are now created individually above
+  // Use a transaction to batch all operations
+  await prisma.$transaction(async (tx) => {
+    // Create all encrypted data first
+    if (encryptedDataToCreate.length > 0) {
+      await tx.encryptedData.createMany({
+        data: encryptedDataToCreate,
+      })
+    }
 
-  // Bulk create all metadata
-  await prisma.credentialMetadata.createMany({
-    data: metadataData,
+    // Then create all credentials
+    if (credentialsToCreate.length > 0) {
+      await tx.credential.createMany({
+        data: credentialsToCreate,
+      })
+    }
+
+    // Bulk create all metadata
+    if (metadataData.length > 0) {
+      await tx.credentialMetadata.createMany({
+        data: metadataData,
+      })
+    }
   })
 
   // Connect credentials to tags

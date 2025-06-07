@@ -1,9 +1,6 @@
 import { PrismaClient } from "@prisma/client"
-import { hash } from "bcryptjs"
 
-export async function saltAndHashPassword(password: string): Promise<string> {
-  return await hash(password, 10)
-}
+import { saltAndHashPassword } from "../../lib/auth/password"
 
 async function seedUsers(prisma: PrismaClient) {
   console.log("🌱 Seeding users...")

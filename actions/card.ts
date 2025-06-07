@@ -63,7 +63,10 @@ export async function createCard(data: CardDtoType): Promise<{
       iv: "temp_iv", // TODO: Generate proper IV
     })
 
-    if (!numberEncryptionResult.success || !numberEncryptionResult.encryptedData) {
+    if (
+      !numberEncryptionResult.success ||
+      !numberEncryptionResult.encryptedData
+    ) {
       return {
         success: false,
         error: "Failed to encrypt card number",
@@ -413,7 +416,10 @@ export async function createCardWithMetadata(
         iv: "temp_iv", // TODO: Generate proper IV
       })
 
-      if (!numberEncryptionResult.success || !numberEncryptionResult.encryptedData) {
+      if (
+        !numberEncryptionResult.success ||
+        !numberEncryptionResult.encryptedData
+      ) {
         return {
           success: false,
           error: "Failed to encrypt card number",

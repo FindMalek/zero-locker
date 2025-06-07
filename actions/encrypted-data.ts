@@ -1,7 +1,10 @@
 "use server"
 
 import { database } from "@/prisma/client"
-import { EncryptedDataDto, EncryptedDataSimpleRo } from "@/schemas/encrypted-data"
+import {
+  EncryptedDataDto,
+  EncryptedDataSimpleRo,
+} from "@/schemas/encrypted-data"
 import { z } from "zod"
 
 import { verifySession } from "@/lib/auth/verify"

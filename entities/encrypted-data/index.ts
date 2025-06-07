@@ -1,2 +1,2 @@
 export * from "./entity"
-export * from "./query" 
+export * from "./query"

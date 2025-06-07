@@ -1,4 +1,6 @@
-import { PrismaClient, SecretStatus, SecretType } from "@prisma/client"
+import { Prisma, PrismaClient, SecretStatus, SecretType } from "@prisma/client"
+
+import { encryptDataSync, SEED_ENCRYPTION_CONFIG } from "../../lib/encryption"
 
 async function seedSecrets(prisma: PrismaClient) {
   console.log("🌱 Seeding secrets...")
@@ -6,7 +8,10 @@ async function seedSecrets(prisma: PrismaClient) {
   const users = await prisma.user.findMany()
   const containers = await prisma.container.findMany()
 
-  const metadataData = []
+  // Prepare arrays for batch operations
+  const secretsToCreate: Prisma.SecretCreateManyInput[] = []
+  const metadataData: Prisma.SecretMetadataCreateManyInput[] = []
+  const encryptedDataToCreate: Prisma.EncryptedDataCreateManyInput[] = []
 
   for (const user of users) {
     // Find the environment container for each user
@@ -41,45 +46,53 @@ async function seedSecrets(prisma: PrismaClient) {
           name: "JWT_SECRET",
           value: "super-secret-jwt-key-for-token-signing",
           note: "Secret key for JWT token signing",
-          metadataType: SecretType.ENV_VARIABLE,
+          metadataType: SecretType.JWT_SECRET,
         },
         {
           id: `secret_redis_url_${user.id}`,
           name: "REDIS_URL",
           value: "redis://localhost:6379",
           note: "Redis connection URL for caching",
-          metadataType: SecretType.ENV_VARIABLE,
+          metadataType: SecretType.DATABASE_URL,
         },
         {
           id: `secret_stripe_key_${user.id}`,
           name: "STRIPE_SECRET_KEY",
           value: "sk_test_1234567890abcdef1234567890abcdef",
           note: "Stripe secret key for payment processing",
-          metadataType: SecretType.THIRD_PARTY_API_KEY,
+          metadataType: SecretType.API_KEY,
         },
       ]
 
       for (const secret of secrets) {
-        // Create encrypted data for secret value
-        const valueEncryption = await prisma.encryptedData.create({
-          data: {
-            encryptedValue: secret.value,
-            encryptionKey: "mock_encryption_key_for_development",
-            iv: "mock_iv_for_development",
-          },
+        // Prepare encrypted data ID
+        const valueEncryptionId = `enc_secret_${secret.id}`
+
+        // Encrypt secret value
+        const encryptedValue = await encryptDataSync(
+          secret.value,
+          SEED_ENCRYPTION_CONFIG.MASTER_KEY,
+          SEED_ENCRYPTION_CONFIG.SECRET_VALUE_IV
+        )
+
+        // Prepare encrypted data for secret value
+        encryptedDataToCreate.push({
+          id: valueEncryptionId,
+          encryptedValue: encryptedValue,
+          encryptionKey: SEED_ENCRYPTION_CONFIG.MASTER_KEY,
+          iv: SEED_ENCRYPTION_CONFIG.SECRET_VALUE_IV,
         })
 
-        await prisma.secret.create({
-          data: {
-            id: secret.id,
-            name: secret.name,
-            valueEncryptionId: valueEncryption.id,
-            note: secret.note,
-            updatedAt: new Date(),
-            createdAt: new Date(),
-            userId: user.id,
-            containerId: envContainer.id,
-          },
+        // Prepare secret data
+        secretsToCreate.push({
+          id: secret.id,
+          name: secret.name,
+          valueEncryptionId: valueEncryptionId,
+          note: secret.note,
+          updatedAt: new Date(),
+          createdAt: new Date(),
+          userId: user.id,
+          containerId: envContainer.id,
         })
 
         // Add metadata for each secret
@@ -113,26 +126,34 @@ async function seedSecrets(prisma: PrismaClient) {
       ]
 
       for (const secret of legacySecrets) {
-        // Create encrypted data for secret value
-        const valueEncryption = await prisma.encryptedData.create({
-          data: {
-            encryptedValue: secret.value,
-            encryptionKey: "mock_encryption_key_for_development",
-            iv: "mock_iv_for_development",
-          },
+        // Prepare encrypted data ID
+        const valueEncryptionId = `enc_secret_${secret.id}`
+
+        // Encrypt secret value
+        const encryptedValue = await encryptDataSync(
+          secret.value,
+          SEED_ENCRYPTION_CONFIG.MASTER_KEY,
+          SEED_ENCRYPTION_CONFIG.SECRET_VALUE_IV
+        )
+
+        // Prepare encrypted data for secret value
+        encryptedDataToCreate.push({
+          id: valueEncryptionId,
+          encryptedValue: encryptedValue,
+          encryptionKey: SEED_ENCRYPTION_CONFIG.MASTER_KEY,
+          iv: SEED_ENCRYPTION_CONFIG.SECRET_VALUE_IV,
         })
 
-        await prisma.secret.create({
-          data: {
-            id: secret.id,
-            name: secret.name,
-            valueEncryptionId: valueEncryption.id,
-            note: secret.note,
-            updatedAt: new Date(),
-            createdAt: new Date(),
-            userId: user.id,
-            containerId: workContainer.id,
-          },
+        // Prepare secret data
+        secretsToCreate.push({
+          id: secret.id,
+          name: secret.name,
+          valueEncryptionId: valueEncryptionId,
+          note: secret.note,
+          updatedAt: new Date(),
+          createdAt: new Date(),
+          userId: user.id,
+          containerId: workContainer.id,
         })
 
         // Add metadata for each secret
@@ -148,10 +169,28 @@ async function seedSecrets(prisma: PrismaClient) {
     }
   }
 
-  // Secrets are now created individually above
+  // Use a transaction to batch all operations
+  await prisma.$transaction(async (tx) => {
+    // Create all encrypted data first
+    if (encryptedDataToCreate.length > 0) {
+      await tx.encryptedData.createMany({
+        data: encryptedDataToCreate,
+      })
+    }
 
-  await prisma.secretMetadata.createMany({
-    data: metadataData,
+    // Then create all secrets
+    if (secretsToCreate.length > 0) {
+      await tx.secret.createMany({
+        data: secretsToCreate,
+      })
+    }
+
+    // Finally create all metadata
+    if (metadataData.length > 0) {
+      await tx.secretMetadata.createMany({
+        data: metadataData,
+      })
+    }
   })
 
   console.log("✅ Secrets seeded successfully")

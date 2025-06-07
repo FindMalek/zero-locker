@@ -3,7 +3,9 @@ import { EncryptedDataSimpleRo } from "@/schemas/encrypted-data"
 import { EncryptedDataEntitySimpleDbData } from "./query"
 
 export class EncryptedDataEntity {
-  static getSimpleRo(entity: EncryptedDataEntitySimpleDbData): EncryptedDataSimpleRo {
+  static getSimpleRo(
+    entity: EncryptedDataEntitySimpleDbData
+  ): EncryptedDataSimpleRo {
     return {
       id: entity.id,
       encryptedValue: entity.encryptedValue,
@@ -13,4 +15,4 @@ export class EncryptedDataEntity {
       updatedAt: entity.updatedAt,
     }
   }
-} 
+}

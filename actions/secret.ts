@@ -82,7 +82,10 @@ export async function createSecret(data: SecretDtoType): Promise<{
         iv: "temp_iv", // TODO: Generate proper IV
       })
 
-      if (!valueEncryptionResult.success || !valueEncryptionResult.encryptedData) {
+      if (
+        !valueEncryptionResult.success ||
+        !valueEncryptionResult.encryptedData
+      ) {
         return {
           success: false,
           error: "Failed to encrypt secret value",
@@ -394,7 +397,10 @@ export async function createSecretWithMetadata(
         iv: "temp_iv", // TODO: Generate proper IV
       })
 
-      if (!valueEncryptionResult.success || !valueEncryptionResult.encryptedData) {
+      if (
+        !valueEncryptionResult.success ||
+        !valueEncryptionResult.encryptedData
+      ) {
         return {
           success: false,
           error: "Failed to encrypt secret value",
@@ -515,7 +521,8 @@ export async function generateEnvFile(containerId: string): Promise<{
     // Generate env content
     const envLines = container.secrets.map((secret) => {
       // In a real app, you'd decrypt the secret value here
-      const secretValue = secret.valueEncryption?.encryptedValue || "PLACEHOLDER_VALUE"
+      const secretValue =
+        secret.valueEncryption?.encryptedValue || "PLACEHOLDER_VALUE"
       return `${secret.name.toUpperCase().replace(/\s+/g, "_")}=${secretValue}`
     })
 
