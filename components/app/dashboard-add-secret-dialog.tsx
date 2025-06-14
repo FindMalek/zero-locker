@@ -56,30 +56,32 @@ export function DashboardAddSecretDialog({
     try {
       setIsSubmitting(true)
 
-      // Validate form
+      if (!sensitiveData.value.trim()) {
+        toast("Secret value is required", "error")
+        return
+      }
+
+      const key = await generateEncryptionKey()
+      const encryptResult = await encryptData(sensitiveData.value, key)
+      const keyString = await exportKey(key as CryptoKey)
+
+      form.setValue("valueEncryption", {
+        encryptedValue: encryptResult.encryptedData,
+        iv: encryptResult.iv,
+        encryptionKey: keyString,
+      })
+
       const isValid = await form.trigger()
       if (!isValid) {
         toast("Please fill in all required fields", "error")
         return
       }
 
-      // Validate sensitive data
-      if (!sensitiveData.value.trim()) {
-        toast("Secret value is required", "error")
-        return
-      }
-
       const secretData = form.getValues()
 
-      // Use title as name if no name provided
       if (title && !secretData.name) {
         secretData.name = title
       }
-
-      // Encrypt secret value
-      const key = await generateEncryptionKey()
-      const encryptResult = await encryptData(sensitiveData.value, key)
-      const keyString = await exportKey(key as CryptoKey)
 
       const secretDto: SecretDto = {
         name: secretData.name,
