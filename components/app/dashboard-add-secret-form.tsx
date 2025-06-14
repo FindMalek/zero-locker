@@ -202,7 +202,6 @@ export function DashboardAddSecretForm({
 
   return (
     <div className="space-y-6">
-      {/* Title Section */}
       <div className="space-y-2">
         <Label htmlFor="title" className="text-sm font-medium">
           Title
@@ -216,7 +215,6 @@ export function DashboardAddSecretForm({
         />
       </div>
 
-      {/* Secret Key-Value Section */}
       <div className="space-y-4">
         <Label className="text-sm font-medium">Secrets</Label>
 
@@ -293,7 +291,6 @@ export function DashboardAddSecretForm({
               </div>
             ))}
 
-            {/* Add Another Button */}
             <div className="border-border border-t p-3 sm:p-4">
               <Button
                 type="button"

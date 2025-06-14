@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { SecretDto, secretDtoSchema } from "@/schemas/secrets/secret"
 import { zodResolver } from "@hookform/resolvers/zod"
+import { SecretStatus, SecretType } from "@prisma/client"
 import { useForm } from "react-hook-form"
 
 import { encryptData, exportKey, generateEncryptionKey } from "@/lib/encryption"
@@ -29,8 +30,7 @@ export function DashboardAddSecretDialog({
 
   const [title, setTitle] = useState("")
   const [createMore, setCreateMore] = useState(false)
-
-  // Temporary state for sensitive data before encryption
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const [sensitiveData, setSensitiveData] = useState({
     value: "",
   })
@@ -45,12 +45,16 @@ export function DashboardAddSecretDialog({
         iv: "",
         encryptionKey: "",
       },
-      metadata: [],
-      containerId: "",
+      metadata: [{
+        type: SecretType.API_KEY,
+        status: SecretStatus.ACTIVE,
+        otherInfo: [],
+        secretId: "",
+      }],
     },
   })
 
-  const [isSubmitting, setIsSubmitting] = useState(false)
+
 
   async function onSubmit() {
     try {
@@ -111,8 +115,12 @@ export function DashboardAddSecretDialog({
               iv: "",
               encryptionKey: "",
             },
-            metadata: [],
-            containerId: secretData.containerId,
+            metadata: [{
+              type: SecretType.API_KEY,
+              status: SecretStatus.ACTIVE,
+              otherInfo: [],
+              secretId: "",
+            }],
           })
           setSensitiveData({ value: "" })
           setTitle("")
@@ -120,8 +128,8 @@ export function DashboardAddSecretDialog({
       } else {
         const errorDetails = result.issues
           ? result.issues
-              .map((issue) => `${issue.path.join(".")}: ${issue.message}`)
-              .join(", ")
+            .map((issue) => `${issue.path.join(".")}: ${issue.message}`)
+            .join(", ")
           : result.error
 
         toast(
