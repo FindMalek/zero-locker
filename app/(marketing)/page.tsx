@@ -5,9 +5,9 @@ import { MarketingWaitlistForm } from "@/components/app/marketing-waitlist-form"
 import { StatCard } from "@/components/shared/stat-card"
 import { AnimatedGridPattern } from "@/components/ui/animated-grid-pattern"
 
-import { listWaitlist } from "@/actions/user/waitlist"
-import { listUsers } from "@/actions/user/user"
 import { listEncryptedDataCount } from "@/actions/encryption"
+import { listUsers } from "@/actions/user/user"
+import { listWaitlist } from "@/actions/user/waitlist"
 
 export default async function Home() {
   const [waitlist, users, encryptedData] = await Promise.all([
@@ -40,8 +40,14 @@ export default async function Home() {
 
               <div className="flex lg:w-1/2">
                 <div className="grid w-full grid-cols-1 gap-4 sm:grid-cols-2">
-                  <StatCard value={users.total?.toString() || "0"} label="USERS SIGNED UP" />
-                  <StatCard value={encryptedData.count?.toString() || "0"} label="MANAGED ENCRYPTED SECRETS" />
+                  <StatCard
+                    value={users.total?.toString() || "0"}
+                    label="USERS SIGNED UP"
+                  />
+                  <StatCard
+                    value={encryptedData.count?.toString() || "0"}
+                    label="MANAGED ENCRYPTED SECRETS"
+                  />
                 </div>
               </div>
             </div>

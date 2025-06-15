@@ -197,7 +197,6 @@ export async function deleteEncryptedData(id: string): Promise<{
   }
 }
 
-
 export async function listEncryptedDataCount(): Promise<{
   success: boolean
   count?: number
