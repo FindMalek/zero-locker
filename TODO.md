@@ -48,15 +48,7 @@ The format would be:
       We need to have link to `Tags` model.
       Should we really do this ?
 
-- [ ] usage of `Metadata` aserver actions
-
 - [ ] Secret container must have these actions - [ ] Add a secret - [ ] Edit a secret - [ ] Delete a secret - [ ] View a secret - [ ] Copy a secret - [ ] Share a secret - [ ] Export .env file - [ ] Generate a .env.example file - [ ] Generate a env.ts file for the `t3-env` library
-
-- [ ] Genenaric return type from server actions
-      We should create a generic return type for the server actions.
-      This would be used to return the data from the server actions.
-
-- [ ] Sync `CardMetadata` with the `Card` Form
 
 - [ ] In each model that uses CRUD actions, implement `isDeleted`
       This would help in recovery and undo actions
@@ -116,3 +108,5 @@ The format would be:
 - [x] Refactor the `EncryptedData` model
       For each `query.ts` file, that its entity uses the `EncryptedData` model, we should create a new function that gets the `EncryptedData` model, and one dosent
       We should think about it decrypting the data, in the server actions or entity.ts file or in the client.
+
+- [x] usage of `Metadata` aserver actions
