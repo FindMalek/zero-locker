@@ -25,7 +25,6 @@ import { Prisma, SecretStatus, SecretType } from "@prisma/client"
 import { z } from "zod"
 
 import { verifySession } from "@/lib/auth/verify"
-import { encryptData, exportKey, generateEncryptionKey } from "@/lib/encryption"
 
 import { createEncryptedData } from "../encryption"
 import { containerSupportsEnvOperations } from "../utils/container"
@@ -130,22 +129,12 @@ export async function createSecret(data: SecretDto): Promise<{
   issues?: z.ZodIssue[]
 }> {
   try {
-    console.log("Starting secret creation with data:", {
-      name: data.name,
-      containerId: data.containerId,
-      hasValueEncryption: !!data.valueEncryption,
-      metadataCount: data.metadata?.length,
-    })
-
     const session = await verifySession()
-    console.log("Session verified for user:", session.user.id)
 
     let validatedData: SecretDto
     try {
       validatedData = secretDtoSchema.parse(data)
-      console.log("Data validated successfully")
     } catch (validationError) {
-      console.error("Validation error:", validationError)
       if (validationError instanceof z.ZodError) {
         return {
           success: false,
@@ -156,9 +145,7 @@ export async function createSecret(data: SecretDto): Promise<{
       throw validationError
     }
 
-    // Validate container type if containerId is provided
     if (validatedData.containerId) {
-      console.log("Checking container:", validatedData.containerId)
       const container = await database.container.findFirst({
         where: {
           id: validatedData.containerId,
@@ -167,27 +154,18 @@ export async function createSecret(data: SecretDto): Promise<{
       })
 
       if (!container) {
-        console.log("Container not found")
         return {
           success: false,
           error: "Container not found",
         }
       }
 
-      console.log("Container found:", {
-        id: container.id,
-        type: container.type,
-        name: container.name,
-      })
-
       const isValid = ContainerEntity.validateEntityForContainer(
         container.type,
         EntityTypeEnum.SECRET
       )
-      console.log("Container validation result:", isValid)
 
       if (!isValid) {
-        console.log("Container type validation failed")
         return {
           success: false,
           error: `Cannot add secrets to ${container.type.toLowerCase().replace("_", " ")} container`,
@@ -201,8 +179,6 @@ export async function createSecret(data: SecretDto): Promise<{
       }
     }
 
-    // Create encrypted data for secret value
-    console.log("Creating encrypted data")
     let valueEncryptionResult
     try {
       valueEncryptionResult = await createEncryptedData({
@@ -801,12 +777,9 @@ export async function createContainerWithSecrets(data: {
   try {
     const session = await verifySession()
 
-    // Validate container data
     const validatedContainer = containerDtoSchema.parse(data.container)
 
-    // Start a transaction
     return await database.$transaction(async (tx) => {
-      // 1. Create the container
       const container = await tx.container.create({
         data: {
           name: validatedContainer.name,
@@ -822,10 +795,8 @@ export async function createContainerWithSecrets(data: {
         },
       })
 
-      // 2. Create all secrets
       const secrets = await Promise.all(
         data.secrets.map(async (secret) => {
-          // Create encrypted data using the client-side encrypted values
           const valueEncryption = await tx.encryptedData.create({
             data: {
               encryptedValue: secret.valueEncryption.encryptedValue,
@@ -834,7 +805,6 @@ export async function createContainerWithSecrets(data: {
             },
           })
 
-          // Create the secret
           return tx.secret.create({
             data: {
               name: secret.name,
