@@ -196,3 +196,25 @@ export async function deleteEncryptedData(id: string): Promise<{
     }
   }
 }
+
+
+export async function listEncryptedDataCount(): Promise<{
+  success: boolean
+  count?: number
+  error?: string
+}> {
+  try {
+    const count = await database.encryptedData.count()
+
+    return {
+      success: true,
+      count,
+    }
+  } catch (error) {
+    console.error("List encrypted data count error:", error)
+    return {
+      success: false,
+      error: "Something went wrong. Please try again.",
+    }
+  }
+}

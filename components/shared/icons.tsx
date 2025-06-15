@@ -46,6 +46,7 @@ import {
   ListIcon,
   Loader2,
   LockIcon,
+  LogIn,
   LogOut,
   LucideIcon,
   MailIcon,
@@ -186,6 +187,7 @@ export const Icons = {
   account: AtSignIcon,
   info: Info,
   refresh: RefreshCw,
+  login: LogIn,
 }
 
 export const getEntityIcon = (itemType: RecentItemType) => {

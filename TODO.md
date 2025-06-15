@@ -36,8 +36,6 @@ The format would be:
 - [ ] Automatic `CardSatuts` detection
       e.g. if the date is due, then automatically its expired
 
-- [ ] Update dependecies: 1. Update `prisma` 2. Update `pnpm`
-
 - [ ] Update the `SecretMetadata` model
       We need to have link to `Platform` model.
 
@@ -110,3 +108,5 @@ The format would be:
       We should think about it decrypting the data, in the server actions or entity.ts file or in the client.
 
 - [x] usage of `Metadata` aserver actions
+
+- [x] Update dependecies: 1. Update `prisma` 2. Update `pnpm`

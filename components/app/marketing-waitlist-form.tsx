@@ -20,10 +20,9 @@ import { Input } from "@/components/ui/input"
 
 import { joinWaitlist } from "@/actions/user"
 
-export function MarketingWaitlistForm() {
+export function MarketingWaitlistForm({ count }: { count: number }) {
   const [isLoading, setIsLoading] = useState(false)
 
-  // Initialize form with React Hook Form and Zod resolver
   const form = useForm<WaitlistUserDto>({
     resolver: zodResolver(WaitlistUserDtoSchema),
     defaultValues: {
@@ -92,6 +91,12 @@ export function MarketingWaitlistForm() {
             Join Waitlist
           </Button>
         </form>
+        <div className="flex items-center gap-2">
+          <div className="bg-success/70 animate-pulse rounded-full p-1" />
+          <p className="text-success/70 text-sm">
+            {count} people have joined the waitlist
+          </p>
+        </div>
       </Form>
     </div>
   )

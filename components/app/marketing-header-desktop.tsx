@@ -1,16 +1,24 @@
+"use client"
+
 import Link from "next/link"
 
 import { siteConfig } from "@/config/site"
 import { cn } from "@/lib/utils"
+import { useIsMobile } from "@/hooks/use-mobile"
 
+import { Icons } from "@/components/shared/icons"
 import { buttonVariants } from "@/components/ui/button"
 import { HyperText } from "@/components/ui/hyper-text"
 
 export function MarketingHeaderDesktop() {
+  const isMobile = useIsMobile()
   return (
     <header className="flex w-full items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
       <div className="flex items-center">
-        <h1 className="text-xl font-bold">🔐 {siteConfig.name}</h1>
+        <h1 className="flex items-center gap-2 text-xl font-bold">
+          <Icons.logo />
+          {!isMobile && <span className="text-xl">{siteConfig.name}</span>}
+        </h1>
       </div>
       <div className="text-secondary-foreground/70 hidden items-center justify-center text-xs md:flex">
         <HyperText
@@ -21,7 +29,7 @@ export function MarketingHeaderDesktop() {
         >
           CURRENTLY IN PRIVATE BETA - BUILT BY
         </HyperText>{" "}
-        <Link href="https://www.findmalek.com">
+        <Link className="pl-2" href="https://www.findmalek.com">
           <HyperText
             duration={500}
             delay={4}
@@ -37,7 +45,7 @@ export function MarketingHeaderDesktop() {
           href="/login"
           className={cn(buttonVariants({ variant: "default" }))}
         >
-          Login
+          {isMobile ? <Icons.login /> : "Login"}
         </Link>
       </div>
     </header>

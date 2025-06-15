@@ -10,7 +10,6 @@ import {
   type WaitlistUserDto,
 } from "@/config/schema"
 
-// Additional CRUD DTOs for waitlist operations
 const getWaitlistByIdDtoSchema = z.object({
   id: z.string().min(1, "Waitlist ID is required"),
 })
