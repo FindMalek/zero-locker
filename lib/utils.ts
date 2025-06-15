@@ -17,7 +17,7 @@ import { twMerge } from "tailwind-merge"
 import { ZodError, ZodIssue } from "zod"
 
 import { env } from "@/env"
-import { User as UserType } from "@/types/dashboard"
+import { KeyValuePair, User as UserType } from "@/types"
 
 import { PRIORITY_ACTIVITY_TYPE } from "@/config/consts"
 
@@ -328,4 +328,27 @@ export function getAllowedEntityTypes(containerType: ContainerType): string[] {
     default:
       return []
   }
+}
+
+/**
+ * Parse text into key-value pairs, supporting .env file format
+ * @param text The text to parse, can be multiple lines
+ * @returns Array of key-value pairs
+ */
+export function parseKeyValuePairs(text: string): KeyValuePair[] {
+  const lines = text.split("\n")
+  return lines
+    .map((line) => line.trim())
+    .filter((line) => line && !line.startsWith("#"))
+    .map((line) => {
+      const [key, ...valueParts] = line.split("=")
+      return {
+        key: key.trim(),
+        value: valueParts
+          .join("=")
+          .trim()
+          .replace(/^["']|["']$/g, ""),
+      }
+    })
+    .filter((pair) => pair.key && pair.value)
 }

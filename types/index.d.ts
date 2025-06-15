@@ -50,3 +50,8 @@ export type SiteConfig = {
   }
   keywords: string[]
 }
+
+export interface KeyValuePair {
+  key: string
+  value: string
+}

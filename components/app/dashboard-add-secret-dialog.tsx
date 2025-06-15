@@ -3,11 +3,11 @@
 import { useState } from "react"
 import { SecretDto, secretDtoSchema } from "@/schemas/secrets/secret"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { SecretStatus, SecretType } from "@prisma/client"
+import { ContainerType, SecretStatus, SecretType } from "@prisma/client"
 import { useForm } from "react-hook-form"
 
 import { encryptData, exportKey, generateEncryptionKey } from "@/lib/encryption"
-import { handleErrors } from "@/lib/utils"
+import { handleErrors, parseKeyValuePairs } from "@/lib/utils"
 import { useToast } from "@/hooks/use-toast"
 
 import { DashboardAddSecretForm } from "@/components/app/dashboard-add-secret-form"
@@ -15,7 +15,7 @@ import { AddItemDialog } from "@/components/shared/add-item-dialog"
 import { Icons } from "@/components/shared/icons"
 import { Form } from "@/components/ui/form"
 
-import { createSecret } from "@/actions/secrets/secret"
+import { createContainerWithSecrets } from "@/actions/secrets/secret"
 
 interface SecretDialogProps {
   open: boolean
@@ -45,16 +45,17 @@ export function DashboardAddSecretDialog({
         iv: "",
         encryptionKey: "",
       },
-      metadata: [{
-        type: SecretType.API_KEY,
-        status: SecretStatus.ACTIVE,
-        otherInfo: [],
-        secretId: "",
-      }],
+      metadata: [
+        {
+          type: SecretType.API_KEY,
+          status: SecretStatus.ACTIVE,
+          otherInfo: [],
+          secretId: "",
+        },
+      ],
+      containerId: "",
     },
   })
-
-
 
   async function onSubmit() {
     try {
@@ -65,44 +66,48 @@ export function DashboardAddSecretDialog({
         return
       }
 
-      const key = await generateEncryptionKey()
-      const encryptResult = await encryptData(sensitiveData.value, key)
-      const keyString = await exportKey(key as CryptoKey)
+      const keyValuePairs = parseKeyValuePairs(sensitiveData.value)
 
-      form.setValue("valueEncryption", {
-        encryptedValue: encryptResult.encryptedData,
-        iv: encryptResult.iv,
-        encryptionKey: keyString,
-      })
-
-      const isValid = await form.trigger()
-      if (!isValid) {
-        toast("Please fill in all required fields", "error")
+      if (keyValuePairs.length === 0) {
+        toast("No valid key-value pairs found", "error")
         return
       }
 
-      const secretData = form.getValues()
+      // Encrypt all secrets on the client side
+      const encryptedSecrets = await Promise.all(
+        keyValuePairs.map(async (pair: { key: string; value: string }) => {
+          const key = await generateEncryptionKey()
+          const encryptResult = await encryptData(pair.value, key)
+          const keyString = await exportKey(key as CryptoKey)
 
-      if (title && !secretData.name) {
-        secretData.name = title
-      }
+          return {
+            name: pair.key,
+            note: "",
+            valueEncryption: {
+              encryptedValue: encryptResult.encryptedData,
+              iv: encryptResult.iv,
+              encryptionKey: keyString,
+            },
+          }
+        })
+      )
 
-      const secretDto: SecretDto = {
-        name: secretData.name,
-        valueEncryption: {
-          encryptedValue: encryptResult.encryptedData,
-          iv: encryptResult.iv,
-          encryptionKey: keyString,
+      const result = await createContainerWithSecrets({
+        container: {
+          name: title,
+          icon: "🔧",
+          description: form.getValues("note"),
+          type: ContainerType.SECRETS_ONLY,
+          tags: [],
         },
-        note: secretData.note,
-        metadata: secretData.metadata,
-        containerId: secretData.containerId,
-      }
-
-      const result = await createSecret(secretDto)
+        secrets: encryptedSecrets,
+      })
 
       if (result.success) {
-        toast("Secret saved successfully", "success")
+        toast(
+          `Successfully created ${result.secrets?.length || 0} secrets`,
+          "success"
+        )
 
         if (!createMore) {
           handleDialogOpenChange(false)
@@ -115,29 +120,27 @@ export function DashboardAddSecretDialog({
               iv: "",
               encryptionKey: "",
             },
-            metadata: [{
-              type: SecretType.API_KEY,
-              status: SecretStatus.ACTIVE,
-              otherInfo: [],
-              secretId: "",
-            }],
+            metadata: [
+              {
+                type: SecretType.API_KEY,
+                status: SecretStatus.ACTIVE,
+                otherInfo: [],
+                secretId: "",
+              },
+            ],
+            containerId: "",
           })
           setSensitiveData({ value: "" })
           setTitle("")
         }
       } else {
-        const errorDetails = result.issues
-          ? result.issues
-            .map((issue) => `${issue.path.join(".")}: ${issue.message}`)
-            .join(", ")
-          : result.error
-
         toast(
-          `Failed to save secret: ${errorDetails || "Unknown error"}`,
+          `Failed to create secrets: ${result.error || "Unknown error"}`,
           "error"
         )
       }
     } catch (error) {
+      console.error("Error in onSubmit:", error)
       const { message, details } = handleErrors(error, "Failed to save secret")
       toast(
         details
