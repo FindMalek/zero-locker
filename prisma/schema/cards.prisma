@@ -62,7 +62,6 @@ model Card {
   @@index([containerId])
   @@index([cvvEncryptionId])
   @@index([numberEncryptionId])
-
   @@map("card")
 }
 

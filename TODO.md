@@ -51,6 +51,9 @@ The format would be:
 - [ ] In each model that uses CRUD actions, implement `isDeleted`
       This would help in recovery and undo actions
 
+- [ ] Use services instead of `lib` files
+      We should create a new folder called `services` and move all the functions that are not related to the database to this folder.
+
 ### Finished Tasks
 
 - [x] Change return types of the Server Actions || High

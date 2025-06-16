@@ -1,0 +1,263 @@
+import { CredentialEntity } from "@/entities/credential/credential"
+import { database } from "@/prisma/client"
+import {
+  createCredentialInputSchema,
+  credentialOutputSchema,
+  deleteCredentialInputSchema,
+  getCredentialInputSchema,
+  listCredentialsInputSchema,
+  listCredentialsOutputSchema,
+  updateCredentialInputSchema,
+  type CredentialOutput,
+  type ListCredentialsOutput,
+} from "@/schemas/credential/dto"
+import { ORPCError, os } from "@orpc/server"
+import type { Prisma } from "@prisma/client"
+
+import { getOrReturnEmptyObject } from "@/lib/utils"
+
+import { createEncryptedData } from "@/actions/encryption"
+import { createTagsAndGetConnections } from "@/actions/utils/tag"
+
+import type { ORPCContext } from "../types"
+
+// Base procedure with context
+const baseProcedure = os.$context<ORPCContext>()
+
+// Authenticated procedure
+const authProcedure = baseProcedure.use(({ context, next }) => {
+  if (!context.session || !context.user) {
+    throw new ORPCError("UNAUTHORIZED")
+  }
+
+  return next({
+    context: {
+      ...context,
+      session: context.session,
+      user: context.user,
+    },
+  })
+})
+
+// Get credential by ID
+export const getCredential = authProcedure
+  .input(getCredentialInputSchema)
+  .output(credentialOutputSchema)
+  .handler(async ({ input, context }): Promise<CredentialOutput> => {
+    const credential = await database.credential.findFirst({
+      where: {
+        id: input.id,
+        userId: context.user.id,
+      },
+    })
+
+    if (!credential) {
+      throw new ORPCError("NOT_FOUND")
+    }
+
+    // Update last viewed timestamp
+    await database.credential.update({
+      where: { id: input.id },
+      data: { lastViewed: new Date() },
+    })
+
+    return CredentialEntity.getSimpleRo(credential)
+  })
+
+// List credentials with pagination
+export const listCredentials = authProcedure
+  .input(listCredentialsInputSchema)
+  .output(listCredentialsOutputSchema)
+  .handler(async ({ input, context }): Promise<ListCredentialsOutput> => {
+    const { page, limit, search, containerId, platformId } = input
+    const skip = (page - 1) * limit
+
+    const where = {
+      userId: context.user.id,
+      ...(containerId && { containerId }),
+      ...(platformId && { platformId }),
+      ...(search && {
+        OR: [
+          { identifier: { contains: search, mode: "insensitive" as const } },
+          { description: { contains: search, mode: "insensitive" as const } },
+        ],
+      }),
+    }
+
+    const [credentials, total] = await Promise.all([
+      database.credential.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: { createdAt: "desc" },
+      }),
+      database.credential.count({ where }),
+    ])
+
+    return {
+      credentials: credentials.map((credential) =>
+        CredentialEntity.getSimpleRo(credential)
+      ),
+      total,
+      hasMore: skip + credentials.length < total,
+      page,
+      limit,
+    }
+  })
+
+// Create credential
+export const createCredential = authProcedure
+  .input(createCredentialInputSchema)
+  .output(credentialOutputSchema)
+  .handler(async ({ input, context }): Promise<CredentialOutput> => {
+    // Verify platform exists
+    const platform = await database.platform.findUnique({
+      where: { id: input.platformId },
+    })
+
+    if (!platform) {
+      throw new ORPCError("NOT_FOUND")
+    }
+
+    const tagConnections = await createTagsAndGetConnections(
+      input.tags,
+      context.user.id,
+      input.containerId
+    )
+
+    // Create encrypted data for password
+    const passwordEncryptionResult = await createEncryptedData({
+      encryptedValue: input.passwordEncryption.encryptedValue,
+      encryptionKey: input.passwordEncryption.encryptionKey,
+      iv: input.passwordEncryption.iv,
+    })
+
+    if (
+      !passwordEncryptionResult.success ||
+      !passwordEncryptionResult.encryptedData
+    ) {
+      throw new ORPCError("INTERNAL_SERVER_ERROR")
+    }
+
+    const credential = await database.credential.create({
+      data: {
+        identifier: input.identifier,
+        passwordEncryptionId: passwordEncryptionResult.encryptedData.id,
+        status: input.status,
+        platformId: input.platformId,
+        description: input.description,
+        userId: context.user.id,
+        tags: tagConnections,
+        ...getOrReturnEmptyObject(input.containerId, "containerId"),
+      },
+    })
+
+    return CredentialEntity.getSimpleRo(credential)
+  })
+
+// Update credential
+export const updateCredential = authProcedure
+  .input(updateCredentialInputSchema)
+  .output(credentialOutputSchema)
+  .handler(async ({ input, context }): Promise<CredentialOutput> => {
+    const { id, ...updateData } = input
+
+    // Verify credential ownership
+    const existingCredential = await database.credential.findFirst({
+      where: {
+        id,
+        userId: context.user.id,
+      },
+    })
+
+    if (!existingCredential) {
+      throw new ORPCError("NOT_FOUND")
+    }
+
+    // Process the update data
+    const updatePayload: Prisma.CredentialUpdateInput = {}
+
+    if (updateData.identifier !== undefined)
+      updatePayload.identifier = updateData.identifier
+    if (updateData.description !== undefined)
+      updatePayload.description = updateData.description
+    if (updateData.status !== undefined)
+      updatePayload.status = updateData.status
+    if (updateData.platformId !== undefined)
+      updatePayload.platform = { connect: { id: updateData.platformId } }
+    if (updateData.containerId !== undefined) {
+      updatePayload.container = updateData.containerId
+        ? { connect: { id: updateData.containerId } }
+        : { disconnect: true }
+    }
+
+    // Handle tags if provided
+    if (updateData.tags !== undefined) {
+      const tagConnections = await createTagsAndGetConnections(
+        updateData.tags,
+        context.user.id,
+        updateData.containerId || existingCredential.containerId || undefined
+      )
+      updatePayload.tags = tagConnections
+    }
+
+    // Handle password encryption updates if provided
+    if (updateData.passwordEncryption) {
+      const passwordEncryptionResult = await createEncryptedData({
+        encryptedValue: updateData.passwordEncryption.encryptedValue,
+        encryptionKey: updateData.passwordEncryption.encryptionKey,
+        iv: updateData.passwordEncryption.iv,
+      })
+
+      if (
+        !passwordEncryptionResult.success ||
+        !passwordEncryptionResult.encryptedData
+      ) {
+        throw new ORPCError("INTERNAL_SERVER_ERROR")
+      }
+
+      updatePayload.passwordEncryption = {
+        connect: { id: passwordEncryptionResult.encryptedData.id },
+      }
+    }
+
+    const updatedCredential = await database.credential.update({
+      where: { id },
+      data: updatePayload,
+    })
+
+    return CredentialEntity.getSimpleRo(updatedCredential)
+  })
+
+// Delete credential
+export const deleteCredential = authProcedure
+  .input(deleteCredentialInputSchema)
+  .output(credentialOutputSchema)
+  .handler(async ({ input, context }): Promise<CredentialOutput> => {
+    // Verify credential ownership
+    const existingCredential = await database.credential.findFirst({
+      where: {
+        id: input.id,
+        userId: context.user.id,
+      },
+    })
+
+    if (!existingCredential) {
+      throw new ORPCError("NOT_FOUND")
+    }
+
+    const deletedCredential = await database.credential.delete({
+      where: { id: input.id },
+    })
+
+    return CredentialEntity.getSimpleRo(deletedCredential)
+  })
+
+// Export the credential router
+export const credentialRouter = {
+  get: getCredential,
+  list: listCredentials,
+  create: createCredential,
+  update: updateCredential,
+  delete: deleteCredential,
+}
