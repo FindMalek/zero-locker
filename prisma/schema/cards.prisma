@@ -62,6 +62,8 @@ model Card {
   @@index([containerId])
   @@index([cvvEncryptionId])
   @@index([numberEncryptionId])
+
+  @@map("card")
 }
 
 /**
@@ -101,4 +103,5 @@ model CardMetadata {
   card   Card   @relation(fields: [cardId], references: [id], onDelete: Cascade)
 
   @@index([cardId])
+  @@map("card_metadata")
 }

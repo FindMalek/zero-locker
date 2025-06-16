@@ -32,4 +32,5 @@ model EncryptedData {
   secretValue Secret[] @relation("SecretValue")
 
   @@index([createdAt])
+  @@map("encrypted_data")
 }
