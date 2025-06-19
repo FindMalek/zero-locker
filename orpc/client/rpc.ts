@@ -6,7 +6,7 @@ import type { AppRouter } from "../routers"
 
 // Create the RPC link
 const link = new RPCLink({
-  url: "/api/orpc",
+  url: `${process.env.NEXT_PUBLIC_APP_URL}/api/orpc`,
   headers: {
     "Content-Type": "application/json",
   },

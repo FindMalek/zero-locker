@@ -5,10 +5,19 @@ import { MarketingWaitlistForm } from "@/components/app/marketing-waitlist-form"
 import { StatCard } from "@/components/shared/stat-card"
 import { AnimatedGridPattern } from "@/components/ui/animated-grid-pattern"
 
+import { createServerClient } from "@/orpc/client/server"
+
 export default async function Home() {
-  const waitlist = { total: 0 }
-  const users = { total: 0 }
-  const encryptedData = { count: 0 }
+  const serverClient = createServerClient({
+    session: null,
+    user: null,
+  })
+
+  const [waitlist, users, encryptedData] = await Promise.all([
+    serverClient.users.getWaitlistCount({}),
+    serverClient.users.getUserCount({}),
+    serverClient.users.getEncryptedDataCount({}),
+  ])
 
   return (
     <div className="relative flex min-h-screen flex-col">

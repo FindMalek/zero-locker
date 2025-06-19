@@ -6,9 +6,12 @@ import { RecentItem, RecentItemTypeEnum } from "@/schemas/utils"
 
 import { MAX_RECENT_ITEMS } from "@/config/consts"
 import { mapItem } from "@/lib/utils"
+// TODO: Import proper session handling when implemented
 
 import { OverviewStats } from "@/components/app/dashboard-overview-stats"
 import { DashboardRecentActivity } from "@/components/app/dashboard-recent-activity"
+// TODO: Import when implementing proper authentication
+// import { createServerClient } from "@/orpc/client/server"
 
 type CardsResponse = ListCardsOutput
 type SecretsResponse = ListSecretsOutput
@@ -72,6 +75,15 @@ async function getStats(
 }
 
 export default async function DashboardPage() {
+  // For now, we'll use placeholder context until we implement proper session handling
+  // TODO: Implement proper session extraction from headers/cookies
+  // const serverClient = createServerClient({
+  //   session: null,
+  //   user: null,
+  // })
+
+  // Since we need authentication for these endpoints, we'll return empty data for now
+  // TODO: Implement proper authentication context passing
   const credentialsResponse: CredentialsResponse = {
     credentials: [],
     total: 0,
