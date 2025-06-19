@@ -1,4 +1,6 @@
 import { Metadata } from "next"
+import { createServerClient } from "@/orpc/client/server"
+import { createContext } from "@/orpc/context"
 import type { ListCardsOutput } from "@/schemas/card/dto"
 import type { ListCredentialsOutput } from "@/schemas/credential/dto"
 import type { ListSecretsOutput } from "@/schemas/secrets/dto"
@@ -6,12 +8,9 @@ import { RecentItem, RecentItemTypeEnum } from "@/schemas/utils"
 
 import { MAX_RECENT_ITEMS } from "@/config/consts"
 import { mapItem } from "@/lib/utils"
-// TODO: Import proper session handling when implemented
 
 import { OverviewStats } from "@/components/app/dashboard-overview-stats"
 import { DashboardRecentActivity } from "@/components/app/dashboard-recent-activity"
-// TODO: Import when implementing proper authentication
-// import { createServerClient } from "@/orpc/client/server"
 
 type CardsResponse = ListCardsOutput
 type SecretsResponse = ListSecretsOutput
@@ -75,36 +74,24 @@ async function getStats(
 }
 
 export default async function DashboardPage() {
-  // For now, we'll use placeholder context until we implement proper session handling
-  // TODO: Implement proper session extraction from headers/cookies
-  // const serverClient = createServerClient({
-  //   session: null,
-  //   user: null,
-  // })
+  const context = await createContext()
+  const serverClient = createServerClient(context)
 
-  // Since we need authentication for these endpoints, we'll return empty data for now
-  // TODO: Implement proper authentication context passing
-  const credentialsResponse: CredentialsResponse = {
-    credentials: [],
-    total: 0,
-    hasMore: false,
-    page: 1,
-    limit: MAX_RECENT_ITEMS,
-  }
-  const cardsResponse: CardsResponse = {
-    cards: [],
-    total: 0,
-    hasMore: false,
-    page: 1,
-    limit: MAX_RECENT_ITEMS,
-  }
-  const secretsResponse: SecretsResponse = {
-    secrets: [],
-    total: 0,
-    hasMore: false,
-    page: 1,
-    limit: MAX_RECENT_ITEMS,
-  }
+  const [credentialsResponse, cardsResponse, secretsResponse] =
+    await Promise.all([
+      serverClient.credentials.list({
+        page: 1,
+        limit: MAX_RECENT_ITEMS,
+      }),
+      serverClient.cards.list({
+        page: 1,
+        limit: MAX_RECENT_ITEMS,
+      }),
+      serverClient.secrets.list({
+        page: 1,
+        limit: MAX_RECENT_ITEMS,
+      }),
+    ])
 
   const stats = await getStats(
     credentialsResponse,

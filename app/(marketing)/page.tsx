@@ -1,11 +1,11 @@
+import { createServerClient } from "@/orpc/client/server"
+
 import { MarketingFooter } from "@/components/app/marketing-footer"
 import { MarketingHeaderDesktop } from "@/components/app/marketing-header-desktop"
 import { MarketingHeaderMobile } from "@/components/app/marketing-header-mobile"
 import { MarketingWaitlistForm } from "@/components/app/marketing-waitlist-form"
 import { StatCard } from "@/components/shared/stat-card"
 import { AnimatedGridPattern } from "@/components/ui/animated-grid-pattern"
-
-import { createServerClient } from "@/orpc/client/server"
 
 export default async function Home() {
   const serverClient = createServerClient({
