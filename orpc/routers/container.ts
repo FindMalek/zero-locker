@@ -1,4 +1,4 @@
-import { ContainerEntity } from "@/entities/container/container"
+import { ContainerEntity } from "@/entities/utils/container/entity"
 import { database } from "@/prisma/client"
 import {
   containerOutputSchema,

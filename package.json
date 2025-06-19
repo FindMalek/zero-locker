@@ -30,6 +30,7 @@
     "@orpc/next": "^0.27.0",
     "@orpc/react-query": "^1.5.2",
     "@orpc/server": "^1.5.2",
+    "@orpc/tanstack-query": "^1.5.2",
     "@prisma/adapter-neon": "6.9.0",
     "@prisma/client": "^6.9.0",
     "@radix-ui/react-accordion": "^1.2.10",

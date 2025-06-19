@@ -6,7 +6,7 @@ const handler = new RPCHandler(appRouter)
 
 async function handleRequest(request: Request) {
   const { response } = await handler.handle(request, {
-    prefix: "/orpc",
+    prefix: "/api/orpc",
     context: await createContext(),
   })
 
@@ -17,4 +17,4 @@ export const GET = handleRequest
 export const POST = handleRequest
 export const PUT = handleRequest
 export const PATCH = handleRequest
-export const DELETE = handleRequest
+export const DELETE = handleRequest 

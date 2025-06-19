@@ -23,60 +23,56 @@ export const cardKeys = {
 
 // Get single card
 export function useCard(id: string) {
-  return useQuery({
-    queryKey: cardKeys.detail(id),
-    queryFn: () => orpc.card.get({ id }),
+  return useQuery(orpc.cards.get.queryOptions({
+    input: { id },
     enabled: !!id,
-  })
+  }))
 }
 
 // List cards with pagination
 export function useCards(input: ListCardsInput = { page: 1, limit: 10 }) {
-  return useQuery({
-    queryKey: cardKeys.list(input),
-    queryFn: () => orpc.card.list(input),
+  return useQuery(orpc.cards.list.queryOptions({
+    input,
     placeholderData: (previousData) => previousData,
-  })
+  }))
 }
 
 // Create card mutation
 export function useCreateCard() {
   const queryClient = useQueryClient()
 
-  return useMutation({
-    mutationFn: (input: CreateCardInput) => orpc.card.create(input),
+  return useMutation(orpc.cards.create.mutationOptions({
     onSuccess: (newCard) => {
       // Invalidate and refetch card lists
-      queryClient.invalidateQueries({ queryKey: cardKeys.lists() })
+      queryClient.invalidateQueries({ queryKey: orpc.cards.list.key() })
 
       // Add the new card to the cache
-      queryClient.setQueryData(cardKeys.detail(newCard.id), newCard)
+      queryClient.setQueryData(orpc.cards.get.queryKey({ input: { id: newCard.id } }), newCard)
     },
     onError: (error) => {
       console.error("Failed to create card:", error)
     },
-  })
+  }))
 }
 
 // Update card mutation
 export function useUpdateCard() {
   const queryClient = useQueryClient()
 
-  return useMutation({
-    mutationFn: (input: UpdateCardInput) => orpc.card.update(input),
+  return useMutation(orpc.cards.update.mutationOptions({
     onMutate: async (input) => {
       // Cancel any outgoing refetches
-      await queryClient.cancelQueries({ queryKey: cardKeys.detail(input.id) })
+      await queryClient.cancelQueries({ queryKey: orpc.cards.get.key({ input: { id: input.id } }) })
 
       // Snapshot the previous value
       const previousCard = queryClient.getQueryData<CardOutput>(
-        cardKeys.detail(input.id)
+        orpc.cards.get.queryKey({ input: { id: input.id } })
       )
 
       // Optimistically update the cache
       if (previousCard) {
         const { expiryDate, ...safeInput } = input
-        queryClient.setQueryData<CardOutput>(cardKeys.detail(input.id), {
+        queryClient.setQueryData<CardOutput>(orpc.cards.get.queryKey({ input: { id: input.id } }), {
           ...previousCard,
           ...safeInput,
           ...(expiryDate && { expiryDate: new Date(expiryDate) }),
@@ -89,7 +85,7 @@ export function useUpdateCard() {
       // Rollback the cache to the previous value
       if (context?.previousCard) {
         queryClient.setQueryData(
-          cardKeys.detail(input.id),
+          orpc.cards.get.queryKey({ input: { id: input.id } }),
           context.previousCard
         )
       }
@@ -97,31 +93,30 @@ export function useUpdateCard() {
     },
     onSuccess: (updatedCard) => {
       // Update the cache with the server response
-      queryClient.setQueryData(cardKeys.detail(updatedCard.id), updatedCard)
+      queryClient.setQueryData(orpc.cards.get.queryKey({ input: { id: updatedCard.id } }), updatedCard)
 
       // Invalidate related queries
-      queryClient.invalidateQueries({ queryKey: cardKeys.lists() })
+      queryClient.invalidateQueries({ queryKey: orpc.cards.list.key() })
     },
-  })
+  }))
 }
 
 // Delete card mutation
 export function useDeleteCard() {
   const queryClient = useQueryClient()
 
-  return useMutation({
-    mutationFn: (input: DeleteCardInput) => orpc.card.delete(input),
+  return useMutation(orpc.cards.delete.mutationOptions({
     onMutate: async (input) => {
       // Cancel any outgoing refetches
-      await queryClient.cancelQueries({ queryKey: cardKeys.detail(input.id) })
+      await queryClient.cancelQueries({ queryKey: orpc.cards.get.key({ input: { id: input.id } }) })
 
       // Snapshot the previous value
       const previousCard = queryClient.getQueryData<CardOutput>(
-        cardKeys.detail(input.id)
+        orpc.cards.get.queryKey({ input: { id: input.id } })
       )
 
       // Optimistically remove from cache
-      queryClient.removeQueries({ queryKey: cardKeys.detail(input.id) })
+      queryClient.removeQueries({ queryKey: orpc.cards.get.key({ input: { id: input.id } }) })
 
       return { previousCard }
     },
@@ -129,7 +124,7 @@ export function useDeleteCard() {
       // Restore the cache if deletion failed
       if (context?.previousCard) {
         queryClient.setQueryData(
-          cardKeys.detail(input.id),
+          orpc.cards.get.queryKey({ input: { id: input.id } }),
           context.previousCard
         )
       }
@@ -137,7 +132,7 @@ export function useDeleteCard() {
     },
     onSuccess: () => {
       // Invalidate and refetch card lists
-      queryClient.invalidateQueries({ queryKey: cardKeys.lists() })
+      queryClient.invalidateQueries({ queryKey: orpc.cards.list.key() })
     },
-  })
+  }))
 }

@@ -3,7 +3,6 @@ import { containerRouter } from "./container"
 import { credentialRouter } from "./credential"
 import { secretRouter } from "./secret"
 
-// Create the main app router
 export const appRouter = {
   cards: cardRouter,
   credentials: credentialRouter,
