@@ -12,11 +12,6 @@ The format would be:
 
 ## Tasks
 
-- [ ] Implement oRPC instead of Next.js Server Actions || Low
-      This would let us scale into using API calls for external usage of the app, to be used in other apps.
-
-- [ ] Use Tanstack Query for reloading data
-
 - [ ] In the `CredentialMetadata` model changes
       The `additionalInfo` field should be a JSON object, of the user's choice.
 
@@ -113,3 +108,8 @@ The format would be:
 - [x] usage of `Metadata` aserver actions
 
 - [x] Update dependecies: 1. Update `prisma` 2. Update `pnpm`
+
+- [x] Implement oRPC instead of Next.js Server Actions || Low
+      This would let us scale into using API calls for external usage of the app, to be used in other apps.
+
+- [x] Use Tanstack Query for reloading data

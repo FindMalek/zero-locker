@@ -12,14 +12,12 @@ import { mapItem } from "@/lib/utils"
 import { OverviewStats } from "@/components/app/dashboard-overview-stats"
 import { DashboardRecentActivity } from "@/components/app/dashboard-recent-activity"
 
-type CardsResponse = ListCardsOutput
-type SecretsResponse = ListSecretsOutput
-type CredentialsResponse = ListCredentialsOutput
+
 
 async function getRecentItems(
-  usersResponse: CredentialsResponse,
-  cardsResponse: CardsResponse,
-  secretsResponse: SecretsResponse
+  usersResponse: ListCredentialsOutput,
+  cardsResponse: ListCardsOutput,
+  secretsResponse: ListSecretsOutput
 ): Promise<RecentItem[]> {
   const recentCredentials: RecentItem[] = (usersResponse.credentials ?? []).map(
     (user) => ({
@@ -62,9 +60,9 @@ export const metadata: Metadata = {
 }
 
 async function getStats(
-  credentialsData: CredentialsResponse,
-  cardsData: CardsResponse,
-  secretsData: SecretsResponse
+  credentialsData: ListCredentialsOutput,
+  cardsData: ListCardsOutput,
+  secretsData: ListSecretsOutput
 ) {
   return {
     credentials: credentialsData.credentials?.length ?? 0,
