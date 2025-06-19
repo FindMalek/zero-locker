@@ -1,4 +1,5 @@
 export * from "./container"
+export * from "./container-with-secrets"
 export * from "./utils"
 export * from "./tag"
 export * from "./platform"

@@ -14,7 +14,7 @@ import {
 import { ORPCError, os } from "@orpc/server"
 import type { Prisma } from "@prisma/client"
 
-import { createEncryptedData } from "@/actions/encryption"
+import { createEncryptedData } from "@/lib/utils/encryption-helpers"
 
 import type { ORPCContext } from "../types"
 

@@ -1,3 +1,6 @@
+// Note: encryption-helpers and tag-helpers are server-only utilities
+// Import them directly where needed in server components/routers
+
 import { CardSimpleRo } from "@/schemas/card"
 import { CredentialSimpleRo } from "@/schemas/credential"
 import { SecretSimpleRo } from "@/schemas/secrets/secret"
@@ -20,6 +23,9 @@ import { env } from "@/env"
 import { KeyValuePair, User as UserType } from "@/types"
 
 import { PRIORITY_ACTIVITY_TYPE } from "@/config/consts"
+
+export * from "./card-expiry-helpers"
+export * from "./password-helpers"
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))

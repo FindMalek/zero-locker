@@ -1,6 +1,12 @@
 import { ContainerEntity } from "@/entities/utils/container/entity"
 import { database } from "@/prisma/client"
 import {
+  createContainerWithSecretsInputSchema,
+  createContainerWithSecretsOutputSchema,
+  type CreateContainerWithSecretsInput,
+  type CreateContainerWithSecretsOutput,
+} from "@/schemas/utils/container-with-secrets"
+import {
   containerOutputSchema,
   createContainerInputSchema,
   deleteContainerInputSchema,
@@ -14,7 +20,7 @@ import {
 import { ORPCError, os } from "@orpc/server"
 import type { Prisma } from "@prisma/client"
 
-import { createTagsAndGetConnections } from "@/actions/utils/tag"
+import { createTagsAndGetConnections } from "@/lib/utils/tag-helpers"
 
 import type { ORPCContext } from "../types"
 
@@ -189,6 +195,85 @@ export const deleteContainer = authProcedure
     return ContainerEntity.getSimpleRo(deletedContainer)
   })
 
+// Create container with secrets
+export const createContainerWithSecrets = authProcedure
+  .input(createContainerWithSecretsInputSchema)
+  .output(createContainerWithSecretsOutputSchema)
+  .handler(
+    async ({ input, context }): Promise<CreateContainerWithSecretsOutput> => {
+      const { container: containerData, secrets: secretsData } = input
+
+      try {
+        // Create container with tags
+        const tagConnections = await createTagsAndGetConnections(
+          containerData.tags,
+          context.user.id,
+          undefined
+        )
+
+        const container = await database.container.create({
+          data: {
+            name: containerData.name,
+            icon: containerData.icon,
+            description: containerData.description,
+            type: containerData.type,
+            userId: context.user.id,
+            tags: tagConnections,
+          },
+        })
+
+        // Create encrypted data and secrets
+        const createdSecrets = []
+        for (const secretData of secretsData) {
+          // Create encrypted data
+          const encryptedData = await database.encryptedData.create({
+            data: {
+              iv: secretData.valueEncryption.iv,
+              encryptedValue: secretData.valueEncryption.encryptedValue,
+              encryptionKey: secretData.valueEncryption.encryptionKey,
+            },
+          })
+
+          // Create secret
+          const secret = await database.secret.create({
+            data: {
+              name: secretData.name,
+              note: secretData.note,
+              userId: context.user.id,
+              containerId: container.id,
+              valueEncryptionId: encryptedData.id,
+            },
+          })
+
+          createdSecrets.push(secret)
+        }
+
+        return {
+          success: true,
+          container: ContainerEntity.getSimpleRo(container),
+          secrets: createdSecrets.map((secret) => ({
+            id: secret.id,
+            name: secret.name,
+            note: secret.note,
+            lastViewed: secret.lastViewed,
+            updatedAt: secret.updatedAt,
+            createdAt: secret.createdAt,
+            userId: secret.userId,
+            containerId: secret.containerId,
+            valueEncryptionId: secret.valueEncryptionId,
+          })),
+        }
+      } catch (error) {
+        console.error("Error creating container with secrets:", error)
+        return {
+          success: false,
+          error:
+            error instanceof Error ? error.message : "Unknown error occurred",
+        }
+      }
+    }
+  )
+
 // Export the container router
 export const containerRouter = {
   get: getContainer,
@@ -196,4 +281,5 @@ export const containerRouter = {
   create: createContainer,
   update: updateContainer,
   delete: deleteContainer,
+  createWithSecrets: createContainerWithSecrets,
 }

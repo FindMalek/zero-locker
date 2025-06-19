@@ -1,4 +1,7 @@
 import { Metadata } from "next"
+import type { ListCardsOutput } from "@/schemas/card/dto"
+import type { ListCredentialsOutput } from "@/schemas/credential/dto"
+import type { ListSecretsOutput } from "@/schemas/secrets/dto"
 import { RecentItem, RecentItemTypeEnum } from "@/schemas/utils"
 
 import { MAX_RECENT_ITEMS } from "@/config/consts"
@@ -7,13 +10,9 @@ import { mapItem } from "@/lib/utils"
 import { OverviewStats } from "@/components/app/dashboard-overview-stats"
 import { DashboardRecentActivity } from "@/components/app/dashboard-recent-activity"
 
-import { listCards } from "@/actions/card"
-import { listCredentials } from "@/actions/credential"
-import { listSecrets } from "@/actions/secrets/secret"
-
-type CardsResponse = Awaited<ReturnType<typeof listCards>>
-type SecretsResponse = Awaited<ReturnType<typeof listSecrets>>
-type CredentialsResponse = Awaited<ReturnType<typeof listCredentials>>
+type CardsResponse = ListCardsOutput
+type SecretsResponse = ListSecretsOutput
+type CredentialsResponse = ListCredentialsOutput
 
 async function getRecentItems(
   usersResponse: CredentialsResponse,
@@ -73,12 +72,27 @@ async function getStats(
 }
 
 export default async function DashboardPage() {
-  const [credentialsResponse, cardsResponse, secretsResponse] =
-    await Promise.all([
-      listCredentials(1, MAX_RECENT_ITEMS),
-      listCards(1, MAX_RECENT_ITEMS),
-      listSecrets(1, MAX_RECENT_ITEMS),
-    ])
+  const credentialsResponse: CredentialsResponse = {
+    credentials: [],
+    total: 0,
+    hasMore: false,
+    page: 1,
+    limit: MAX_RECENT_ITEMS,
+  }
+  const cardsResponse: CardsResponse = {
+    cards: [],
+    total: 0,
+    hasMore: false,
+    page: 1,
+    limit: MAX_RECENT_ITEMS,
+  }
+  const secretsResponse: SecretsResponse = {
+    secrets: [],
+    total: 0,
+    hasMore: false,
+    page: 1,
+    limit: MAX_RECENT_ITEMS,
+  }
 
   const stats = await getStats(
     credentialsResponse,

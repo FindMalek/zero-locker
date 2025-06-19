@@ -2,6 +2,11 @@
 
 import { useEffect, useState } from "react"
 import {
+  useCreateCredentialWithMetadata,
+  usePlatforms,
+  useTags,
+} from "@/orpc/hooks"
+import {
   CredentialDto,
   credentialDtoSchema,
   CredentialMetadataDto,
@@ -12,11 +17,12 @@ import { AccountStatus } from "@prisma/client"
 import { useForm } from "react-hook-form"
 
 import { encryptData, exportKey, generateEncryptionKey } from "@/lib/encryption"
-import { checkPasswordStrength, generatePassword } from "@/lib/password"
 import { cn, getMetadataLabels, handleErrors } from "@/lib/utils"
+import {
+  checkPasswordStrength,
+  generatePassword,
+} from "@/lib/utils/password-helpers"
 import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard"
-import { usePlatforms } from "@/hooks/use-platforms"
-import { useTags } from "@/hooks/use-tags"
 import { useToast } from "@/hooks/use-toast"
 
 import { DashboardAddCredentialForm } from "@/components/app/dashboard-add-credential-form"
@@ -33,8 +39,6 @@ import {
 import { Form } from "@/components/ui/form"
 import { Separator } from "@/components/ui/separator"
 
-import { createCredentialWithMetadata } from "@/actions/credential"
-
 interface CredentialDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -45,12 +49,15 @@ export function DashboardAddCredentialDialog({
   onOpenChange,
 }: CredentialDialogProps) {
   const { toast } = useToast()
-  const { platforms, error: platformsError } = usePlatforms()
-  const { tags: availableTags, error: tagsError } = useTags()
+  const platformsQuery = usePlatforms()
+  const tagsQuery = useTags()
+  const createCredentialWithMetadataMutation = useCreateCredentialWithMetadata()
+
+  const platforms = platformsQuery.data?.platforms || []
+  const availableTags = tagsQuery.data?.tags || []
 
   const [createMore, setCreateMore] = useState(false)
   const [showMetadata, setShowMetadata] = useState(false)
-  const [isSubmitting, setIsSubmitting] = useState(false)
   const [passwordStrength, setPasswordStrength] = useState<{
     score: number
     feedback: string
@@ -95,13 +102,13 @@ export function DashboardAddCredentialDialog({
   })
 
   useEffect(() => {
-    if (platformsError) {
-      toast(platformsError, "error")
+    if (platformsQuery.error) {
+      toast("Failed to load platforms", "error")
     }
-    if (tagsError) {
-      toast(tagsError, "error")
+    if (tagsQuery.error) {
+      toast("Failed to load tags", "error")
     }
-  }, [platformsError, tagsError, toast])
+  }, [platformsQuery.error, tagsQuery.error, toast])
 
   const handleGeneratePassword = () => {
     const newPassword = generatePassword(16)
@@ -140,19 +147,17 @@ export function DashboardAddCredentialDialog({
   }
 
   async function onSubmit() {
+    if (!sensitiveData.identifier.trim()) {
+      toast("Identifier is required", "error")
+      return
+    }
+
+    if (!sensitiveData.password.trim()) {
+      toast("Password is required", "error")
+      return
+    }
+
     try {
-      setIsSubmitting(true)
-
-      if (!sensitiveData.identifier.trim()) {
-        toast("Identifier is required", "error")
-        return
-      }
-
-      if (!sensitiveData.password.trim()) {
-        toast("Password is required", "error")
-        return
-      }
-
       const key = await generateEncryptionKey()
       const encryptResult = await encryptData(sensitiveData.password, key)
       const keyString = await exportKey(key as CryptoKey)
@@ -214,57 +219,61 @@ export function DashboardAddCredentialDialog({
         }
       }
 
-      const result = await createCredentialWithMetadata(
-        credentialDto,
-        metadataDto
-      )
+      createCredentialWithMetadataMutation.mutate(
+        {
+          credential: credentialDto,
+          metadata: metadataDto,
+        },
+        {
+          onSuccess: () => {
+            toast("Credential saved successfully", "success")
 
-      if (result.success) {
-        toast("Credential saved successfully", "success")
-
-        if (!createMore) {
-          handleDialogOpenChange(false)
-        } else {
-          credentialForm.reset({
-            identifier: "",
-            description: "",
-            status: AccountStatus.ACTIVE,
-            platformId: credentialData.platformId,
-            containerId: credentialData.containerId,
-            passwordEncryption: {
-              encryptedValue: "",
-              iv: "",
-              encryptionKey: "",
-            },
-            tags: [],
-            metadata: [],
-          })
-          metadataForm.reset({
-            recoveryEmail: "",
-            phoneNumber: "",
-            otherInfo: [],
-            has2FA: false,
-          })
-          setSensitiveData({ identifier: "", password: "" })
-          setPasswordStrength(null)
-          setShowMetadata(false)
+            if (!createMore) {
+              handleDialogOpenChange(false)
+            } else {
+              credentialForm.reset({
+                identifier: "",
+                description: "",
+                status: AccountStatus.ACTIVE,
+                platformId: credentialData.platformId,
+                containerId: credentialData.containerId,
+                passwordEncryption: {
+                  encryptedValue: "",
+                  iv: "",
+                  encryptionKey: "",
+                },
+                tags: [],
+                metadata: [],
+              })
+              metadataForm.reset({
+                recoveryEmail: "",
+                phoneNumber: "",
+                otherInfo: [],
+                has2FA: false,
+              })
+              setSensitiveData({ identifier: "", password: "" })
+              setPasswordStrength(null)
+              setShowMetadata(false)
+            }
+          },
+          onError: (error) => {
+            const { message, details } = handleErrors(
+              error,
+              "Failed to save credential"
+            )
+            toast(
+              details
+                ? `${message}: ${Array.isArray(details) ? details.join(", ") : details}`
+                : message,
+              "error"
+            )
+          },
         }
-      } else {
-        const errorDetails = result.issues
-          ? result.issues
-              .map((issue) => `${issue.path.join(".")}: ${issue.message}`)
-              .join(", ")
-          : result.error
-
-        toast(
-          `Failed to save credential: ${errorDetails || "Unknown error"}`,
-          "error"
-        )
-      }
+      )
     } catch (error) {
       const { message, details } = handleErrors(
         error,
-        "Failed to save credential"
+        "Failed to encrypt credential data"
       )
       toast(
         details
@@ -272,8 +281,6 @@ export function DashboardAddCredentialDialog({
           : message,
         "error"
       )
-    } finally {
-      setIsSubmitting(false)
     }
   }
 
@@ -296,7 +303,7 @@ export function DashboardAddCredentialDialog({
       title="Add New Credential"
       description="Add a new credential to your vault. All information is securely stored."
       icon={<Icons.user className="size-5" />}
-      isSubmitting={isSubmitting}
+      isSubmitting={createCredentialWithMetadataMutation.isPending}
       createMore={createMore}
       onCreateMoreChange={setCreateMore}
       createMoreText="Create another credential"
@@ -316,7 +323,11 @@ export function DashboardAddCredentialDialog({
           <DashboardAddCredentialForm
             form={credentialForm}
             platforms={platforms}
-            availableTags={availableTags}
+            availableTags={availableTags.map((tag) => ({
+              name: tag.name,
+              containerId: tag.containerId || undefined,
+              color: tag.color || undefined,
+            }))}
             passwordStrength={passwordStrength}
             sensitiveData={sensitiveData}
             setSensitiveData={setSensitiveData}

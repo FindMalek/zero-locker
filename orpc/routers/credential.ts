@@ -1,6 +1,12 @@
 import { CredentialEntity } from "@/entities/credential/credential"
 import { database } from "@/prisma/client"
 import {
+  createCredentialWithMetadataInputSchema,
+  createCredentialWithMetadataOutputSchema,
+  type CreateCredentialWithMetadataInput,
+  type CreateCredentialWithMetadataOutput,
+} from "@/schemas/credential/credential-with-metadata"
+import {
   createCredentialInputSchema,
   credentialOutputSchema,
   deleteCredentialInputSchema,
@@ -13,11 +19,11 @@ import {
 } from "@/schemas/credential/dto"
 import { ORPCError, os } from "@orpc/server"
 import type { Prisma } from "@prisma/client"
+import { z } from "zod"
 
 import { getOrReturnEmptyObject } from "@/lib/utils"
-
-import { createEncryptedData } from "@/actions/encryption"
-import { createTagsAndGetConnections } from "@/actions/utils/tag"
+import { createEncryptedData } from "@/lib/utils/encryption-helpers"
+import { createTagsAndGetConnections } from "@/lib/utils/tag-helpers"
 
 import type { ORPCContext } from "../types"
 
@@ -253,11 +259,101 @@ export const deleteCredential = authProcedure
     return CredentialEntity.getSimpleRo(deletedCredential)
   })
 
+// Create credential with metadata
+export const createCredentialWithMetadata = authProcedure
+  .input(createCredentialWithMetadataInputSchema)
+  .output(createCredentialWithMetadataOutputSchema)
+  .handler(
+    async ({ input, context }): Promise<CreateCredentialWithMetadataOutput> => {
+      const { credential: credentialData, metadata } = input
+
+      try {
+        // Verify platform exists
+        const platform = await database.platform.findUnique({
+          where: { id: credentialData.platformId },
+        })
+
+        if (!platform) {
+          return {
+            success: false,
+            error: "Platform not found",
+          }
+        }
+
+        const tagConnections = await createTagsAndGetConnections(
+          credentialData.tags,
+          context.user.id,
+          credentialData.containerId
+        )
+
+        // Create encrypted data for password
+        const passwordEncryptionResult = await createEncryptedData({
+          encryptedValue: credentialData.passwordEncryption.encryptedValue,
+          encryptionKey: credentialData.passwordEncryption.encryptionKey,
+          iv: credentialData.passwordEncryption.iv,
+        })
+
+        if (
+          !passwordEncryptionResult.success ||
+          !passwordEncryptionResult.encryptedData
+        ) {
+          return {
+            success: false,
+            error: "Failed to encrypt password",
+          }
+        }
+
+        // Create credential
+        const credential = await database.credential.create({
+          data: {
+            identifier: credentialData.identifier,
+            passwordEncryptionId: passwordEncryptionResult.encryptedData.id,
+            status: credentialData.status,
+            platformId: credentialData.platformId,
+            description: credentialData.description,
+            userId: context.user.id,
+            tags: tagConnections,
+            ...getOrReturnEmptyObject(
+              credentialData.containerId,
+              "containerId"
+            ),
+          },
+        })
+
+        // Create metadata if provided
+        if (metadata) {
+          await database.credentialMetadata.create({
+            data: {
+              credentialId: credential.id,
+              recoveryEmail: metadata.recoveryEmail,
+              phoneNumber: metadata.phoneNumber,
+              otherInfo: metadata.otherInfo || [],
+              has2FA: metadata.has2FA || false,
+            },
+          })
+        }
+
+        return {
+          success: true,
+          credential: CredentialEntity.getSimpleRo(credential),
+        }
+      } catch (error) {
+        console.error("Error creating credential with metadata:", error)
+        return {
+          success: false,
+          error:
+            error instanceof Error ? error.message : "Unknown error occurred",
+        }
+      }
+    }
+  )
+
 // Export the credential router
 export const credentialRouter = {
   get: getCredential,
   list: listCredentials,
   create: createCredential,
+  createWithMetadata: createCredentialWithMetadata,
   update: updateCredential,
   delete: deleteCredential,
 }

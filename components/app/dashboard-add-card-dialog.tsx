@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useCreateCard } from "@/orpc/hooks"
 import { CardDto, cardDtoSchema } from "@/schemas/card"
 import { TagDto } from "@/schemas/utils/tag"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -16,8 +17,6 @@ import { AddItemDialog } from "@/components/shared/add-item-dialog"
 import { Icons } from "@/components/shared/icons"
 import { Form } from "@/components/ui/form"
 
-import { createCard } from "@/actions/card"
-
 interface CardDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -30,9 +29,9 @@ export function DashboardAddCardDialog({
   availableTags = [],
 }: CardDialogProps) {
   const { toast } = useToast()
+  const createCardMutation = useCreateCard()
 
   const [createMore, setCreateMore] = useState(false)
-  const [isSubmitting, setIsSubmitting] = useState(false)
   const [sensitiveData, setSensitiveData] = useState({
     number: "",
     cvv: "",
@@ -65,19 +64,17 @@ export function DashboardAddCardDialog({
   })
 
   async function onSubmit() {
+    if (!sensitiveData.number.trim()) {
+      toast("Card number is required", "error")
+      return
+    }
+
+    if (!sensitiveData.cvv.trim()) {
+      toast("CVV is required", "error")
+      return
+    }
+
     try {
-      setIsSubmitting(true)
-
-      if (!sensitiveData.number.trim()) {
-        toast("Card number is required", "error")
-        return
-      }
-
-      if (!sensitiveData.cvv.trim()) {
-        toast("CVV is required", "error")
-        return
-      }
-
       const key = await generateEncryptionKey()
       const encryptCvvResult = await encryptData(sensitiveData.cvv, key)
       const encryptNumberResult = await encryptData(sensitiveData.number, key)
@@ -116,60 +113,62 @@ export function DashboardAddCardDialog({
         },
       }
 
-      const result = await createCard(cardDataWithEncryption)
+      createCardMutation.mutate(cardDataWithEncryption, {
+        onSuccess: () => {
+          toast("Card saved successfully", "success")
 
-      if (result.success) {
-        toast("Card saved successfully", "success")
-
-        if (!createMore) {
-          handleDialogOpenChange(false)
-        } else {
-          form.reset({
-            name: "",
-            description: "",
-            type: CardType.CREDIT,
-            provider: CardProvider.VISA,
-            status: CardStatus.ACTIVE,
-            expiryDate: "",
-            billingAddress: "",
-            cardholderName: "",
-            cardholderEmail: "",
-            tags: [],
-            numberEncryption: {
-              encryptedValue: "",
-              iv: "",
-              encryptionKey: "",
-            },
-            cvvEncryption: {
-              encryptedValue: "",
-              iv: "",
-              encryptionKey: "",
-            },
-          })
-          setSensitiveData({ number: "", cvv: "" })
-        }
-      } else {
-        const errorDetails = result.issues
-          ? result.issues
-              .map((issue) => `${issue.path.join(".")}: ${issue.message}`)
-              .join(", ")
-          : result.error
-
-        toast(
-          `Failed to save card: ${errorDetails || "Unknown error"}`,
-          "error"
-        )
-      }
+          if (!createMore) {
+            handleDialogOpenChange(false)
+          } else {
+            form.reset({
+              name: "",
+              description: "",
+              type: CardType.CREDIT,
+              provider: CardProvider.VISA,
+              status: CardStatus.ACTIVE,
+              expiryDate: "",
+              billingAddress: "",
+              cardholderName: "",
+              cardholderEmail: "",
+              tags: [],
+              numberEncryption: {
+                encryptedValue: "",
+                iv: "",
+                encryptionKey: "",
+              },
+              cvvEncryption: {
+                encryptedValue: "",
+                iv: "",
+                encryptionKey: "",
+              },
+            })
+            setSensitiveData({ number: "", cvv: "" })
+          }
+        },
+        onError: (error) => {
+          const { message, details } = handleErrors(
+            error,
+            "Failed to save card"
+          )
+          toast(
+            details
+              ? `${message}: ${Array.isArray(details) ? details.join(", ") : details}`
+              : message,
+            "error"
+          )
+        },
+      })
     } catch (error) {
-      const { message, details } = handleErrors(error, "Failed to save card")
+      const { message, details } = handleErrors(
+        error,
+        "Failed to encrypt card data"
+      )
       toast(
         details
           ? `${message}: ${Array.isArray(details) ? details.join(", ") : details}`
           : message,
         "error"
       )
-    } finally {
-      setIsSubmitting(false)
     }
   }
 
@@ -189,7 +188,7 @@ export function DashboardAddCardDialog({
       title="Add New Card"
       description="Add a new card to your vault. All information is securely stored."
       icon={<Icons.creditCard className="size-5" />}
-      isSubmitting={isSubmitting}
+      isSubmitting={createCardMutation.isPending}
       createMore={createMore}
       onCreateMoreChange={setCreateMore}
       createMoreText="Create another card"

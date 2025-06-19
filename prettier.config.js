@@ -24,7 +24,7 @@ module.exports = {
     "^@/components/(.*)$",
     "^@/components/ui/(.*)$",
     "",
-    "@/actions/(.*)",
+
     "",
     "^[./]",
   ],

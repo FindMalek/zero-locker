@@ -5,16 +5,10 @@ import { MarketingWaitlistForm } from "@/components/app/marketing-waitlist-form"
 import { StatCard } from "@/components/shared/stat-card"
 import { AnimatedGridPattern } from "@/components/ui/animated-grid-pattern"
 
-import { listEncryptedDataCount } from "@/actions/encryption"
-import { listUsers } from "@/actions/user/user"
-import { listWaitlist } from "@/actions/user/waitlist"
-
 export default async function Home() {
-  const [waitlist, users, encryptedData] = await Promise.all([
-    listWaitlist(),
-    listUsers(),
-    listEncryptedDataCount(),
-  ])
+  const waitlist = { total: 0 }
+  const users = { total: 0 }
+  const encryptedData = { count: 0 }
 
   return (
     <div className="relative flex min-h-screen flex-col">

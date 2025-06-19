@@ -8,8 +8,8 @@ import { CardStatus } from "@prisma/client"
 import { ChevronDown, Plus } from "lucide-react"
 import { UseFormReturn } from "react-hook-form"
 
-import { CardExpiryDateUtils } from "@/lib/card-expiry-utils"
 import { cn, getMetadataLabels } from "@/lib/utils"
+import { CardExpiryDateUtils } from "@/lib/utils/card-expiry-helpers"
 
 import { CardPaymentInputs } from "@/components/shared/card-payment-inputs"
 import { CardStatusIndicator } from "@/components/shared/card-status-indicator"
