@@ -1,4 +1,5 @@
 import { ContainerEntity } from "@/entities/utils/container/entity"
+import { authMiddleware } from "@/middleware/auth"
 import { database } from "@/prisma/client"
 import {
   createContainerWithSecretsInputSchema,
@@ -24,23 +25,10 @@ import { createTagsAndGetConnections } from "@/lib/utils/tag-helpers"
 
 import type { ORPCContext } from "../types"
 
-// Base procedure with context
 const baseProcedure = os.$context<ORPCContext>()
-
-// Authenticated procedure
-const authProcedure = baseProcedure.use(({ context, next }) => {
-  if (!context.session || !context.user) {
-    throw new ORPCError("UNAUTHORIZED")
-  }
-
-  return next({
-    context: {
-      ...context,
-      session: context.session,
-      user: context.user,
-    },
-  })
-})
+const authProcedure = baseProcedure.use(({ context, next }) =>
+  authMiddleware({ context, next })
+)
 
 // Get container by ID
 export const getContainer = authProcedure

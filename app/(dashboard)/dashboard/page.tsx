@@ -12,8 +12,6 @@ import { mapItem } from "@/lib/utils"
 import { OverviewStats } from "@/components/app/dashboard-overview-stats"
 import { DashboardRecentActivity } from "@/components/app/dashboard-recent-activity"
 
-
-
 async function getRecentItems(
   usersResponse: ListCredentialsOutput,
   cardsResponse: ListCardsOutput,

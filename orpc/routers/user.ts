@@ -14,14 +14,12 @@ import {
   type JoinWaitlistOutput,
 } from "@/schemas/user/waitlist"
 import { ORPCError, os } from "@orpc/server"
+import { Prisma } from "@prisma/client"
 import { z } from "zod"
 
 import type { ORPCContext } from "../types"
 
-// Base procedure with context
 const baseProcedure = os.$context<ORPCContext>()
-
-// Public procedure (no auth required)
 const publicProcedure = baseProcedure.use(({ context, next }) => {
   return next({ context })
 })
@@ -53,11 +51,61 @@ export const joinWaitlist = publicProcedure
 
       return { success: true }
     } catch (error) {
-      console.error("Error joining waitlist:", error)
+      // Re-throw ORPC errors to let ORPC handle them
+      if (error instanceof ORPCError) {
+        throw error
+      }
+
+      // Handle Prisma-specific errors
+      if (error instanceof Prisma.PrismaClientKnownRequestError) {
+        console.error("Database constraint error joining waitlist:", {
+          code: error.code,
+          message: error.message,
+          meta: error.meta,
+        })
+
+        // Handle unique constraint violations
+        if (error.code === "P2002") {
+          return {
+            success: false,
+            error: "Email is already on the waitlist",
+          }
+        }
+
+        // Handle other known Prisma errors
+        return {
+          success: false,
+          error: "Database constraint violation occurred",
+        }
+      }
+
+      // Handle Prisma client errors (connection issues, etc.)
+      if (error instanceof Prisma.PrismaClientUnknownRequestError) {
+        console.error("Unknown Prisma error joining waitlist:", {
+          message: error.message,
+        })
+        return {
+          success: false,
+          error: "Database connection issue occurred",
+        }
+      }
+
+      // Handle Prisma validation errors
+      if (error instanceof Prisma.PrismaClientValidationError) {
+        console.error("Prisma validation error joining waitlist:", {
+          message: error.message,
+        })
+        return {
+          success: false,
+          error: "Invalid data provided",
+        }
+      }
+
+      // Handle unexpected errors
+      console.error("Unexpected error joining waitlist:", error)
       return {
         success: false,
-        error:
-          error instanceof Error ? error.message : "Unknown error occurred",
+        error: "An unexpected error occurred. Please try again later.",
       }
     }
   })

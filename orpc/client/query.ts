@@ -11,9 +11,15 @@ export const createQueryClient = () => {
         // Retry failed requests
         retry: (failureCount, error: any) => {
           // Don't retry on 4xx errors
+          // Check various error object structures defensively
+          const errorCode = error?.data?.code || error?.code
+          const errorStatus = error?.status || error?.data?.status
+
           if (
-            error?.data?.code === "UNAUTHORIZED" ||
-            error?.data?.code === "FORBIDDEN"
+            errorCode === "UNAUTHORIZED" ||
+            errorCode === "FORBIDDEN" ||
+            errorStatus === 401 ||
+            errorStatus === 403
           ) {
             return false
           }
