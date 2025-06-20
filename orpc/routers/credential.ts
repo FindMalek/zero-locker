@@ -250,74 +250,95 @@ export const deleteCredential = authProcedure
 // Create credential with metadata
 export const createCredentialWithMetadata = authProcedure
   .input(createCredentialWithMetadataInputSchema)
-  .output(credentialOutputSchema)
-  .handler(async ({ input, context }): Promise<CredentialOutput> => {
-    const { credential: credentialData, metadata } = input
+  .output(createCredentialWithMetadataOutputSchema)
+  .handler(
+    async ({ input, context }): Promise<CreateCredentialWithMetadataOutput> => {
+      const { credential: credentialData, metadata } = input
 
-    // Verify platform exists
-    const platform = await database.platform.findUnique({
-      where: { id: credentialData.platformId },
-    })
-
-    if (!platform) {
-      throw new ORPCError("NOT_FOUND")
-    }
-
-    const tagConnections = await createTagsAndGetConnections(
-      credentialData.tags,
-      context.user.id,
-      credentialData.containerId
-    )
-
-    // Create encrypted data for password
-    const passwordEncryptionResult = await createEncryptedData({
-      encryptedValue: credentialData.passwordEncryption.encryptedValue,
-      encryptionKey: credentialData.passwordEncryption.encryptionKey,
-      iv: credentialData.passwordEncryption.iv,
-    })
-
-    if (
-      !passwordEncryptionResult.success ||
-      !passwordEncryptionResult.encryptedData
-    ) {
-      throw new ORPCError("INTERNAL_SERVER_ERROR")
-    }
-
-    // Use transaction for atomicity
-    const result = await database.$transaction(async (tx) => {
-      const credential = await tx.credential.create({
-        data: {
-          identifier: credentialData.identifier,
-          passwordEncryptionId: passwordEncryptionResult.encryptedData!.id,
-          status: credentialData.status,
-          platformId: credentialData.platformId,
-          description: credentialData.description,
-          userId: context.user.id,
-          tags: tagConnections,
-          ...getOrReturnEmptyObject(credentialData.containerId, "containerId"),
-        },
-      })
-
-      // Create metadata if provided
-      if (metadata) {
-        await tx.credentialMetadata.create({
-          data: {
-            credentialId: credential.id,
-            recoveryEmail: metadata.recoveryEmail,
-            phoneNumber: metadata.phoneNumber,
-            otherInfo: metadata.otherInfo || [],
-            has2FA: metadata.has2FA || false,
-          },
+      try {
+        // Verify platform exists
+        const platform = await database.platform.findUnique({
+          where: { id: credentialData.platformId },
         })
+
+        if (!platform) {
+          throw new ORPCError("NOT_FOUND")
+        }
+
+        const tagConnections = await createTagsAndGetConnections(
+          credentialData.tags,
+          context.user.id,
+          credentialData.containerId
+        )
+
+        // Create encrypted data for password
+        const passwordEncryptionResult = await createEncryptedData({
+          encryptedValue: credentialData.passwordEncryption.encryptedValue,
+          encryptionKey: credentialData.passwordEncryption.encryptionKey,
+          iv: credentialData.passwordEncryption.iv,
+        })
+
+        if (
+          !passwordEncryptionResult.success ||
+          !passwordEncryptionResult.encryptedData
+        ) {
+          throw new ORPCError("INTERNAL_SERVER_ERROR")
+        }
+
+        // Use transaction for atomicity
+        const result = await database.$transaction(async (tx) => {
+          const credential = await tx.credential.create({
+            data: {
+              identifier: credentialData.identifier,
+              passwordEncryptionId: passwordEncryptionResult.encryptedData!.id,
+              status: credentialData.status,
+              platformId: credentialData.platformId,
+              description: credentialData.description,
+              userId: context.user.id,
+              tags: tagConnections,
+              ...getOrReturnEmptyObject(
+                credentialData.containerId,
+                "containerId"
+              ),
+            },
+          })
+
+          // Create metadata if provided
+          if (metadata) {
+            await tx.credentialMetadata.create({
+              data: {
+                credentialId: credential.id,
+                recoveryEmail: metadata.recoveryEmail,
+                phoneNumber: metadata.phoneNumber,
+                otherInfo: metadata.otherInfo || [],
+                has2FA: metadata.has2FA || false,
+              },
+            })
+          }
+
+          return credential
+        })
+
+        return {
+          success: true,
+          credential: CredentialEntity.getSimpleRo(result),
+        }
+      } catch (error) {
+        console.error("Error creating credential with metadata:", error)
+
+        // If it's an ORPCError, re-throw it to maintain consistent error handling
+        if (error instanceof ORPCError) {
+          throw error
+        }
+
+        return {
+          success: false,
+          error:
+            error instanceof Error ? error.message : "Unknown error occurred",
+        }
       }
-
-      return credential
-    })
-
-    const credential = result
-
-    return CredentialEntity.getSimpleRo(credential)
-  })
+    }
+  )
 
 // Export the credential router
 export const credentialRouter = {

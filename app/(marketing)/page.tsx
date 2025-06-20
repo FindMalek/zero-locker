@@ -13,11 +13,28 @@ export default async function Home() {
     user: null,
   })
 
-  const [waitlist, users, encryptedData] = await Promise.all([
-    serverClient.users.getWaitlistCount({}),
-    serverClient.users.getUserCount({}),
-    serverClient.users.getEncryptedDataCount({}),
-  ])
+  let waitlist = { total: 0 }
+  let users = { total: 0 }
+  let encryptedData = { count: 0 }
+
+  try {
+    const [waitlistResult, usersResult, encryptedDataResult] =
+      await Promise.all([
+        serverClient.users.getWaitlistCount({}),
+        serverClient.users.getUserCount({}),
+        serverClient.users.getEncryptedDataCount({}),
+      ])
+
+    waitlist = waitlistResult
+    users = usersResult
+    encryptedData = encryptedDataResult
+  } catch (error) {
+    // Silently handle database connection errors during build
+    console.warn(
+      "Database not available during build, using default values:",
+      error
+    )
+  }
 
   return (
     <div className="relative flex min-h-screen flex-col">
