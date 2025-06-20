@@ -33,7 +33,7 @@ export function MarketingHowItWorks() {
               Import & Store
             </h3>
             <p className="text-muted-foreground text-sm sm:text-base">
-              Import existing passwords or add new ones. Store cards, notes, and
+              Import existing passwords or add new ones. Store cards, accounts, and
               any sensitive data.
             </p>
           </div>
@@ -46,8 +46,8 @@ export function MarketingHowItWorks() {
               Access Anywhere
             </h3>
             <p className="text-muted-foreground text-sm sm:text-base">
-              Use Zero-Locker on all your devices with seamless sync and offline
-              access.
+              Use Zero-Locker on all your devices with seamless sync across
+              platforms.
             </p>
           </div>
         </div>

@@ -89,12 +89,12 @@ export function MarketingFeatures() {
           <Card className="hover:border-primary/20 border-2 transition-colors">
             <CardHeader>
               <div className="flex items-center gap-2">
-                <Icons.users className="text-primary h-8 w-8" />
-                <CardTitle>Team Collaboration</CardTitle>
+                <Icons.lock className="text-primary h-8 w-8" />
+                <CardTitle>Secret Management</CardTitle>
               </div>
               <CardDescription>
-                Share passwords and sensitive data securely with your team while
-                maintaining full control and audit trails.
+                Securely store API keys, environment variables, and sensitive 
+                configuration data with encrypted access control.
               </CardDescription>
             </CardHeader>
           </Card>
