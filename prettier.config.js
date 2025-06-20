@@ -24,8 +24,6 @@ module.exports = {
     "^@/components/(.*)$",
     "^@/components/ui/(.*)$",
     "",
-    "@/actions/(.*)",
-    "",
     "^[./]",
   ],
   tailwindFunctions: ["clsx", "cn", "twmerge", "cva"],

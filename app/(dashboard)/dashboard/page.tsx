@@ -1,4 +1,9 @@
 import { Metadata } from "next"
+import { createServerClient } from "@/orpc/client/server"
+import { createContext } from "@/orpc/context"
+import type { ListCardsOutput } from "@/schemas/card/dto"
+import type { ListCredentialsOutput } from "@/schemas/credential/dto"
+import type { ListSecretsOutput } from "@/schemas/secrets/dto"
 import { RecentItem, RecentItemTypeEnum } from "@/schemas/utils"
 
 import { MAX_RECENT_ITEMS } from "@/config/consts"
@@ -7,18 +12,10 @@ import { mapItem } from "@/lib/utils"
 import { OverviewStats } from "@/components/app/dashboard-overview-stats"
 import { DashboardRecentActivity } from "@/components/app/dashboard-recent-activity"
 
-import { listCards } from "@/actions/card"
-import { listCredentials } from "@/actions/credential"
-import { listSecrets } from "@/actions/secrets/secret"
-
-type CardsResponse = Awaited<ReturnType<typeof listCards>>
-type SecretsResponse = Awaited<ReturnType<typeof listSecrets>>
-type CredentialsResponse = Awaited<ReturnType<typeof listCredentials>>
-
 async function getRecentItems(
-  usersResponse: CredentialsResponse,
-  cardsResponse: CardsResponse,
-  secretsResponse: SecretsResponse
+  usersResponse: ListCredentialsOutput,
+  cardsResponse: ListCardsOutput,
+  secretsResponse: ListSecretsOutput
 ): Promise<RecentItem[]> {
   const recentCredentials: RecentItem[] = (usersResponse.credentials ?? []).map(
     (user) => ({
@@ -61,9 +58,9 @@ export const metadata: Metadata = {
 }
 
 async function getStats(
-  credentialsData: CredentialsResponse,
-  cardsData: CardsResponse,
-  secretsData: SecretsResponse
+  credentialsData: ListCredentialsOutput,
+  cardsData: ListCardsOutput,
+  secretsData: ListSecretsOutput
 ) {
   return {
     credentials: credentialsData.credentials?.length ?? 0,
@@ -73,11 +70,23 @@ async function getStats(
 }
 
 export default async function DashboardPage() {
+  const context = await createContext()
+  const serverClient = createServerClient(context)
+
   const [credentialsResponse, cardsResponse, secretsResponse] =
     await Promise.all([
-      listCredentials(1, MAX_RECENT_ITEMS),
-      listCards(1, MAX_RECENT_ITEMS),
-      listSecrets(1, MAX_RECENT_ITEMS),
+      serverClient.credentials.list({
+        page: 1,
+        limit: MAX_RECENT_ITEMS,
+      }),
+      serverClient.cards.list({
+        page: 1,
+        limit: MAX_RECENT_ITEMS,
+      }),
+      serverClient.secrets.list({
+        page: 1,
+        limit: MAX_RECENT_ITEMS,
+      }),
     ])
 
   const stats = await getStats(

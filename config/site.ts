@@ -1,17 +1,17 @@
 import { SiteConfig } from "@/types"
 
 export const siteConfig: SiteConfig = {
-  name: "FindAccount",
+  name: "Zero Account",
   description: "Secure password management made simple.",
-  url: "https://account.findmalek.com",
+  url: "https://www.0locker.com",
   images: {
-    default: "https://account.findmalek.com/og.png",
-    notFound: "https://account.findmalek.com/not-found.png",
+    default: "https://www.0locker.com/og.png",
+    notFound: "https://www.0locker.com/not-found.png",
     logo: "https://emojicdn.elk.sh/🔒?style=twitter",
   },
   links: {
     twitter: "https://twitter.com/foundmalek",
-    github: "https://github.com/findmalek/findaccount",
+    github: "https://github.com/findmalek/zero-locker",
   },
   author: {
     name: "Malek Gara-Hellal",

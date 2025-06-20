@@ -34,7 +34,7 @@ export type SiteConfig = {
   url: string
   links: {
     twitter?: string
-    github?: string
+    github: string
     discord?: string
   }
   images: {

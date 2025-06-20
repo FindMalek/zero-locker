@@ -2,7 +2,7 @@ import { encryptedDataDtoSchema } from "@/schemas/encryption/encryption"
 import { CardProvider, CardStatus, CardType } from "@prisma/client"
 import { z } from "zod"
 
-import { CardExpiryDateUtils } from "@/lib/card-expiry-utils"
+import { CardExpiryDateUtils } from "@/lib/utils/card-expiry-helpers"
 
 import { tagDtoSchema } from "../utils/tag"
 

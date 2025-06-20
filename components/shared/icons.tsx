@@ -1,3 +1,4 @@
+import Image from "next/image"
 import { RecentItemType, RecentItemTypeEnum } from "@/schemas/utils"
 import {
   AlertTriangle,
@@ -32,6 +33,7 @@ import {
   File,
   FileText,
   Folder,
+  GithubIcon,
   GlobeIcon,
   HelpCircle,
   HomeIcon,
@@ -88,6 +90,30 @@ export type Icon = LucideIcon
 
 function LogoIcon({ className }: { className?: string }) {
   return <span className={cn(className)}>🔐</span>
+}
+
+function LastPassIcon({ className }: { className?: string }) {
+  return (
+    <Image
+      src="/logos/lastpass.svg"
+      alt="LastPass"
+      width={48}
+      height={48}
+      className={cn(className, "inline-block object-contain align-middle")}
+    />
+  )
+}
+
+function HashiCorpIcon({ className }: { className?: string }) {
+  return (
+    <Image
+      src="/logos/hashicorp.svg"
+      alt="HashiCorp"
+      width={48}
+      height={48}
+      className={cn(className, "inline-block object-contain align-middle")}
+    />
+  )
 }
 
 export const Icons = {
@@ -188,6 +214,9 @@ export const Icons = {
   info: Info,
   refresh: RefreshCw,
   login: LogIn,
+  lastPass: LastPassIcon,
+  hashicorp: HashiCorpIcon,
+  github: GithubIcon,
 }
 
 export const getEntityIcon = (itemType: RecentItemType) => {
