@@ -21,8 +21,8 @@ import {
 import { ORPCError, os } from "@orpc/server"
 import type { Prisma } from "@prisma/client"
 
-import { createTagsAndGetConnections } from "@/lib/utils/tag-helpers"
 import { createEncryptedData } from "@/lib/utils/encryption-helpers"
+import { createTagsAndGetConnections } from "@/lib/utils/tag-helpers"
 
 import type { ORPCContext } from "../types"
 
@@ -260,12 +260,12 @@ export const createContainerWithSecrets = authProcedure
         }
       } catch (error) {
         console.error("Error creating container with secrets:", error)
-        
+
         // If it's an ORPCError, re-throw it to maintain consistent error handling
         if (error instanceof ORPCError) {
           throw error
         }
-        
+
         return {
           success: false,
           error:
