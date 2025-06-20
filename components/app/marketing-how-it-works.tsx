@@ -33,8 +33,8 @@ export function MarketingHowItWorks() {
               Import & Store
             </h3>
             <p className="text-muted-foreground text-sm sm:text-base">
-              Import existing passwords or add new ones. Store cards, accounts, and
-              any sensitive data.
+              Import existing passwords or add new ones. Store cards, accounts,
+              and any sensitive data.
             </p>
           </div>
 

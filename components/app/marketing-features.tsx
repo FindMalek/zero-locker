@@ -93,7 +93,7 @@ export function MarketingFeatures() {
                 <CardTitle>Secret Management</CardTitle>
               </div>
               <CardDescription>
-                Securely store API keys, environment variables, and sensitive 
+                Securely store API keys, environment variables, and sensitive
                 configuration data with encrypted access control.
               </CardDescription>
             </CardHeader>

@@ -1,7 +1,7 @@
 import { SiteConfig } from "@/types"
 
 export const siteConfig: SiteConfig = {
-  name: "Zero Account",
+  name: "Zero Locker",
   description: "Secure password management made simple.",
   url: "https://www.0locker.com",
   images: {

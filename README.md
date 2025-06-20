@@ -1,8 +1,8 @@
 ![hero](github.png)
 
-# Zero Account
+# Zero Locker
 
-Zero Account is a secure password management tool designed to store, retrieve, and manage account credentials and sensitive information efficiently. It provides a user-friendly platform with advanced features like password generation, secure storage, and easy migration from existing TXT files.
+Zero Locker is a secure password management tool designed to store, retrieve, and manage account credentials and sensitive information efficiently. It provides a user-friendly platform with advanced features like password generation, secure storage, and easy migration from existing TXT files.
 
 ## Features
 
