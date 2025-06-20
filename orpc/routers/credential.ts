@@ -250,52 +250,46 @@ export const deleteCredential = authProcedure
 // Create credential with metadata
 export const createCredentialWithMetadata = authProcedure
   .input(createCredentialWithMetadataInputSchema)
-  .output(createCredentialWithMetadataOutputSchema)
+  .output(credentialOutputSchema)
   .handler(
-    async ({ input, context }): Promise<CreateCredentialWithMetadataOutput> => {
+    async ({ input, context }): Promise<CredentialOutput> => {
       const { credential: credentialData, metadata } = input
 
-      try {
-        // Verify platform exists
-        const platform = await database.platform.findUnique({
-          where: { id: credentialData.platformId },
-        })
+      // Verify platform exists
+      const platform = await database.platform.findUnique({
+        where: { id: credentialData.platformId },
+      })
 
-        if (!platform) {
-          return {
-            success: false,
-            error: "Platform not found",
-          }
-        }
+      if (!platform) {
+        throw new ORPCError("NOT_FOUND")
+      }
 
-        const tagConnections = await createTagsAndGetConnections(
-          credentialData.tags,
-          context.user.id,
-          credentialData.containerId
-        )
+      const tagConnections = await createTagsAndGetConnections(
+        credentialData.tags,
+        context.user.id,
+        credentialData.containerId
+      )
 
-        // Create encrypted data for password
-        const passwordEncryptionResult = await createEncryptedData({
-          encryptedValue: credentialData.passwordEncryption.encryptedValue,
-          encryptionKey: credentialData.passwordEncryption.encryptionKey,
-          iv: credentialData.passwordEncryption.iv,
-        })
+      // Create encrypted data for password
+      const passwordEncryptionResult = await createEncryptedData({
+        encryptedValue: credentialData.passwordEncryption.encryptedValue,
+        encryptionKey: credentialData.passwordEncryption.encryptionKey,
+        iv: credentialData.passwordEncryption.iv,
+      })
 
-        if (
-          !passwordEncryptionResult.success ||
-          !passwordEncryptionResult.encryptedData
-        ) {
-          return {
-            success: false,
-            error: "Failed to encrypt password",
-          }
-        }
+      if (
+        !passwordEncryptionResult.success ||
+        !passwordEncryptionResult.encryptedData
+      ) {
+        throw new ORPCError("INTERNAL_SERVER_ERROR")
+      }
 
-        // Create credential
-        const credential = await database.credential.create({
+      // Use transaction for atomicity
+      const result = await database.$transaction(async (tx) => {
+        const credential = await tx.credential.create({
           data: {
             identifier: credentialData.identifier,
-            passwordEncryptionId: passwordEncryptionResult.encryptedData.id,
+            passwordEncryptionId: passwordEncryptionResult.encryptedData!.id,
             status: credentialData.status,
             platformId: credentialData.platformId,
             description: credentialData.description,
@@ -310,7 +304,7 @@ export const createCredentialWithMetadata = authProcedure
 
         // Create metadata if provided
         if (metadata) {
-          await database.credentialMetadata.create({
+          await tx.credentialMetadata.create({
             data: {
               credentialId: credential.id,
               recoveryEmail: metadata.recoveryEmail,
@@ -321,18 +315,12 @@ export const createCredentialWithMetadata = authProcedure
           })
         }
 
-        return {
-          success: true,
-          credential: CredentialEntity.getSimpleRo(credential),
-        }
-      } catch (error) {
-        console.error("Error creating credential with metadata:", error)
-        return {
-          success: false,
-          error:
-            error instanceof Error ? error.message : "Unknown error occurred",
-        }
-      }
+        return credential
+      })
+
+      const credential = result
+
+      return CredentialEntity.getSimpleRo(credential)
     }
   )
 

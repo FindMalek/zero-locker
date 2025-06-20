@@ -22,6 +22,7 @@ import { ORPCError, os } from "@orpc/server"
 import type { Prisma } from "@prisma/client"
 
 import { createTagsAndGetConnections } from "@/lib/utils/tag-helpers"
+import { createEncryptedData } from "@/lib/utils/encryption-helpers"
 
 import type { ORPCContext } from "../types"
 
@@ -192,54 +193,60 @@ export const createContainerWithSecrets = authProcedure
       const { container: containerData, secrets: secretsData } = input
 
       try {
-        // Create container with tags
-        const tagConnections = await createTagsAndGetConnections(
-          containerData.tags,
-          context.user.id,
-          undefined
-        )
+        const result = await database.$transaction(async (tx) => {
+          // Create container with tags
+          const tagConnections = await createTagsAndGetConnections(
+            containerData.tags,
+            context.user.id,
+            undefined
+          )
 
-        const container = await database.container.create({
-          data: {
-            name: containerData.name,
-            icon: containerData.icon,
-            description: containerData.description,
-            type: containerData.type,
-            userId: context.user.id,
-            tags: tagConnections,
-          },
-        })
-
-        // Create encrypted data and secrets
-        const createdSecrets = []
-        for (const secretData of secretsData) {
-          // Create encrypted data
-          const encryptedData = await database.encryptedData.create({
+          const container = await tx.container.create({
             data: {
+              name: containerData.name,
+              icon: containerData.icon,
+              description: containerData.description,
+              type: containerData.type,
+              userId: context.user.id,
+              tags: tagConnections,
+            },
+          })
+
+          // Create encrypted data and secrets
+          const createdSecrets = []
+          for (const secretData of secretsData) {
+            // Use the helper function for consistency
+            const encryptionResult = await createEncryptedData({
               iv: secretData.valueEncryption.iv,
               encryptedValue: secretData.valueEncryption.encryptedValue,
               encryptionKey: secretData.valueEncryption.encryptionKey,
-            },
-          })
+            })
 
-          // Create secret
-          const secret = await database.secret.create({
-            data: {
-              name: secretData.name,
-              note: secretData.note,
-              userId: context.user.id,
-              containerId: container.id,
-              valueEncryptionId: encryptedData.id,
-            },
-          })
+            if (!encryptionResult.success || !encryptionResult.encryptedData) {
+              throw new ORPCError("INTERNAL_SERVER_ERROR")
+            }
 
-          createdSecrets.push(secret)
-        }
+            // Create secret
+            const secret = await tx.secret.create({
+              data: {
+                name: secretData.name,
+                note: secretData.note,
+                userId: context.user.id,
+                containerId: container.id,
+                valueEncryptionId: encryptionResult.encryptedData.id,
+              },
+            })
+
+            createdSecrets.push(secret)
+          }
+
+          return { container, createdSecrets }
+        })
 
         return {
           success: true,
-          container: ContainerEntity.getSimpleRo(container),
-          secrets: createdSecrets.map((secret) => ({
+          container: ContainerEntity.getSimpleRo(result.container),
+          secrets: result.createdSecrets.map((secret) => ({
             id: secret.id,
             name: secret.name,
             note: secret.note,
@@ -253,6 +260,12 @@ export const createContainerWithSecrets = authProcedure
         }
       } catch (error) {
         console.error("Error creating container with secrets:", error)
+        
+        // If it's an ORPCError, re-throw it to maintain consistent error handling
+        if (error instanceof ORPCError) {
+          throw error
+        }
+        
         return {
           success: false,
           error:
