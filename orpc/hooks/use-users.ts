@@ -3,7 +3,11 @@
 import { orpc } from "@/orpc/client"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 
-// Join waitlist mutation
+/**
+ * Returns a mutation hook for joining the user waitlist.
+ *
+ * On successful mutation, the waitlist count query is invalidated to trigger a refetch.
+ */
 export function useJoinWaitlist() {
   const queryClient = useQueryClient()
 
@@ -24,7 +28,11 @@ export function useJoinWaitlist() {
   )
 }
 
-// Get waitlist count
+/**
+ * Returns a React Query hook that fetches the current waitlist count from the server.
+ *
+ * The query result is cached and considered fresh for 5 minutes.
+ */
 export function useWaitlistCount() {
   return useQuery(
     orpc.users.getWaitlistCount.queryOptions({
@@ -34,7 +42,11 @@ export function useWaitlistCount() {
   )
 }
 
-// Get user count
+/**
+ * Returns a React Query hook that fetches the total number of users from the server.
+ *
+ * The query result is cached and considered fresh for 5 minutes.
+ */
 export function useUserCount() {
   return useQuery(
     orpc.users.getUserCount.queryOptions({
@@ -44,7 +56,11 @@ export function useUserCount() {
   )
 }
 
-// Get encrypted data count
+/**
+ * Returns a React Query hook that fetches the count of encrypted data entries from the server.
+ *
+ * The query result is cached and considered fresh for 5 minutes.
+ */
 export function useEncryptedDataCount() {
   return useQuery(
     orpc.users.getEncryptedDataCount.queryOptions({

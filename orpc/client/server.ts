@@ -5,8 +5,12 @@ import { appRouter } from "../routers"
 import type { ORPCContext } from "../types"
 
 /**
- * Server-side oRPC client for SSR optimization
- * This eliminates HTTP requests during server-side rendering
+ * Creates a server-side oRPC client instance for the app router using the provided SSR context.
+ *
+ * This client enables direct invocation of router procedures during server-side rendering, bypassing HTTP requests.
+ *
+ * @param context - The server-side rendering context to be used for procedure calls
+ * @returns A router client instance bound to the app router and the given context
  */
 export function createServerClient(
   context: ORPCContext

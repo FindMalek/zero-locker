@@ -14,6 +14,16 @@ import { DashboardRecentActivity } from "@/components/app/dashboard-recent-activ
 
 
 
+/**
+ * Aggregates and returns the most recent credentials, cards, and secrets as unified recent activity items.
+ *
+ * Maps each credential, card, and secret to a standardized `RecentItem` format, tags them by type, merges them, sorts by most recent activity, and limits the result to the maximum allowed recent items.
+ *
+ * @param usersResponse - The response containing credential data
+ * @param cardsResponse - The response containing card data
+ * @param secretsResponse - The response containing secret data
+ * @returns An array of the most recent activity items across all types
+ */
 async function getRecentItems(
   usersResponse: ListCredentialsOutput,
   cardsResponse: ListCardsOutput,
@@ -59,6 +69,14 @@ export const metadata: Metadata = {
   title: "Dashboard Overview",
 }
 
+/**
+ * Computes the total counts of credentials, cards, and secrets from the provided data.
+ *
+ * @param credentialsData - The response data containing the list of credentials
+ * @param cardsData - The response data containing the list of cards
+ * @param secretsData - The response data containing the list of secrets
+ * @returns An object with the counts of credentials, cards, and secrets
+ */
 async function getStats(
   credentialsData: ListCredentialsOutput,
   cardsData: ListCardsOutput,
@@ -71,6 +89,13 @@ async function getStats(
   }
 }
 
+/**
+ * Renders the dashboard overview page with recent activity and statistics for credentials, cards, and secrets.
+ *
+ * Fetches recent credentials, cards, and secrets, computes their counts, and displays them using overview and recent activity components.
+ *
+ * @returns The dashboard page JSX element
+ */
 export default async function DashboardPage() {
   const context = await createContext()
   const serverClient = createServerClient(context)

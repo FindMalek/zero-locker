@@ -10,7 +10,14 @@ import type {
 } from "@/schemas/secrets/dto"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 
-// Get single secret
+/**
+ * Fetches a single secret by its ID using a React Query hook.
+ *
+ * The query is enabled only if a valid ID is provided.
+ *
+ * @param id - The unique identifier of the secret to fetch
+ * @returns The React Query result for the requested secret
+ */
 export function useSecret(id: string) {
   return useQuery(
     orpc.secrets.get.queryOptions({
@@ -20,7 +27,12 @@ export function useSecret(id: string) {
   )
 }
 
-// List secrets with pagination
+/**
+ * Fetches a paginated list of secrets, using previous data as a placeholder to maintain UI stability during refetches.
+ *
+ * @param input - Pagination parameters for listing secrets. Defaults to the first page with a limit of 10.
+ * @returns The React Query result containing the list of secrets.
+ */
 export function useSecrets(input: ListSecretsInput = { page: 1, limit: 10 }) {
   return useQuery(
     orpc.secrets.list.queryOptions({
@@ -30,7 +42,14 @@ export function useSecrets(input: ListSecretsInput = { page: 1, limit: 10 }) {
   )
 }
 
-// Create secret mutation
+/**
+ * Provides a mutation hook to create a new secret and update the cache on success.
+ *
+ * On successful creation, the secrets list is invalidated and the new secret is added to the cache.
+ * Logs an error to the console if creation fails.
+ * 
+ * @returns A mutation object for creating a secret.
+ */
 export function useCreateSecret() {
   const queryClient = useQueryClient()
 
@@ -53,7 +72,13 @@ export function useCreateSecret() {
   )
 }
 
-// Update secret mutation
+/**
+ * Provides a mutation hook to update an existing secret with optimistic cache updates and rollback on error.
+ *
+ * Optimistically updates the cached secret data before the server response, rolling back if the update fails. On success, updates the cache with the server response and invalidates the secrets list query to ensure data consistency.
+ *
+ * @returns A mutation object for updating a secret, including status and mutation methods.
+ */
 export function useUpdateSecret() {
   const queryClient = useQueryClient()
 
@@ -107,7 +132,13 @@ export function useUpdateSecret() {
   )
 }
 
-// Delete secret mutation
+/**
+ * Provides a mutation hook to delete a secret and manage cache updates optimistically.
+ *
+ * Optimistically removes the secret from the cache before the server confirms deletion, restores it if the deletion fails, and invalidates the secret list cache on success to ensure UI consistency.
+ *
+ * @returns A mutation object for deleting a secret.
+ */
 export function useDeleteSecret() {
   const queryClient = useQueryClient()
 

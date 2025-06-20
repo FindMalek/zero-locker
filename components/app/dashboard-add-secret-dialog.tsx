@@ -21,6 +21,14 @@ interface SecretDialogProps {
   onOpenChange: (open: boolean) => void
 }
 
+/**
+ * Displays a dialog for securely adding new secrets to a vault, handling client-side encryption and form validation.
+ *
+ * Presents a form for entering secret data, encrypts each secret on the client before submission, and supports creating multiple secrets in sequence. On successful creation, shows a confirmation and resets the form if desired; on failure, displays an error message.
+ *
+ * @param open - Whether the dialog is visible
+ * @param onOpenChange - Callback to update the dialog's open state
+ */
 export function DashboardAddSecretDialog({
   open,
   onOpenChange,

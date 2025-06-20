@@ -10,7 +10,14 @@ import type {
 } from "@/schemas/credential/dto"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 
-// Get single credential
+/**
+ * Retrieves a single credential by its ID using a React Query hook.
+ *
+ * The query is enabled only if a valid ID is provided.
+ *
+ * @param id - The unique identifier of the credential to fetch
+ * @returns The React Query result containing the credential data
+ */
 export function useCredential(id: string) {
   return useQuery(
     orpc.credentials.get.queryOptions({
@@ -20,7 +27,12 @@ export function useCredential(id: string) {
   )
 }
 
-// List credentials with pagination
+/**
+ * Fetches a paginated list of credentials, using previous data as a placeholder to maintain UI stability during loading.
+ *
+ * @param input - Optional pagination parameters for listing credentials
+ * @returns A React Query result containing the list of credentials
+ */
 export function useCredentials(
   input: ListCredentialsInput = { page: 1, limit: 10 }
 ) {
@@ -32,7 +44,14 @@ export function useCredentials(
   )
 }
 
-// Create credential mutation
+/**
+ * Provides a mutation hook to create a new credential.
+ *
+ * On successful creation, the credential list is invalidated and the new credential is cached for immediate access.
+ * Errors during creation are logged to the console.
+ *
+ * @returns A mutation object for creating credentials.
+ */
 export function useCreateCredential() {
   const queryClient = useQueryClient()
 
@@ -55,7 +74,12 @@ export function useCreateCredential() {
   )
 }
 
-// Create credential with metadata mutation
+/**
+ * Provides a mutation hook to create a new credential with additional metadata.
+ *
+ * On successful creation, the credential list is invalidated and the new credential is cached. Errors during creation are logged.
+ * @returns A mutation object for creating a credential with metadata.
+ */
 export function useCreateCredentialWithMetadata() {
   const queryClient = useQueryClient()
 
@@ -84,7 +108,13 @@ export function useCreateCredentialWithMetadata() {
   )
 }
 
-// Update credential mutation
+/**
+ * Provides a mutation hook to update an existing credential with optimistic cache updates and rollback on error.
+ *
+ * Optimistically updates the cached credential data before the server response, rolling back to the previous state if the update fails. On success, updates the cache with the server response and invalidates the credential list to ensure data consistency.
+ *
+ * @returns A mutation object for updating credentials, including status and mutation methods.
+ */
 export function useUpdateCredential() {
   const queryClient = useQueryClient()
 
@@ -140,7 +170,13 @@ export function useUpdateCredential() {
   )
 }
 
-// Delete credential mutation
+/**
+ * Provides a mutation hook to delete a credential by ID with optimistic cache updates and rollback on error.
+ *
+ * Optimistically removes the credential from the cache before the server confirms deletion. If the deletion fails, the previous credential state is restored. On successful deletion, the credential list cache is invalidated to ensure updated data.
+ *
+ * @returns A mutation object for deleting a credential.
+ */
 export function useDeleteCredential() {
   const queryClient = useQueryClient()
 

@@ -7,6 +7,11 @@ import { MarketingWaitlistForm } from "@/components/app/marketing-waitlist-form"
 import { StatCard } from "@/components/shared/stat-card"
 import { AnimatedGridPattern } from "@/components/ui/animated-grid-pattern"
 
+/**
+ * Renders the marketing landing page with dynamic statistics and a waitlist form.
+ *
+ * Fetches waitlist, user, and encrypted data counts from the server and displays them alongside marketing content, headers, and an animated background.
+ */
 export default async function Home() {
   const serverClient = createServerClient({
     session: null,
