@@ -44,6 +44,14 @@ interface CredentialDialogProps {
   onOpenChange: (open: boolean) => void
 }
 
+/**
+ * Displays a dialog for adding a new credential with optional metadata to the user's vault.
+ *
+ * Provides a form for entering credential details, password management (including generation, strength checking, and clipboard copy), and an expandable section for additional metadata. Handles form validation, encryption of sensitive data, and submission via a mutation hook. On successful creation, optionally resets the form for consecutive entries or closes the dialog.
+ *
+ * @param open - Whether the dialog is visible
+ * @param onOpenChange - Callback invoked when the dialog's open state changes
+ */
 export function DashboardAddCredentialDialog({
   open,
   onOpenChange,

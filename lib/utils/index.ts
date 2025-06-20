@@ -24,6 +24,13 @@ import { PRIORITY_ACTIVITY_TYPE } from "@/config/consts"
 export * from "./card-expiry-helpers"
 export * from "./password-helpers"
 
+/**
+ * Merges multiple class name values into a single string, resolving Tailwind CSS conflicts.
+ *
+ * Accepts any combination of class name arguments, arrays, or objects, and returns a deduplicated, merged class string suitable for use in JSX.
+ *
+ * @returns The merged class name string
+ */
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }

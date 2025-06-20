@@ -11,6 +11,11 @@ interface OverviewStatsProps {
   }
 }
 
+/**
+ * Displays an overview of account, payment card, and secure note statistics in a responsive grid layout.
+ *
+ * @param stats - Object containing counts for credentials, cards, and secrets to display in the overview.
+ */
 export async function OverviewStats({ stats }: OverviewStatsProps) {
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">

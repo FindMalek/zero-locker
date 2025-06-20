@@ -23,6 +23,15 @@ interface CardDialogProps {
   availableTags?: TagDto[]
 }
 
+/**
+ * Renders a dialog for securely adding a new card, encrypting sensitive data before submission.
+ *
+ * Presents a form for entering card details, encrypts the card number and CVV client-side, and submits the encrypted data to create a new card. Handles form validation, error and success notifications, and supports adding multiple cards in sequence. Resets form and sensitive data state when the dialog is closed.
+ *
+ * @param open - Whether the dialog is open
+ * @param onOpenChange - Callback invoked when the dialog open state changes
+ * @param availableTags - Optional list of tags that can be assigned to the card
+ */
 export function DashboardAddCardDialog({
   open,
   onOpenChange,

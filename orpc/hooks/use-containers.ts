@@ -10,7 +10,14 @@ import type {
 } from "@/schemas/utils/dto"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 
-// Get single container
+/**
+ * Retrieves a single container by its ID using a React Query hook.
+ *
+ * The query is enabled only if a valid ID is provided.
+ *
+ * @param id - The unique identifier of the container to fetch
+ * @returns The query result containing the container data
+ */
 export function useContainer(id: string) {
   return useQuery(
     orpc.containers.get.queryOptions({
@@ -20,7 +27,12 @@ export function useContainer(id: string) {
   )
 }
 
-// List containers with pagination
+/**
+ * Fetches a paginated list of containers using the provided pagination input.
+ *
+ * @param input - Pagination parameters for listing containers. Defaults to page 1 and limit 10.
+ * @returns A React Query result containing the list of containers.
+ */
 export function useContainers(
   input: ListContainersInput = { page: 1, limit: 10 }
 ) {
@@ -32,7 +44,12 @@ export function useContainers(
   )
 }
 
-// Create container mutation
+/**
+ * Provides a mutation hook to create a new container and update the cache.
+ *
+ * On successful creation, the container list is invalidated and the new container is cached. Errors are logged to the console.
+ * @returns A mutation object for creating containers.
+ */
 export function useCreateContainer() {
   const queryClient = useQueryClient()
 
@@ -55,7 +72,12 @@ export function useCreateContainer() {
   )
 }
 
-// Create container with secrets mutation
+/**
+ * Provides a mutation hook to create a new container along with its secrets.
+ *
+ * On successful creation, invalidates the containers and secrets list queries and caches the new container. Logs errors to the console if the operation fails.
+ * @returns A mutation object for creating a container with secrets.
+ */
 export function useCreateContainerWithSecrets() {
   const queryClient = useQueryClient()
 
@@ -87,7 +109,13 @@ export function useCreateContainerWithSecrets() {
   )
 }
 
-// Update container mutation
+/**
+ * Provides a mutation hook to update an existing container with optimistic cache updates and rollback on error.
+ *
+ * On mutation, the cache is optimistically updated with the new input. If the update fails, the cache is restored to its previous state. On success, the cache is updated with the server response and the container list query is invalidated to ensure fresh data.
+ *
+ * @returns A mutation object for updating a container.
+ */
 export function useUpdateContainer() {
   const queryClient = useQueryClient()
 
@@ -141,7 +169,13 @@ export function useUpdateContainer() {
   )
 }
 
-// Delete container mutation
+/**
+ * Provides a mutation hook to delete a container and manage cache updates optimistically.
+ *
+ * Removes the container from the cache before the server confirms deletion, restoring it if the operation fails. On success, invalidates the container list query to refresh data.
+ *
+ * @returns A mutation object for deleting containers.
+ */
 export function useDeleteContainer() {
   const queryClient = useQueryClient()
 

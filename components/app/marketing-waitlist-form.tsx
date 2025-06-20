@@ -18,6 +18,13 @@ import {
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 
+/**
+ * Renders a waitlist signup form for users to join by submitting their email address.
+ *
+ * Displays the current number of people who have joined the waitlist and provides feedback on successful or failed submissions.
+ *
+ * @param count - The number of people who have already joined the waitlist
+ */
 export function MarketingWaitlistForm({ count }: { count: number }) {
   const joinWaitlistMutation = useJoinWaitlist()
 
