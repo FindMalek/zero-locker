@@ -6,6 +6,7 @@ import { CardDto, cardDtoSchema } from "@/schemas/card"
 import { TagDto } from "@/schemas/utils/tag"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { CardProvider, CardStatus, CardType } from "@prisma/client"
+import { useQueryClient } from "@tanstack/react-query"
 import { useForm } from "react-hook-form"
 
 import { encryptData, exportKey, generateEncryptionKey } from "@/lib/encryption"
@@ -30,6 +31,7 @@ export function DashboardAddCardDialog({
 }: CardDialogProps) {
   const { toast } = useToast()
   const createCardMutation = useCreateCard()
+  const queryClient = useQueryClient()
 
   const [createMore, setCreateMore] = useState(false)
   const [sensitiveData, setSensitiveData] = useState({
@@ -143,6 +145,7 @@ export function DashboardAddCardDialog({
               },
             })
             setSensitiveData({ number: "", cvv: "" })
+            queryClient.invalidateQueries({ queryKey: ["cards"] })
           }
         },
         onError: (error) => {
