@@ -76,6 +76,12 @@ export function DashboardSidebar({ user, ...props }: DashboardSidebarProps) {
               />
 
               <SidebarSeparator />
+
+              <DashboardSidebarMenuItemComponent
+                href="/dashboard/logs"
+                icon={<Icons.logs className="h-4 w-4" />}
+                label="Logs"
+              />
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

@@ -50,6 +50,7 @@ import {
   LockIcon,
   LogIn,
   LogOut,
+  LogsIcon,
   LucideIcon,
   MailIcon,
   MapPin,
@@ -217,6 +218,7 @@ export const Icons = {
   lastPass: LastPassIcon,
   hashicorp: HashiCorpIcon,
   github: GithubIcon,
+  logs: LogsIcon,
 }
 
 export const getEntityIcon = (itemType: RecentItemType) => {

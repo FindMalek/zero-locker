@@ -1,12 +1,13 @@
 "use client"
 
-import { useUserCount, useEncryptedDataCount } from "@/orpc/hooks"
+import { useEncryptedDataCount, useUserCount } from "@/orpc/hooks"
 
 import { StatCard } from "@/components/shared/stat-card"
 
 export function MarketingStats() {
   const { data: userData, isLoading: userLoading } = useUserCount()
-  const { data: encryptedData, isLoading: encryptedLoading } = useEncryptedDataCount()
+  const { data: encryptedData, isLoading: encryptedLoading } =
+    useEncryptedDataCount()
 
   const userCount = userData?.total ?? 0
   const encryptedDataCount = encryptedData?.count ?? 0
