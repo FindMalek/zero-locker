@@ -30,11 +30,13 @@ import {
   CreditCard,
   DatabaseZapIcon,
   DollarSign,
+  EyeIcon,
   File,
   FileText,
   Folder,
   GithubIcon,
   GlobeIcon,
+  Grid3X3Icon,
   HelpCircle,
   HomeIcon,
   HospitalIcon,
@@ -219,6 +221,9 @@ export const Icons = {
   hashicorp: HashiCorpIcon,
   github: GithubIcon,
   logs: LogsIcon,
+  grid: Grid3X3Icon,
+  list: ListIcon,
+  eye: EyeIcon
 }
 
 export const getEntityIcon = (itemType: RecentItemType) => {
