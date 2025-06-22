@@ -53,6 +53,15 @@ The format would be:
       WE will have an ability to share links or QR code for this
       with a shorten link with dub.co maybe
 
+- [ ] Fix loading states in the `marketing` page
+      The loading states are just '...' and not a proper loading state.
+      We should use the `Skeleton` component to show a loading state.
+      Also we should use the `useQuery` hook to fetch the data.
+      And use the `HydrationBoundary` to hydrate the data.
+      And use the `QueryClient` to fetch the data.
+      And use the `QueryClientProvider` to provide the `QueryClient` to the app.
+      And use the `useQuery` hook to fetch the data.
+
 ### Finished Tasks
 
 - [x] Change return types of the Server Actions || High

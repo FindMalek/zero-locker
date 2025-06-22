@@ -66,7 +66,3 @@ export const deleteCredentialDtoSchema = z.object({
 })
 
 export type DeleteCredentialDto = z.infer<typeof deleteCredentialDtoSchema>
-
-export const credentialRoSchema = credentialSimpleRoSchema.extend({
-  plaf,
-})

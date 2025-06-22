@@ -74,6 +74,7 @@ import {
   Sparkles,
   SquareTerminal,
   Stethoscope,
+  StretchHorizontalIcon,
   SunMedium,
   ToggleRightIcon,
   Trash,
@@ -224,6 +225,7 @@ export const Icons = {
   grid: Grid3X3Icon,
   list: ListIcon,
   eye: EyeIcon,
+  view: StretchHorizontalIcon,
 }
 
 export const getEntityIcon = (itemType: RecentItemType) => {

@@ -6,9 +6,15 @@ import type {
   CredentialOutput,
   DeleteCredentialInput,
   ListCredentialsInput,
+  ListCredentialsOutput,
   UpdateCredentialInput,
 } from "@/schemas/credential/dto"
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+  type UseQueryOptions,
+} from "@tanstack/react-query"
 
 // Query keys factory
 export const credentialKeys = {
@@ -31,12 +37,14 @@ export function useCredential(id: string) {
 
 // List credentials with pagination
 export function useCredentials(
-  input: ListCredentialsInput = { page: 1, limit: 10 }
+  input: ListCredentialsInput = { page: 1, limit: 10 },
+  options?: Omit<UseQueryOptions<ListCredentialsOutput>, "queryKey" | "queryFn">
 ) {
   return useQuery({
     queryKey: credentialKeys.list(input),
     queryFn: () => orpc.credentials.list.call(input),
     placeholderData: (previousData) => previousData,
+    ...options,
   })
 }
 

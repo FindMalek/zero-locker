@@ -1,24 +1,18 @@
 "use client"
 
 import { useMemo, useState } from "react"
-import { credentialKeys } from "@/orpc/hooks/use-credentials"
-import { platformKeys } from "@/orpc/hooks/use-platforms"
+import { useCredentials } from "@/orpc/hooks/use-credentials"
+import { usePlatforms } from "@/orpc/hooks/use-platforms"
 import type { ListCredentialsOutput } from "@/schemas/credential/dto"
 import type { ListPlatformsOutput } from "@/schemas/utils/dto"
-import {
-  dehydrate,
-  HydrationBoundary,
-  QueryClient,
-} from "@tanstack/react-query"
+
+import type { SortDirection, SortField, ViewMode } from "@/types/common"
 
 import { DashboardAccountGridView } from "@/components/app/dashboard-account-grid-view"
 import { DashboardAccountListView } from "@/components/app/dashboard-account-list-view"
 import { DashboardAccountsFilters } from "@/components/app/dashboard-accounts-filters"
-import { DashboardAddCredentialDialog } from "@/components/app/dashboard-add-credential-dialog"
 import { Icons } from "@/components/shared/icons"
 import { Button } from "@/components/ui/button"
-
-type ViewMode = "list" | "grid"
 
 interface AccountsClientProps {
   initialData: {
@@ -32,15 +26,30 @@ export function DashboardAccountsClient({ initialData }: AccountsClientProps) {
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
   const [platformFilter, setPlatformFilter] = useState("all")
-  const [addDialogOpen, setAddDialogOpen] = useState(false)
+  const [sortField, setSortField] = useState<SortField | null>(null)
+  const [sortDirection, setSortDirection] = useState<SortDirection>("asc")
+  const [showArchived, setShowArchived] = useState(false)
+
+  const { data: credentialsData } = useCredentials(
+    { page: 1, limit: 50 },
+    {
+      initialData: initialData.credentials,
+    }
+  )
+  const { data: platformsData } = usePlatforms(
+    { page: 1, limit: 100 },
+    {
+      initialData: initialData.platforms,
+    }
+  )
 
   const platforms = useMemo(() => {
-    return initialData.platforms.platforms || []
-  }, [initialData.platforms.platforms])
+    return platformsData?.platforms || []
+  }, [platformsData?.platforms])
 
   const credentials = useMemo(() => {
-    return initialData.credentials.credentials || []
-  }, [initialData.credentials.credentials])
+    return credentialsData?.credentials || []
+  }, [credentialsData?.credentials])
 
   const platformNames = useMemo(() => {
     return Array.from(
@@ -73,121 +82,73 @@ export function DashboardAccountsClient({ initialData }: AccountsClientProps) {
     })
   }, [credentials, platforms, searchTerm, statusFilter, platformFilter])
 
-  // Create a query client and dehydrate the initial data
-  const queryClient = new QueryClient()
-
-  // Pre-populate the query cache with initial data
-  queryClient.setQueryData(
-    credentialKeys.list({ page: 1, limit: 50 }),
-    initialData.credentials
-  )
-  queryClient.setQueryData(
-    platformKeys.list({ page: 1, limit: 100 }),
-    initialData.platforms
-  )
-
   return (
-    <HydrationBoundary state={dehydrate(queryClient)}>
-      <div className="min-h-screen bg-gray-50/50">
-        <div className="mx-auto max-w-7xl p-6">
-          {/* Header */}
-          <div className="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <h1 className="text-2xl font-semibold text-gray-900">Accounts</h1>
-              <p className="mt-1 text-gray-600">
-                Manage your accounts and credentials
-              </p>
-            </div>
-            <div className="mt-4 flex items-center gap-3 sm:mt-0">
-              <div className="flex items-center rounded-lg border bg-white p-1">
-                <Button
-                  variant={viewMode === "list" ? "default" : "ghost"}
-                  size="sm"
-                  onClick={() => setViewMode("list")}
-                  className="h-8 px-3"
-                >
-                  <Icons.list className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant={viewMode === "grid" ? "default" : "ghost"}
-                  size="sm"
-                  onClick={() => setViewMode("grid")}
-                  className="h-8 px-3"
-                >
-                  <Icons.grid className="h-4 w-4" />
-                </Button>
-              </div>
-              <Button className="h-9" onClick={() => setAddDialogOpen(true)}>
-                <Icons.add className="mr-2 h-4 w-4" />
-                Add Account
-              </Button>
-            </div>
-          </div>
+    <div className="min-h-screen">
+      <div className="mx-auto max-w-7xl p-6">
+        <DashboardAccountsFilters
+          searchTerm={searchTerm}
+          onSearchChange={setSearchTerm}
+          statusFilter={statusFilter}
+          onStatusFilterChange={setStatusFilter}
+          platformFilter={platformFilter}
+          onPlatformFilterChange={setPlatformFilter}
+          platforms={platformNames}
+          viewMode={viewMode}
+          onViewModeChange={setViewMode}
+          sortField={sortField}
+          sortDirection={sortDirection}
+          onSortChange={setSortField}
+          showArchived={showArchived}
+          onShowArchivedChange={setShowArchived}
+        />
 
-          {/* Filters */}
-          <DashboardAccountsFilters
-            searchTerm={searchTerm}
-            onSearchChange={setSearchTerm}
-            statusFilter={statusFilter}
-            onStatusFilterChange={setStatusFilter}
-            platformFilter={platformFilter}
-            onPlatformFilterChange={setPlatformFilter}
-            platforms={platformNames}
-          />
-
-          {/* Results count */}
-          <div className="mb-4">
-            <p className="text-sm text-gray-600">
-              {filteredCredentials.length}{" "}
-              {filteredCredentials.length === 1 ? "account" : "accounts"}
-            </p>
-          </div>
-
-          {/* Content */}
-          {filteredCredentials.length === 0 ? (
-            <div className="py-12 text-center">
-              <div className="mb-4 text-gray-400">
-                <Icons.grid className="mx-auto h-12 w-12" />
-              </div>
-              <h3 className="mb-2 text-lg font-medium text-gray-900">
-                No accounts found
-              </h3>
-              <p className="mb-4 text-gray-600">
-                Try adjusting your search or filter criteria
-              </p>
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setSearchTerm("")
-                  setStatusFilter("all")
-                  setPlatformFilter("all")
-                }}
-              >
-                Clear filters
-              </Button>
-            </div>
-          ) : (
-            <>
-              {viewMode === "list" ? (
-                <DashboardAccountListView
-                  credentials={filteredCredentials}
-                  platforms={platforms}
-                />
-              ) : (
-                <DashboardAccountGridView
-                  credentials={filteredCredentials}
-                  platforms={platforms}
-                />
-              )}
-            </>
-          )}
+        {/* Results count */}
+        <div className="mb-4">
+          <p className="text-sm text-gray-600">
+            {filteredCredentials.length}{" "}
+            {filteredCredentials.length === 1 ? "account" : "accounts"}
+          </p>
         </div>
-      </div>
 
-      <DashboardAddCredentialDialog
-        open={addDialogOpen}
-        onOpenChange={setAddDialogOpen}
-      />
-    </HydrationBoundary>
+        {/* Content */}
+        {filteredCredentials.length === 0 ? (
+          <div className="py-12 text-center">
+            <div className="mb-4 text-gray-400">
+              <Icons.grid className="mx-auto h-12 w-12" />
+            </div>
+            <h3 className="mb-2 text-lg font-medium text-gray-900">
+              No accounts found
+            </h3>
+            <p className="mb-4 text-gray-600">
+              Try adjusting your search or filter criteria
+            </p>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setSearchTerm("")
+                setStatusFilter("all")
+                setPlatformFilter("all")
+              }}
+            >
+              Clear filters
+            </Button>
+          </div>
+        ) : (
+          <>
+            {viewMode === "list" ? (
+              <DashboardAccountListView
+                credentials={filteredCredentials}
+                platforms={platforms}
+              />
+            ) : (
+              <DashboardAccountGridView
+                credentials={filteredCredentials}
+                platforms={platforms}
+              />
+            )}
+          </>
+        )}
+      </div>
+    </div>
   )
 }

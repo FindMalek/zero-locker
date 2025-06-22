@@ -1,16 +1,10 @@
 "use client"
 
-import { AccountStatus } from "@prisma/client"
-import { Search } from "lucide-react"
+import type { SortDirection, SortField, ViewMode } from "@/types/common"
 
+import { DashboardAccountsDisplay } from "@/components/app/dashboard-accounts-display"
+import { Icons } from "@/components/shared/icons"
 import { Input } from "@/components/ui/input"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
 
 interface EntityFiltersProps {
   searchTerm: string
@@ -20,6 +14,13 @@ interface EntityFiltersProps {
   platformFilter: string
   onPlatformFilterChange: (value: string) => void
   platforms: string[]
+  viewMode: ViewMode
+  onViewModeChange: (mode: ViewMode) => void
+  sortField: SortField | null
+  sortDirection: SortDirection
+  onSortChange: (field: SortField) => void
+  showArchived?: boolean
+  onShowArchivedChange?: (show: boolean) => void
 }
 
 export function DashboardAccountsFilters({
@@ -30,12 +31,18 @@ export function DashboardAccountsFilters({
   platformFilter,
   onPlatformFilterChange,
   platforms,
+  viewMode,
+  onViewModeChange,
+  sortField,
+  sortDirection,
+  onSortChange,
+  showArchived,
+  onShowArchivedChange,
 }: EntityFiltersProps) {
   return (
     <div className="mb-6 flex flex-col gap-4 sm:flex-row">
-      {/* Search */}
       <div className="relative flex-1">
-        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-gray-400" />
+        <Icons.search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-gray-400" />
         <Input
           placeholder="Search by identifier or description..."
           value={searchTerm}
@@ -44,33 +51,15 @@ export function DashboardAccountsFilters({
         />
       </div>
 
-      {/* Status filter */}
-      <Select value={statusFilter} onValueChange={onStatusFilterChange}>
-        <SelectTrigger className="w-full sm:w-[180px]">
-          <SelectValue placeholder="Filter by status" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">All Statuses</SelectItem>
-          <SelectItem value={AccountStatus.ACTIVE}>Active</SelectItem>
-          <SelectItem value={AccountStatus.SUSPENDED}>Suspended</SelectItem>
-          <SelectItem value={AccountStatus.DELETED}>Deleted</SelectItem>
-        </SelectContent>
-      </Select>
-
-      {/* Platform filter */}
-      <Select value={platformFilter} onValueChange={onPlatformFilterChange}>
-        <SelectTrigger className="w-full sm:w-[180px]">
-          <SelectValue placeholder="Filter by platform" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">All Platforms</SelectItem>
-          {platforms.map((platform) => (
-            <SelectItem key={platform} value={platform}>
-              {platform}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      <DashboardAccountsDisplay
+        viewMode={viewMode}
+        onViewModeChange={onViewModeChange}
+        sortField={sortField}
+        sortDirection={sortDirection}
+        onSortChange={onSortChange}
+        showArchived={showArchived}
+        onShowArchivedChange={onShowArchivedChange}
+      />
     </div>
   )
 }
