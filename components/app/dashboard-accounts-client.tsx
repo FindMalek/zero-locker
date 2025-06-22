@@ -10,8 +10,7 @@ import type { ListPlatformsOutput } from "@/schemas/utils/dto"
 import { DashboardAccountGridView } from "@/components/app/dashboard-account-grid-view"
 import { DashboardAccountListView } from "@/components/app/dashboard-account-list-view"
 import { DashboardAccountsHeader } from "@/components/app/dashboard-accounts-header"
-import { Icons } from "@/components/shared/icons"
-import { Button } from "@/components/ui/button"
+import { EmptyState } from "@/components/shared/empty-state"
 
 interface AccountsClientProps {
   initialData: {
@@ -198,20 +197,12 @@ export function DashboardAccountsClient({ initialData }: AccountsClientProps) {
 
         {/* Content */}
         {filteredCredentials.length === 0 ? (
-          <div className="py-12 text-center">
-            <div className="mb-4 text-gray-400">
-              <Icons.grid className="mx-auto h-12 w-12" />
-            </div>
-            <h3 className="mb-2 text-lg font-medium text-gray-900">
-              No accounts found
-            </h3>
-            <p className="mb-4 text-gray-600">
-              Try adjusting your search or filter criteria
-            </p>
-            <Button variant="outline" onClick={clearAllFilters}>
-              Clear filters
-            </Button>
-          </div>
+          <EmptyState
+            title="No accounts found"
+            description="Try adjusting your search or filter criteria"
+            actionLabel="Clear filters"
+            onAction={clearAllFilters}
+          />
         ) : (
           <>
             {viewMode === "list" ? (
