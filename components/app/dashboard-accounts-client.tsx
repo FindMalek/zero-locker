@@ -73,10 +73,14 @@ export function DashboardAccountsClient({ initialData }: AccountsClientProps) {
     return credentialsData?.credentials || []
   }, [credentialsData?.credentials])
 
-  const platformNames = useMemo(() => {
-    return Array.from(
-      new Set(platforms.map((platform) => platform.name))
-    ).sort()
+  const uniquePlatforms = useMemo(() => {
+    const platformMap = new Map()
+    platforms.forEach((platform) => {
+      if (!platformMap.has(platform.name)) {
+        platformMap.set(platform.name, platform)
+      }
+    })
+    return Array.from(platformMap.values()).sort((a, b) => a.name.localeCompare(b.name))
   }, [platforms])
 
   const filteredCredentials = useMemo(() => {
@@ -116,7 +120,7 @@ export function DashboardAccountsClient({ initialData }: AccountsClientProps) {
           onToggleStatusFilter={toggleStatusFilter}
           platformFilters={platformFilters}
           onTogglePlatformFilter={togglePlatformFilter}
-          platforms={platformNames}
+          platforms={uniquePlatforms}
           onClearFilters={clearAllFilters}
           viewMode={viewMode}
           onViewModeChange={setViewMode}

@@ -3,6 +3,7 @@
 import { CredentialEntity } from "@/entities"
 import { accountStatusEnum } from "@/schemas/credential"
 import type { SortDirection, SortField, ViewMode } from "@/schemas/utils"
+import type { PlatformSimpleRo } from "@/schemas/utils/platform"
 import { Globe, Tag } from "lucide-react"
 
 import {
@@ -24,7 +25,7 @@ interface EntityFiltersProps {
   onToggleStatusFilter: (status: string) => void
   platformFilters: string[]
   onTogglePlatformFilter: (platform: string) => void
-  platforms: string[]
+  platforms: PlatformSimpleRo[]
   onClearFilters: () => void
   viewMode: ViewMode
   onViewModeChange: (mode: ViewMode) => void
@@ -86,8 +87,9 @@ export function DashboardAccountsHeader({
       "Platform",
       Globe,
       platforms.map((platform) => ({
-        value: platform,
-        label: platform,
+        value: platform.name,
+        label: platform.name,
+        logo: platform.logo || undefined,
       })),
       platformFilters,
       onTogglePlatformFilter,

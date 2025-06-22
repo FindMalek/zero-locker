@@ -12,12 +12,15 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover"
 import { Separator } from "@/components/ui/separator"
+import Image from "next/image"
+import { getLogoDevUrlWithToken, getPlaceholderImage } from "@/lib/utils"
 
 type FilterView = "main" | string
 
 export interface FilterOption {
   value: string
   label: string
+  logo?: string
 }
 
 export interface FilterConfig {
@@ -70,6 +73,7 @@ export function DashboardMultiFilters({
       label: string
       value: string
       filterId: string
+      logo?: string
     }> = []
 
     filters.forEach((filter) => {
@@ -81,6 +85,7 @@ export function DashboardMultiFilters({
             label: option.label,
             value: value,
             filterId: filter.id,
+            logo: option.logo,
           })
         }
       })
@@ -179,7 +184,23 @@ export function DashboardMultiFilters({
               variant={isSelected ? "outline" : "secondary"}
               className="flex w-full items-center justify-between p-3"
             >
-              <span className="text-sm font-medium">{option.label}</span>
+              <div className="flex items-center gap-2">
+                {option.logo && (
+                  <Image
+                    src={
+                      getPlaceholderImage(
+                        option.label,
+                        getLogoDevUrlWithToken(option.logo || null)
+                      )
+                    }
+                    alt={`${option.label} logo`}
+                    width={16}
+                    height={16}
+                    className="h-4 w-4 rounded-sm object-contain"
+                  />
+                )}
+                <span className="text-sm font-medium">{option.label}</span>
+              </div>
               {isSelected && <Icons.check className="text-primary h-4 w-4" />}
             </Button>
           )
@@ -203,6 +224,7 @@ export function DashboardMultiFilters({
               <Badge
                 key={`${filter.filterId}-${filter.value}-${index}`}
                 variant="info"
+                className="flex items-center gap-1"
               >
                 {filter.label}
                 <button
