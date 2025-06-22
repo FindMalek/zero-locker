@@ -1,6 +1,7 @@
 "use client"
 
 import type React from "react"
+import Image from "next/image"
 import {
   ArrowDown,
   ArrowUp,
@@ -12,7 +13,7 @@ import {
 
 import type { SortDirection, SortField } from "@/types/common"
 import type { Entity } from "@/types/entity"
-import Image from "next/image"
+
 import { formatDate } from "@/lib/date-utils"
 
 import { StatusBadge } from "@/components/shared/status-badge"
@@ -117,7 +118,6 @@ export function EntityListView({
                           size={20}
                           showLabel={false}
                         />
-                      
                       </TooltipTrigger>
                       <TooltipContent>
                         <p>{entity.platform}</p>
