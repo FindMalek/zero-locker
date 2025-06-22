@@ -1,6 +1,6 @@
+import { Icons } from "@/components/shared/icons"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { Icons } from "@/components/shared/icons"
 
 interface EmptyStateProps {
   icon?: React.ComponentType<{ className?: string }>
@@ -20,15 +20,13 @@ export function EmptyState({
   return (
     <Card className="border-2 border-dashed">
       <CardContent className="py-12 text-center">
-        <div className="mb-4 text-muted-foreground">
+        <div className="text-muted-foreground mb-4">
           <Icon className="mx-auto h-12 w-12" />
         </div>
-        <h3 className="mb-2 text-lg font-medium text-muted-foreground">
+        <h3 className="text-muted-foreground mb-2 text-lg font-medium">
           {title}
         </h3>
-        <p className="mb-4 text-muted-foreground">
-          {description}
-        </p>
+        <p className="text-muted-foreground mb-4">{description}</p>
         {actionLabel && onAction && (
           <Button variant="outline" onClick={onAction}>
             {actionLabel}
@@ -37,4 +35,4 @@ export function EmptyState({
       </CardContent>
     </Card>
   )
-} 
+}
