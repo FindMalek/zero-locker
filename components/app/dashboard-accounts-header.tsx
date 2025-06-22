@@ -1,9 +1,19 @@
 "use client"
 
+import { CredentialEntity } from "@/entities"
+import { accountStatusEnum } from "@/schemas/credential"
 import type { SortDirection, SortField, ViewMode } from "@/schemas/utils"
+import { Globe, Tag } from "lucide-react"
 
-import { DashboardAccountsDisplay } from "@/components/app/dashboard-accounts-display"
-import { DashboardAccountsFilters } from "@/components/app/dashboard-accounts-filters"
+import {
+  createFilterConfig,
+  DashboardMultiFilters,
+} from "@/components/shared/dashboard-multi-filters"
+import {
+  DashboardViewControls,
+  type DisplayProperty,
+  type SortOption,
+} from "@/components/shared/dashboard-view-controls"
 import { Icons } from "@/components/shared/icons"
 import { Input } from "@/components/ui/input"
 
@@ -42,10 +52,105 @@ export function DashboardAccountsHeader({
   showArchived,
   onShowArchivedChange,
 }: EntityFiltersProps) {
+  const filters = [
+    createFilterConfig(
+      "status",
+      "Status",
+      Tag,
+      [
+        {
+          value: accountStatusEnum.ACTIVE,
+          label: CredentialEntity.convertAccountStatusToString(
+            accountStatusEnum.ACTIVE
+          ),
+        },
+        {
+          value: accountStatusEnum.SUSPENDED,
+          label: CredentialEntity.convertAccountStatusToString(
+            accountStatusEnum.SUSPENDED
+          ),
+        },
+        {
+          value: accountStatusEnum.DELETED,
+          label: CredentialEntity.convertAccountStatusToString(
+            accountStatusEnum.DELETED
+          ),
+        },
+      ],
+      statusFilters,
+      onToggleStatusFilter,
+      3
+    ),
+    createFilterConfig(
+      "platform",
+      "Platform",
+      Globe,
+      platforms.map((platform) => ({
+        value: platform,
+        label: platform,
+      })),
+      platformFilters,
+      onTogglePlatformFilter,
+      platforms.length
+    ),
+  ]
+
+  const sortOptions: SortOption[] = [
+    { field: "identifier", label: "Identifier" },
+    { field: "status", label: "Status" },
+    { field: "lastViewed", label: "Last Viewed" },
+    { field: "createdAt", label: "Date Created" },
+  ]
+
+  const displayProperties: DisplayProperty[] = [
+    {
+      id: "identifier",
+      label: "Identifier",
+      enabled: true,
+      onChange: () => {},
+    },
+    {
+      id: "description",
+      label: "Description",
+      enabled: true,
+      onChange: () => {},
+    },
+    {
+      id: "status",
+      label: "Status",
+      enabled: true,
+      onChange: () => {},
+    },
+    {
+      id: "password",
+      label: "Password",
+      enabled: true,
+      onChange: () => {},
+    },
+    {
+      id: "lastViewed",
+      label: "Last Viewed",
+      enabled: true,
+      onChange: () => {},
+    },
+    {
+      id: "createdAt",
+      label: "Created Date",
+      enabled: true,
+      onChange: () => {},
+    },
+    {
+      id: "platform",
+      label: "Platform",
+      enabled: true,
+      onChange: () => {},
+    },
+  ]
+
   return (
     <div className="mb-6 flex flex-col gap-4 sm:flex-row">
       <div className="relative flex-1">
-        <Icons.search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-4 transform text-gray-400" />
+        <Icons.search className="text-muted-foreground absolute left-3 top-1/2 size-4 -translate-y-1/2 transform" />
         <Input
           placeholder="Search by identifier or description..."
           value={searchTerm}
@@ -54,23 +159,19 @@ export function DashboardAccountsHeader({
         />
       </div>
 
-      <DashboardAccountsFilters
-        statusFilters={statusFilters}
-        onToggleStatusFilter={onToggleStatusFilter}
-        platformFilters={platformFilters}
-        onTogglePlatformFilter={onTogglePlatformFilter}
-        platforms={platforms}
-        onClearFilters={onClearFilters}
-      />
+      <DashboardMultiFilters filters={filters} onClearAll={onClearFilters} />
 
-      <DashboardAccountsDisplay
+      <DashboardViewControls
         viewMode={viewMode}
         onViewModeChange={onViewModeChange}
         sortField={sortField}
-        sortDirection={sortDirection}
-        onSortChange={onSortChange}
+        sortDirection={sortDirection || "asc"}
+        onSortChange={(field) => onSortChange(field as SortField)}
+        sortOptions={sortOptions}
         showArchived={showArchived}
         onShowArchivedChange={onShowArchivedChange}
+        archivedLabel="Show archived accounts"
+        displayProperties={displayProperties}
       />
     </div>
   )

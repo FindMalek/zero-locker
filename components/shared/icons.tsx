@@ -33,6 +33,7 @@ import {
   EyeIcon,
   File,
   FileText,
+  Filter,
   Folder,
   GithubIcon,
   GlobeIcon,
@@ -126,6 +127,7 @@ export const Icons = {
   close: X,
   up: ArrowUp,
   down: ArrowDown,
+  right: ChevronRight,
   spinner: Loader2,
   chevronLeft: ChevronLeft,
   chevronRight: ChevronRight,
@@ -226,6 +228,7 @@ export const Icons = {
   list: ListIcon,
   eye: EyeIcon,
   view: StretchHorizontalIcon,
+  filter: Filter,
 }
 
 export const getEntityIcon = (itemType: RecentItemType) => {

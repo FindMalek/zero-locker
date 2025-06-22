@@ -26,7 +26,7 @@ export function DashboardAccountsClient({ initialData }: AccountsClientProps) {
   const [statusFilters, setStatusFilters] = useState<string[]>([])
   const [platformFilters, setPlatformFilters] = useState<string[]>([])
   const [sortField, setSortField] = useState<SortField | null>(null)
-  const [sortDirection, setSortDirection] = useState<SortDirection>("asc")
+  const [sortDirection] = useState<SortDirection>("asc")
   const [showArchived, setShowArchived] = useState(false)
 
   // Toggle functions for multiselect filters
