@@ -62,6 +62,9 @@ The format would be:
       And use the `QueryClientProvider` to provide the `QueryClient` to the app.
       And use the `useQuery` hook to fetch the data.
 
+- [ ] Add a `Initialization Vector` page
+      Showcase a list of all the `Initialization Vector`s in the database.
+
 ### Finished Tasks
 
 - [x] Change return types of the Server Actions || High

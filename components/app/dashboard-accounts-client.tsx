@@ -4,13 +4,12 @@ import { useMemo, useState } from "react"
 import { useCredentials } from "@/orpc/hooks/use-credentials"
 import { usePlatforms } from "@/orpc/hooks/use-platforms"
 import type { ListCredentialsOutput } from "@/schemas/credential/dto"
+import type { SortDirection, SortField, ViewMode } from "@/schemas/utils"
 import type { ListPlatformsOutput } from "@/schemas/utils/dto"
-
-import type { SortDirection, SortField, ViewMode } from "@/types/common"
 
 import { DashboardAccountGridView } from "@/components/app/dashboard-account-grid-view"
 import { DashboardAccountListView } from "@/components/app/dashboard-account-list-view"
-import { DashboardAccountsFilters } from "@/components/app/dashboard-accounts-filters"
+import { DashboardAccountsHeader } from "@/components/app/dashboard-accounts-header"
 import { Icons } from "@/components/shared/icons"
 import { Button } from "@/components/ui/button"
 
@@ -24,11 +23,34 @@ interface AccountsClientProps {
 export function DashboardAccountsClient({ initialData }: AccountsClientProps) {
   const [viewMode, setViewMode] = useState<ViewMode>("list")
   const [searchTerm, setSearchTerm] = useState("")
-  const [statusFilter, setStatusFilter] = useState("all")
-  const [platformFilter, setPlatformFilter] = useState("all")
+  const [statusFilters, setStatusFilters] = useState<string[]>([])
+  const [platformFilters, setPlatformFilters] = useState<string[]>([])
   const [sortField, setSortField] = useState<SortField | null>(null)
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc")
   const [showArchived, setShowArchived] = useState(false)
+
+  // Toggle functions for multiselect filters
+  const toggleStatusFilter = (status: string) => {
+    setStatusFilters((prev) =>
+      prev.includes(status)
+        ? prev.filter((s) => s !== status)
+        : [...prev, status]
+    )
+  }
+
+  const togglePlatformFilter = (platform: string) => {
+    setPlatformFilters((prev) =>
+      prev.includes(platform)
+        ? prev.filter((p) => p !== platform)
+        : [...prev, platform]
+    )
+  }
+
+  const clearAllFilters = () => {
+    setSearchTerm("")
+    setStatusFilters([])
+    setPlatformFilters([])
+  }
 
   const { data: credentialsData } = useCredentials(
     { page: 1, limit: 50 },
@@ -70,29 +92,32 @@ export function DashboardAccountsClient({ initialData }: AccountsClientProps) {
             .includes(searchTerm.toLowerCase()))
 
       const matchesStatus =
-        statusFilter === "all" || credential.status === statusFilter
+        statusFilters.length === 0 || statusFilters.includes(credential.status)
 
       const credentialPlatform = platforms.find(
         (p) => p.id === credential.platformId
       )
       const matchesPlatform =
-        platformFilter === "all" || credentialPlatform?.name === platformFilter
+        platformFilters.length === 0 ||
+        (credentialPlatform &&
+          platformFilters.includes(credentialPlatform.name))
 
       return matchesSearch && matchesStatus && matchesPlatform
     })
-  }, [credentials, platforms, searchTerm, statusFilter, platformFilter])
+  }, [credentials, platforms, searchTerm, statusFilters, platformFilters])
 
   return (
     <div className="min-h-screen">
       <div className="mx-auto max-w-7xl p-6">
-        <DashboardAccountsFilters
+        <DashboardAccountsHeader
           searchTerm={searchTerm}
           onSearchChange={setSearchTerm}
-          statusFilter={statusFilter}
-          onStatusFilterChange={setStatusFilter}
-          platformFilter={platformFilter}
-          onPlatformFilterChange={setPlatformFilter}
+          statusFilters={statusFilters}
+          onToggleStatusFilter={toggleStatusFilter}
+          platformFilters={platformFilters}
+          onTogglePlatformFilter={togglePlatformFilter}
           platforms={platformNames}
+          onClearFilters={clearAllFilters}
           viewMode={viewMode}
           onViewModeChange={setViewMode}
           sortField={sortField}
@@ -122,14 +147,7 @@ export function DashboardAccountsClient({ initialData }: AccountsClientProps) {
             <p className="mb-4 text-gray-600">
               Try adjusting your search or filter criteria
             </p>
-            <Button
-              variant="outline"
-              onClick={() => {
-                setSearchTerm("")
-                setStatusFilter("all")
-                setPlatformFilter("all")
-              }}
-            >
+            <Button variant="outline" onClick={clearAllFilters}>
               Clear filters
             </Button>
           </div>

@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import type { SortDirection, SortField, ViewMode } from "@/schemas/utils"
 
 import { Icons } from "@/components/shared/icons"
 import { Button } from "@/components/ui/button"
@@ -11,8 +12,6 @@ import {
 } from "@/components/ui/popover"
 import { Separator } from "@/components/ui/separator"
 import { Switch } from "@/components/ui/switch"
-
-import type { SortDirection, SortField, ViewMode } from "../../types/common"
 
 interface DisplayProperty {
   id: string
@@ -95,7 +94,7 @@ export function DashboardAccountsDisplay({
           <Icons.chevronDown className="ml-2 h-4 w-4" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-80 p-0" align="end">
+      <PopoverContent className="w-80 p-0 " align="end">
         <div className="space-y-4 p-4">
           {/* View Mode */}
           <div className="space-y-3">
@@ -186,7 +185,7 @@ export function DashboardAccountsDisplay({
                   variant={property.enabled ? "outline" : "secondary"}
                   size="sm"
                   onClick={() => toggleDisplayProperty(property.id)}
-                  className={`flex items-center justify-between rounded border p-2 text-xs transition-all duration-200 hover:bg-gray-50`}
+                  className={`flex items-center justify-between rounded border p-2 text-xs`}
                 >
                   <span className="font-medium">{property.label}</span>
                   {property.enabled && (
