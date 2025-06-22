@@ -15,6 +15,7 @@ import type { SortDirection, SortField } from "@/types/common"
 import type { Entity } from "@/types/entity"
 
 import { formatDate } from "@/lib/date-utils"
+import { getLogoDevUrlWithToken, getPlaceholderImage } from "@/lib/utils"
 
 import { StatusBadge } from "@/components/shared/status-badge"
 import { Button } from "@/components/ui/button"
@@ -113,10 +114,15 @@ export function EntityListView({
                   <div className="flex items-center gap-3">
                     <Tooltip>
                       <TooltipTrigger>
-                        <PlatformLogo
-                          platform={entity.platform}
-                          size={20}
-                          showLabel={false}
+                        <Image
+                          src={getPlaceholderImage(
+                            entity.platform,
+                            getLogoDevUrlWithToken(entity.platformLogo)
+                          )}
+                          alt={`${entity.platform} logo`}
+                          width={16}
+                          height={16}
+                          className="h-4 w-4 rounded-sm object-contain"
                         />
                       </TooltipTrigger>
                       <TooltipContent>

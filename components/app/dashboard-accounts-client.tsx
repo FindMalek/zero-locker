@@ -26,7 +26,7 @@ export function DashboardAccountsClient({ initialData }: AccountsClientProps) {
   const [statusFilters, setStatusFilters] = useState<string[]>([])
   const [platformFilters, setPlatformFilters] = useState<string[]>([])
   const [sortField, setSortField] = useState<SortField | null>(null)
-  const [sortDirection] = useState<SortDirection>("asc")
+  const [sortDirection, setSortDirection] = useState<SortDirection>("asc")
   const [showArchived, setShowArchived] = useState(false)
 
   // Toggle functions for multiselect filters
@@ -50,6 +50,15 @@ export function DashboardAccountsClient({ initialData }: AccountsClientProps) {
     setSearchTerm("")
     setStatusFilters([])
     setPlatformFilters([])
+  }
+
+  const handleSortChange = (field: SortField) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc")
+    } else {
+      setSortField(field)
+      setSortDirection("asc")
+    }
   }
 
   const { data: credentialsData } = useCredentials(
@@ -80,11 +89,13 @@ export function DashboardAccountsClient({ initialData }: AccountsClientProps) {
         platformMap.set(platform.name, platform)
       }
     })
-    return Array.from(platformMap.values()).sort((a, b) => a.name.localeCompare(b.name))
+    return Array.from(platformMap.values()).sort((a, b) =>
+      a.name.localeCompare(b.name)
+    )
   }, [platforms])
 
   const filteredCredentials = useMemo(() => {
-    return credentials.filter((credential) => {
+    let filtered = credentials.filter((credential) => {
       const matchesSearch =
         searchTerm === "" ||
         credential.identifier
@@ -108,7 +119,53 @@ export function DashboardAccountsClient({ initialData }: AccountsClientProps) {
 
       return matchesSearch && matchesStatus && matchesPlatform
     })
-  }, [credentials, platforms, searchTerm, statusFilters, platformFilters])
+
+    if (sortField) {
+      filtered = filtered.sort((a, b) => {
+        let aValue: string | number | Date
+        let bValue: string | number | Date
+
+        switch (sortField) {
+          case "identifier":
+            aValue = a.identifier || ""
+            bValue = b.identifier || ""
+            break
+          case "status":
+            aValue = a.status || ""
+            bValue = b.status || ""
+            break
+          case "lastViewed":
+            aValue = a.lastViewed ? new Date(a.lastViewed) : new Date(0)
+            bValue = b.lastViewed ? new Date(b.lastViewed) : new Date(0)
+            break
+          case "createdAt":
+            aValue = new Date(a.createdAt)
+            bValue = new Date(b.createdAt)
+            break
+          default:
+            return 0
+        }
+
+        if (aValue < bValue) {
+          return sortDirection === "asc" ? -1 : 1
+        }
+        if (aValue > bValue) {
+          return sortDirection === "asc" ? 1 : -1
+        }
+        return 0
+      })
+    }
+
+    return filtered
+  }, [
+    credentials,
+    platforms,
+    searchTerm,
+    statusFilters,
+    platformFilters,
+    sortField,
+    sortDirection,
+  ])
 
   return (
     <div className="min-h-screen">
@@ -126,7 +183,7 @@ export function DashboardAccountsClient({ initialData }: AccountsClientProps) {
           onViewModeChange={setViewMode}
           sortField={sortField}
           sortDirection={sortDirection}
-          onSortChange={setSortField}
+          onSortChange={handleSortChange}
           showArchived={showArchived}
           onShowArchivedChange={setShowArchived}
         />

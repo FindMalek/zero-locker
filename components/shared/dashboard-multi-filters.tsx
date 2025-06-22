@@ -2,6 +2,9 @@
 
 import type React from "react"
 import { useState } from "react"
+import Image from "next/image"
+
+import { getLogoDevUrlWithToken, getPlaceholderImage } from "@/lib/utils"
 
 import { Icons } from "@/components/shared/icons"
 import { Badge } from "@/components/ui/badge"
@@ -12,8 +15,6 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover"
 import { Separator } from "@/components/ui/separator"
-import Image from "next/image"
-import { getLogoDevUrlWithToken, getPlaceholderImage } from "@/lib/utils"
 
 type FilterView = "main" | string
 
@@ -187,12 +188,10 @@ export function DashboardMultiFilters({
               <div className="flex items-center gap-2">
                 {option.logo && (
                   <Image
-                    src={
-                      getPlaceholderImage(
-                        option.label,
-                        getLogoDevUrlWithToken(option.logo || null)
-                      )
-                    }
+                    src={getPlaceholderImage(
+                      option.label,
+                      getLogoDevUrlWithToken(option.logo || null)
+                    )}
                     alt={`${option.label} logo`}
                     width={16}
                     height={16}
