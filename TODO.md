@@ -49,6 +49,10 @@ The format would be:
 - [ ] Use services instead of `lib` files
       We should create a new folder called `services` and move all the functions that are not related to the database to this folder.
 
+- [ ] Credential, Secrets and Cards sharing
+      WE will have an ability to share links or QR code for this
+      with a shorten link with dub.co maybe
+
 ### Finished Tasks
 
 - [x] Change return types of the Server Actions || High

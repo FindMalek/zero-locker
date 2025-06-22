@@ -5,6 +5,7 @@ import type { PlatformSimpleRo } from "@/schemas/utils/platform"
 import { AccountStatus } from "@prisma/client"
 import { format } from "date-fns"
 
+import { Icons } from "@/components/shared/icons"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
@@ -14,7 +15,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import {Icons} from "@/components/shared/icons"
 
 interface AccountGridViewProps {
   credentials: CredentialOutput[]

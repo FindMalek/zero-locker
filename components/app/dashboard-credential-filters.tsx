@@ -1,8 +1,8 @@
 "use client"
 
-import { AccountStatus } from "@prisma/client"
-import { Search } from "lucide-react"
-
+import { CredentialEntity } from "@/entities/credential/credential"
+import { LIST_ACCOUNT_STATUSES } from "@/schemas/credential"
+import {Icons} from "@/components/shared/icons"
 import { Input } from "@/components/ui/input"
 import {
   Select,
@@ -22,7 +22,7 @@ interface EntityFiltersProps {
   platforms: string[]
 }
 
-export function DashboardAccountsFilters({
+export function DashboardCredentialFilters({
   searchTerm,
   onSearchChange,
   statusFilter,
@@ -33,9 +33,8 @@ export function DashboardAccountsFilters({
 }: EntityFiltersProps) {
   return (
     <div className="mb-6 flex flex-col gap-4 sm:flex-row">
-      {/* Search */}
       <div className="relative flex-1">
-        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-gray-400" />
+        <Icons.search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-muted" />
         <Input
           placeholder="Search by identifier or description..."
           value={searchTerm}
@@ -44,20 +43,20 @@ export function DashboardAccountsFilters({
         />
       </div>
 
-      {/* Status filter */}
       <Select value={statusFilter} onValueChange={onStatusFilterChange}>
         <SelectTrigger className="w-full sm:w-[180px]">
           <SelectValue placeholder="Filter by status" />
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="all">All Statuses</SelectItem>
-          <SelectItem value={AccountStatus.ACTIVE}>Active</SelectItem>
-          <SelectItem value={AccountStatus.SUSPENDED}>Suspended</SelectItem>
-          <SelectItem value={AccountStatus.DELETED}>Deleted</SelectItem>
+          {LIST_ACCOUNT_STATUSES.map((status) => (
+            <SelectItem key={status} value={status}>
+              {CredentialEntity.convertAccountStatusToString(status)}
+            </SelectItem>
+          ))}
         </SelectContent>
       </Select>
 
-      {/* Platform filter */}
       <Select value={platformFilter} onValueChange={onPlatformFilterChange}>
         <SelectTrigger className="w-full sm:w-[180px]">
           <SelectValue placeholder="Filter by platform" />

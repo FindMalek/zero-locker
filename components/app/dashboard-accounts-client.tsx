@@ -15,8 +15,8 @@ import { DashboardAccountGridView } from "@/components/app/dashboard-account-gri
 import { DashboardAccountListView } from "@/components/app/dashboard-account-list-view"
 import { DashboardAccountsFilters } from "@/components/app/dashboard-accounts-filters"
 import { DashboardAddCredentialDialog } from "@/components/app/dashboard-add-credential-dialog"
+import { Icons } from "@/components/shared/icons"
 import { Button } from "@/components/ui/button"
-import {Icons} from "@/components/shared/icons"
 
 type ViewMode = "list" | "grid"
 

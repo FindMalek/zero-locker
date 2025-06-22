@@ -223,7 +223,7 @@ export const Icons = {
   logs: LogsIcon,
   grid: Grid3X3Icon,
   list: ListIcon,
-  eye: EyeIcon
+  eye: EyeIcon,
 }
 
 export const getEntityIcon = (itemType: RecentItemType) => {
