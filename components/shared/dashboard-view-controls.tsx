@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import type React from "react"
+import type { SortDirection, ViewMode } from "@/schemas/utils"
 
 import { Icons } from "@/components/shared/icons"
 import { Button } from "@/components/ui/button"
@@ -12,9 +13,6 @@ import {
 } from "@/components/ui/popover"
 import { Separator } from "@/components/ui/separator"
 import { Switch } from "@/components/ui/switch"
-
-export type ViewMode = "grid" | "list"
-export type SortDirection = "asc" | "desc"
 
 export interface DisplayProperty {
   id: string
@@ -61,8 +59,8 @@ export interface DashboardViewControlsProps {
 }
 
 const defaultViewModeOptions: ViewModeOption[] = [
-  { mode: "grid", label: "Cards", icon: Icons.grid },
-  { mode: "list", label: "Rows", icon: Icons.list },
+  { mode: "cards", label: "Cards", icon: Icons.grid },
+  { mode: "rows", label: "Rows", icon: Icons.list },
 ]
 
 export function DashboardViewControls({

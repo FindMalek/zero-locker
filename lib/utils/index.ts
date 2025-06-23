@@ -355,3 +355,31 @@ export function parseKeyValuePairs(text: string): KeyValuePair[] {
     })
     .filter((pair) => pair.key && pair.value)
 }
+
+export function getRelativeTime(date: Date | null) {
+  if (!date) return "Never"
+
+  const now = new Date()
+  const diffInMs = now.getTime() - date.getTime()
+  const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24))
+
+  if (diffInDays === 0) return "Today"
+  if (diffInDays === 1) return "Yesterday"
+  if (diffInDays < 7) return `${diffInDays}d ago`
+  if (diffInDays < 30) return `${Math.floor(diffInDays / 7)}w ago`
+  if (diffInDays < 365) return `${Math.floor(diffInDays / 30)}mo ago`
+  return `${Math.floor(diffInDays / 365)}y ago`
+}
+
+export function getCreatedOrLastViewedText(
+  date: Date | null,
+  lastViewed: boolean
+) {
+  if (!date)
+    return `Created ${getRelativeTime(new Date()).toLowerCase()} at ${formatDate(new Date())}`
+
+  if (!lastViewed)
+    return `Created ${getRelativeTime(date).toLowerCase()} at ${formatDate(date)}`
+
+  return `Last seen ${getRelativeTime(date).toLowerCase()} on ${formatDate(date)}`
+}

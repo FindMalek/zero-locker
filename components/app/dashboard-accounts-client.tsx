@@ -7,8 +7,8 @@ import type { ListCredentialsOutput } from "@/schemas/credential/dto"
 import type { SortDirection, SortField, ViewMode } from "@/schemas/utils"
 import type { ListPlatformsOutput } from "@/schemas/utils/dto"
 
+import { DashboardAccountCardsView } from "@/components/app/dashboard-account-cards-view"
 import { DashboardAccountGridView } from "@/components/app/dashboard-account-grid-view"
-import { DashboardAccountListView } from "@/components/app/dashboard-account-list-view"
 import { DashboardAccountsHeader } from "@/components/app/dashboard-accounts-header"
 import { EmptyState } from "@/components/shared/empty-state"
 
@@ -20,7 +20,7 @@ interface AccountsClientProps {
 }
 
 export function DashboardAccountsClient({ initialData }: AccountsClientProps) {
-  const [viewMode, setViewMode] = useState<ViewMode>("list")
+  const [viewMode, setViewMode] = useState<ViewMode>("cards")
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilters, setStatusFilters] = useState<string[]>([])
   const [platformFilters, setPlatformFilters] = useState<string[]>([])
@@ -187,7 +187,6 @@ export function DashboardAccountsClient({ initialData }: AccountsClientProps) {
           onShowArchivedChange={setShowArchived}
         />
 
-        {/* Results count */}
         <div className="mb-4">
           <p className="text-sm text-gray-600">
             {filteredCredentials.length}{" "}
@@ -195,7 +194,6 @@ export function DashboardAccountsClient({ initialData }: AccountsClientProps) {
           </p>
         </div>
 
-        {/* Content */}
         {filteredCredentials.length === 0 ? (
           <EmptyState
             title="No accounts found"
@@ -205,8 +203,8 @@ export function DashboardAccountsClient({ initialData }: AccountsClientProps) {
           />
         ) : (
           <>
-            {viewMode === "list" ? (
-              <DashboardAccountListView
+            {viewMode === "cards" ? (
+              <DashboardAccountCardsView
                 credentials={filteredCredentials}
                 platforms={platforms}
               />
