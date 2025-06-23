@@ -44,5 +44,7 @@ export type DeleteCredentialInput = z.infer<typeof deleteCredentialInputSchema>
 export type ListCredentialsInput = z.infer<typeof listCredentialsInputSchema>
 
 export type CredentialOutput = z.infer<typeof credentialOutputSchema>
-export type CredentialIncludeOutput = z.infer<typeof credentialIncludeOutputSchema>
+export type CredentialIncludeOutput = z.infer<
+  typeof credentialIncludeOutputSchema
+>
 export type ListCredentialsOutput = z.infer<typeof listCredentialsOutputSchema>

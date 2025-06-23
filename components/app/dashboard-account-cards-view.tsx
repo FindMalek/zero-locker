@@ -26,6 +26,8 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 
+import { TagDisplay } from "../shared/tag-display"
+
 interface CredentialListViewProps {
   credentials: CredentialIncludeOutput[]
   platforms: PlatformSimpleRo[]
@@ -50,8 +52,6 @@ export function DashboardAccountCardsView({
       {credentials.map((credential) => {
         const platform = getPlatform(credential.platformId)
         const primaryDate = credential.lastViewed || credential.createdAt
-
-        const tags = credential.tags.map((tag) => tag.name).join(", ")
 
         return (
           <div
@@ -110,6 +110,8 @@ export function DashboardAccountCardsView({
                 </TooltipContent>
               </Tooltip>
             </div>
+
+            <TagDisplay tags={credential.tags} size="sm" />
 
             <StatusBadge status={credential.status} compact />
 

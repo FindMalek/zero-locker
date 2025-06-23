@@ -1,3 +1,4 @@
+import { TagEntity } from "@/entities/utils"
 import {
   accountStatusEnum,
   AccountStatusInfer,
@@ -6,8 +7,10 @@ import {
 } from "@/schemas/credential"
 import { AccountStatus } from "@prisma/client"
 
-import { TagEntity } from "@/entities/utils"
-import { CredentialEntitySimpleDbData , CredentialEntityIncludeDbData} from "./query"
+import {
+  CredentialEntityIncludeDbData,
+  CredentialEntitySimpleDbData,
+} from "./query"
 
 export class CredentialEntity {
   static getSimpleRo(entity: CredentialEntitySimpleDbData): CredentialSimpleRo {
@@ -34,7 +37,7 @@ export class CredentialEntity {
     return {
       ...this.getSimpleRo(entity),
       tags: entity.tags.map((tag) => TagEntity.getSimpleRo(tag)),
-    } 
+    }
   }
 
   static convertPrismaToAccountStatus(

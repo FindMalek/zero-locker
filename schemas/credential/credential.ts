@@ -55,7 +55,6 @@ export const credentialIncludeRoSchema = credentialSimpleRoSchema.extend({
 
 export type CredentialIncludeRo = z.infer<typeof credentialIncludeRoSchema>
 
-
 export const getCredentialByIdDtoSchema = z.object({
   id: z.string().min(1, "Credential ID is required"),
 })
