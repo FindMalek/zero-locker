@@ -1,5 +1,5 @@
 import { encryptedDataDtoSchema } from "@/schemas/encryption/encryption"
-import { tagDtoSchema } from "@/schemas/utils/tag"
+import { tagDtoSchema, tagSimpleRoSchema } from "@/schemas/utils/tag"
 import { AccountStatus } from "@prisma/client"
 import { z } from "zod"
 
@@ -48,6 +48,13 @@ export const credentialSimpleRoSchema = z.object({
 })
 
 export type CredentialSimpleRo = z.infer<typeof credentialSimpleRoSchema>
+
+export const credentialIncludeRoSchema = credentialSimpleRoSchema.extend({
+  tags: z.array(tagSimpleRoSchema),
+})
+
+export type CredentialIncludeRo = z.infer<typeof credentialIncludeRoSchema>
+
 
 export const getCredentialByIdDtoSchema = z.object({
   id: z.string().min(1, "Credential ID is required"),

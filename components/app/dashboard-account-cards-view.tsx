@@ -1,7 +1,7 @@
 "use client"
 
 import Image from "next/image"
-import type { CredentialOutput } from "@/schemas/credential/dto"
+import type { CredentialIncludeOutput } from "@/schemas/credential/dto"
 import type { PlatformSimpleRo } from "@/schemas/utils/platform"
 
 import {
@@ -27,7 +27,7 @@ import {
 } from "@/components/ui/tooltip"
 
 interface CredentialListViewProps {
-  credentials: CredentialOutput[]
+  credentials: CredentialIncludeOutput[]
   platforms: PlatformSimpleRo[]
 }
 
@@ -50,6 +50,8 @@ export function DashboardAccountCardsView({
       {credentials.map((credential) => {
         const platform = getPlatform(credential.platformId)
         const primaryDate = credential.lastViewed || credential.createdAt
+
+        const tags = credential.tags.map((tag) => tag.name).join(", ")
 
         return (
           <div

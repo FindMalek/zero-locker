@@ -1,4 +1,4 @@
-import { CredentialEntity } from "@/entities/credential/credential"
+import { CredentialEntity, CredentialQuery } from "@/entities/credential/credential"
 import { authMiddleware } from "@/middleware/auth"
 import { database } from "@/prisma/client"
 import {
@@ -84,13 +84,14 @@ export const listCredentials = authProcedure
         skip,
         take: limit,
         orderBy: { createdAt: "desc" },
+        include: {...CredentialQuery.getInclude()},
       }),
       database.credential.count({ where }),
     ])
 
     return {
       credentials: credentials.map((credential) =>
-        CredentialEntity.getSimpleRo(credential)
+        CredentialEntity.getRo(credential)
       ),
       total,
       hasMore: skip + credentials.length < total,
