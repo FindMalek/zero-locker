@@ -15,6 +15,7 @@ export const tagSimpleRoSchema = z.object({
   color: z.string(),
 
   userId: z.string().nullable(),
+  containerId: z.string().optional(),
 })
 
 export type TagSimpleRo = z.infer<typeof tagSimpleRoSchema>
