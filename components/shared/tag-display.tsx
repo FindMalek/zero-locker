@@ -80,7 +80,7 @@ function TagBadge({ tag, size = "sm" }: TagBadgeProps) {
       const b = Number.parseInt(color.slice(5, 7), 16)
       return `rgba(${r}, ${g}, ${b}, 0.1)`
     }
-    return color + "20"
+    return color + "50"
   }
 
   const backgroundColor = getLightBackground(color)
@@ -88,7 +88,7 @@ function TagBadge({ tag, size = "sm" }: TagBadgeProps) {
   return (
     <Badge
       variant="outline"
-      className={`border-0 font-medium transition-all duration-200 hover:scale-105 ${
+      className={`border-0 font-medium transition-all duration-200 ${
         size === "sm" ? "h-5 px-2 text-xs" : "h-6 px-2.5 text-sm"
       }`}
       style={{
