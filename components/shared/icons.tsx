@@ -77,6 +77,7 @@ import {
   Stethoscope,
   StretchHorizontalIcon,
   SunMedium,
+  TagIcon,
   ToggleRightIcon,
   Trash,
   TrendingDown,
@@ -157,9 +158,6 @@ export const Icons = {
   student: PencilIcon,
   teacher: UserCogIcon,
   monitor: Monitor,
-  lock: LockIcon,
-  puzzle: PuzzleIcon,
-  globe: GlobeIcon,
   databaseZap: DatabaseZapIcon,
   blog: BookImageIcon,
   graph: LineChartIcon,
@@ -229,6 +227,10 @@ export const Icons = {
   eye: EyeIcon,
   view: StretchHorizontalIcon,
   filter: Filter,
+  tag: TagIcon,
+  globe: GlobeIcon,
+  lock: LockIcon,
+  puzzle: PuzzleIcon,
 }
 
 export const getEntityIcon = (itemType: RecentItemType) => {

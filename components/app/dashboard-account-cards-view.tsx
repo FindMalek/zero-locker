@@ -10,6 +10,7 @@ import {
   getPlaceholderImage,
   getRelativeTime,
 } from "@/lib/utils"
+import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard"
 
 import { Icons } from "@/components/shared/icons"
 import { StatusBadge } from "@/components/shared/status-badge"
@@ -37,6 +38,10 @@ export function DashboardAccountCardsView({
   credentials,
   platforms,
 }: CredentialListViewProps) {
+  const { copy, isCopied } = useCopyToClipboard({
+    successDuration: 1000, // 1 second for the check icon
+  })
+
   const getPlatform = (platformId: string) => {
     return (
       platforms.find((p) => p.id === platformId) || {
@@ -45,6 +50,10 @@ export function DashboardAccountCardsView({
         logo: "",
       }
     )
+  }
+
+  const handleCopyIdentifier = async (identifier: string) => {
+    await copy(identifier)
   }
 
   return (
@@ -76,12 +85,29 @@ export function DashboardAccountCardsView({
               </TooltipContent>
             </Tooltip>
 
-            {/* Main Content */}
             <div className="min-w-0 flex-1">
               <div className="mb-1 flex items-center gap-2">
-                <h3 className="truncate text-sm font-semibold">
-                  {credential.identifier}
-                </h3>
+                <div className="group/identifier flex items-center gap-1">
+                  <h3
+                    className="hover:text-primary group-hover/identifier:text-primary cursor-pointer truncate text-sm font-semibold transition-colors"
+                    onClick={() => handleCopyIdentifier(credential.identifier)}
+                  >
+                    {credential.identifier}
+                  </h3>
+
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="hover:text-primary h-6 w-6 p-0 opacity-0 transition-all group-hover/identifier:opacity-100"
+                    onClick={() => handleCopyIdentifier(credential.identifier)}
+                  >
+                    {isCopied ? (
+                      <Icons.check className="h-3 w-3" />
+                    ) : (
+                      <Icons.copy className="h-3 w-3" />
+                    )}
+                  </Button>
+                </div>
               </div>
 
               {credential.description && (
