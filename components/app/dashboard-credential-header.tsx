@@ -6,12 +6,12 @@ import { PlatformOutput } from "@/schemas/utils/dto"
 
 import { getLogoDevUrlWithToken, getPlaceholderImage } from "@/lib/utils"
 import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard"
+import { useToast } from "@/hooks/use-toast"
 
 import { Icons } from "@/components/shared/icons"
 import { ItemActionsDropdown } from "@/components/shared/item-actions-dropdown"
 import { StatusBadge } from "@/components/shared/status-badge"
 import { Button } from "@/components/ui/button"
-import { Separator } from "@/components/ui/separator"
 
 interface CredentialHeaderProps {
   credential: CredentialOutput
@@ -24,67 +24,79 @@ export function CredentialHeader({
   platform,
   onDelete,
 }: CredentialHeaderProps) {
-  const { copy, isCopied } = useCopyToClipboard({ successDuration: 1000 })
+  const { copy, isCopied } = useCopyToClipboard({ successDuration: 2000 })
+  const { toast } = useToast()
 
-  const handleCopyId = async () => {
-    await copy(credential.id)
+  const handleCopyLink = async () => {
+    await copy(window.location.href)
+    toast("Credential link copied to clipboard", "success")
   }
 
   return (
-    <div className="flex items-start justify-between">
-      <div className="flex items-center gap-4">
-        <Image
-          src={getPlaceholderImage(
-            platform.name,
-            getLogoDevUrlWithToken(platform.logo)
-          )}
-          alt={`${platform.name} logo`}
-          width={64}
-          height={64}
-          className="bg-secondary size-16 rounded-full object-contain p-3"
-        />
-        <div className="space-y-1">
-          <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold">{credential.identifier}</h1>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-8 w-8 p-0"
-              onClick={handleCopyId}
-            >
-              {isCopied ? (
-                <Icons.check className="h-4 w-4" />
-              ) : (
-                <Icons.copy className="h-4 w-4" />
-              )}
-            </Button>
+    <div className="flex items-start justify-between gap-4">
+      {/* Platform Logo & Credential Info */}
+      <div className="flex min-w-0 items-center gap-4">
+        <div className="flex-shrink-0">
+          <Image
+            src={getPlaceholderImage(
+              platform.name,
+              getLogoDevUrlWithToken(platform.logo)
+            )}
+            alt={`${platform.name} logo`}
+            width={64}
+            height={64}
+            className="bg-muted ring-border size-16 rounded-xl object-contain p-3 ring-1"
+          />
+        </div>
+
+        <div className="min-w-0 flex-1 space-y-2">
+          <div className="text-muted-foreground flex items-center gap-2 text-sm">
+            <Icons.globe className="size-4" />
+            <span className="text-xs font-medium">{platform.name}</span>
           </div>
-          <div className="text-muted-foreground flex items-center gap-2">
-            <span>{platform.name}</span>
-            <Separator orientation="vertical" className="h-4" />
-            <StatusBadge status={credential.status} />
-          </div>
+          <h1 className="text-foreground text-xl font-semibold leading-tight sm:text-2xl">
+            {credential.identifier}
+          </h1>
         </div>
       </div>
 
-      <ItemActionsDropdown
-        onEdit={() => {
-          // TODO: Implement edit
-        }}
-        onShare={() => {
-          // TODO: Implement share
-        }}
-        onDuplicate={() => {
-          // TODO: Implement duplicate
-        }}
-        onMove={() => {
-          // TODO: Implement move
-        }}
-        onArchive={() => {
-          // TODO: Implement archive
-        }}
-        onDelete={onDelete}
-      />
+      {/* Actions */}
+      <div className="flex flex-shrink-0 items-center gap-2">
+        <StatusBadge status={credential.status} />
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-7 px-2.5"
+          onClick={handleCopyLink}
+        >
+          {isCopied ? (
+            <>
+              <Icons.check className="mr-1 h-3 w-3" />
+              <span className="whitespace-nowrap text-xs">Copied</span>
+            </>
+          ) : (
+            <>
+              <Icons.copy className="mr-1 h-3 w-3" />
+              <span className="whitespace-nowrap text-xs">Copy link</span>
+            </>
+          )}
+        </Button>
+        <ItemActionsDropdown
+          onShare={() => {
+            // TODO: Implement share
+          }}
+          onDuplicate={() => {
+            // TODO: Implement duplicate
+          }}
+          onMove={() => {
+            // TODO: Implement move
+          }}
+          onArchive={() => {
+            // TODO: Implement archive
+          }}
+          onDelete={onDelete}
+        />
+      </div>
     </div>
   )
 }

@@ -59,39 +59,58 @@ function renderMenuItems({
     return action
   }
 
+  const hasMainActions =
+    actions.onEdit ||
+    actions.onShare ||
+    actions.onDuplicate ||
+    actions.onMove ||
+    actions.onArchive
+
   return (
     <>
-      <MenuItem onClick={handleClick(actions.onEdit)}>
-        <Icons.pencil className={`mr-2 ${iconSize}`} />
-        Edit
-        <MenuShortcut>E</MenuShortcut>
-      </MenuItem>
-      <MenuItem onClick={handleClick(actions.onShare)}>
-        <Icons.share className={`mr-2 ${iconSize}`} />
-        Share
-        <MenuShortcut>S</MenuShortcut>
-      </MenuItem>
-      <MenuItem onClick={handleClick(actions.onDuplicate)}>
-        <Icons.copy className={`mr-2 ${iconSize}`} />
-        Duplicate
-        <MenuShortcut>D</MenuShortcut>
-      </MenuItem>
-      <MenuItem onClick={handleClick(actions.onMove)}>
-        <Icons.move className={`mr-2 ${iconSize}`} />
-        Move
-        <MenuShortcut>M</MenuShortcut>
-      </MenuItem>
-      <MenuItem onClick={handleClick(actions.onArchive)}>
-        <Icons.archive className={`mr-2 ${iconSize}`} />
-        Archive
-        <MenuShortcut>A</MenuShortcut>
-      </MenuItem>
-      <MenuSeparator />
-      <MenuItem variant="destructive" onClick={handleClick(actions.onDelete)}>
-        <Icons.trash className={`mr-2 ${iconSize}`} />
-        Delete
-        <MenuShortcut variant="destructive">X</MenuShortcut>
-      </MenuItem>
+      {actions.onEdit && (
+        <MenuItem onClick={handleClick(actions.onEdit)}>
+          <Icons.pencil className={`mr-2 ${iconSize}`} />
+          Edit
+          <MenuShortcut>E</MenuShortcut>
+        </MenuItem>
+      )}
+      {actions.onShare && (
+        <MenuItem onClick={handleClick(actions.onShare)}>
+          <Icons.share className={`mr-2 ${iconSize}`} />
+          Share
+          <MenuShortcut>S</MenuShortcut>
+        </MenuItem>
+      )}
+      {actions.onDuplicate && (
+        <MenuItem onClick={handleClick(actions.onDuplicate)}>
+          <Icons.copy className={`mr-2 ${iconSize}`} />
+          Duplicate
+          <MenuShortcut>D</MenuShortcut>
+        </MenuItem>
+      )}
+      {actions.onMove && (
+        <MenuItem onClick={handleClick(actions.onMove)}>
+          <Icons.move className={`mr-2 ${iconSize}`} />
+          Move
+          <MenuShortcut>M</MenuShortcut>
+        </MenuItem>
+      )}
+      {actions.onArchive && (
+        <MenuItem onClick={handleClick(actions.onArchive)}>
+          <Icons.archive className={`mr-2 ${iconSize}`} />
+          Archive
+          <MenuShortcut>A</MenuShortcut>
+        </MenuItem>
+      )}
+      {hasMainActions && actions.onDelete && <MenuSeparator />}
+      {actions.onDelete && (
+        <MenuItem variant="destructive" onClick={handleClick(actions.onDelete)}>
+          <Icons.trash className={`mr-2 ${iconSize}`} />
+          Delete
+          <MenuShortcut variant="destructive">X</MenuShortcut>
+        </MenuItem>
+      )}
     </>
   )
 }

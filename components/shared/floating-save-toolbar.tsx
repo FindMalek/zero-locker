@@ -27,9 +27,11 @@ export function FloatingSaveToolbar({
         className
       )}
     >
-      <div className="bg-background border-border flex items-center gap-3 rounded-lg border px-4 py-3 shadow-lg">
-        <span className="text-sm font-medium">Unsaved changes</span>
-        <div className="flex items-center gap-2">
+      <div className="bg-background border-border min-w-4xl flex w-full items-center justify-between rounded-lg border px-3 py-2 shadow-lg">
+        <span className="flex-shrink-0 text-sm font-medium">
+          Unsaved changes
+        </span>
+        <div className="flex flex-shrink-0 items-center gap-2">
           <Button variant="outline" size="sm" onClick={onDiscard}>
             Discard
           </Button>

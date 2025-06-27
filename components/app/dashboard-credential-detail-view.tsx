@@ -29,6 +29,7 @@ import { CredentialSidebar } from "@/components/app/dashboard-credential-sidebar
 import { EmptyState } from "@/components/shared/empty-state"
 import { FloatingSaveToolbar } from "@/components/shared/floating-save-toolbar"
 import { Icons } from "@/components/shared/icons"
+import { Separator } from "@/components/ui/separator"
 
 interface CredentialDetailViewProps {
   credentialId: string
@@ -191,6 +192,8 @@ export function CredentialDetailView({
               platform={platform}
               onDelete={handleDelete}
             />
+
+            <Separator />
 
             {/* Form Fields */}
             <CredentialForm credential={credential} form={form} />
