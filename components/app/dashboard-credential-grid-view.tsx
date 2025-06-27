@@ -2,19 +2,15 @@
 
 import type { CredentialOutput } from "@/schemas/credential/dto"
 import type { PlatformSimpleRo } from "@/schemas/utils/platform"
-import { AccountStatus } from "@prisma/client"
 import { format } from "date-fns"
 
+import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard"
+
 import { Icons } from "@/components/shared/icons"
-import { Badge } from "@/components/ui/badge"
+import { ItemActionsDropdown } from "@/components/shared/item-actions-dropdown"
+import { StatusBadge } from "@/components/shared/status-badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
 
 interface CredentialGridViewProps {
   credentials: CredentialOutput[]
@@ -25,49 +21,15 @@ export function DashboardCredentialGridView({
   credentials,
   platforms,
 }: CredentialGridViewProps) {
-  const getStatusBadge = (status: AccountStatus) => {
-    switch (status) {
-      case AccountStatus.ACTIVE:
-        return (
-          <Badge
-            variant="default"
-            className="bg-green-100 text-xs text-green-800"
-          >
-            Active
-          </Badge>
-        )
-      case AccountStatus.SUSPENDED:
-        return (
-          <Badge
-            variant="secondary"
-            className="bg-yellow-100 text-xs text-yellow-800"
-          >
-            Suspended
-          </Badge>
-        )
-      case AccountStatus.DELETED:
-        return (
-          <Badge variant="destructive" className="text-xs">
-            Deleted
-          </Badge>
-        )
-      default:
-        return (
-          <Badge variant="outline" className="text-xs">
-            {status}
-          </Badge>
-        )
-    }
-  }
+  const { copy, isCopied } = useCopyToClipboard({ successDuration: 1000 })
 
   const getPlatformName = (platformId: string) => {
     const platform = platforms.find((p) => p.id === platformId)
     return platform?.name || "Unknown Platform"
   }
 
-  const handleCopy = (text: string) => {
-    navigator.clipboard.writeText(text)
-    // You could add a toast notification here
+  const handleCopy = async (text: string) => {
+    await copy(text)
   }
 
   return (
@@ -89,7 +51,7 @@ export function DashboardCredentialGridView({
                   </p>
                 </div>
               </div>
-              {getStatusBadge(credential.status)}
+              <StatusBadge status={credential.status} compact />
             </div>
           </CardHeader>
 
@@ -124,30 +86,33 @@ export function DashboardCredentialGridView({
                 onClick={() => handleCopy(credential.identifier)}
                 className="h-8 w-8 p-0"
               >
-                <Icons.copy className="h-4 w-4" />
+                {isCopied ? (
+                  <Icons.check className="h-4 w-4" />
+                ) : (
+                  <Icons.copy className="h-4 w-4" />
+                )}
               </Button>
 
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                    <Icons.more className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem>
-                    <Icons.eye className="mr-2 h-4 w-4" />
-                    View Details
-                  </DropdownMenuItem>
-                  <DropdownMenuItem>
-                    <Icons.edit className="mr-2 h-4 w-4" />
-                    Edit
-                  </DropdownMenuItem>
-                  <DropdownMenuItem className="text-red-600">
-                    <Icons.trash className="mr-2 h-4 w-4" />
-                    Delete
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <ItemActionsDropdown
+                onEdit={() => {
+                  // TODO: Implement edit
+                }}
+                onShare={() => {
+                  // TODO: Implement share
+                }}
+                onDuplicate={() => {
+                  // TODO: Implement duplicate
+                }}
+                onMove={() => {
+                  // TODO: Implement move
+                }}
+                onArchive={() => {
+                  // TODO: Implement archive
+                }}
+                onDelete={() => {
+                  // TODO: Implement delete
+                }}
+              />
             </div>
           </CardContent>
         </Card>

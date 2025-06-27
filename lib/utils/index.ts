@@ -22,6 +22,7 @@ import { KeyValuePair, User as UserType } from "@/types"
 import { PRIORITY_ACTIVITY_TYPE } from "@/config/consts"
 
 export * from "./card-expiry-helpers"
+export * from "./color-helpers"
 export * from "./password-helpers"
 
 export function cn(...inputs: ClassValue[]) {
@@ -375,8 +376,7 @@ export function getCreatedOrLastViewedText(
   date: Date | null,
   lastViewed: boolean
 ) {
-  if (!date)
-    return `Created ${getRelativeTime(new Date()).toLowerCase()} at ${formatDate(new Date())}`
+  if (!date) return `Created recently at ${formatDate(new Date())}`
 
   if (!lastViewed)
     return `Created ${getRelativeTime(date).toLowerCase()} at ${formatDate(date)}`

@@ -126,7 +126,7 @@ export function DashboardViewControls({
                         key={option.mode}
                         variant={viewMode === option.mode ? "default" : "ghost"}
                         size="sm"
-                        onClick={() => onViewModeChange!(option.mode)}
+                        onClick={() => onViewModeChange?.(option.mode)}
                         className="h-8 flex-1"
                       >
                         <option.icon className="mr-2 h-4 w-4" />
@@ -158,7 +158,7 @@ export function DashboardViewControls({
                         }
                         size="sm"
                         className="h-8 justify-between text-xs"
-                        onClick={() => onSortChange!(option.field)}
+                        onClick={() => onSortChange?.(option.field)}
                       >
                         {option.label}
                         {sortField === option.field && (

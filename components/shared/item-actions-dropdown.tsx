@@ -27,6 +27,75 @@ interface ItemActionsProps {
   children?: React.ReactNode
 }
 
+interface MenuItemsConfig {
+  MenuItem: typeof DropdownMenuItem | typeof ContextMenuItem
+  MenuSeparator: typeof DropdownMenuSeparator | typeof ContextMenuSeparator
+  iconSize: string
+  stopPropagation: boolean
+  actions: {
+    onEdit?: () => void
+    onShare?: () => void
+    onDuplicate?: () => void
+    onMove?: () => void
+    onArchive?: () => void
+    onDelete?: () => void
+  }
+}
+
+function renderMenuItems({
+  MenuItem,
+  MenuSeparator,
+  iconSize,
+  stopPropagation,
+  actions,
+}: MenuItemsConfig) {
+  const handleClick = (action?: () => void) => {
+    if (stopPropagation) {
+      return (e: React.MouseEvent) => {
+        e.stopPropagation()
+        action?.()
+      }
+    }
+    return action
+  }
+
+  return (
+    <>
+      <MenuItem onClick={handleClick(actions.onEdit)}>
+        <Icons.pencil className={`mr-2 ${iconSize}`} />
+        Edit
+        <MenuShortcut>E</MenuShortcut>
+      </MenuItem>
+      <MenuItem onClick={handleClick(actions.onShare)}>
+        <Icons.share className={`mr-2 ${iconSize}`} />
+        Share
+        <MenuShortcut>S</MenuShortcut>
+      </MenuItem>
+      <MenuItem onClick={handleClick(actions.onDuplicate)}>
+        <Icons.copy className={`mr-2 ${iconSize}`} />
+        Duplicate
+        <MenuShortcut>D</MenuShortcut>
+      </MenuItem>
+      <MenuItem onClick={handleClick(actions.onMove)}>
+        <Icons.move className={`mr-2 ${iconSize}`} />
+        Move
+        <MenuShortcut>M</MenuShortcut>
+      </MenuItem>
+      <MenuItem onClick={handleClick(actions.onArchive)}>
+        <Icons.archive className={`mr-2 ${iconSize}`} />
+        Archive
+        <MenuShortcut>A</MenuShortcut>
+      </MenuItem>
+      <MenuSeparator />
+      <MenuItem variant="destructive" onClick={handleClick(actions.onDelete)}>
+        <Icons.trash className={`mr-2 ${iconSize}`} />
+        Delete
+        <MenuShortcut variant="destructive">X</MenuShortcut>
+      </MenuItem>
+    </>
+  )
+}
+
 export function ItemActionsDropdown({
   onEdit,
   onShare,
@@ -36,41 +105,20 @@ export function ItemActionsDropdown({
   onDelete,
   variant = "dropdown",
 }: ItemActionsProps) {
-  const menuItems = (
-    <>
-      <DropdownMenuItem onClick={onEdit}>
-        <Icons.pencil className="mr-2 h-3 w-3" />
-        Edit
-        <MenuShortcut>E</MenuShortcut>
-      </DropdownMenuItem>
-      <DropdownMenuItem onClick={onShare}>
-        <Icons.share className="mr-2 h-3 w-3" />
-        Share
-        <MenuShortcut>S</MenuShortcut>
-      </DropdownMenuItem>
-      <DropdownMenuItem onClick={onDuplicate}>
-        <Icons.copy className="mr-2 h-3 w-3" />
-        Duplicate
-        <MenuShortcut>D</MenuShortcut>
-      </DropdownMenuItem>
-      <DropdownMenuItem onClick={onMove}>
-        <Icons.move className="mr-2 h-3 w-3" />
-        Move
-        <MenuShortcut>M</MenuShortcut>
-      </DropdownMenuItem>
-      <DropdownMenuItem onClick={onArchive}>
-        <Icons.archive className="mr-2 h-3 w-3" />
-        Archive
-        <MenuShortcut>A</MenuShortcut>
-      </DropdownMenuItem>
-      <DropdownMenuSeparator />
-      <DropdownMenuItem variant="destructive" onClick={onDelete}>
-        <Icons.trash className="mr-2 h-3 w-3" />
-        Delete
-        <MenuShortcut variant="destructive">X</MenuShortcut>
-      </DropdownMenuItem>
-    </>
-  )
+  const menuItems = renderMenuItems({
+    MenuItem: DropdownMenuItem,
+    MenuSeparator: DropdownMenuSeparator,
+    iconSize: "h-3 w-3",
+    stopPropagation: false,
+    actions: {
+      onEdit,
+      onShare,
+      onDuplicate,
+      onMove,
+      onArchive,
+      onDelete,
+    },
+  })
 
   if (variant === "dropdown") {
     return (
@@ -99,72 +147,20 @@ export function ItemActionsContextMenu({
   onDelete,
   children,
 }: ItemActionsProps) {
-  const contextMenuItems = (
-    <>
-      <ContextMenuItem
-        onClick={(e) => {
-          e.stopPropagation()
-          onEdit?.()
-        }}
-      >
-        <Icons.pencil className="mr-2 h-4 w-4" />
-        Edit
-        <MenuShortcut>E</MenuShortcut>
-      </ContextMenuItem>
-      <ContextMenuItem
-        onClick={(e) => {
-          e.stopPropagation()
-          onShare?.()
-        }}
-      >
-        <Icons.share className="mr-2 h-4 w-4" />
-        Share
-        <MenuShortcut>S</MenuShortcut>
-      </ContextMenuItem>
-      <ContextMenuItem
-        onClick={(e) => {
-          e.stopPropagation()
-          onDuplicate?.()
-        }}
-      >
-        <Icons.copy className="mr-2 h-4 w-4" />
-        Duplicate
-        <MenuShortcut>D</MenuShortcut>
-      </ContextMenuItem>
-      <ContextMenuItem
-        onClick={(e) => {
-          e.stopPropagation()
-          onMove?.()
-        }}
-      >
-        <Icons.move className="mr-2 h-4 w-4" />
-        Move
-        <MenuShortcut>M</MenuShortcut>
-      </ContextMenuItem>
-      <ContextMenuItem
-        onClick={(e) => {
-          e.stopPropagation()
-          onArchive?.()
-        }}
-      >
-        <Icons.archive className="mr-2 h-4 w-4" />
-        Archive
-        <MenuShortcut>A</MenuShortcut>
-      </ContextMenuItem>
-      <ContextMenuSeparator />
-      <ContextMenuItem
-        variant="destructive"
-        onClick={(e) => {
-          e.stopPropagation()
-          onDelete?.()
-        }}
-      >
-        <Icons.trash className="mr-2 h-4 w-4" />
-        Delete
-        <MenuShortcut variant="destructive">X</MenuShortcut>
-      </ContextMenuItem>
-    </>
-  )
+  const contextMenuItems = renderMenuItems({
+    MenuItem: ContextMenuItem,
+    MenuSeparator: ContextMenuSeparator,
+    iconSize: "h-4 w-4",
+    stopPropagation: true,
+    actions: {
+      onEdit,
+      onShare,
+      onDuplicate,
+      onMove,
+      onArchive,
+      onDelete,
+    },
+  })
 
   return (
     <ContextMenu>

@@ -23,7 +23,7 @@ export const platformSimpleRoSchema = z.object({
   status: z.nativeEnum(PlatformStatus),
 
   logo: z.string(),
-  loginUrl: z.string().nullable(),
+  loginUrl: z.string(),
 
   updatedAt: z.date(),
   createdAt: z.date(),

@@ -10,7 +10,6 @@ const tagColorPalettes = {
     "#98D8C8",
     "#F7DC6F",
     "#BB8FCE",
-    "#85C1E9",
     "#F8C471",
     "#82E0AA",
     "#F1948A",
@@ -87,7 +86,7 @@ export function generateTagColor(
   for (let i = 0; i < tagName.length; i++) {
     const char = tagName.charCodeAt(i)
     hash = (hash << 5) - hash + char
-    hash = hash & hash // Convert to 32-bit integer
+    hash = hash >>> 0 // Convert to 32-bit unsigned integer
   }
 
   // Get the color palette
@@ -151,22 +150,34 @@ export function getRandomTagColor(palette: ColorPalette = "pastel"): string {
 }
 
 /**
+ * Calculate accurate WCAG luminance for a color
+ * @param r - Red value (0-255)
+ * @param g - Green value (0-255)
+ * @param b - Blue value (0-255)
+ * @returns Luminance value (0-1)
+ */
+export function getLuminance(r: number, g: number, b: number): number {
+  const rs = r / 255
+  const gs = g / 255
+  const bs = b / 255
+
+  const rLin = rs <= 0.03928 ? rs / 12.92 : Math.pow((rs + 0.055) / 1.055, 2.4)
+  const gLin = gs <= 0.03928 ? gs / 12.92 : Math.pow((gs + 0.055) / 1.055, 2.4)
+  const bLin = bs <= 0.03928 ? bs / 12.92 : Math.pow((bs + 0.055) / 1.055, 2.4)
+
+  return 0.2126 * rLin + 0.7152 * gLin + 0.0722 * bLin
+}
+
+/**
  * Check if a color is light or dark (for text contrast)
  * @param color - Hex color string
  * @returns boolean - true if light, false if dark
  */
 export function isLightColor(color: string): boolean {
-  // Remove # if present
-  const hex = color.replace("#", "")
+  const rgb = hexToRgb(color)
+  if (!rgb) return false
 
-  // Convert to RGB
-  const r = parseInt(hex.substring(0, 2), 16)
-  const g = parseInt(hex.substring(2, 4), 16)
-  const b = parseInt(hex.substring(4, 6), 16)
-
-  // Calculate luminance
-  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255
-
+  const luminance = getLuminance(rgb.r, rgb.g, rgb.b)
   return luminance > 0.5
 }
 

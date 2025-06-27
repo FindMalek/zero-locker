@@ -1,7 +1,6 @@
 "use client"
 
 import type { CredentialOutput } from "@/schemas/credential/dto"
-import type { AccountStatus } from "@prisma/client"
 
 import { formatDate } from "@/lib/utils"
 
@@ -19,7 +18,6 @@ import {
 
 interface CredentialSidebarProps {
   credential: CredentialOutput
-  onStatusChange?: (status: AccountStatus) => void
   onContainerChange?: (containerId: string) => void
 }
 

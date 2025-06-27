@@ -190,7 +190,7 @@ export function DashboardMultiFilters({
                   <Image
                     src={getPlaceholderImage(
                       option.label,
-                      getLogoDevUrlWithToken(option.logo || null)
+                      option.logo ? getLogoDevUrlWithToken(option.logo) : null
                     )}
                     alt={`${option.label} logo`}
                     width={16}

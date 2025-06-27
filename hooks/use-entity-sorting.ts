@@ -26,17 +26,23 @@ export function useEntitySorting(entities: CredentialEntitySimpleDbData[]) {
     if (!sortField || !sortDirection) return entities
 
     return [...entities].sort((a, b) => {
-      let aValue: any = a[sortField]
-      let bValue: any = b[sortField]
+      let aValue: string | number | Date | null = a[sortField]
+      let bValue: string | number | Date | null = b[sortField]
 
       if (sortField === "lastViewed" || sortField === "createdAt") {
         aValue = aValue ? new Date(aValue).getTime() : 0
         bValue = bValue ? new Date(bValue).getTime() : 0
       }
 
-      if (typeof aValue === "string") {
+      if (typeof aValue === "string" && typeof bValue === "string") {
         aValue = aValue.toLowerCase()
         bValue = bValue.toLowerCase()
+      } else if (aValue === null || aValue === undefined) {
+        aValue = ""
+      }
+
+      if (bValue === null || bValue === undefined) {
+        bValue = ""
       }
 
       if (aValue < bValue) return sortDirection === "asc" ? -1 : 1

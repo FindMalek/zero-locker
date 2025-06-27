@@ -16,8 +16,10 @@ import type {
 } from "@/schemas/credential/dto"
 import type { ListPlatformsOutput } from "@/schemas/utils/dto"
 import { zodResolver } from "@hookform/resolvers/zod"
-import type { AccountStatus } from "@prisma/client"
 import { useForm } from "react-hook-form"
+
+import { handleErrors } from "@/lib/utils"
+import { useToast } from "@/hooks/use-toast"
 
 import { DashboardCredentialDetailSkeleton } from "@/components/app/dashboard-credential-detail-skeleton"
 import { CredentialFooter } from "@/components/app/dashboard-credential-footer"
@@ -41,6 +43,7 @@ export function CredentialDetailView({
   initialData,
 }: CredentialDetailViewProps) {
   const router = useRouter()
+  const { toast } = useToast()
 
   const {
     data: credential,
@@ -88,7 +91,7 @@ export function CredentialDetailView({
         status: credential.status,
         platformId: credential.platformId,
         containerId: credential.containerId || "",
-        // TODO: Get these from credential metadata when available
+        // TODO: Get these from credential metadata when available/app/dashboard-credential-detail-view.tsx
         passwordProtection: true,
         twoFactorAuth: false,
         accessLogging: true,
@@ -115,8 +118,18 @@ export function CredentialDetailView({
 
       // Reset form dirty state after successful save
       reset(data)
+      toast("Credential updated successfully", "success")
     } catch (error) {
-      console.error("Failed to save credential:", error)
+      const { message, details } = handleErrors(
+        error,
+        "Failed to save credential"
+      )
+      toast(
+        details
+          ? `${message}: ${Array.isArray(details) ? details.join(", ") : details}`
+          : message,
+        "error"
+      )
     }
   }
 
@@ -142,10 +155,6 @@ export function CredentialDetailView({
     // TODO: Implement delete logic
     console.log("Deleting credential:", credential.id)
     router.push("/dashboard/credentials")
-  }
-
-  const handleStatusChange = (status: AccountStatus) => {
-    form.setValue("status", status, { shouldDirty: true })
   }
 
   const handleContainerChange = (containerId: string) => {
@@ -193,7 +202,6 @@ export function CredentialDetailView({
           {/* Right Sidebar */}
           <CredentialSidebar
             credential={credential}
-            onStatusChange={handleStatusChange}
             onContainerChange={handleContainerChange}
           />
         </div>

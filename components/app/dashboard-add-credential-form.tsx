@@ -71,7 +71,9 @@ export function DashboardAddCredentialForm({
                     label: platform.name,
                     logo: getPlaceholderImage(
                       platform.name,
-                      getLogoDevUrlWithToken(platform.logo || null)
+                      platform.logo
+                        ? getLogoDevUrlWithToken(platform.logo)
+                        : null
                     ),
                   }))}
                   selectedItem={

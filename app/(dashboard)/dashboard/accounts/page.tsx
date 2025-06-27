@@ -13,20 +13,40 @@ async function getInitialData() {
   const context = await createContext()
   const serverClient = createServerClient(context)
 
-  const [credentialsResponse, platformsResponse] = await Promise.all([
-    serverClient.credentials.list({
-      page: 1,
-      limit: 50,
-    }),
-    serverClient.platforms.list({
-      page: 1,
-      limit: 100,
-    }),
-  ])
+  try {
+    const [credentialsResponse, platformsResponse] = await Promise.all([
+      serverClient.credentials.list({
+        page: 1,
+        limit: 50,
+      }),
+      serverClient.platforms.list({
+        page: 1,
+        limit: 100,
+      }),
+    ])
 
-  return {
-    credentials: credentialsResponse,
-    platforms: platformsResponse,
+    return {
+      credentials: credentialsResponse,
+      platforms: platformsResponse,
+    }
+  } catch (error) {
+    console.error("Failed to fetch initial data:", error)
+    return {
+      credentials: {
+        credentials: [],
+        total: 0,
+        hasMore: false,
+        page: 1,
+        limit: 50,
+      },
+      platforms: {
+        platforms: [],
+        total: 0,
+        hasMore: false,
+        page: 1,
+        limit: 100,
+      },
+    }
   }
 }
 
