@@ -36,7 +36,7 @@ export function TagDisplay({ tags, size = "sm" }: TagDisplayProps) {
     <div className="flex items-center">
       <TagBadge tag={firstTag} size={size} isConnected />
 
-      <HoverCard>
+      <HoverCard openDelay={0} closeDelay={0}>
         <HoverCardTrigger asChild>
           <Button
             variant="outline"

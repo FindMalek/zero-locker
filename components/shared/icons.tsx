@@ -2,6 +2,7 @@ import Image from "next/image"
 import { RecentItemType, RecentItemTypeEnum } from "@/schemas/utils"
 import {
   AlertTriangle,
+  Archive,
   ArrowDown,
   ArrowRight,
   ArrowUp,
@@ -60,8 +61,9 @@ import {
   Menu,
   Monitor,
   Moon,
-  MoreHorizontal,
   MoreVertical,
+  MoreVerticalIcon,
+  Move,
   PencilIcon,
   PhoneIcon,
   Pizza,
@@ -71,6 +73,7 @@ import {
   SaveIcon,
   Search,
   Settings,
+  Share,
   Shield,
   Sparkles,
   SquareTerminal,
@@ -172,7 +175,7 @@ export const Icons = {
   menu: Menu,
   document: BookIcon,
   folder: Folder,
-  more: MoreHorizontal,
+  more: MoreVerticalIcon,
   badgeCheck: BadgeCheck,
   bell: Bell,
   logOut: LogOut,
@@ -231,6 +234,9 @@ export const Icons = {
   globe: GlobeIcon,
   lock: LockIcon,
   puzzle: PuzzleIcon,
+  share: Share,
+  move: Move,
+  archive: Archive,
 }
 
 export const getEntityIcon = (itemType: RecentItemType) => {

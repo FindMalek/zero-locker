@@ -13,21 +13,15 @@ import {
 import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard"
 
 import { Icons } from "@/components/shared/icons"
+import { ItemActionsDropdown } from "@/components/shared/item-actions-dropdown"
 import { StatusBadge } from "@/components/shared/status-badge"
+import { TagDisplay } from "@/components/shared/tag-display"
 import { Button } from "@/components/ui/button"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
-
-import { TagDisplay } from "../shared/tag-display"
 
 interface CredentialListViewProps {
   credentials: CredentialIncludeOutput[]
@@ -39,7 +33,7 @@ export function DashboardAccountCardsView({
   platforms,
 }: CredentialListViewProps) {
   const { copy, isCopied } = useCopyToClipboard({
-    successDuration: 1000, // 1 second for the check icon
+    successDuration: 1000,
   })
 
   const getPlatform = (platformId: string) => {
@@ -102,9 +96,9 @@ export function DashboardAccountCardsView({
                     onClick={() => handleCopyIdentifier(credential.identifier)}
                   >
                     {isCopied ? (
-                      <Icons.check className="h-3 w-3" />
+                      <Icons.check className="size-3" />
                     ) : (
-                      <Icons.copy className="h-3 w-3" />
+                      <Icons.copy className="size-3" />
                     )}
                   </Button>
                 </div>
@@ -142,28 +136,27 @@ export function DashboardAccountCardsView({
             <StatusBadge status={credential.status} compact />
 
             {/* Actions */}
-            <div className="flex items-center gap-1 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                    <Icons.more className="h-3 w-3" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem>
-                    <Icons.eye className="mr-2 h-3 w-3" />
-                    View Details
-                  </DropdownMenuItem>
-                  <DropdownMenuItem>
-                    <Icons.edit className="mr-2 h-3 w-3" />
-                    Edit
-                  </DropdownMenuItem>
-                  <DropdownMenuItem className="text-red-600">
-                    <Icons.trash className="mr-2 h-3 w-3" />
-                    Delete
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+            <div className="flex items-center gap-1">
+              <ItemActionsDropdown
+                onEdit={() => {
+                  // TODO: Implement edit
+                }}
+                onShare={() => {
+                  // TODO: Implement share
+                }}
+                onDuplicate={() => {
+                  // TODO: Implement duplicate
+                }}
+                onMove={() => {
+                  // TODO: Implement move
+                }}
+                onArchive={() => {
+                  // TODO: Implement archive
+                }}
+                onDelete={() => {
+                  // TODO: Implement delete
+                }}
+              />
             </div>
           </div>
         )
