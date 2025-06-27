@@ -1,4 +1,5 @@
 import { Suspense } from "react"
+import { Metadata } from "next"
 import { notFound } from "next/navigation"
 import { createServerClient } from "@/orpc/client/server"
 import { createContext } from "@/orpc/context"
@@ -31,6 +32,55 @@ async function getAccountData(id: string) {
     }
   } catch {
     return null
+  }
+}
+
+export async function generateMetadata({
+  params,
+}: AccountDetailPageProps): Promise<Metadata> {
+  const resolvedParams = await params
+
+  if (!resolvedParams.id) {
+    return {
+      title: "Account Not Found",
+      description: "The requested account could not be found.",
+    }
+  }
+
+  const data = await getAccountData(resolvedParams.id)
+
+  if (!data) {
+    return {
+      title: "Account Not Found",
+      description: "The requested account could not be found.",
+    }
+  }
+
+  const { credential, platforms } = data
+  const platform = platforms.platforms.find(
+    (p) => p.id === credential.platformId
+  )
+  const platformName = platform?.name || "Unknown Platform"
+
+  return {
+    title: `${credential.identifier} - ${platformName}`,
+    description: credential.description
+      ? `Account details for ${credential.identifier} on ${platformName}. ${credential.description}`
+      : `Account details for ${credential.identifier} on ${platformName}.`,
+    openGraph: {
+      title: `${credential.identifier} - ${platformName}`,
+      description: credential.description
+        ? `Account details for ${credential.identifier} on ${platformName}. ${credential.description}`
+        : `Account details for ${credential.identifier} on ${platformName}.`,
+      type: "website",
+    },
+    twitter: {
+      card: "summary",
+      title: `${credential.identifier} - ${platformName}`,
+      description: credential.description
+        ? `Account details for ${credential.identifier} on ${platformName}. ${credential.description}`
+        : `Account details for ${credential.identifier} on ${platformName}.`,
+    },
   }
 }
 
