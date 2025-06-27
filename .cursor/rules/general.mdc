@@ -274,3 +274,4 @@ alwaysApply: true
 - Use the namespace keyword instead of the module keyword to declare TypeScript namespaces.
 - Make sure to use the digits argument with Number#toFixed().
 - Make sure to use the "use strict" directive in script files.
+- Don't put multiple components in one file, each file must have one component.
