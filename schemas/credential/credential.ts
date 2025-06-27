@@ -81,9 +81,9 @@ export const credentialFormDtoSchema = z.object({
   platformId: z.string().min(1, "Platform is required"),
   containerId: z.string().optional(),
   // Security settings (metadata)
-  passwordProtection: z.boolean().default(true),
-  twoFactorAuth: z.boolean().default(false),
-  accessLogging: z.boolean().default(true),
+  passwordProtection: z.boolean(),
+  twoFactorAuth: z.boolean(),
+  accessLogging: z.boolean(),
 })
 
 export type CredentialFormDto = z.infer<typeof credentialFormDtoSchema>

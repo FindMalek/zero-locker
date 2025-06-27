@@ -82,7 +82,9 @@ export const getCredentialPassword = authProcedure
     }
 
     if (!credential.passwordEncryption) {
-      throw new ORPCError("NOT_FOUND", "Password encryption data not found")
+      throw new ORPCError("NOT_FOUND", {
+        message: "Password encryption data not found",
+      })
     }
 
     try {
@@ -102,7 +104,9 @@ export const getCredentialPassword = authProcedure
       return { password: decryptedPassword }
     } catch (error) {
       console.error("Failed to decrypt password:", error)
-      throw new ORPCError("INTERNAL_SERVER_ERROR", "Failed to decrypt password")
+      throw new ORPCError("INTERNAL_SERVER_ERROR", {
+        message: "Failed to decrypt password",
+      })
     }
   })
 

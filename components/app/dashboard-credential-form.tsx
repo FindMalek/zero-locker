@@ -1,8 +1,10 @@
 "use client"
 
 import React, { useState } from "react"
+import { UseFormReturn } from "react-hook-form"
 import { useCredentialPassword } from "@/orpc/hooks/use-credentials"
 import type { CredentialOutput } from "@/schemas/credential/dto"
+import type { CredentialFormDto } from "@/schemas/credential/credential"
 
 import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard"
 
@@ -14,27 +16,20 @@ import { Separator } from "@/components/ui/separator"
 import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
 
-interface CredentialFormData {
-  identifier: string
-  description: string | null
-  passwordProtection: boolean
-  twoFactorAuth: boolean
-  accessLogging: boolean
-}
-
 interface CredentialFormProps {
   credential?: CredentialOutput
-  data: CredentialFormData
-  onChange: (data: CredentialFormData) => void
+  form: UseFormReturn<CredentialFormDto>
 }
 
 export function CredentialForm({
   credential,
-  data,
-  onChange,
+  form,
 }: CredentialFormProps) {
   const [showPassword, setShowPassword] = useState(false)
   const { copy, isCopied } = useCopyToClipboard({ successDuration: 1000 })
+
+  const { register, watch, setValue } = form
+  const formData = watch()
 
   const { data: passwordData, isLoading: isLoadingPassword } =
     useCredentialPassword(
@@ -62,8 +57,7 @@ export function CredentialForm({
         </div>
         <div className="relative">
           <Input
-            value={data.identifier}
-            onChange={(e) => onChange({ ...data, identifier: e.target.value })}
+            {...register("identifier")}
             className="border-border focus:border-ring focus:ring-ring pr-8 focus:ring-1"
           />
           <Button
@@ -71,7 +65,7 @@ export function CredentialForm({
             variant="ghost"
             size="sm"
             className="hover:bg-muted absolute right-1 top-1/2 h-6 w-6 -translate-y-1/2 p-0"
-            onClick={() => handleCopy(data.identifier)}
+            onClick={() => handleCopy(formData.identifier)}
           >
             {isCopied ? (
               <Icons.check className="h-3 w-3" />
@@ -134,8 +128,7 @@ export function CredentialForm({
           Description
         </Label>
         <Textarea
-          value={data.description || ""}
-          onChange={(e) => onChange({ ...data, description: e.target.value })}
+          {...register("description")}
           placeholder="Add a description for this credential..."
           className="border-border focus:border-ring focus:ring-ring min-h-[80px] resize-none focus:ring-1"
         />
@@ -155,9 +148,9 @@ export function CredentialForm({
               </div>
             </div>
             <Switch
-              checked={data.passwordProtection}
+              checked={formData.passwordProtection}
               onCheckedChange={(checked) =>
-                onChange({ ...data, passwordProtection: checked })
+                setValue("passwordProtection", checked, { shouldDirty: true })
               }
             />
           </div>
@@ -172,9 +165,9 @@ export function CredentialForm({
               </div>
             </div>
             <Switch
-              checked={data.twoFactorAuth}
+              checked={formData.twoFactorAuth}
               onCheckedChange={(checked) =>
-                onChange({ ...data, twoFactorAuth: checked })
+                setValue("twoFactorAuth", checked, { shouldDirty: true })
               }
             />
           </div>
@@ -187,9 +180,9 @@ export function CredentialForm({
               </div>
             </div>
             <Switch
-              checked={data.accessLogging}
+              checked={formData.accessLogging}
               onCheckedChange={(checked) =>
-                onChange({ ...data, accessLogging: checked })
+                setValue("accessLogging", checked, { shouldDirty: true })
               }
             />
           </div>

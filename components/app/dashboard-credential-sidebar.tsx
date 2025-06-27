@@ -6,7 +6,7 @@ import type { AccountStatus } from "@prisma/client"
 import { formatDate } from "@/lib/utils"
 
 import { Icons } from "@/components/shared/icons"
-import { Badge } from "@/components/ui/badge"
+import { StatusBadge } from "@/components/shared/status-badge"
 import { Card, CardContent } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import {
@@ -25,22 +25,8 @@ interface CredentialSidebarProps {
 
 export function CredentialSidebar({
   credential,
-  onStatusChange,
   onContainerChange,
 }: CredentialSidebarProps) {
-  const getStatusColor = (status: AccountStatus) => {
-    switch (status) {
-      case "ACTIVE":
-        return "bg-green-50 text-green-700 border-green-200 dark:bg-green-950 dark:text-green-300 dark:border-green-800"
-      case "SUSPENDED":
-        return "bg-yellow-50 text-yellow-700 border-yellow-200 dark:bg-yellow-950 dark:text-yellow-300 dark:border-yellow-800"
-      case "DELETED":
-        return "bg-red-50 text-red-700 border-red-200 dark:bg-red-950 dark:text-red-300 dark:border-red-800"
-      default:
-        return "bg-secondary text-secondary-foreground border-border"
-    }
-  }
-
   return (
     <div className="space-y-4">
       {/* Status Card */}
@@ -52,9 +38,7 @@ export function CredentialSidebar({
                 Status
               </Label>
             </div>
-            <Badge className={getStatusColor(credential.status)}>
-              {credential.status}
-            </Badge>
+            <StatusBadge status={credential.status} />
           </div>
         </CardContent>
       </Card>

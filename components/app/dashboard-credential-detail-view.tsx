@@ -1,25 +1,25 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect } from "react"
 import { useRouter } from "next/navigation"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
 import {
   useCredential,
   useUpdateCredential,
 } from "@/orpc/hooks/use-credentials"
-import { usePlatforms } from "@/orpc/hooks/use-platforms"
 import type {
   CredentialOutput,
   UpdateCredentialInput,
 } from "@/schemas/credential/dto"
 import type { ListPlatformsOutput } from "@/schemas/utils/dto"
 import type { AccountStatus } from "@prisma/client"
+import { credentialFormDtoSchema, type CredentialFormDto } from "@/schemas/credential/credential"
 
 import { DashboardCredentialDetailSkeleton } from "@/components/app/dashboard-credential-detail-skeleton"
 import { CredentialForm } from "@/components/app/dashboard-credential-form"
-import {
-  CredentialFooter,
-  CredentialHeader,
-} from "@/components/app/dashboard-credential-header"
+import { CredentialHeader } from "@/components/app/dashboard-credential-header"
+import { CredentialFooter } from "@/components/app/dashboard-credential-footer"
 import { CredentialSidebar } from "@/components/app/dashboard-credential-sidebar"
 import { EmptyState } from "@/components/shared/empty-state"
 import { FloatingSaveToolbar } from "@/components/shared/floating-save-toolbar"
@@ -31,14 +31,6 @@ interface CredentialDetailViewProps {
     credential: CredentialOutput
     platforms: ListPlatformsOutput
   }
-}
-
-interface CredentialFormData {
-  identifier: string
-  description: string | null
-  passwordProtection: boolean
-  twoFactorAuth: boolean
-  accessLogging: boolean
 }
 
 export function CredentialDetailView({
@@ -54,78 +46,80 @@ export function CredentialDetailView({
   } = useCredential(credentialId, {
     initialData: initialData?.credential,
   })
-  const { data: platforms } = usePlatforms(
-    { page: 1, limit: 100 },
-    {
-      initialData: initialData?.platforms,
-    }
-  )
   const updateCredentialMutation = useUpdateCredential()
 
-  // Form state management
-  const [formData, setFormData] = useState<CredentialFormData>({
-    identifier: "",
-    description: null,
-    passwordProtection: true,
-    twoFactorAuth: false,
-    accessLogging: true,
+  // Form setup with react-hook-form and zod
+  const form = useForm<CredentialFormDto>({
+    resolver: zodResolver(credentialFormDtoSchema),
+    defaultValues: {
+      identifier: "",
+      description: "",
+      status: "ACTIVE",
+      platformId: "",
+      containerId: "",
+      passwordProtection: true,
+      twoFactorAuth: false,
+      accessLogging: true,
+    },
   })
 
-  const [originalFormData, setOriginalFormData] = useState<CredentialFormData>({
-    identifier: "",
-    description: null,
-    passwordProtection: true,
-    twoFactorAuth: false,
-    accessLogging: true,
-  })
+  const { formState: { isDirty }, reset, handleSubmit } = form
 
-  const [hasChanges, setHasChanges] = useState(false)
-
-  // Initialize form data when credential loads
+  // Initialize form when credential loads
   useEffect(() => {
     if (credential) {
-      const initialData = {
+      const initialFormData: CredentialFormDto = {
         identifier: credential.identifier,
-        description: credential.description,
-        passwordProtection: true, // TODO: Get from credential metadata
-        twoFactorAuth: false, // TODO: Get from credential metadata
-        accessLogging: true, // TODO: Get from credential metadata
+        description: credential.description || "",
+        status: credential.status,
+        platformId: credential.platformId,
+        containerId: credential.containerId || "",
+        // TODO: Get these from credential metadata when available
+        passwordProtection: true,
+        twoFactorAuth: false,
+        accessLogging: true,
       }
-      setFormData(initialData)
-      setOriginalFormData(initialData)
+      reset(initialFormData)
     }
-  }, [credential])
+  }, [credential, reset])
 
-  // Check for changes
-  useEffect(() => {
-    const hasChanges =
-      JSON.stringify(formData) !== JSON.stringify(originalFormData)
-    setHasChanges(hasChanges)
-  }, [formData, originalFormData])
-
-  const handleSave = async () => {
+  const handleSave = async (data: CredentialFormDto) => {
     if (!credential) return
 
     try {
       const updateData: UpdateCredentialInput = {
         id: credential.id,
-        identifier: formData.identifier,
-        description: formData.description || undefined,
-        // TODO: Map security settings to proper DTO fields
+        identifier: data.identifier,
+        description: data.description || undefined,
+        status: data.status,
+        platformId: data.platformId,
+        containerId: data.containerId || undefined,
+        // TODO: Handle metadata fields (passwordProtection, twoFactorAuth, accessLogging)
       }
 
       await updateCredentialMutation.mutateAsync(updateData)
-
-      setOriginalFormData(formData)
-      setHasChanges(false)
+      
+      // Reset form dirty state after successful save
+      reset(data)
     } catch (error) {
       console.error("Failed to save credential:", error)
     }
   }
 
   const handleDiscard = () => {
-    setFormData(originalFormData)
-    setHasChanges(false)
+    if (credential) {
+      const originalData: CredentialFormDto = {
+        identifier: credential.identifier,
+        description: credential.description || "",
+        status: credential.status,
+        platformId: credential.platformId,
+        containerId: credential.containerId || "",
+        passwordProtection: true,
+        twoFactorAuth: false,
+        accessLogging: true,
+      }
+      reset(originalData)
+    }
   }
 
   const handleDelete = async () => {
@@ -137,13 +131,11 @@ export function CredentialDetailView({
   }
 
   const handleStatusChange = (status: AccountStatus) => {
-    // TODO: Implement status change
-    console.log("Changing status to:", status)
+    form.setValue("status", status, { shouldDirty: true })
   }
 
   const handleContainerChange = (containerId: string) => {
-    // TODO: Implement container change
-    console.log("Changing container to:", containerId)
+    form.setValue("containerId", containerId, { shouldDirty: true })
   }
 
   if (isLoading) {
@@ -176,8 +168,7 @@ export function CredentialDetailView({
             {/* Form Fields */}
             <CredentialForm
               credential={credential}
-              data={formData}
-              onChange={setFormData}
+              form={form}
             />
 
             {/* Footer */}
@@ -195,8 +186,8 @@ export function CredentialDetailView({
 
       {/* Floating Save Toolbar */}
       <FloatingSaveToolbar
-        isVisible={hasChanges}
-        onSave={handleSave}
+        isVisible={isDirty}
+        onSave={handleSubmit(handleSave)}
         onDiscard={handleDiscard}
       />
     </div>

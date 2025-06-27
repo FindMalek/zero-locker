@@ -2,7 +2,6 @@
 
 import type { CredentialOutput } from "@/schemas/credential/dto"
 
-import { formatDate } from "@/lib/utils"
 import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard"
 
 import { Icons } from "@/components/shared/icons"
@@ -40,19 +39,6 @@ export function CredentialHeader({
           <Icons.trash2 className="h-4 w-4" />
         </Button>
       </div>
-    </div>
-  )
-}
-
-interface CredentialFooterProps {
-  credential: CredentialOutput
-}
-
-export function CredentialFooter({ credential }: CredentialFooterProps) {
-  return (
-    <div className="text-muted-foreground border-border flex items-center gap-2 border-t pt-6 text-xs">
-      <Icons.user className="h-3 w-3" />
-      <span>Created by System Admin • {formatDate(credential.createdAt)}</span>
     </div>
   )
 }
