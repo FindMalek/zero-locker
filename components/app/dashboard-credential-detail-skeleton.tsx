@@ -1,6 +1,6 @@
 import { Skeleton } from "@/components/ui/skeleton"
 
-export function DashboardAccountDetailSkeleton() {
+export function DashboardCredentialDetailSkeleton() {
   return (
     <div className="space-y-6">
       {/* Header */}

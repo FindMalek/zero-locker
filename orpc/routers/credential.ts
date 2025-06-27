@@ -25,6 +25,7 @@ import { ORPCError, os } from "@orpc/server"
 import type { Prisma } from "@prisma/client"
 import { z } from "zod"
 
+import { decryptData } from "@/lib/encryption"
 import { getOrReturnEmptyObject } from "@/lib/utils"
 import { createEncryptedData } from "@/lib/utils/encryption-helpers"
 import { createTagsAndGetConnections } from "@/lib/utils/tag-helpers"
@@ -59,6 +60,50 @@ export const getCredential = authProcedure
     })
 
     return CredentialEntity.getSimpleRo(credential)
+  })
+
+// Get credential password (decrypted on server for security)
+export const getCredentialPassword = authProcedure
+  .input(getCredentialInputSchema)
+  .output(z.object({ password: z.string() }))
+  .handler(async ({ input, context }): Promise<{ password: string }> => {
+    const credential = await database.credential.findFirst({
+      where: {
+        id: input.id,
+        userId: context.user.id,
+      },
+      include: {
+        passwordEncryption: true,
+      },
+    })
+
+    if (!credential) {
+      throw new ORPCError("NOT_FOUND")
+    }
+
+    if (!credential.passwordEncryption) {
+      throw new ORPCError("NOT_FOUND", "Password encryption data not found")
+    }
+
+    try {
+      // Decrypt password on server for security
+      const decryptedPassword = await decryptData(
+        credential.passwordEncryption.encryptedValue,
+        credential.passwordEncryption.iv,
+        credential.passwordEncryption.encryptionKey
+      )
+
+      // Update last viewed timestamp
+      await database.credential.update({
+        where: { id: input.id },
+        data: { lastViewed: new Date() },
+      })
+
+      return { password: decryptedPassword }
+    } catch (error) {
+      console.error("Failed to decrypt password:", error)
+      throw new ORPCError("INTERNAL_SERVER_ERROR", "Failed to decrypt password")
+    }
   })
 
 // List credentials with pagination
@@ -347,6 +392,7 @@ export const createCredentialWithMetadata = authProcedure
 // Export the credential router
 export const credentialRouter = {
   get: getCredential,
+  getPassword: getCredentialPassword,
   list: listCredentials,
   create: createCredential,
   createWithMetadata: createCredentialWithMetadata,

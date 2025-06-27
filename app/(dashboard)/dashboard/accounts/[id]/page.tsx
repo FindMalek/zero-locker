@@ -4,16 +4,16 @@ import { notFound } from "next/navigation"
 import { createServerClient } from "@/orpc/client/server"
 import { createContext } from "@/orpc/context"
 
-import { DashboardAccountDetailSkeleton } from "@/components/app/dashboard-account-detail-skeleton"
-import { AccountDetailView } from "@/components/app/dashboard-account-detail-view"
+import { DashboardCredentialDetailSkeleton } from "@/components/app/dashboard-credential-detail-skeleton"
+import { CredentialDetailView } from "@/components/app/dashboard-credential-detail-view"
 
-interface AccountDetailPageProps {
+interface CredentialDetailPageProps {
   params: Promise<{
     id: string
   }>
 }
 
-async function getAccountData(id: string) {
+async function getCredentialData(id: string) {
   try {
     const context = await createContext()
     const serverClient = createServerClient(context)
@@ -37,22 +37,22 @@ async function getAccountData(id: string) {
 
 export async function generateMetadata({
   params,
-}: AccountDetailPageProps): Promise<Metadata> {
+}: CredentialDetailPageProps): Promise<Metadata> {
   const resolvedParams = await params
 
   if (!resolvedParams.id) {
     return {
-      title: "Account Not Found",
-      description: "The requested account could not be found.",
+      title: "Credential Not Found",
+      description: "The requested credential could not be found.",
     }
   }
 
-  const data = await getAccountData(resolvedParams.id)
+  const data = await getCredentialData(resolvedParams.id)
 
   if (!data) {
     return {
-      title: "Account Not Found",
-      description: "The requested account could not be found.",
+      title: "Credential Not Found",
+      description: "The requested credential could not be found.",
     }
   }
 
@@ -65,35 +65,35 @@ export async function generateMetadata({
   return {
     title: `${credential.identifier} - ${platformName}`,
     description: credential.description
-      ? `Account details for ${credential.identifier} on ${platformName}. ${credential.description}`
-      : `Account details for ${credential.identifier} on ${platformName}.`,
+      ? `Credential details for ${credential.identifier} on ${platformName}. ${credential.description}`
+      : `Credential details for ${credential.identifier} on ${platformName}.`,
     openGraph: {
       title: `${credential.identifier} - ${platformName}`,
       description: credential.description
-        ? `Account details for ${credential.identifier} on ${platformName}. ${credential.description}`
-        : `Account details for ${credential.identifier} on ${platformName}.`,
+        ? `Credential details for ${credential.identifier} on ${platformName}. ${credential.description}`
+        : `Credential details for ${credential.identifier} on ${platformName}.`,
       type: "website",
     },
     twitter: {
       card: "summary",
       title: `${credential.identifier} - ${platformName}`,
       description: credential.description
-        ? `Account details for ${credential.identifier} on ${platformName}. ${credential.description}`
-        : `Account details for ${credential.identifier} on ${platformName}.`,
+        ? `Credential details for ${credential.identifier} on ${platformName}. ${credential.description}`
+        : `Credential details for ${credential.identifier} on ${platformName}.`,
     },
   }
 }
 
-export default async function AccountDetailPage({
+export default async function CredentialDetailPage({
   params,
-}: AccountDetailPageProps) {
+}: CredentialDetailPageProps) {
   const resolvedParams = await params
 
   if (!resolvedParams.id) {
     notFound()
   }
 
-  const data = await getAccountData(resolvedParams.id)
+  const data = await getCredentialData(resolvedParams.id)
 
   if (!data) {
     notFound()
@@ -101,10 +101,10 @@ export default async function AccountDetailPage({
 
   return (
     <div className="space-y-6">
-      <Suspense fallback={<DashboardAccountDetailSkeleton />}>
-        <AccountDetailView
-          initialData={data}
+      <Suspense fallback={<DashboardCredentialDetailSkeleton />}>
+        <CredentialDetailView
           credentialId={resolvedParams.id}
+          initialData={data}
         />
       </Suspense>
     </div>

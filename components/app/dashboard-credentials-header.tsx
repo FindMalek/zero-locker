@@ -36,7 +36,7 @@ interface EntityFiltersProps {
   onShowArchivedChange?: (show: boolean) => void
 }
 
-export function DashboardAccountsHeader({
+export function DashboardCredentialsHeader({
   searchTerm,
   onSearchChange,
   statusFilters,
@@ -172,7 +172,7 @@ export function DashboardAccountsHeader({
         sortOptions={sortOptions}
         showArchived={showArchived}
         onShowArchivedChange={onShowArchivedChange}
-        archivedLabel="Show archived accounts"
+        archivedLabel="Show archived credentials"
         displayProperties={displayProperties}
       />
     </div>

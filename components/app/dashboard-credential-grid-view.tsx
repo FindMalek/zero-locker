@@ -16,15 +16,15 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 
-interface AccountGridViewProps {
+interface CredentialGridViewProps {
   credentials: CredentialOutput[]
   platforms: PlatformSimpleRo[]
 }
 
-export function DashboardAccountGridView({
+export function DashboardCredentialGridView({
   credentials,
   platforms,
-}: AccountGridViewProps) {
+}: CredentialGridViewProps) {
   const getStatusBadge = (status: AccountStatus) => {
     switch (status) {
       case AccountStatus.ACTIVE:

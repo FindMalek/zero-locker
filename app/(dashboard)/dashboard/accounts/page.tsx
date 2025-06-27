@@ -2,7 +2,7 @@ import { Metadata } from "next"
 import { createServerClient } from "@/orpc/client/server"
 import { createContext } from "@/orpc/context"
 
-import { DashboardAccountsClient } from "@/components/app/dashboard-accounts-client"
+import { DashboardCredentialsClient } from "@/components/app/dashboard-credential-client"
 
 export const metadata: Metadata = {
   title: "Accounts",
@@ -33,5 +33,5 @@ async function getInitialData() {
 export default async function AccountsPage() {
   const initialData = await getInitialData()
 
-  return <DashboardAccountsClient initialData={initialData} />
+  return <DashboardCredentialsClient initialData={initialData} />
 }

@@ -76,7 +76,7 @@ export function ItemActionsDropdown({
     return (
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+          <Button variant="outline" size="sm" className="h-8 w-8 p-0">
             <Icons.more className="h-3 w-3" />
           </Button>
         </DropdownMenuTrigger>
@@ -87,7 +87,7 @@ export function ItemActionsDropdown({
     )
   }
 
-  return null // Context menu variant will be handled separately
+  return null
 }
 
 export function ItemActionsContextMenu({

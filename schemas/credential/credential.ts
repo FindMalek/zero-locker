@@ -72,3 +72,18 @@ export const deleteCredentialDtoSchema = z.object({
 })
 
 export type DeleteCredentialDto = z.infer<typeof deleteCredentialDtoSchema>
+
+// Form-specific schema for credential editing (excluding encryption details)
+export const credentialFormDtoSchema = z.object({
+  identifier: z.string().min(1, "Username/identifier is required"),
+  description: z.string().optional(),
+  status: z.nativeEnum(AccountStatus),
+  platformId: z.string().min(1, "Platform is required"),
+  containerId: z.string().optional(),
+  // Security settings (metadata)
+  passwordProtection: z.boolean().default(true),
+  twoFactorAuth: z.boolean().default(false),
+  accessLogging: z.boolean().default(true),
+})
+
+export type CredentialFormDto = z.infer<typeof credentialFormDtoSchema>

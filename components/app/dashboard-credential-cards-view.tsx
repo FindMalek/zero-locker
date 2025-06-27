@@ -29,7 +29,7 @@ interface CredentialListViewProps {
   platforms: PlatformSimpleRo[]
 }
 
-export function DashboardAccountCardsView({
+export function DashboardCredentialCardsView({
   credentials,
   platforms,
 }: CredentialListViewProps) {

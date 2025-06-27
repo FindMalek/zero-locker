@@ -7,19 +7,21 @@ import type { ListCredentialsOutput } from "@/schemas/credential/dto"
 import type { SortDirection, SortField, ViewMode } from "@/schemas/utils"
 import type { ListPlatformsOutput } from "@/schemas/utils/dto"
 
-import { DashboardAccountCardsView } from "@/components/app/dashboard-account-cards-view"
-import { DashboardAccountGridView } from "@/components/app/dashboard-account-grid-view"
-import { DashboardAccountsHeader } from "@/components/app/dashboard-accounts-header"
+import { DashboardCredentialCardsView } from "@/components/app/dashboard-credential-cards-view"
+import { DashboardCredentialGridView } from "@/components/app/dashboard-credential-grid-view"
+import { DashboardCredentialsHeader } from "@/components/app/dashboard-credentials-header"
 import { EmptyState } from "@/components/shared/empty-state"
 
-interface AccountsClientProps {
+interface CredentialsClientProps {
   initialData: {
     credentials: ListCredentialsOutput
     platforms: ListPlatformsOutput
   }
 }
 
-export function DashboardAccountsClient({ initialData }: AccountsClientProps) {
+export function DashboardCredentialsClient({
+  initialData,
+}: CredentialsClientProps) {
   const [viewMode, setViewMode] = useState<ViewMode>("cards")
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilters, setStatusFilters] = useState<string[]>([])
@@ -169,7 +171,7 @@ export function DashboardAccountsClient({ initialData }: AccountsClientProps) {
   return (
     <div className="min-h-screen">
       <div className="mx-auto max-w-7xl p-6">
-        <DashboardAccountsHeader
+        <DashboardCredentialsHeader
           searchTerm={searchTerm}
           onSearchChange={setSearchTerm}
           statusFilters={statusFilters}
@@ -190,13 +192,13 @@ export function DashboardAccountsClient({ initialData }: AccountsClientProps) {
         <div className="mb-4">
           <p className="text-sm text-gray-600">
             {filteredCredentials.length}{" "}
-            {filteredCredentials.length === 1 ? "account" : "accounts"}
+            {filteredCredentials.length === 1 ? "credential" : "credentials"}
           </p>
         </div>
 
         {filteredCredentials.length === 0 ? (
           <EmptyState
-            title="No accounts found"
+            title="No credentials found"
             description="Try adjusting your search or filter criteria"
             actionLabel="Clear filters"
             onAction={clearAllFilters}
@@ -204,12 +206,12 @@ export function DashboardAccountsClient({ initialData }: AccountsClientProps) {
         ) : (
           <>
             {viewMode === "cards" ? (
-              <DashboardAccountCardsView
+              <DashboardCredentialCardsView
                 credentials={filteredCredentials}
                 platforms={platforms}
               />
             ) : (
-              <DashboardAccountGridView
+              <DashboardCredentialGridView
                 credentials={filteredCredentials}
                 platforms={platforms}
               />
