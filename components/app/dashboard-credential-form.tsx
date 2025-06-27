@@ -1,10 +1,10 @@
 "use client"
 
 import React, { useState } from "react"
-import { UseFormReturn } from "react-hook-form"
 import { useCredentialPassword } from "@/orpc/hooks/use-credentials"
-import type { CredentialOutput } from "@/schemas/credential/dto"
 import type { CredentialFormDto } from "@/schemas/credential/credential"
+import type { CredentialOutput } from "@/schemas/credential/dto"
+import { UseFormReturn } from "react-hook-form"
 
 import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard"
 
@@ -21,10 +21,7 @@ interface CredentialFormProps {
   form: UseFormReturn<CredentialFormDto>
 }
 
-export function CredentialForm({
-  credential,
-  form,
-}: CredentialFormProps) {
+export function CredentialForm({ credential, form }: CredentialFormProps) {
   const [showPassword, setShowPassword] = useState(false)
   const { copy, isCopied } = useCopyToClipboard({ successDuration: 1000 })
 

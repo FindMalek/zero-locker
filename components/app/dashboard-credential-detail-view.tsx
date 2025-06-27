@@ -2,24 +2,27 @@
 
 import { useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
 import {
   useCredential,
   useUpdateCredential,
 } from "@/orpc/hooks/use-credentials"
+import {
+  credentialFormDtoSchema,
+  type CredentialFormDto,
+} from "@/schemas/credential/credential"
 import type {
   CredentialOutput,
   UpdateCredentialInput,
 } from "@/schemas/credential/dto"
 import type { ListPlatformsOutput } from "@/schemas/utils/dto"
+import { zodResolver } from "@hookform/resolvers/zod"
 import type { AccountStatus } from "@prisma/client"
-import { credentialFormDtoSchema, type CredentialFormDto } from "@/schemas/credential/credential"
+import { useForm } from "react-hook-form"
 
 import { DashboardCredentialDetailSkeleton } from "@/components/app/dashboard-credential-detail-skeleton"
+import { CredentialFooter } from "@/components/app/dashboard-credential-footer"
 import { CredentialForm } from "@/components/app/dashboard-credential-form"
 import { CredentialHeader } from "@/components/app/dashboard-credential-header"
-import { CredentialFooter } from "@/components/app/dashboard-credential-footer"
 import { CredentialSidebar } from "@/components/app/dashboard-credential-sidebar"
 import { EmptyState } from "@/components/shared/empty-state"
 import { FloatingSaveToolbar } from "@/components/shared/floating-save-toolbar"
@@ -63,7 +66,11 @@ export function CredentialDetailView({
     },
   })
 
-  const { formState: { isDirty }, reset, handleSubmit } = form
+  const {
+    formState: { isDirty },
+    reset,
+    handleSubmit,
+  } = form
 
   // Initialize form when credential loads
   useEffect(() => {
@@ -98,7 +105,7 @@ export function CredentialDetailView({
       }
 
       await updateCredentialMutation.mutateAsync(updateData)
-      
+
       // Reset form dirty state after successful save
       reset(data)
     } catch (error) {
@@ -166,10 +173,7 @@ export function CredentialDetailView({
             <CredentialHeader credential={credential} onDelete={handleDelete} />
 
             {/* Form Fields */}
-            <CredentialForm
-              credential={credential}
-              form={form}
-            />
+            <CredentialForm credential={credential} form={form} />
 
             {/* Footer */}
             <CredentialFooter credential={credential} />

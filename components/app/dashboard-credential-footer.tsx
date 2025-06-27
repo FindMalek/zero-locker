@@ -17,4 +17,4 @@ export function CredentialFooter({ credential }: CredentialFooterProps) {
       <span>Created by System Admin • {formatDate(credential.createdAt)}</span>
     </div>
   )
-} 
+}
