@@ -51,6 +51,13 @@ export function CredentialDetailView({
   })
   const updateCredentialMutation = useUpdateCredential()
 
+  const platform = initialData?.platforms.platforms.find(
+    (p) => p.id === credential?.platformId
+  )
+  if (!platform) {
+    throw new Error("Platform not found")
+  }
+
   // Form setup with react-hook-form and zod
   const form = useForm<CredentialFormDto>({
     resolver: zodResolver(credentialFormDtoSchema),
@@ -170,7 +177,11 @@ export function CredentialDetailView({
           {/* Main Content */}
           <div className="space-y-6 lg:col-span-3">
             {/* Header */}
-            <CredentialHeader credential={credential} onDelete={handleDelete} />
+            <CredentialHeader
+              credential={credential}
+              platform={platform}
+              onDelete={handleDelete}
+            />
 
             {/* Form Fields */}
             <CredentialForm credential={credential} form={form} />
