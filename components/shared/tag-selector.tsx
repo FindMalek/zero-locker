@@ -4,6 +4,7 @@ import { useState } from "react"
 import { Check, ChevronsUpDown, X } from "lucide-react"
 
 import { cn } from "@/lib/utils"
+import { generateTagColor } from "@/lib/utils/color-helpers"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -20,32 +21,6 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
-
-// Array of softer pastel colors in HEX format
-const softColors = [
-  "#F8E8EE", // soft rose
-  "#E8F4F8", // soft sky
-  "#E8F8F0", // soft mint
-  "#F8F8E8", // soft cream
-  "#F0E8F8", // soft lavender
-  "#F8E8F8", // soft pink
-  "#E8E8F8", // soft periwinkle
-  "#F8F0E8", // soft peach
-  "#E8F8F8", // soft aqua
-  "#F0F8E8", // soft sage
-  "#F8F0F0", // soft blush
-  "#E8F8E8", // soft seafoam
-  "#F0F0F8", // soft bluebell
-  "#F8E8F0", // soft mauve
-  "#F8F8F0", // soft butter
-  "#E8F0F8", // soft powder
-  "#F0F8F0", // soft jade
-]
-
-// Function to get a random color from the array
-export const getRandomSoftColor = () => {
-  return softColors[Math.floor(Math.random() * softColors.length)]
-}
 
 interface TagSelectorProps<T> {
   availableTags: T[]
@@ -96,7 +71,7 @@ export function TagSelector<T>({
       if (!colorMap[tagId]) {
         setColorMap((prev) => ({
           ...prev,
-          [tagId]: getRandomSoftColor(),
+          [tagId]: generateTagColor(getLabel(existingTag), "pastel"),
         }))
       }
       onChange([...selectedTags, existingTag])
@@ -117,7 +92,7 @@ export function TagSelector<T>({
     const tagId = getValue(newTag)
     setColorMap((prev) => ({
       ...prev,
-      [tagId]: getRandomSoftColor(),
+      [tagId]: generateTagColor(inputValue, "pastel"),
     }))
     onChange([...selectedTags, newTag])
     setInputValue("")
@@ -208,10 +183,11 @@ export function TagSelector<T>({
             if (!colorMap[tagId]) {
               setColorMap((prev) => ({
                 ...prev,
-                [tagId]: getRandomSoftColor(),
+                [tagId]: generateTagColor(getLabel(tag), "pastel"),
               }))
             }
-            const backgroundColor = colorMap[tagId] || getRandomSoftColor()
+            const backgroundColor =
+              colorMap[tagId] || generateTagColor(getLabel(tag), "pastel")
 
             return (
               <Badge

@@ -1,6 +1,7 @@
 "use client"
 
 import Image from "next/image"
+import { useRouter } from "next/navigation"
 import type { CredentialIncludeOutput } from "@/schemas/credential/dto"
 import type { PlatformSimpleRo } from "@/schemas/utils/platform"
 
@@ -13,7 +14,7 @@ import {
 import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard"
 
 import { Icons } from "@/components/shared/icons"
-import { ItemActionsDropdown } from "@/components/shared/item-actions-dropdown"
+import { ItemActionsContextMenu } from "@/components/shared/item-actions-dropdown"
 import { StatusBadge } from "@/components/shared/status-badge"
 import { TagDisplay } from "@/components/shared/tag-display"
 import { Button } from "@/components/ui/button"
@@ -32,6 +33,7 @@ export function DashboardAccountCardsView({
   credentials,
   platforms,
 }: CredentialListViewProps) {
+  const router = useRouter()
   const { copy, isCopied } = useCopyToClipboard({
     successDuration: 1000,
   })
@@ -46,8 +48,16 @@ export function DashboardAccountCardsView({
     )
   }
 
-  const handleCopyIdentifier = async (identifier: string) => {
+  const handleCopyIdentifier = async (
+    identifier: string,
+    e?: React.MouseEvent
+  ) => {
+    e?.stopPropagation()
     await copy(identifier)
+  }
+
+  const handleCardClick = (credentialId: string) => {
+    router.push(`/dashboard/accounts/${credentialId}`)
   }
 
   return (
@@ -57,108 +67,105 @@ export function DashboardAccountCardsView({
         const primaryDate = credential.lastViewed || credential.createdAt
 
         return (
-          <div
+          <ItemActionsContextMenu
             key={credential.id}
-            className="dark:hover:bg-secondary/50 hover:border-secondary-foreground/20 border-secondary group flex items-center gap-4 rounded-lg border-2 p-4 transition-colors duration-200 hover:shadow-sm"
+            onEdit={() => {
+              // TODO: Implement edit
+            }}
+            onShare={() => {
+              // TODO: Implement share
+            }}
+            onDuplicate={() => {
+              // TODO: Implement duplicate
+            }}
+            onMove={() => {
+              // TODO: Implement move
+            }}
+            onArchive={() => {
+              // TODO: Implement archive
+            }}
+            onDelete={() => {
+              // TODO: Implement delete
+            }}
           >
-            <Tooltip>
-              <TooltipTrigger>
-                <Image
-                  src={getPlaceholderImage(
-                    platform.name,
-                    getLogoDevUrlWithToken(platform.logo)
-                  )}
-                  alt={`${platform.name} logo`}
-                  width={64}
-                  height={64}
-                  className="bg-secondary size-10 rounded-full object-contain p-2"
-                />
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>{platform.name}</p>
-              </TooltipContent>
-            </Tooltip>
-
-            <div className="min-w-0 flex-1">
-              <div className="mb-1 flex items-center gap-2">
-                <div className="group/identifier flex items-center gap-1">
-                  <h3
-                    className="hover:text-primary group-hover/identifier:text-primary cursor-pointer truncate text-sm font-semibold transition-colors"
-                    onClick={() => handleCopyIdentifier(credential.identifier)}
-                  >
-                    {credential.identifier}
-                  </h3>
-
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="hover:text-primary h-6 w-6 p-0 opacity-0 transition-all group-hover/identifier:opacity-100"
-                    onClick={() => handleCopyIdentifier(credential.identifier)}
-                  >
-                    {isCopied ? (
-                      <Icons.check className="size-3" />
-                    ) : (
-                      <Icons.copy className="size-3" />
-                    )}
-                  </Button>
-                </div>
-              </div>
-
-              {credential.description && (
-                <p className="text-muted-foreground truncate text-sm">
-                  {credential.description}
-                </p>
-              )}
-            </div>
-
-            {/* Date */}
-            <div className="text-muted-foreground flex items-center gap-4 text-sm">
+            <div
+              className="dark:hover:bg-secondary/50 hover:border-secondary-foreground/20 border-secondary group flex cursor-pointer items-center gap-4 rounded-lg border-2 p-4 transition-colors duration-200 hover:shadow-sm"
+              onClick={() => handleCardClick(credential.id)}
+            >
               <Tooltip>
                 <TooltipTrigger>
-                  <div className="flex items-center gap-1">
-                    <Icons.clock className="h-3 w-3" />
-                    <span>{getRelativeTime(primaryDate)}</span>
-                  </div>
+                  <Image
+                    src={getPlaceholderImage(
+                      platform.name,
+                      getLogoDevUrlWithToken(platform.logo)
+                    )}
+                    alt={`${platform.name} logo`}
+                    width={64}
+                    height={64}
+                    className="bg-secondary size-10 rounded-full object-contain p-2"
+                  />
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p>
-                    {getCreatedOrLastViewedText(
-                      primaryDate,
-                      !!credential.lastViewed
-                    )}
-                  </p>
+                  <p>{platform.name}</p>
                 </TooltipContent>
               </Tooltip>
+
+              <div className="min-w-0 flex-1">
+                <div className="mb-1 flex items-center gap-2">
+                  <div className="group/identifier flex items-center gap-1">
+                    <h3 className="hover:text-primary group-hover/identifier:text-primary truncate text-sm font-semibold transition-colors">
+                      {credential.identifier}
+                    </h3>
+
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="hover:text-primary h-6 w-6 p-0 opacity-0 transition-all group-hover/identifier:opacity-100"
+                      onClick={(e) =>
+                        handleCopyIdentifier(credential.identifier, e)
+                      }
+                    >
+                      {isCopied ? (
+                        <Icons.check className="size-3" />
+                      ) : (
+                        <Icons.copy className="size-3" />
+                      )}
+                    </Button>
+                  </div>
+                </div>
+
+                {credential.description && (
+                  <p className="text-muted-foreground truncate text-sm">
+                    {credential.description}
+                  </p>
+                )}
+              </div>
+
+              {/* Date */}
+              <div className="text-muted-foreground flex items-center gap-4 text-sm">
+                <Tooltip>
+                  <TooltipTrigger>
+                    <div className="flex items-center gap-1">
+                      <Icons.clock className="h-3 w-3" />
+                      <span>{getRelativeTime(primaryDate)}</span>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>
+                      {getCreatedOrLastViewedText(
+                        primaryDate,
+                        !!credential.lastViewed
+                      )}
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+              </div>
+
+              <TagDisplay tags={credential.tags} size="sm" />
+
+              <StatusBadge status={credential.status} compact />
             </div>
-
-            <TagDisplay tags={credential.tags} size="sm" />
-
-            <StatusBadge status={credential.status} compact />
-
-            {/* Actions */}
-            <div className="flex items-center gap-1">
-              <ItemActionsDropdown
-                onEdit={() => {
-                  // TODO: Implement edit
-                }}
-                onShare={() => {
-                  // TODO: Implement share
-                }}
-                onDuplicate={() => {
-                  // TODO: Implement duplicate
-                }}
-                onMove={() => {
-                  // TODO: Implement move
-                }}
-                onArchive={() => {
-                  // TODO: Implement archive
-                }}
-                onDelete={() => {
-                  // TODO: Implement delete
-                }}
-              />
-            </div>
-          </div>
+          </ItemActionsContextMenu>
         )
       })}
     </div>

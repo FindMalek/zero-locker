@@ -1,14 +1,13 @@
 import { useMemo, useState } from "react"
+import type { CredentialEntitySimpleDbData } from "@/entities"
 
-import type { Entity } from "@/types/entity"
-
-export function useEntityFilters(entities: Entity[]) {
+export function useEntityFilters(entities: CredentialEntitySimpleDbData[]) {
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
   const [platformFilter, setPlatformFilter] = useState("all")
 
   const platforms = useMemo(() => {
-    const uniquePlatforms = new Set(entities.map((entity) => entity.platform))
+    const uniquePlatforms = new Set(entities.map((entity) => entity.platformId))
     return Array.from(uniquePlatforms).sort()
   }, [entities])
 
@@ -27,7 +26,7 @@ export function useEntityFilters(entities: Entity[]) {
 
       // Platform filter
       const matchesPlatform =
-        platformFilter === "all" || entity.platform === platformFilter
+        platformFilter === "all" || entity.platformId === platformFilter
 
       return matchesSearch && matchesStatus && matchesPlatform
     })

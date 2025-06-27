@@ -1,9 +1,8 @@
 import { useMemo, useState } from "react"
+import type { CredentialEntitySimpleDbData } from "@/entities"
+import type { SortDirection, SortField } from "@/schemas"
 
-import type { SortDirection, SortField } from "@/types/common"
-import type { Entity } from "@/types/entity"
-
-export function useEntitySorting(entities: Entity[]) {
+export function useEntitySorting(entities: CredentialEntitySimpleDbData[]) {
   const [sortField, setSortField] = useState<SortField | null>(null)
   const [sortDirection, setSortDirection] = useState<SortDirection>(null)
 
