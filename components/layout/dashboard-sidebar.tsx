@@ -14,6 +14,7 @@ import {
   SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
+  SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
@@ -50,7 +51,6 @@ export function DashboardSidebar({ user, ...props }: DashboardSidebarProps) {
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarSeparator />
-
               <DashboardSidebarMenuItemComponent
                 href="/dashboard"
                 icon={<Icons.home className="h-4 w-4" />}
@@ -58,6 +58,9 @@ export function DashboardSidebar({ user, ...props }: DashboardSidebarProps) {
               />
 
               <SidebarSeparator />
+              <SidebarGroupLabel>
+                <span>Applications</span>
+              </SidebarGroupLabel>
 
               <DashboardSidebarMenuItemComponent
                 href="/dashboard/accounts"
@@ -76,11 +79,42 @@ export function DashboardSidebar({ user, ...props }: DashboardSidebarProps) {
               />
 
               <SidebarSeparator />
+              <SidebarGroupLabel>
+                <span>Library</span>
+              </SidebarGroupLabel>
+
+              <DashboardSidebarMenuItemComponent
+                href="/dashboard/platforms"
+                icon={<Icons.platform className="h-4 w-4" />}
+                label="Platforms"
+              />
+              <DashboardSidebarMenuItemComponent
+                href="/dashboard/containers"
+                icon={<Icons.folder className="h-4 w-4" />}
+                label="Containers"
+              />
+
+              <DashboardSidebarMenuItemComponent
+                href="/dashboard/tags"
+                icon={<Icons.tag className="h-4 w-4" />}
+                label="Tags"
+              />
+
+              <SidebarSeparator />
+              <SidebarGroupLabel>
+                <span>Lifecycle</span>
+              </SidebarGroupLabel>
 
               <DashboardSidebarMenuItemComponent
                 href="/dashboard/logs"
                 icon={<Icons.logs className="h-4 w-4" />}
                 label="Logs"
+              />
+
+              <DashboardSidebarMenuItemComponent
+                href="/dashboard/iv"
+                icon={<Icons.iv className="h-4 w-4" />}
+                label="Initialized Vectors"
               />
             </SidebarMenu>
           </SidebarGroupContent>

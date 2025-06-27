@@ -2,6 +2,7 @@ import Image from "next/image"
 import { RecentItemType, RecentItemTypeEnum } from "@/schemas/utils"
 import {
   AlertTriangle,
+  AppWindow,
   Archive,
   ArrowDown,
   ArrowRight,
@@ -71,12 +72,14 @@ import {
   Plus,
   PuzzleIcon,
   RefreshCw,
+  RssIcon,
   SaveIcon,
   Search,
   Settings,
   Share,
   Shield,
   Sparkles,
+  SquaresIntersectIcon,
   SquareTerminal,
   Stethoscope,
   StretchHorizontalIcon,
@@ -240,7 +243,10 @@ export const Icons = {
   puzzle: PuzzleIcon,
   share: Share,
   move: Move,
+  apps: AppWindow,
   archive: Archive,
+  iv: SquaresIntersectIcon,
+  platform: RssIcon,
 }
 
 export const getEntityIcon = (itemType: RecentItemType) => {
