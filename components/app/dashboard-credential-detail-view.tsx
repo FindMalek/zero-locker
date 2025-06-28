@@ -184,21 +184,14 @@ export function CredentialDetailView({
     <div className="bg-background min-h-screen">
       <div className="mx-auto max-w-6xl p-4">
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-4">
-          {/* Main Content */}
           <div className="space-y-6 lg:col-span-3">
-            {/* Header */}
             <CredentialHeader
               credential={credential}
               platform={platform}
               onDelete={handleDelete}
             />
-
             <Separator />
-
-            {/* Form Fields */}
             <CredentialForm credential={credential} form={form} />
-
-            {/* Footer */}
             <CredentialFooter credential={credential} />
           </div>
 

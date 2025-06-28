@@ -15,6 +15,11 @@ import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
 import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 
 interface CredentialFormProps {
   credential?: CredentialOutput
@@ -44,13 +49,21 @@ export function CredentialForm({ credential, form }: CredentialFormProps) {
 
   return (
     <div className="space-y-5">
-      {/* Identifier */}
       <div className="space-y-1.5">
         <div className="flex items-center gap-2">
           <Label className="text-foreground text-sm font-medium">
             Identifier
           </Label>
-          <Icons.helpCircle className="text-muted-foreground h-3 w-3" />
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Icons.helpCircle className="text-muted-foreground h-3 w-3" />
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>
+                The username, email, or unique identifier for this credential
+              </p>
+            </TooltipContent>
+          </Tooltip>
         </div>
         <div className="relative">
           <Input
@@ -79,7 +92,17 @@ export function CredentialForm({ credential, form }: CredentialFormProps) {
           <Label className="text-foreground text-sm font-medium">
             Password
           </Label>
-          <Icons.helpCircle className="text-muted-foreground h-3 w-3" />
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Icons.helpCircle className="text-muted-foreground h-3 w-3" />
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>
+                The password is encrypted and stored securely. Click the eye
+                icon to reveal it.
+              </p>
+            </TooltipContent>
+          </Tooltip>
         </div>
         <div className="relative">
           <Input
@@ -121,9 +144,22 @@ export function CredentialForm({ credential, form }: CredentialFormProps) {
 
       {/* Description */}
       <div className="space-y-1.5">
-        <Label className="text-foreground text-sm font-medium">
-          Description
-        </Label>
+        <div className="flex items-center gap-2">
+          <Label className="text-foreground text-sm font-medium">
+            Description
+          </Label>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Icons.helpCircle className="text-muted-foreground h-3 w-3" />
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>
+                Add notes or context about this credential to help you remember
+                its purpose
+              </p>
+            </TooltipContent>
+          </Tooltip>
+        </div>
         <Textarea
           {...register("description")}
           placeholder="Add a description for this credential..."

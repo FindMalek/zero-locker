@@ -24,8 +24,8 @@ export function CredentialHeader({
   platform,
   onDelete,
 }: CredentialHeaderProps) {
-  const { copy, isCopied } = useCopyToClipboard({ successDuration: 2000 })
   const { toast } = useToast()
+  const { copy, isCopied } = useCopyToClipboard({ successDuration: 2000 })
 
   const handleCopyLink = async () => {
     await copy(window.location.href)
@@ -34,7 +34,6 @@ export function CredentialHeader({
 
   return (
     <div className="flex items-start justify-between gap-4">
-      {/* Platform Logo & Credential Info */}
       <div className="flex min-w-0 items-center gap-4">
         <div className="flex-shrink-0">
           <Image
@@ -50,17 +49,13 @@ export function CredentialHeader({
         </div>
 
         <div className="min-w-0 flex-1 space-y-2">
-          <div className="text-muted-foreground flex items-center gap-2 text-sm">
-            <Icons.globe className="size-4" />
-            <span className="text-xs font-medium">{platform.name}</span>
-          </div>
+          <span className="text-xs font-medium">{platform.name}</span>
           <h1 className="text-foreground text-xl font-semibold leading-tight sm:text-2xl">
             {credential.identifier}
           </h1>
         </div>
       </div>
 
-      {/* Actions */}
       <div className="flex flex-shrink-0 items-center gap-2">
         <StatusBadge status={credential.status} />
         <Button
@@ -81,6 +76,7 @@ export function CredentialHeader({
             </>
           )}
         </Button>
+
         <ItemActionsDropdown
           onShare={() => {
             // TODO: Implement share
