@@ -1,6 +1,7 @@
 "use client"
 
 import Image from "next/image"
+import Link from "next/link"
 import type { CredentialOutput } from "@/schemas/credential/dto"
 import { PlatformOutput } from "@/schemas/utils/dto"
 
@@ -49,7 +50,19 @@ export function CredentialHeader({
         </div>
 
         <div className="min-w-0 flex-1 space-y-2">
-          <span className="text-xs font-medium">{platform.name}</span>
+          {platform.loginUrl ? (
+            <Link
+              href={platform.loginUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-primary focus:ring-ring group flex items-center gap-1.5 rounded-sm transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2"
+            >
+              <span className="text-xs font-medium">{platform.name}</span>
+              <Icons.link className="h-3 w-3 opacity-0 transition-opacity group-hover:opacity-100" />
+            </Link>
+          ) : (
+            <span className="text-xs font-medium">{platform.name}</span>
+          )}
           <h1 className="text-foreground text-xl font-semibold leading-tight sm:text-2xl">
             {credential.identifier}
           </h1>

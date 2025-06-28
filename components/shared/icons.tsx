@@ -32,6 +32,7 @@ import {
   CreditCard,
   DatabaseZapIcon,
   DollarSign,
+  ExternalLink,
   EyeIcon,
   EyeOff,
   File,
@@ -247,6 +248,7 @@ export const Icons = {
   archive: Archive,
   iv: SquaresIntersectIcon,
   platform: RssIcon,
+  link: ExternalLink,
 }
 
 export const getEntityIcon = (itemType: RecentItemType) => {

@@ -16,6 +16,7 @@ import type {
 } from "@/schemas/credential/dto"
 import type { ListPlatformsOutput } from "@/schemas/utils/dto"
 import { zodResolver } from "@hookform/resolvers/zod"
+import { AccountStatus } from "@prisma/client"
 import { useForm } from "react-hook-form"
 
 import { handleErrors } from "@/lib/utils"
@@ -162,6 +163,31 @@ export function CredentialDetailView({
     form.setValue("containerId", containerId, { shouldDirty: true })
   }
 
+  const handleStatusChange = async (status: AccountStatus) => {
+    if (!credential) return
+
+    try {
+      const updateData: UpdateCredentialInput = {
+        id: credential.id,
+        status: status,
+      }
+
+      await updateCredentialMutation.mutateAsync(updateData)
+      toast("Status updated successfully", "success")
+    } catch (error) {
+      const { message, details } = handleErrors(
+        error,
+        "Failed to update status"
+      )
+      toast(
+        details
+          ? `${message}: ${Array.isArray(details) ? details.join(", ") : details}`
+          : message,
+        "error"
+      )
+    }
+  }
+
   if (isLoading) {
     return <DashboardCredentialDetailSkeleton />
   }
@@ -195,15 +221,14 @@ export function CredentialDetailView({
             <CredentialFooter credential={credential} />
           </div>
 
-          {/* Right Sidebar */}
           <CredentialSidebar
             credential={credential}
+            onStatusChange={handleStatusChange}
             onContainerChange={handleContainerChange}
           />
         </div>
       </div>
 
-      {/* Floating Save Toolbar */}
       <FloatingSaveToolbar
         isVisible={isDirty}
         onSave={handleSubmit(handleSave)}

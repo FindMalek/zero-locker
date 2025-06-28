@@ -5,11 +5,11 @@ import { useRouter } from "next/navigation"
 import type { CredentialIncludeOutput } from "@/schemas/credential/dto"
 import type { PlatformSimpleRo } from "@/schemas/utils/platform"
 
+import { getRelativeTime } from "@/lib/date-utils"
 import {
   getCreatedOrLastViewedText,
   getLogoDevUrlWithToken,
   getPlaceholderImage,
-  getRelativeTime,
 } from "@/lib/utils"
 import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard"
 
