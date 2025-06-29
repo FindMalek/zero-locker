@@ -5,13 +5,11 @@ import { TagDto } from "@/schemas/utils/tag"
 import { useForm } from "react-hook-form"
 
 import { getLogoDevUrlWithToken, getPlaceholderImage } from "@/lib/utils"
+import { generateTagColor } from "@/lib/utils/color-helpers"
 
 import { Icons } from "@/components/shared/icons"
 import { PasswordStrengthMeter } from "@/components/shared/password-strength-meter"
-import {
-  getRandomSoftColor,
-  TagSelector,
-} from "@/components/shared/tag-selector"
+import { TagSelector } from "@/components/shared/tag-selector"
 import { Button } from "@/components/ui/button"
 import { ComboboxResponsive } from "@/components/ui/combobox-responsive"
 import {
@@ -73,7 +71,9 @@ export function DashboardAddCredentialForm({
                     label: platform.name,
                     logo: getPlaceholderImage(
                       platform.name,
-                      getLogoDevUrlWithToken(platform.logo || null)
+                      platform.logo
+                        ? getLogoDevUrlWithToken(platform.logo)
+                        : null
                     ),
                   }))}
                   selectedItem={
@@ -210,7 +210,7 @@ export function DashboardAddCredentialForm({
                 getLabel={(tag) => tag.name}
                 createTag={(name) => ({
                   name,
-                  color: getRandomSoftColor(),
+                  color: generateTagColor(name, "pastel"),
                   userId: undefined,
                   containerId: undefined,
                 })}

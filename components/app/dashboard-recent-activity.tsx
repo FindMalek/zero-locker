@@ -1,5 +1,6 @@
 "use client"
 
+import Link from "next/link"
 import { RecentItem } from "@/schemas/utils"
 
 import {
@@ -12,7 +13,7 @@ import { formatDate, formatFullDate } from "@/lib/utils"
 import { AddItemDropdown } from "@/components/shared/add-item-dropdown"
 import { getEntityIcon, Icons } from "@/components/shared/icons"
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
+import { Button, buttonVariants } from "@/components/ui/button"
 import {
   Card,
   CardContent,
@@ -101,9 +102,15 @@ export function DashboardRecentActivity({
 
       {recentItems.length > 0 && (
         <CardFooter>
-          <Button variant="outline" className="w-full" disabled>
-            View all activity (coming soon)
-          </Button>
+          <Link
+            href="/dashboard/logs"
+            className={buttonVariants({
+              variant: "outline",
+              className: "w-full",
+            })}
+          >
+            View all activity
+          </Link>
         </CardFooter>
       )}
     </Card>

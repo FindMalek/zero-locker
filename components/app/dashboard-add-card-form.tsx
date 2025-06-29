@@ -10,13 +10,11 @@ import { UseFormReturn } from "react-hook-form"
 
 import { cn, getMetadataLabels } from "@/lib/utils"
 import { CardExpiryDateUtils } from "@/lib/utils/card-expiry-helpers"
+import { generateTagColor } from "@/lib/utils/color-helpers"
 
 import { CardPaymentInputs } from "@/components/shared/card-payment-inputs"
 import { CardStatusIndicator } from "@/components/shared/card-status-indicator"
-import {
-  getRandomSoftColor,
-  TagSelector,
-} from "@/components/shared/tag-selector"
+import { TagSelector } from "@/components/shared/tag-selector"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -195,7 +193,7 @@ export function DashboardAddCardForm({
                 getLabel={(tag) => tag.name}
                 createTag={(name) => ({
                   name,
-                  color: getRandomSoftColor(),
+                  color: generateTagColor(name, "pastel"),
                   userId: undefined,
                   containerId: undefined,
                 })}
