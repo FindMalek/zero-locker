@@ -11,7 +11,6 @@ import { useToast } from "@/hooks/use-toast"
 
 import { Icons } from "@/components/shared/icons"
 import { ItemActionsDropdown } from "@/components/shared/item-actions-dropdown"
-import { StatusBadge } from "@/components/shared/status-badge"
 import { Button } from "@/components/ui/button"
 
 interface CredentialHeaderProps {
@@ -70,7 +69,6 @@ export function CredentialHeader({
       </div>
 
       <div className="flex flex-shrink-0 items-center gap-2">
-        <StatusBadge status={credential.status} />
         <Button
           variant="outline"
           size="sm"

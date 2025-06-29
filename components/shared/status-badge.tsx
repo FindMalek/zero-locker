@@ -2,14 +2,22 @@
 
 import { AccountStatus } from "@prisma/client"
 
+import { Icons } from "@/components/shared/icons"
 import { Badge } from "@/components/ui/badge"
 
 interface StatusBadgeProps {
   status: AccountStatus
   compact?: boolean
+  withPopover?: boolean
+  className?: string
 }
 
-export function StatusBadge({ status, compact = false }: StatusBadgeProps) {
+export function StatusBadge({
+  status,
+  compact = false,
+  withPopover = false,
+  className = "",
+}: StatusBadgeProps) {
   const getStatusConfig = (status: AccountStatus) => {
     switch (status) {
       case AccountStatus.ACTIVE:
@@ -43,9 +51,16 @@ export function StatusBadge({ status, compact = false }: StatusBadgeProps) {
     ? "text-xs font-medium h-5 px-2"
     : "text-xs font-medium h-6 px-2.5"
 
+  const badgeClasses = `${config.className} ${sizeClasses} ${className}${
+    withPopover ? " cursor-pointer hover:opacity-80 transition-opacity" : ""
+  }`
+
   return (
-    <Badge variant="outline" className={`${config.className} ${sizeClasses}`}>
-      {config.label}
+    <Badge variant="outline" className={badgeClasses}>
+      <span>{config.label}</span>
+      {withPopover && (
+        <Icons.chevronDown className="ml-1.5 h-3 w-3 opacity-60" />
+      )}
     </Badge>
   )
 }
