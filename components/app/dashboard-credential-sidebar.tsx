@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { CredentialEntity } from "@/entities/credential/credential/entity"
 import { usePlatforms } from "@/orpc/hooks/use-platforms"
 import {
   accountStatusEnum,
@@ -37,15 +38,21 @@ interface CredentialSidebarProps {
 
 const statusConfig = {
   [accountStatusEnum.ACTIVE]: {
-    label: "Active",
+    label: CredentialEntity.convertAccountStatusToString(
+      accountStatusEnum.ACTIVE
+    ),
     icon: Icons.check,
   },
   [accountStatusEnum.SUSPENDED]: {
-    label: "Suspended",
+    label: CredentialEntity.convertAccountStatusToString(
+      accountStatusEnum.SUSPENDED
+    ),
     icon: Icons.warning,
   },
   [accountStatusEnum.DELETED]: {
-    label: "Deleted",
+    label: CredentialEntity.convertAccountStatusToString(
+      accountStatusEnum.DELETED
+    ),
     icon: Icons.trash,
   },
 }
@@ -82,38 +89,31 @@ export function CredentialSidebar({
   }
 
   return (
-    <div className="flex h-full flex-col space-y-6 p-4">
-      {/* Status Section */}
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <Popover open={statusPopoverOpen} onOpenChange={setStatusPopoverOpen}>
-            <PopoverTrigger asChild>
-              <div>
-                <StatusBadge status={credential.status} withPopover />
-              </div>
-            </PopoverTrigger>
-            <PopoverContent align="end" className="w-40 p-2">
-              <div className="space-y-1">
-                {Object.entries(statusConfig).map(([status, config]) => (
-                  <Button
-                    key={status}
-                    variant="ghost"
-                    size="sm"
-                    className="w-full justify-start gap-2 text-xs"
-                    onClick={() =>
-                      handleStatusChange(status as AccountStatusInfer)
-                    }
-                    disabled={status === credential.status || isChangingStatus}
-                  >
-                    <config.icon className="h-3 w-3" />
-                    {config.label}
-                  </Button>
-                ))}
-              </div>
-            </PopoverContent>
-          </Popover>
-        </div>
-      </div>
+    <div className="flex h-full flex-col space-y-6">
+      <Popover open={statusPopoverOpen} onOpenChange={setStatusPopoverOpen}>
+        <PopoverTrigger asChild>
+          <div className="w-full cursor-pointer">
+            <StatusBadge status={credential.status} withPopover isFullWidth />
+          </div>
+        </PopoverTrigger>
+        <PopoverContent align="end" className="w-40 p-2">
+          <div className="space-y-1">
+            {Object.entries(statusConfig).map(([status, config]) => (
+              <Button
+                key={status}
+                variant="ghost"
+                size="sm"
+                className="w-full justify-start gap-2 text-xs"
+                onClick={() => handleStatusChange(status as AccountStatusInfer)}
+                disabled={status === credential.status || isChangingStatus}
+              >
+                <config.icon className="h-3 w-3" />
+                {config.label}
+              </Button>
+            ))}
+          </div>
+        </PopoverContent>
+      </Popover>
 
       {/* Quick Actions */}
       <div className="flex gap-2">
@@ -160,7 +160,6 @@ export function CredentialSidebar({
 
       {/* Container Section */}
       <div className="space-y-3">
-        <Label className="text-sm font-medium">Container</Label>
         <ContainerSelector
           currentContainerId={credential.containerId}
           entityType={EntityTypeEnum.CREDENTIAL}

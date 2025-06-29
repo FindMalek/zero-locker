@@ -222,7 +222,10 @@ export function CredentialDetailView({
           </div>
 
           <CredentialSidebar
-            credential={credential}
+            credential={{
+              ...credential,
+              containerId: form.watch("containerId") || credential.containerId,
+            }}
             onStatusChange={handleStatusChange}
             onContainerChange={handleContainerChange}
           />

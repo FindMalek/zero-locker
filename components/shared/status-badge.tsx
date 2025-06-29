@@ -10,11 +10,13 @@ interface StatusBadgeProps {
   compact?: boolean
   withPopover?: boolean
   className?: string
+  isFullWidth?: boolean
 }
 
 export function StatusBadge({
   status,
   compact = false,
+  isFullWidth = false,
   withPopover = false,
   className = "",
 }: StatusBadgeProps) {
@@ -53,7 +55,7 @@ export function StatusBadge({
 
   const badgeClasses = `${config.className} ${sizeClasses} ${className}${
     withPopover ? " cursor-pointer hover:opacity-80 transition-opacity" : ""
-  }`
+  } ${isFullWidth ? "w-full justify-between" : ""}`
 
   return (
     <Badge variant="outline" className={badgeClasses}>
