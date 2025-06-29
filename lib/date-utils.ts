@@ -36,3 +36,15 @@ export function getPrimaryDate(lastViewed: Date | null, createdAt: Date) {
     label: "Created",
   }
 }
+
+export function getFullFormattedDateAndTime(date: Date | null): string {
+  if (!date) return "Never"
+  return new Intl.DateTimeFormat("en-US", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  }).format(date)
+}

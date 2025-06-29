@@ -10,7 +10,7 @@ import {
 import type { CredentialOutput } from "@/schemas/credential/dto"
 import { EntityTypeEnum } from "@/schemas/utils"
 
-import { getRelativeTime } from "@/lib/date-utils"
+import { getFullFormattedDateAndTime, getRelativeTime } from "@/lib/date-utils"
 import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard"
 
 import { ContainerSelector } from "@/components/shared/container-selector"
@@ -175,27 +175,48 @@ export function CredentialSidebar({
         <div className="space-y-2 text-sm">
           <div className="flex items-center justify-between">
             <span className="text-muted-foreground">Created</span>
-            <span className="font-medium">
-              {getRelativeTime(credential.createdAt)}
-            </span>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="font-medium hover:underline">
+                  {getRelativeTime(credential.createdAt)}
+                </span>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>{getFullFormattedDateAndTime(credential.createdAt)}</p>
+              </TooltipContent>
+            </Tooltip>
           </div>
 
           {credential.updatedAt.getTime() !==
             credential.createdAt.getTime() && (
             <div className="flex items-center justify-between">
               <span className="text-muted-foreground">Modified</span>
-              <span className="font-medium">
-                {getRelativeTime(credential.updatedAt)}
-              </span>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className="font-medium hover:underline">
+                    {getRelativeTime(credential.updatedAt)}
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>{getFullFormattedDateAndTime(credential.updatedAt)}</p>
+                </TooltipContent>
+              </Tooltip>
             </div>
           )}
 
           {credential.lastViewed && (
             <div className="flex items-center justify-between">
               <span className="text-muted-foreground">Last viewed</span>
-              <span className="font-medium">
-                {getRelativeTime(credential.lastViewed)}
-              </span>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className="font-medium hover:underline">
+                    {getRelativeTime(credential.lastViewed)}
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>{getFullFormattedDateAndTime(credential.lastViewed)}</p>
+                </TooltipContent>
+              </Tooltip>
             </div>
           )}
         </div>
