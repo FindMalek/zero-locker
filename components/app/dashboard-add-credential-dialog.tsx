@@ -100,6 +100,7 @@ export function DashboardAddCredentialDialog({
   const [createMore, setCreateMore] = useState(false)
   const [showAdvanced, setShowAdvanced] = useState(false)
   const [statusPopoverOpen, setStatusPopoverOpen] = useState(false)
+  const [isGenerating, setIsGenerating] = useState(false)
 
   // Forms
   const credentialForm = useForm<CredentialDto>({
@@ -136,9 +137,13 @@ export function DashboardAddCredentialDialog({
 
   // Password handling
   const handleGeneratePassword = () => {
+    setIsGenerating(true)
     const newPassword = generatePassword()
     setSensitiveData((prev) => ({ ...prev, password: newPassword }))
     setPasswordStrength(checkPasswordStrength(newPassword))
+    
+    // Reset animation after 300ms
+    setTimeout(() => setIsGenerating(false), 300)
   }
 
   const handlePasswordChange = (password: string) => {
@@ -310,6 +315,7 @@ export function DashboardAddCredentialDialog({
       setCreateMore(false)
       setShowAdvanced(false)
       setPasswordStrength(null)
+      setIsGenerating(false)
     }
     onOpenChange(open)
   }
@@ -337,7 +343,7 @@ export function DashboardAddCredentialDialog({
 
               <div className="min-w-0 flex-1 space-y-1">
                 <ResponsiveDialogTitle className="flex items-center gap-2 font-mono">
-                  {!selectedPlatform && <Icons.user className="size-4" />}
+                  {!selectedPlatform && <Icons.user className="size-3" />}
                   Add New Credential
                 </ResponsiveDialogTitle>
                 <ResponsiveDialogDescription>
@@ -364,7 +370,7 @@ export function DashboardAddCredentialDialog({
                       </Label>
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <Icons.helpCircle className="text-muted-foreground h-3 w-3" />
+                          <Icons.helpCircle className="text-muted-foreground size-3" />
                         </TooltipTrigger>
                         <TooltipContent>
                           <p>
@@ -431,7 +437,7 @@ export function DashboardAddCredentialDialog({
                         </Label>
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <Icons.helpCircle className="text-muted-foreground h-3 w-3" />
+                            <Icons.helpCircle className="text-muted-foreground size-3" />
                           </TooltipTrigger>
                           <TooltipContent>
                             <p>
@@ -465,7 +471,7 @@ export function DashboardAddCredentialDialog({
                         </Label>
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <Icons.helpCircle className="text-muted-foreground h-3 w-3" />
+                            <Icons.helpCircle className="text-muted-foreground size-3" />
                           </TooltipTrigger>
                           <TooltipContent>
                             <p>
@@ -490,11 +496,14 @@ export function DashboardAddCredentialDialog({
                               <Button
                                 type="button"
                                 variant="ghost"
-                                size="sm"
-                                className="size-6 p-0"
+                                size="icon"
                                 onClick={handleGeneratePassword}
                               >
-                                <Icons.refresh className="h-3 w-3" />
+                                <Icons.refresh 
+                                  className={`size-3 transition-transform duration-300 ${
+                                    isGenerating ? "rotate-180" : ""
+                                  }`} 
+                                />
                               </Button>
                             </TooltipTrigger>
                             <TooltipContent>
@@ -515,7 +524,7 @@ export function DashboardAddCredentialDialog({
                       <Label className="text-sm font-medium">Description</Label>
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <Icons.helpCircle className="text-muted-foreground h-3 w-3" />
+                          <Icons.helpCircle className="text-muted-foreground size-3" />
                         </TooltipTrigger>
                         <TooltipContent>
                           <p>Add notes or context about this credential</p>
@@ -565,7 +574,7 @@ export function DashboardAddCredentialDialog({
                       onClick={() => setShowAdvanced(!showAdvanced)}
                     >
                       <div className="flex items-center gap-3">
-                        <Icons.settings className="h-4 w-4" />
+                        <Icons.settings className="size-3" />
                         <span className="font-medium">Advanced Settings</span>
                       </div>
                       <div className="flex items-center gap-2">
@@ -573,7 +582,7 @@ export function DashboardAddCredentialDialog({
                           {showAdvanced ? "Hide" : "Optional"}
                         </span>
                         <Icons.chevronDown
-                          className={`h-4 w-4 transition-transform ${
+                          className={`size-3 transition-transform ${
                             showAdvanced ? "rotate-180" : ""
                           }`}
                         />
@@ -583,6 +592,29 @@ export function DashboardAddCredentialDialog({
                     {showAdvanced && (
                       <div className="bg-muted/55 space-y-4 p-4">
                         <Form {...metadataForm}>
+                          {/* Two-Factor Authentication */}
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <Label className="text-sm font-medium">
+                                Two-Factor Authentication
+                              </Label>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Icons.helpCircle className="text-muted-foreground size-3" />
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>Enable if this account has 2FA configured</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </div>
+                            <Switch
+                              checked={metadataForm.watch("has2FA")}
+                              onCheckedChange={(checked) =>
+                                metadataForm.setValue("has2FA", checked)
+                              }
+                            />
+                          </div>
+                          
                           <div className="grid gap-4 sm:grid-cols-2">
                             <div className="space-y-2">
                               <Label className="text-sm font-medium">
@@ -607,22 +639,7 @@ export function DashboardAddCredentialDialog({
                             </div>
                           </div>
 
-                          <div className="flex items-center space-x-3 rounded-md border p-4">
-                            <Switch
-                              checked={metadataForm.watch("has2FA")}
-                              onCheckedChange={(checked) =>
-                                metadataForm.setValue("has2FA", checked)
-                              }
-                            />
-                            <div className="space-y-1 leading-none">
-                              <Label className="text-sm font-medium">
-                                Two-Factor Authentication
-                              </Label>
-                              <p className="text-muted-foreground text-xs">
-                                This account has 2FA enabled
-                              </p>
-                            </div>
-                          </div>
+         
 
                           <div className="space-y-2">
                             <Label className="text-sm font-medium">
@@ -683,7 +700,7 @@ export function DashboardAddCredentialDialog({
                             handleStatusChange(status as AccountStatusInfer)
                           }
                         >
-                          <config.icon className="h-3 w-3" />
+                          <config.icon className="size-4" />
                           {config.label}
                         </Button>
                       ))}
@@ -742,7 +759,7 @@ export function DashboardAddCredentialDialog({
                 }}
               >
                 {createCredentialWithMetadataMutation.isPending && (
-                  <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
+                  <Icons.spinner className="mr-2 size-4 animate-spin" />
                 )}
                 Create Credential
               </Button>

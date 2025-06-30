@@ -8,7 +8,7 @@ export default function RegisterLoading() {
       <div className="w-full max-w-sm">
         <div className="mb-4 flex flex-col items-center gap-2">
           <div className="flex flex-col items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-md">
+            <div className="flex size-8 items-center justify-center rounded-md">
               <Skeleton className="size-6" />
             </div>
             <span className="sr-only">{siteConfig.name}</span>

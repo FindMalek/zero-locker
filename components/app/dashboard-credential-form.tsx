@@ -56,7 +56,7 @@ export function CredentialForm({ credential, form }: CredentialFormProps) {
           </Label>
           <Tooltip>
             <TooltipTrigger asChild>
-              <Icons.helpCircle className="text-muted-foreground h-3 w-3" />
+              <Icons.helpCircle className="text-muted-foreground size-3" />
             </TooltipTrigger>
             <TooltipContent>
               <p>
@@ -73,14 +73,14 @@ export function CredentialForm({ credential, form }: CredentialFormProps) {
           <Button
             type="button"
             variant="ghost"
-            size="sm"
-            className="hover:bg-muted absolute right-1 top-1/2 h-6 w-6 -translate-y-1/2 p-0"
+            size="icon"
+            className="hover:bg-muted absolute right-1 top-1/2 -translate-y-1/2"
             onClick={() => handleCopy(formData.identifier)}
           >
             {isCopied ? (
-              <Icons.check className="h-3 w-3" />
+              <Icons.check className="size-4" />
             ) : (
-              <Icons.copy className="h-3 w-3" />
+              <Icons.copy className="size-4" />
             )}
           </Button>
         </div>
@@ -94,7 +94,7 @@ export function CredentialForm({ credential, form }: CredentialFormProps) {
           </Label>
           <Tooltip>
             <TooltipTrigger asChild>
-              <Icons.helpCircle className="text-muted-foreground h-3 w-3" />
+              <Icons.helpCircle className="text-muted-foreground size-3" />
             </TooltipTrigger>
             <TooltipContent>
               <p>
@@ -115,27 +115,27 @@ export function CredentialForm({ credential, form }: CredentialFormProps) {
             <Button
               type="button"
               variant="ghost"
-              size="sm"
-              className="hover:bg-muted h-6 w-6 p-0"
+              size="icon"
+              className="hover:bg-muted"
               onClick={() => handleCopy(passwordData?.password || "")}
               disabled={!showPassword || !passwordData?.password}
             >
-              <Icons.copy className="h-3 w-3" />
+              <Icons.copy className="size-4" />
             </Button>
             <Button
               type="button"
               variant="ghost"
-              size="sm"
-              className="hover:bg-muted h-6 w-6 p-0"
+              size="icon"
+              className="hover:bg-muted"
               onClick={handlePasswordToggle}
               disabled={isLoadingPassword}
             >
               {isLoadingPassword ? (
-                <div className="border-muted-foreground h-3 w-3 animate-spin rounded-full border border-t-transparent" />
+                <div className="border-muted-foreground size-4 animate-spin rounded-full border border-t-transparent" />
               ) : showPassword ? (
-                <Icons.eyeOff className="h-3 w-3" />
+                <Icons.eyeOff className="size-4" />
               ) : (
-                <Icons.eye className="h-3 w-3" />
+                <Icons.eye className="size-4" />
               )}
             </Button>
           </div>
@@ -150,7 +150,7 @@ export function CredentialForm({ credential, form }: CredentialFormProps) {
           </Label>
           <Tooltip>
             <TooltipTrigger asChild>
-              <Icons.helpCircle className="text-muted-foreground h-3 w-3" />
+              <Icons.helpCircle className="text-muted-foreground size-3" />
             </TooltipTrigger>
             <TooltipContent>
               <p>

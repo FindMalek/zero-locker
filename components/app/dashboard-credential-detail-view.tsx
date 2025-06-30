@@ -196,7 +196,7 @@ export function CredentialDetailView({
     return (
       <div className="flex min-h-[400px] items-center justify-center">
         <EmptyState
-          icon={() => <Icons.warning className="h-12 w-12" />}
+          icon={() => <Icons.warning className="size-12" />}
           title="Credential not found"
           description="The credential you're looking for doesn't exist or you don't have access to it."
           actionLabel="Go back"

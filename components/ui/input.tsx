@@ -43,11 +43,12 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
               aria-label={isVisible ? "Hide password" : "Show password"}
               aria-pressed={isVisible}
               variant="ghost"
+              size="icon"
             >
               {isVisible ? (
-                <EyeOff className="size-4" strokeWidth={2} aria-hidden="true" />
+                <EyeOff className="size-4" aria-hidden="true" />
               ) : (
-                <Eye className="size-4" strokeWidth={2} aria-hidden="true" />
+                <Eye className="size-4" aria-hidden="true" />
               )}
             </Button>
           </div>
@@ -74,11 +75,12 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
               aria-label={isVisible ? "Hide password" : "Show password"}
               aria-pressed={isVisible}
               variant="ghost"
+              size="icon"
             >
               {isVisible ? (
-                <EyeOff size={16} strokeWidth={2} aria-hidden="true" />
+                <EyeOff className="size-4" aria-hidden="true" />
               ) : (
-                <Eye size={16} strokeWidth={2} aria-hidden="true" />
+                <Eye className="size-4" aria-hidden="true" />
               )}
             </Button>
             <div
@@ -94,9 +96,9 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
                   variant="ghost"
                 >
                   {isCopied ? (
-                    <Check size={16} strokeWidth={2} className="text-green-600" aria-hidden="true" />
+                    <Check className="size-3 text-success" ria-hidden="true" />
                   ) : (
-                    <Copy size={16} strokeWidth={2} aria-hidden="true" />
+                    <Copy className="size-3" ria-hidden="true" />
                   )}
                 </Button>
               )}

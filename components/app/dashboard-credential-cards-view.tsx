@@ -120,15 +120,15 @@ export function DashboardCredentialCardsView({
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="hover:text-primary h-6 w-6 p-0 opacity-0 transition-all group-hover/identifier:opacity-100"
+                      className="hover:text-primary  opacity-0 transition-all group-hover/identifier:opacity-100"
                       onClick={(e) =>
                         handleCopyIdentifier(credential.identifier, e)
                       }
                     >
                       {isCopied ? (
-                        <Icons.check className="size-3" />
+                        <Icons.check className="size-4" />
                       ) : (
-                        <Icons.copy className="size-3" />
+                        <Icons.copy className="size-4" />
                       )}
                     </Button>
                   </div>
@@ -146,7 +146,7 @@ export function DashboardCredentialCardsView({
                 <Tooltip>
                   <TooltipTrigger>
                     <div className="flex items-center gap-1">
-                      <Icons.clock className="h-3 w-3" />
+                      <Icons.clock className="size-4" />
                       <span>{getRelativeTime(primaryDate)}</span>
                     </div>
                   </TooltipTrigger>
