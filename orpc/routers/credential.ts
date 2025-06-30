@@ -166,6 +166,21 @@ export const createCredential = authProcedure
       throw new ORPCError("NOT_FOUND")
     }
 
+    // Check if credential with same identifier already exists for this platform and user
+    const existingCredential = await database.credential.findFirst({
+      where: {
+        identifier: input.identifier,
+        platformId: input.platformId,
+        userId: context.user.id,
+      },
+    })
+
+    if (existingCredential) {
+      throw new ORPCError("CONFLICT", {
+        message: "A credential with this identifier already exists for this platform",
+      })
+    }
+
     const tagConnections = await createTagsAndGetConnections(
       input.tags,
       context.user.id,
@@ -219,6 +234,27 @@ export const updateCredential = authProcedure
 
     if (!existingCredential) {
       throw new ORPCError("NOT_FOUND")
+    }
+
+    // Check for duplicate identifier if identifier or platformId is being updated
+    if (updateData.identifier !== undefined || updateData.platformId !== undefined) {
+      const newIdentifier = updateData.identifier ?? existingCredential.identifier
+      const newPlatformId = updateData.platformId ?? existingCredential.platformId
+      
+      const duplicateCredential = await database.credential.findFirst({
+        where: {
+          identifier: newIdentifier,
+          platformId: newPlatformId,
+          userId: context.user.id,
+          NOT: { id }, // Exclude current credential
+        },
+      })
+
+      if (duplicateCredential) {
+        throw new ORPCError("CONFLICT", {
+          message: "A credential with this identifier already exists for this platform",
+        })
+      }
     }
 
     // Process the update data
@@ -316,6 +352,21 @@ export const createCredentialWithMetadata = authProcedure
 
         if (!platform) {
           throw new ORPCError("NOT_FOUND")
+        }
+
+        // Check if credential with same identifier already exists for this platform and user
+        const existingCredential = await database.credential.findFirst({
+          where: {
+            identifier: credentialData.identifier,
+            platformId: credentialData.platformId,
+            userId: context.user.id,
+          },
+        })
+
+        if (existingCredential) {
+          throw new ORPCError("CONFLICT", {
+            message: "A credential with this identifier already exists for this platform",
+          })
         }
 
         const tagConnections = await createTagsAndGetConnections(
