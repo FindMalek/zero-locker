@@ -1,43 +1,71 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useState } from "react"
+import Image from "next/image"
 import {
   useCreateCredentialWithMetadata,
   usePlatforms,
   useTags,
 } from "@/orpc/hooks"
 import {
+  accountStatusEnum,
+  AccountStatusInfer,
   CredentialDto,
   credentialDtoSchema,
   CredentialMetadataDto,
   credentialMetadataDtoSchema,
 } from "@/schemas/credential"
+import { EntityTypeEnum } from "@/schemas/utils"
+import { TagDto } from "@/schemas/utils/tag"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { AccountStatus } from "@prisma/client"
 import { useForm } from "react-hook-form"
 
+import { statusConfig } from "@/config/converter"
 import { encryptData, exportKey, generateEncryptionKey } from "@/lib/encryption"
-import { cn, getMetadataLabels, handleErrors } from "@/lib/utils"
+import {
+  cn,
+  getLogoDevUrlWithToken,
+  getPlaceholderImage,
+  handleErrors,
+} from "@/lib/utils"
 import {
   checkPasswordStrength,
   generatePassword,
 } from "@/lib/utils/password-helpers"
-import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard"
 import { useToast } from "@/hooks/use-toast"
 
-import { DashboardAddCredentialForm } from "@/components/app/dashboard-add-credential-form"
-import { DashboardAddCredentialMetadataForm } from "@/components/app/dashboard-add-credential-metadata-form"
-import { AddItemDialog } from "@/components/shared/add-item-dialog"
+import { ContainerSelector } from "@/components/shared/container-selector"
 import { Icons } from "@/components/shared/icons"
-import { Badge } from "@/components/ui/badge"
+import { PasswordStrengthMeter } from "@/components/shared/password-strength-meter"
+import { StatusBadge } from "@/components/shared/status-badge"
+import { TagSelector } from "@/components/shared/tag-selector"
 import { Button } from "@/components/ui/button"
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible"
+import { ComboboxResponsive } from "@/components/ui/combobox-responsive"
 import { Form } from "@/components/ui/form"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
+import {
+  ResponsiveDialog,
+  ResponsiveDialogBody,
+  ResponsiveDialogContent,
+  ResponsiveDialogDescription,
+  ResponsiveDialogFooter,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+} from "@/components/ui/responsive-dialog"
 import { Separator } from "@/components/ui/separator"
+import { Switch } from "@/components/ui/switch"
+import { Textarea } from "@/components/ui/textarea"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 
 interface CredentialDialogProps {
   open: boolean
@@ -49,35 +77,37 @@ export function DashboardAddCredentialDialog({
   onOpenChange,
 }: CredentialDialogProps) {
   const { toast } = useToast()
-  const platformsQuery = usePlatforms()
-  const tagsQuery = useTags()
+
+  // Data fetching
+  const { data: platformsData } = usePlatforms()
+  const { data: tagsData } = useTags({ page: 1, limit: 100 })
+
+  const platforms = platformsData?.platforms || []
+  const availableTags = tagsData?.tags || []
+
+  // Mutations
   const createCredentialWithMetadataMutation = useCreateCredentialWithMetadata()
 
-  const platforms = platformsQuery.data?.platforms || []
-  const availableTags = tagsQuery.data?.tags || []
-
-  const [createMore, setCreateMore] = useState(false)
-  const [showMetadata, setShowMetadata] = useState(false)
-  const [passwordStrength, setPasswordStrength] = useState<{
-    score: number
-    feedback: string
-  } | null>(null)
-
+  // Form state
   const [sensitiveData, setSensitiveData] = useState({
     identifier: "",
     password: "",
   })
+  const [passwordStrength, setPasswordStrength] = useState<{
+    score: number
+    feedback: string
+  } | null>(null)
+  const [createMore, setCreateMore] = useState(false)
+  const [showAdvanced, setShowAdvanced] = useState(false)
+  const [statusPopoverOpen, setStatusPopoverOpen] = useState(false)
 
-  const { copy, isCopied } = useCopyToClipboard({
-    successDuration: 1500,
-  })
-
+  // Forms
   const credentialForm = useForm<CredentialDto>({
     resolver: zodResolver(credentialDtoSchema),
     defaultValues: {
       identifier: "",
       description: "",
-      status: AccountStatus.ACTIVE,
+      status: accountStatusEnum.ACTIVE,
       platformId: "",
       containerId: "",
       passwordEncryption: {
@@ -97,21 +127,16 @@ export function DashboardAddCredentialDialog({
       phoneNumber: "",
       otherInfo: [],
       has2FA: false,
-      credentialId: "",
     },
   })
 
-  useEffect(() => {
-    if (platformsQuery.error) {
-      toast("Failed to load platforms", "error")
-    }
-    if (tagsQuery.error) {
-      toast("Failed to load tags", "error")
-    }
-  }, [platformsQuery.error, tagsQuery.error, toast])
+  const selectedPlatform = platforms.find(
+    (p) => p.id === credentialForm.watch("platformId")
+  )
 
+  // Password handling
   const handleGeneratePassword = () => {
-    const newPassword = generatePassword(16)
+    const newPassword = generatePassword()
     setSensitiveData((prev) => ({ ...prev, password: newPassword }))
     setPasswordStrength(checkPasswordStrength(newPassword))
   }
@@ -121,10 +146,12 @@ export function DashboardAddCredentialDialog({
     setPasswordStrength(checkPasswordStrength(password))
   }
 
-  const handleCopyPassword = () => {
-    copy(sensitiveData.password)
+  const handleStatusChange = (newStatus: AccountStatusInfer) => {
+    credentialForm.setValue("status", newStatus)
+    setStatusPopoverOpen(false)
   }
 
+  // Check if metadata has values
   const hasMetadataValues = () => {
     const values = metadataForm.getValues()
     return (
@@ -135,17 +162,7 @@ export function DashboardAddCredentialDialog({
     )
   }
 
-  const getMetadataLabelsForCredential = () => {
-    const values = metadataForm.getValues()
-    const fieldMappings = {
-      recoveryEmail: "Email",
-      phoneNumber: "Phone",
-      has2FA: "2FA",
-      otherInfo: "Notes",
-    }
-    return getMetadataLabels(values, fieldMappings, 4)
-  }
-
+  // Submit handler
   async function onSubmit() {
     if (!sensitiveData.identifier.trim()) {
       toast("Identifier is required", "error")
@@ -226,15 +243,16 @@ export function DashboardAddCredentialDialog({
         },
         {
           onSuccess: () => {
-            toast("Credential saved successfully", "success")
+            toast("Credential created successfully", "success")
 
             if (!createMore) {
               handleDialogOpenChange(false)
             } else {
+              // Reset for creating another
               credentialForm.reset({
                 identifier: "",
                 description: "",
-                status: AccountStatus.ACTIVE,
+                status: accountStatusEnum.ACTIVE,
                 platformId: credentialData.platformId,
                 containerId: credentialData.containerId,
                 passwordEncryption: {
@@ -253,13 +271,13 @@ export function DashboardAddCredentialDialog({
               })
               setSensitiveData({ identifier: "", password: "" })
               setPasswordStrength(null)
-              setShowMetadata(false)
+              setShowAdvanced(false)
             }
           },
           onError: (error) => {
             const { message, details } = handleErrors(
               error,
-              "Failed to save credential"
+              "Failed to create credential"
             )
             toast(
               details
@@ -290,103 +308,448 @@ export function DashboardAddCredentialDialog({
       metadataForm.reset()
       setSensitiveData({ identifier: "", password: "" })
       setCreateMore(false)
-      setShowMetadata(false)
+      setShowAdvanced(false)
       setPasswordStrength(null)
     }
     onOpenChange(open)
   }
 
   return (
-    <AddItemDialog
-      open={open}
-      onOpenChange={handleDialogOpenChange}
-      title="Add New Credential"
-      description="Add a new credential to your vault. All information is securely stored."
-      icon={<Icons.user className="size-5" />}
-      isSubmitting={createCredentialWithMetadataMutation.isPending}
-      createMore={createMore}
-      onCreateMoreChange={setCreateMore}
-      createMoreText="Create another credential"
-      submitText="Save Credential"
-      formId="credential-form"
-      className="sm:max-w-[800px]"
-    >
-      <Form {...credentialForm}>
-        <form
-          id="credential-form"
-          onSubmit={(e) => {
-            e.preventDefault()
-            onSubmit()
-          }}
-          className="space-y-6"
-        >
-          <DashboardAddCredentialForm
-            form={credentialForm}
-            platforms={platforms}
-            availableTags={availableTags.map((tag) => ({
-              name: tag.name,
-              containerId: tag.containerId || undefined,
-              color: tag.color || undefined,
-            }))}
-            passwordStrength={passwordStrength}
-            sensitiveData={sensitiveData}
-            setSensitiveData={setSensitiveData}
-            onPasswordChange={handlePasswordChange}
-            onGeneratePassword={handleGeneratePassword}
-            onCopyPassword={handleCopyPassword}
-            isCopied={isCopied}
-          />
-
-          <div className="space-y-4">
-            <Separator />
-
-            <Collapsible open={showMetadata} onOpenChange={setShowMetadata}>
-              <CollapsibleTrigger asChild>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  className={cn(
-                    "hover:bg-muted/50 flex w-full items-center justify-between p-4",
-                    showMetadata && "bg-muted/55"
-                  )}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="flex items-center gap-2">
-                      <Icons.add className="h-4 w-4" />
-                      <span className="font-medium">
-                        Additional Information
-                      </span>
-                    </div>
-                    {hasMetadataValues() && (
-                      <Badge variant="secondary" className="text-xs">
-                        {getMetadataLabelsForCredential()}
-                      </Badge>
+    <ResponsiveDialog open={open} onOpenChange={handleDialogOpenChange}>
+      <ResponsiveDialogContent className="max-h-[90vh] sm:max-w-[900px]">
+        <ResponsiveDialogHeader className="border-b pb-4">
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex min-w-0 items-center gap-4">
+              {selectedPlatform && (
+                <div className="flex-shrink-0">
+                  <Image
+                    src={getPlaceholderImage(
+                      selectedPlatform.name,
+                      getLogoDevUrlWithToken(selectedPlatform.logo)
                     )}
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-muted-foreground text-sm">
-                      {showMetadata ? "Hide" : "Optional"}
-                    </span>
-                    <Icons.chevronDown
-                      className={`h-4 w-4 transition-transform ${
-                        showMetadata ? "rotate-180" : ""
-                      }`}
+                    alt={`${selectedPlatform.name} logo`}
+                    width={48}
+                    height={48}
+                    className="bg-muted ring-border size-12 rounded-lg object-contain p-2 ring-1"
+                  />
+                </div>
+              )}
+
+              <div className="min-w-0 flex-1 space-y-1">
+                <ResponsiveDialogTitle className="flex items-center gap-2 font-mono">
+                  {!selectedPlatform && <Icons.user className="size-4" />}
+                  Add New Credential
+                </ResponsiveDialogTitle>
+                <ResponsiveDialogDescription>
+                  {selectedPlatform
+                    ? `Create a new credential for ${selectedPlatform.name}`
+                    : "Add a new credential to your vault. All information is securely stored."}
+                </ResponsiveDialogDescription>
+              </div>
+            </div>
+          </div>
+        </ResponsiveDialogHeader>
+
+        <ResponsiveDialogBody className="max-h-[60vh] space-y-6 overflow-y-auto">
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-4">
+            {/* Main Form */}
+            <div className="space-y-6 lg:col-span-3">
+              <Form {...credentialForm}>
+                <form id="credential-form" className="space-y-6">
+                  {/* Platform Selection */}
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Label htmlFor="platform" className="text-sm font-medium">
+                        Platform
+                      </Label>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Icons.helpCircle className="text-muted-foreground h-3 w-3" />
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>
+                            Required field - Select the platform for this
+                            credential
+                          </p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </div>
+                    <ComboboxResponsive
+                      items={platforms.map((platform) => ({
+                        value: platform.id,
+                        label: platform.name,
+                        logo: getPlaceholderImage(
+                          platform.name,
+                          getLogoDevUrlWithToken(platform.logo || null)
+                        ),
+                      }))}
+                      selectedItem={
+                        platforms.find(
+                          (p) => p.id === credentialForm.watch("platformId")
+                        )
+                          ? {
+                              value: credentialForm.watch("platformId"),
+                              label:
+                                platforms.find(
+                                  (p) =>
+                                    p.id === credentialForm.watch("platformId")
+                                )?.name || "",
+                              logo: getPlaceholderImage(
+                                platforms.find(
+                                  (p) =>
+                                    p.id === credentialForm.watch("platformId")
+                                )?.name || "",
+                                getLogoDevUrlWithToken(
+                                  platforms.find(
+                                    (p) =>
+                                      p.id ===
+                                      credentialForm.watch("platformId")
+                                  )?.logo || null
+                                )
+                              ),
+                            }
+                          : null
+                      }
+                      onSelect={(item) =>
+                        credentialForm.setValue("platformId", item?.value || "")
+                      }
+                      placeholder="Select a platform..."
+                      searchPlaceholder="Search platforms..."
+                      emptyText="No platforms found."
                     />
                   </div>
-                </Button>
-              </CollapsibleTrigger>
 
-              <CollapsibleContent className="space-y-4">
-                <div className="bg-muted/55 p-4">
-                  <Form {...metadataForm}>
-                    <DashboardAddCredentialMetadataForm form={metadataForm} />
-                  </Form>
-                </div>
-              </CollapsibleContent>
-            </Collapsible>
+                  {/* Basic Credential Info */}
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <Label
+                          htmlFor="identifier"
+                          className="text-sm font-medium"
+                        >
+                          Username/Email
+                        </Label>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Icons.helpCircle className="text-muted-foreground h-3 w-3" />
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>
+                              Required field - Enter the username or email for
+                              this account
+                            </p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </div>
+                      <Input
+                        id="identifier"
+                        value={sensitiveData.identifier}
+                        onChange={(e) =>
+                          setSensitiveData((prev) => ({
+                            ...prev,
+                            identifier: e.target.value,
+                          }))
+                        }
+                        placeholder="Enter username or email"
+                        className="border-border focus:border-ring focus:ring-ring focus:ring-1"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <Label
+                          htmlFor="password"
+                          className="text-sm font-medium"
+                        >
+                          Password
+                        </Label>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Icons.helpCircle className="text-muted-foreground h-3 w-3" />
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>
+                              Required field - Enter the password for this
+                              account
+                            </p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </div>
+                      <div className="relative">
+                        <Input
+                          id="password"
+                          variant="password"
+                          value={sensitiveData.password}
+                          onChange={(e) => handlePasswordChange(e.target.value)}
+                          placeholder="Enter password"
+                          className="pr-14"
+                        />
+                        <div className="absolute inset-y-0 right-10 flex items-center gap-1 pr-1">
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                className="size-6 p-0"
+                                onClick={handleGeneratePassword}
+                              >
+                                <Icons.refresh className="h-3 w-3" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Generate password</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </div>
+                      </div>
+                      {passwordStrength && (
+                        <PasswordStrengthMeter score={passwordStrength.score} />
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Description */}
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Label className="text-sm font-medium">Description</Label>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Icons.helpCircle className="text-muted-foreground h-3 w-3" />
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Add notes or context about this credential</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </div>
+                    <Textarea
+                      {...credentialForm.register("description")}
+                      placeholder="Add a description for this credential..."
+                      className="border-border focus:border-ring focus:ring-ring min-h-[80px] resize-none focus:ring-1"
+                    />
+                  </div>
+
+                  {/* Tags */}
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium">Tags</Label>
+                    <TagSelector<TagDto>
+                      selectedTags={credentialForm.watch("tags") || []}
+                      availableTags={availableTags.map((tag) => ({
+                        name: tag.name,
+                        containerId: tag.containerId || undefined,
+                        color: tag.color || undefined,
+                      }))}
+                      onChange={(tags: TagDto[]) =>
+                        credentialForm.setValue("tags", tags)
+                      }
+                      getValue={(tag: TagDto) => tag.name}
+                      getLabel={(tag: TagDto) => tag.name}
+                      createTag={(inputValue: string): TagDto => ({
+                        name: inputValue,
+                        containerId: undefined,
+                        color: undefined,
+                      })}
+                    />
+                  </div>
+
+                  {/* Advanced Settings */}
+                  <div className="space-y-4">
+                    <Separator />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      className={cn(
+                        "hover:bg-muted/50 flex w-full items-center justify-between p-4",
+                        showAdvanced && "bg-muted/55"
+                      )}
+                      onClick={() => setShowAdvanced(!showAdvanced)}
+                    >
+                      <div className="flex items-center gap-3">
+                        <Icons.settings className="h-4 w-4" />
+                        <span className="font-medium">Advanced Settings</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-muted-foreground text-sm">
+                          {showAdvanced ? "Hide" : "Optional"}
+                        </span>
+                        <Icons.chevronDown
+                          className={`h-4 w-4 transition-transform ${
+                            showAdvanced ? "rotate-180" : ""
+                          }`}
+                        />
+                      </div>
+                    </Button>
+
+                    {showAdvanced && (
+                      <div className="bg-muted/55 space-y-4 p-4">
+                        <Form {...metadataForm}>
+                          <div className="grid gap-4 sm:grid-cols-2">
+                            <div className="space-y-2">
+                              <Label className="text-sm font-medium">
+                                Recovery Email
+                              </Label>
+                              <Input
+                                {...metadataForm.register("recoveryEmail")}
+                                placeholder="Recovery email address"
+                                className="border-border focus:border-ring focus:ring-ring focus:ring-1"
+                              />
+                            </div>
+
+                            <div className="space-y-2">
+                              <Label className="text-sm font-medium">
+                                Phone Number
+                              </Label>
+                              <Input
+                                {...metadataForm.register("phoneNumber")}
+                                placeholder="Phone number"
+                                className="border-border focus:border-ring focus:ring-ring focus:ring-1"
+                              />
+                            </div>
+                          </div>
+
+                          <div className="flex items-center space-x-3 rounded-md border p-4">
+                            <Switch
+                              checked={metadataForm.watch("has2FA")}
+                              onCheckedChange={(checked) =>
+                                metadataForm.setValue("has2FA", checked)
+                              }
+                            />
+                            <div className="space-y-1 leading-none">
+                              <Label className="text-sm font-medium">
+                                Two-Factor Authentication
+                              </Label>
+                              <p className="text-muted-foreground text-xs">
+                                This account has 2FA enabled
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label className="text-sm font-medium">
+                              Additional Notes
+                            </Label>
+                            <Textarea
+                              value={
+                                metadataForm.watch("otherInfo")?.join("\n") ||
+                                ""
+                              }
+                              onChange={(e) =>
+                                metadataForm.setValue(
+                                  "otherInfo",
+                                  e.target.value
+                                    .split("\n")
+                                    .filter((line) => line.trim())
+                                )
+                              }
+                              placeholder="Security questions, backup codes, etc."
+                              className="border-border focus:border-ring focus:ring-ring min-h-[80px] resize-none focus:ring-1"
+                            />
+                          </div>
+                        </Form>
+                      </div>
+                    )}
+                  </div>
+                </form>
+              </Form>
+            </div>
+
+            {/* Sidebar */}
+            <div className="flex h-full flex-col space-y-6">
+              {/* Status */}
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">Status</Label>
+                <Popover
+                  open={statusPopoverOpen}
+                  onOpenChange={setStatusPopoverOpen}
+                >
+                  <PopoverTrigger asChild>
+                    <div className="w-full cursor-pointer">
+                      <StatusBadge
+                        status={credentialForm.watch("status")}
+                        withPopover
+                        isFullWidth
+                      />
+                    </div>
+                  </PopoverTrigger>
+                  <PopoverContent align="end" className="w-40 p-2">
+                    <div className="space-y-1">
+                      {Object.entries(statusConfig).map(([status, config]) => (
+                        <Button
+                          key={status}
+                          variant="ghost"
+                          size="sm"
+                          className="w-full justify-start gap-2 text-xs"
+                          onClick={() =>
+                            handleStatusChange(status as AccountStatusInfer)
+                          }
+                        >
+                          <config.icon className="h-3 w-3" />
+                          {config.label}
+                        </Button>
+                      ))}
+                    </div>
+                  </PopoverContent>
+                </Popover>
+              </div>
+
+              {/* Container */}
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">Container</Label>
+                <ContainerSelector
+                  currentContainerId={credentialForm.watch("containerId")}
+                  entityType={EntityTypeEnum.CREDENTIAL}
+                  onContainerChange={(containerId) =>
+                    credentialForm.setValue("containerId", containerId)
+                  }
+                />
+              </div>
+            </div>
           </div>
-        </form>
-      </Form>
-    </AddItemDialog>
+        </ResponsiveDialogBody>
+
+        <ResponsiveDialogFooter>
+          <div className="flex w-full flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="create-more"
+                checked={createMore}
+                onCheckedChange={setCreateMore}
+              />
+              <label
+                htmlFor="create-more"
+                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              >
+                Create another credential after saving
+              </label>
+            </div>
+
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => handleDialogOpenChange(false)}
+                disabled={createCredentialWithMetadataMutation.isPending}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                form="credential-form"
+                disabled={createCredentialWithMetadataMutation.isPending}
+                onClick={(e) => {
+                  e.preventDefault()
+                  onSubmit()
+                }}
+              >
+                {createCredentialWithMetadataMutation.isPending && (
+                  <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
+                )}
+                Create Credential
+              </Button>
+            </div>
+          </div>
+        </ResponsiveDialogFooter>
+      </ResponsiveDialogContent>
+    </ResponsiveDialog>
   )
 }

@@ -45,9 +45,9 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
               variant="ghost"
             >
               {isVisible ? (
-                <EyeOff size={16} strokeWidth={2} aria-hidden="true" />
+                <EyeOff className="size-4" strokeWidth={2} aria-hidden="true" />
               ) : (
-                <Eye size={16} strokeWidth={2} aria-hidden="true" />
+                <Eye className="size-4" strokeWidth={2} aria-hidden="true" />
               )}
             </Button>
           </div>

@@ -1,15 +1,12 @@
 "use client"
 
 import { useState } from "react"
-import { CredentialEntity } from "@/entities/credential/credential/entity"
 import { usePlatforms } from "@/orpc/hooks/use-platforms"
-import {
-  accountStatusEnum,
-  AccountStatusInfer,
-} from "@/schemas/credential/credential"
+import { AccountStatusInfer } from "@/schemas/credential/credential"
 import type { CredentialOutput } from "@/schemas/credential/dto"
 import { EntityTypeEnum } from "@/schemas/utils"
 
+import { statusConfig } from "@/config/converter"
 import { getFullFormattedDateAndTime, getRelativeTime } from "@/lib/date-utils"
 import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard"
 
@@ -34,27 +31,6 @@ interface CredentialSidebarProps {
   credential: CredentialOutput
   onStatusChange?: (status: AccountStatusInfer) => void
   onContainerChange?: (containerId: string) => void
-}
-
-const statusConfig = {
-  [accountStatusEnum.ACTIVE]: {
-    label: CredentialEntity.convertAccountStatusToString(
-      accountStatusEnum.ACTIVE
-    ),
-    icon: Icons.check,
-  },
-  [accountStatusEnum.SUSPENDED]: {
-    label: CredentialEntity.convertAccountStatusToString(
-      accountStatusEnum.SUSPENDED
-    ),
-    icon: Icons.warning,
-  },
-  [accountStatusEnum.DELETED]: {
-    label: CredentialEntity.convertAccountStatusToString(
-      accountStatusEnum.DELETED
-    ),
-    icon: Icons.trash,
-  },
 }
 
 export function CredentialSidebar({

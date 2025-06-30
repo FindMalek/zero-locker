@@ -177,7 +177,8 @@ export const createCredential = authProcedure
 
     if (existingCredential) {
       throw new ORPCError("CONFLICT", {
-        message: "A credential with this identifier already exists for this platform",
+        message:
+          "A credential with this identifier already exists for this platform",
       })
     }
 
@@ -237,10 +238,15 @@ export const updateCredential = authProcedure
     }
 
     // Check for duplicate identifier if identifier or platformId is being updated
-    if (updateData.identifier !== undefined || updateData.platformId !== undefined) {
-      const newIdentifier = updateData.identifier ?? existingCredential.identifier
-      const newPlatformId = updateData.platformId ?? existingCredential.platformId
-      
+    if (
+      updateData.identifier !== undefined ||
+      updateData.platformId !== undefined
+    ) {
+      const newIdentifier =
+        updateData.identifier ?? existingCredential.identifier
+      const newPlatformId =
+        updateData.platformId ?? existingCredential.platformId
+
       const duplicateCredential = await database.credential.findFirst({
         where: {
           identifier: newIdentifier,
@@ -252,7 +258,8 @@ export const updateCredential = authProcedure
 
       if (duplicateCredential) {
         throw new ORPCError("CONFLICT", {
-          message: "A credential with this identifier already exists for this platform",
+          message:
+            "A credential with this identifier already exists for this platform",
         })
       }
     }
@@ -365,7 +372,8 @@ export const createCredentialWithMetadata = authProcedure
 
         if (existingCredential) {
           throw new ORPCError("CONFLICT", {
-            message: "A credential with this identifier already exists for this platform",
+            message:
+              "A credential with this identifier already exists for this platform",
           })
         }
 
