@@ -540,7 +540,17 @@ export function DashboardAddCredentialDialog({
 
                   {/* Tags */}
                   <div className="space-y-2">
-                    <Label className="text-sm font-medium">Tags</Label>
+                    <div className="flex items-center gap-2">
+                      <Label className="text-sm font-medium">Tags</Label>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Icons.helpCircle className="text-muted-foreground size-3" />
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Add tags to organize and categorize this credential</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </div>
                     <TagSelector<TagDto>
                       selectedTags={credentialForm.watch("tags") || []}
                       availableTags={availableTags.map((tag) => ({
@@ -562,8 +572,7 @@ export function DashboardAddCredentialDialog({
                   </div>
 
                   {/* Advanced Settings */}
-                  <div className="space-y-4">
-                    <Separator />
+                  <div >
                     <Button
                       type="button"
                       variant="ghost"
@@ -619,9 +628,19 @@ export function DashboardAddCredentialDialog({
 
                           <div className="grid gap-4 sm:grid-cols-2">
                             <div className="space-y-2">
-                              <Label className="text-sm font-medium">
-                                Recovery Email
-                              </Label>
+                              <div className="flex items-center gap-2">
+                                <Label className="text-sm font-medium">
+                                  Recovery Email
+                                </Label>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Icons.helpCircle className="text-muted-foreground size-3" />
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    <p>Backup email address for account recovery</p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </div>
                               <Input
                                 {...metadataForm.register("recoveryEmail")}
                                 placeholder="Recovery email address"
@@ -630,9 +649,19 @@ export function DashboardAddCredentialDialog({
                             </div>
 
                             <div className="space-y-2">
-                              <Label className="text-sm font-medium">
-                                Phone Number
-                              </Label>
+                              <div className="flex items-center gap-2">
+                                <Label className="text-sm font-medium">
+                                  Phone Number
+                                </Label>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Icons.helpCircle className="text-muted-foreground size-3" />
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    <p>Phone number associated with this account</p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </div>
                               <Input
                                 {...metadataForm.register("phoneNumber")}
                                 placeholder="Phone number"
@@ -642,9 +671,19 @@ export function DashboardAddCredentialDialog({
                           </div>
 
                           <div className="space-y-2">
-                            <Label className="text-sm font-medium">
-                              Additional Notes
-                            </Label>
+                            <div className="flex items-center gap-2">
+                              <Label className="text-sm font-medium">
+                                Additional Notes
+                              </Label>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Icons.helpCircle className="text-muted-foreground size-3" />
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>Security questions, backup codes, or other important account information</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </div>
                             <Textarea
                               value={
                                 metadataForm.watch("otherInfo")?.join("\n") ||
@@ -671,7 +710,7 @@ export function DashboardAddCredentialDialog({
             </div>
 
             {/* Sidebar */}
-            <div className="flex h-full flex-col space-y-6">
+            <div className="sticky top-0 flex h-fit flex-col space-y-6">
               {/* Status */}
               <div className="space-y-2">
                 <Label className="text-sm font-medium">Status</Label>
