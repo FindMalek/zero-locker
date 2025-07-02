@@ -417,15 +417,45 @@ export const createCredentialWithMetadata = authProcedure
 
           // Create metadata if provided
           if (metadata) {
-            await tx.credentialMetadata.create({
+            const credentialMetadata = await tx.credentialMetadata.create({
               data: {
                 credentialId: credential.id,
                 recoveryEmail: metadata.recoveryEmail,
                 phoneNumber: metadata.phoneNumber,
-                otherInfo: metadata.otherInfo || [],
                 has2FA: metadata.has2FA || false,
               },
             })
+
+            // Create encrypted key-value pairs if provided
+            if (metadata.keyValuePairs && metadata.keyValuePairs.length > 0) {
+              for (const kvPair of metadata.keyValuePairs) {
+                // Create encrypted data for the value
+                const valueEncryptionResult = await createEncryptedData({
+                  encryptedValue: kvPair.valueEncryption.encryptedValue,
+                  encryptionKey: kvPair.valueEncryption.encryptionKey,
+                  iv: kvPair.valueEncryption.iv,
+                })
+
+                if (
+                  !valueEncryptionResult.success ||
+                  !valueEncryptionResult.encryptedData
+                ) {
+                  throw new ORPCError("INTERNAL_SERVER_ERROR", {
+                    message:
+                      "Failed to create encrypted data for key-value pair",
+                  })
+                }
+
+                // Create the key-value pair
+                await tx.credentialKeyValuePair.create({
+                  data: {
+                    key: kvPair.key,
+                    valueEncryptionId: valueEncryptionResult.encryptedData.id,
+                    credentialMetadataId: credentialMetadata.id,
+                  },
+                })
+              }
+            }
           }
 
           return credential
