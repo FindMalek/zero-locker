@@ -13,7 +13,7 @@ interface CredentialFooterProps {
 export function CredentialFooter({ credential }: CredentialFooterProps) {
   return (
     <div className="text-muted-foreground border-border flex items-center gap-2 border-t pt-6 text-xs">
-      <Icons.user className="h-3 w-3" />
+      <Icons.user className="size-4" />
       <span>Created by System Admin • {formatDate(credential.createdAt)}</span>
     </div>
   )

@@ -105,9 +105,9 @@ export function DashboardViewControls({
       <Popover open={isDisplayOpen} onOpenChange={setIsDisplayOpen}>
         <PopoverTrigger asChild>
           <Button variant="outline">
-            <Icons.settings className="mr-2 h-4 w-4" />
+            <Icons.settings className="mr-2 size-4" />
             {triggerLabel}
-            <Icons.chevronDown className="ml-2 h-4 w-4" />
+            <Icons.chevronDown className="ml-2 size-4" />
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-80 p-0" align="end">
@@ -117,7 +117,7 @@ export function DashboardViewControls({
               <>
                 <div className="space-y-3">
                   <div className="text-muted-foreground flex items-center gap-2">
-                    <Icons.view className="h-4 w-4" />
+                    <Icons.view className="size-4" />
                     <span className="text-sm font-medium">View</span>
                   </div>
                   <div className="flex items-center rounded-lg border p-1">
@@ -129,7 +129,7 @@ export function DashboardViewControls({
                         onClick={() => onViewModeChange?.(option.mode)}
                         className="h-8 flex-1"
                       >
-                        <option.icon className="mr-2 h-4 w-4" />
+                        <option.icon className="mr-2 size-4" />
                         {option.label}
                       </Button>
                     ))}
@@ -146,7 +146,7 @@ export function DashboardViewControls({
               <>
                 <div className="space-y-3">
                   <div className="text-muted-foreground flex items-center gap-2">
-                    <Icons.arrowUpDown className="h-4 w-4" />
+                    <Icons.arrowUpDown className="size-4" />
                     <span className="text-sm font-medium">Ordering</span>
                   </div>
                   <div className="grid grid-cols-2 gap-2">
@@ -183,7 +183,7 @@ export function DashboardViewControls({
               <>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <Icons.eye className="text-muted-foreground h-4 w-4" />
+                    <Icons.eye className="text-muted-foreground size-4" />
                     <span className="text-sm font-medium">{archivedLabel}</span>
                   </div>
                   <Switch
@@ -212,7 +212,7 @@ export function DashboardViewControls({
                     >
                       <span className="font-medium">{property.label}</span>
                       {property.enabled && (
-                        <Icons.check className="text-primary h-3 w-3" />
+                        <Icons.check className="text-primary size-3" />
                       )}
                     </Button>
                   ))}

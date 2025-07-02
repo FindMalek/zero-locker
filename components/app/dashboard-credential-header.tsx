@@ -57,7 +57,7 @@ export function CredentialHeader({
               className="hover:text-primary focus:ring-ring group flex items-center gap-1.5 rounded-sm transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2"
             >
               <span className="text-xs font-medium">{platform.name}</span>
-              <Icons.link className="h-3 w-3 opacity-0 transition-opacity group-hover:opacity-100" />
+              <Icons.link className="size-3 opacity-0 transition-opacity group-hover:opacity-100" />
             </Link>
           ) : (
             <span className="text-xs font-medium">{platform.name}</span>
@@ -77,12 +77,12 @@ export function CredentialHeader({
         >
           {isCopied ? (
             <>
-              <Icons.check className="mr-1 h-3 w-3" />
+              <Icons.check className="mr-1 size-3" />
               <span className="whitespace-nowrap text-xs">Copied</span>
             </>
           ) : (
             <>
-              <Icons.copy className="mr-1 h-3 w-3" />
+              <Icons.copy className="mr-1 size-3" />
               <span className="whitespace-nowrap text-xs">Copy link</span>
             </>
           )}

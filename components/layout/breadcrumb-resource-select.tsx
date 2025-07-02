@@ -151,11 +151,11 @@ export function BreadcrumbResourceSelect({
       <div className="flex max-w-[200px] items-center justify-between">
         <div className="flex flex-1 items-center gap-2">
           {resourceType === "accounts" && (
-            <Skeleton className="h-4 w-4 shrink-0 rounded-full" />
+            <Skeleton className="size-4 shrink-0 rounded-full" />
           )}
-          <Skeleton className="h-4 min-w-[120px] flex-1" />
+          <Skeleton className="size-4 min-w-[120px] flex-1" />
         </div>
-        <Icons.chevronDown className="ml-2 h-4 w-4 shrink-0" />
+        <Icons.chevronDown className="ml-2 size-4 shrink-0" />
       </div>
     )
   }
@@ -188,7 +188,7 @@ export function BreadcrumbResourceSelect({
             )}
             <span className="truncate">{currentItem.name}</span>
           </div>
-          <Icons.chevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+          <Icons.chevronDown className="ml-2 size-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-[300px] p-0" align="start">
@@ -219,7 +219,7 @@ export function BreadcrumbResourceSelect({
                     )}
                     <span className="flex-1 truncate">{item.name}</span>
                     {item.id === currentId && (
-                      <Icons.check className="text-primary h-4 w-4 shrink-0" />
+                      <Icons.check className="text-primary size-4 shrink-0" />
                     )}
                   </div>
                 </CommandItem>
