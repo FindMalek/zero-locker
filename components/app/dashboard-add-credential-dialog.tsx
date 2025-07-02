@@ -58,7 +58,6 @@ import {
   ResponsiveDialogHeader,
   ResponsiveDialogTitle,
 } from "@/components/ui/responsive-dialog"
-import { Separator } from "@/components/ui/separator"
 import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
 import {
@@ -78,17 +77,14 @@ export function DashboardAddCredentialDialog({
 }: CredentialDialogProps) {
   const { toast } = useToast()
 
-  // Data fetching
   const { data: platformsData } = usePlatforms()
   const { data: tagsData } = useTags({ page: 1, limit: 100 })
 
   const platforms = platformsData?.platforms || []
   const availableTags = tagsData?.tags || []
 
-  // Mutations
   const createCredentialWithMetadataMutation = useCreateCredentialWithMetadata()
 
-  // Form state
   const [sensitiveData, setSensitiveData] = useState({
     identifier: "",
     password: "",
@@ -547,7 +543,9 @@ export function DashboardAddCredentialDialog({
                           <Icons.helpCircle className="text-muted-foreground size-3" />
                         </TooltipTrigger>
                         <TooltipContent>
-                          <p>Add tags to organize and categorize this credential</p>
+                          <p>
+                            Add tags to organize and categorize this credential
+                          </p>
                         </TooltipContent>
                       </Tooltip>
                     </div>
@@ -572,7 +570,7 @@ export function DashboardAddCredentialDialog({
                   </div>
 
                   {/* Advanced Settings */}
-                  <div >
+                  <div>
                     <Button
                       type="button"
                       variant="ghost"
@@ -637,7 +635,9 @@ export function DashboardAddCredentialDialog({
                                     <Icons.helpCircle className="text-muted-foreground size-3" />
                                   </TooltipTrigger>
                                   <TooltipContent>
-                                    <p>Backup email address for account recovery</p>
+                                    <p>
+                                      Backup email address for account recovery
+                                    </p>
                                   </TooltipContent>
                                 </Tooltip>
                               </div>
@@ -658,7 +658,9 @@ export function DashboardAddCredentialDialog({
                                     <Icons.helpCircle className="text-muted-foreground size-3" />
                                   </TooltipTrigger>
                                   <TooltipContent>
-                                    <p>Phone number associated with this account</p>
+                                    <p>
+                                      Phone number associated with this account
+                                    </p>
                                   </TooltipContent>
                                 </Tooltip>
                               </div>
@@ -680,7 +682,10 @@ export function DashboardAddCredentialDialog({
                                   <Icons.helpCircle className="text-muted-foreground size-3" />
                                 </TooltipTrigger>
                                 <TooltipContent>
-                                  <p>Security questions, backup codes, or other important account information</p>
+                                  <p>
+                                    Security questions, backup codes, or other
+                                    important account information
+                                  </p>
                                 </TooltipContent>
                               </Tooltip>
                             </div>
