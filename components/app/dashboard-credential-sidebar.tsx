@@ -72,7 +72,7 @@ export function CredentialSidebar({
             <StatusBadge status={credential.status} withPopover isFullWidth />
           </div>
         </PopoverTrigger>
-        <PopoverContent align="end" className="w-40 p-2">
+        <PopoverContent align="end" className="w-40 p-0">
           <div className="space-y-1">
             {Object.entries(statusConfig).map(([status, config]) => (
               <Button
@@ -83,7 +83,7 @@ export function CredentialSidebar({
                 onClick={() => handleStatusChange(status as AccountStatusInfer)}
                 disabled={status === credential.status || isChangingStatus}
               >
-                <config.icon className="h-3 w-3" />
+                <config.icon className="size-3" />
                 {config.label}
               </Button>
             ))}
@@ -102,9 +102,9 @@ export function CredentialSidebar({
               onClick={handleCopyIdentifier}
             >
               {isCopied ? (
-                <Icons.check className="text-success mr-2 h-4 w-4" />
+                <Icons.check className="text-success mr-2 size-4" />
               ) : (
-                <Icons.copy className="mr-2 h-4 w-4" />
+                <Icons.copy className="mr-2 size-4" />
               )}
               Copy ID
             </Button>
@@ -123,7 +123,7 @@ export function CredentialSidebar({
                 className="flex-1"
                 onClick={() => window.open(platform.loginUrl, "_blank")}
               >
-                <Icons.link className="mr-2 h-4 w-4" />
+                <Icons.link className="mr-2 size-4" />
                 Open
               </Button>
             </TooltipTrigger>

@@ -282,7 +282,7 @@ export function DashboardAddSecretForm({
                       size="icon"
                       onClick={() => removeKeyValuePair(pair.id)}
                       title="Remove this key-value pair"
-                      className="text-muted-foreground hover:text-destructive flex-shrink-0 flex items-center justify-center"
+                      className="text-muted-foreground hover:text-destructive flex flex-shrink-0 items-center justify-center"
                     >
                       <Icons.trash className="size-4" />
                     </Button>

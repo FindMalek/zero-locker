@@ -138,7 +138,7 @@ export function DashboardMultiFilters({
               className="flex w-full items-center justify-between p-3"
             >
               <div className="flex items-center gap-3">
-                <filter.icon className="text-muted-foreground h-4 w-4" />
+                <filter.icon className="text-muted-foreground size-4" />
                 <span className="text-sm font-medium">{filter.label}</span>
                 {activeCount && <Badge variant="info">{activeCount}</Badge>}
               </div>
@@ -146,7 +146,7 @@ export function DashboardMultiFilters({
                 <span className="text-xs text-gray-500">
                   {filter.count || filter.options.length}
                 </span>
-                <Icons.right className="text-muted-foreground h-4 w-4" />
+                <Icons.right className="text-muted-foreground size-4" />
               </div>
             </Button>
           )
@@ -164,10 +164,10 @@ export function DashboardMultiFilters({
           onClick={handleBackClick}
           className="p-1"
         >
-          <Icons.chevronLeft className="h-4 w-4" />
+          <Icons.chevronLeft className="size-4" />
         </Button>
         <div className="flex items-center gap-2">
-          <filter.icon className="text-muted-foreground h-4 w-4" />
+          <filter.icon className="text-muted-foreground size-4" />
           <span className="text-sm font-medium">{filter.label}</span>
           {filter.selectedValues.length > 0 && (
             <Badge variant="info">{filter.selectedValues.length}</Badge>
@@ -195,12 +195,12 @@ export function DashboardMultiFilters({
                     alt={`${option.label} logo`}
                     width={16}
                     height={16}
-                    className="h-4 w-4 rounded-sm object-contain"
+                    className="size-4 rounded-sm object-contain"
                   />
                 )}
                 <span className="text-sm font-medium">{option.label}</span>
               </div>
-              {isSelected && <Icons.check className="text-primary h-4 w-4" />}
+              {isSelected && <Icons.check className="text-primary size-4" />}
             </Button>
           )
         })}
@@ -230,7 +230,7 @@ export function DashboardMultiFilters({
                   onClick={() => removeFilter(filter.filterId, filter.value)}
                   className="ml-1 rounded-full p-0.5 hover:bg-blue-200"
                 >
-                  <Icons.close className="h-3 w-3" />
+                  <Icons.close className="size-3" />
                 </button>
               </Badge>
             ))}
@@ -248,14 +248,14 @@ export function DashboardMultiFilters({
       <Popover open={isFilterOpen} onOpenChange={setIsFilterOpen}>
         <PopoverTrigger asChild>
           <Button variant="outline" className="relative">
-            <Icons.filter className="mr-2 h-4 w-4" />
+            <Icons.filter className="mr-2 size-4" />
             Filter
             {totalActiveFilters > 0 && (
               <Badge variant="secondary" className="ml-2 h-5 px-1.5 text-xs">
                 {totalActiveFilters}
               </Badge>
             )}
-            <Icons.chevronDown className="ml-2 h-4 w-4" />
+            <Icons.chevronDown className="ml-2 size-4" />
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-80 p-0" align="end">

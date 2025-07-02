@@ -275,3 +275,4 @@ alwaysApply: true
 - Make sure to use the digits argument with Number#toFixed().
 - Make sure to use the "use strict" directive in script files.
 - Don't put multiple components in one file, each file must have one component.
+- Don't use the TailwindCSS class names 'h-NUMBER w-NUMBER' instead use 'size-NUMBR'

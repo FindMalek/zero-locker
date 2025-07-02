@@ -254,10 +254,10 @@ export const Icons = {
 export const getEntityIcon = (itemType: RecentItemType) => {
   switch (itemType) {
     case RecentItemTypeEnum.CREDENTIAL:
-      return <AtSignIcon className="h-4 w-4" />
+      return <AtSignIcon className="size-4" />
     case RecentItemTypeEnum.CARD:
-      return <CreditCard className="h-4 w-4" />
+      return <CreditCard className="size-4" />
     case RecentItemTypeEnum.SECRET:
-      return <KeyIcon className="h-4 w-4" />
+      return <KeyIcon className="size-4" />
   }
 }

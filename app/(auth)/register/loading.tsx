@@ -14,7 +14,7 @@ export default function RegisterLoading() {
             <span className="sr-only">{siteConfig.name}</span>
           </div>
           <Skeleton className="h-7 w-48" />
-          <Skeleton className="h-4 w-40" />
+          <Skeleton className="size-40" />
         </div>
 
         <div className="space-y-4">
@@ -25,7 +25,7 @@ export default function RegisterLoading() {
         </div>
 
         <div className="mt-4 flex justify-center gap-1 text-xs">
-          <Skeleton className="h-3 w-32" />
+          <Skeleton className="size-32" />
         </div>
       </div>
     </div>

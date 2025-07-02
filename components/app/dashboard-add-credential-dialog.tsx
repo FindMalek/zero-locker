@@ -141,7 +141,7 @@ export function DashboardAddCredentialDialog({
     const newPassword = generatePassword()
     setSensitiveData((prev) => ({ ...prev, password: newPassword }))
     setPasswordStrength(checkPasswordStrength(newPassword))
-    
+
     // Reset animation after 300ms
     setTimeout(() => setIsGenerating(false), 300)
   }
@@ -499,10 +499,10 @@ export function DashboardAddCredentialDialog({
                                 size="icon"
                                 onClick={handleGeneratePassword}
                               >
-                                <Icons.refresh 
+                                <Icons.refresh
                                   className={`size-3 transition-transform duration-300 ${
                                     isGenerating ? "rotate-180" : ""
-                                  }`} 
+                                  }`}
                                 />
                               </Button>
                             </TooltipTrigger>
@@ -603,7 +603,9 @@ export function DashboardAddCredentialDialog({
                                   <Icons.helpCircle className="text-muted-foreground size-3" />
                                 </TooltipTrigger>
                                 <TooltipContent>
-                                  <p>Enable if this account has 2FA configured</p>
+                                  <p>
+                                    Enable if this account has 2FA configured
+                                  </p>
                                 </TooltipContent>
                               </Tooltip>
                             </div>
@@ -614,7 +616,7 @@ export function DashboardAddCredentialDialog({
                               }
                             />
                           </div>
-                          
+
                           <div className="grid gap-4 sm:grid-cols-2">
                             <div className="space-y-2">
                               <Label className="text-sm font-medium">
@@ -638,8 +640,6 @@ export function DashboardAddCredentialDialog({
                               />
                             </div>
                           </div>
-
-         
 
                           <div className="space-y-2">
                             <Label className="text-sm font-medium">

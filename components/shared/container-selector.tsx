@@ -86,7 +86,7 @@ export function ContainerSelector({
                       {currentContainer.name}
                     </p>
                   </div>
-                  <Icons.chevronDown className="text-muted-foreground h-3 w-3" />
+                  <Icons.chevronDown className="text-muted-foreground size-3" />
                 </div>
               </button>
             </PopoverTrigger>
@@ -94,7 +94,7 @@ export function ContainerSelector({
               <div className="space-y-3 p-3">
                 {/* Search Bar */}
                 <div className="relative">
-                  <Icons.search className="text-muted-foreground absolute left-2.5 top-2.5 h-4 w-4" />
+                  <Icons.search className="text-muted-foreground absolute left-2.5 top-2.5 size-4" />
                   <Input
                     placeholder="Search containers..."
                     value={searchQuery}
@@ -120,7 +120,7 @@ export function ContainerSelector({
                           {container.name}
                         </span>
                         {container.id === currentContainerId && (
-                          <Icons.check className="ml-auto h-3 w-3 text-emerald-600" />
+                          <Icons.check className="ml-auto size-3 text-emerald-600" />
                         )}
                       </Button>
                     ))}
@@ -147,7 +147,7 @@ export function ContainerSelector({
                     setPopoverOpen(false)
                   }}
                 >
-                  <Icons.add className="h-4 w-4" />
+                  <Icons.add className="size-4" />
                   Create Container
                 </Button>
               </div>
@@ -162,12 +162,12 @@ export function ContainerSelector({
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <Icons.folder className="text-muted-foreground h-4 w-4" />
+                    <Icons.folder className="text-muted-foreground size-4" />
                     <span className="text-muted-foreground text-sm">
                       No container assigned
                     </span>
                   </div>
-                  <Icons.chevronDown className="text-muted-foreground h-3 w-3" />
+                  <Icons.chevronDown className="text-muted-foreground size-3" />
                 </div>
               </button>
             </PopoverTrigger>
@@ -175,7 +175,7 @@ export function ContainerSelector({
               <div className="space-y-3 p-3">
                 {/* Search Bar */}
                 <div className="relative">
-                  <Icons.search className="text-muted-foreground absolute left-2.5 top-2.5 h-4 w-4" />
+                  <Icons.search className="text-muted-foreground absolute left-2.5 top-2.5 size-4" />
                   <Input
                     placeholder="Search containers..."
                     value={searchQuery}
@@ -224,7 +224,7 @@ export function ContainerSelector({
                     setPopoverOpen(false)
                   }}
                 >
-                  <Icons.add className="h-4 w-4" />
+                  <Icons.add className="size-4" />
                   Create Container
                 </Button>
               </div>

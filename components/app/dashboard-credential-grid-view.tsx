@@ -40,7 +40,7 @@ export function DashboardCredentialGridView({
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-2">
                 <div className="rounded-lg bg-gray-100 p-2">
-                  <Icons.user className="h-4 w-4 text-gray-600" />
+                  <Icons.user className="size-4 text-gray-600" />
                 </div>
                 <div>
                   <h3 className="max-w-[150px] truncate text-sm font-semibold">
@@ -84,12 +84,11 @@ export function DashboardCredentialGridView({
                 variant="ghost"
                 size="sm"
                 onClick={() => handleCopy(credential.identifier)}
-                className="h-8 w-8 p-0"
               >
                 {isCopied ? (
-                  <Icons.check className="h-4 w-4" />
+                  <Icons.check className="size-4" />
                 ) : (
-                  <Icons.copy className="h-4 w-4" />
+                  <Icons.copy className="size-4" />
                 )}
               </Button>
 

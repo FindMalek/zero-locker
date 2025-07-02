@@ -61,7 +61,7 @@ export function StatusBadge({
     <Badge variant="outline" className={badgeClasses}>
       <span>{config.label}</span>
       {withPopover && (
-        <Icons.chevronDown className="ml-1.5 h-3 w-3 opacity-60" />
+        <Icons.chevronDown className="ml-1.5 size-3 opacity-60" />
       )}
     </Badge>
   )

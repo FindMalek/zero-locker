@@ -11,11 +11,11 @@ export function PasswordStrengthMeter({
 }: PasswordStrengthMeterProps) {
   const levels = 5
   const colors = [
-    "rgb(239, 68, 68)", 
-    "rgb(249, 115, 22)", 
-    "rgb(234, 179, 8)", 
-    "rgb(34, 197, 94)", 
-    "rgb(34, 197, 94)", 
+    "rgb(239, 68, 68)",
+    "rgb(249, 115, 22)",
+    "rgb(234, 179, 8)",
+    "rgb(34, 197, 94)",
+    "rgb(34, 197, 94)",
   ]
 
   return (
