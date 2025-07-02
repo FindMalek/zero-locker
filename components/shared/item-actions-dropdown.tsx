@@ -127,7 +127,7 @@ export function ItemActionsDropdown({
   const menuItems = renderMenuItems({
     MenuItem: DropdownMenuItem,
     MenuSeparator: DropdownMenuSeparator,
-    iconSize: "h-3 w-3",
+    iconSize: "size-3",
     stopPropagation: false,
     actions: {
       onEdit,
@@ -143,8 +143,8 @@ export function ItemActionsDropdown({
     return (
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="outline" size="sm" className="h-8 w-8 p-0">
-            <Icons.more className="h-3 w-3" />
+          <Button variant="outline" size="sm" className="size-8 p-0">
+            <Icons.more className="size-3" />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-48">
@@ -169,7 +169,7 @@ export function ItemActionsContextMenu({
   const contextMenuItems = renderMenuItems({
     MenuItem: ContextMenuItem,
     MenuSeparator: ContextMenuSeparator,
-    iconSize: "h-4 w-4",
+    iconSize: "size-4",
     stopPropagation: true,
     actions: {
       onEdit,

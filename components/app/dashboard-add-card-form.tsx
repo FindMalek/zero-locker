@@ -216,7 +216,7 @@ export function DashboardAddCardForm({
           >
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-2">
-                <Plus className="h-4 w-4" />
+                <Plus className="size-4" />
                 <span className="font-medium">Additional Information</span>
               </div>
               {hasMetadataValues() && (
@@ -230,7 +230,7 @@ export function DashboardAddCardForm({
                 {showMetadata ? "Hide" : "Optional"}
               </span>
               <ChevronDown
-                className={`h-4 w-4 transition-transform ${showMetadata ? "rotate-180" : ""}`}
+                className={`size-4 transition-transform ${showMetadata ? "rotate-180" : ""}`}
               />
             </div>
           </Button>

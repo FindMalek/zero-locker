@@ -118,7 +118,7 @@ export function TagSelector<T>({
                 ? `${selectedTags.length} tag(s) selected`
                 : "Select tags..."}
             </span>
-            <ChevronsUpDown className="h-4 w-4 opacity-50" />
+            <ChevronsUpDown className="size-4 opacity-50" />
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-full p-0" align="start">
@@ -145,7 +145,7 @@ export function TagSelector<T>({
                   >
                     <Check
                       className={cn(
-                        "mr-2 h-4 w-4",
+                        "mr-2 size-4",
                         selectedTags.some(
                           (selected) => getValue(selected) === getValue(tag)
                         )
@@ -164,7 +164,7 @@ export function TagSelector<T>({
                 ) && (
                   <CommandGroup heading="Create Tag">
                     <CommandItem value={inputValue} onSelect={handleCreate}>
-                      <Check className="mr-2 h-4 w-4 opacity-100" />
+                      <Check className="mr-2 size-4 opacity-100" />
                       Create &quot;{inputValue}&quot;
                     </CommandItem>
                   </CommandGroup>

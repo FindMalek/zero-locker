@@ -21,7 +21,7 @@ export function EmptyState({
     <Card className="border-2 border-dashed">
       <CardContent className="py-12 text-center">
         <div className="text-muted-foreground mb-4">
-          <Icon className="mx-auto h-12 w-12" />
+          <Icon className="mx-auto size-12" />
         </div>
         <h3 className="text-muted-foreground mb-2 text-lg font-medium">
           {title}

@@ -35,7 +35,7 @@ export function DashboardCredentialFilters({
   return (
     <div className="mb-6 flex flex-col gap-4 sm:flex-row">
       <div className="relative flex-1">
-        <Icons.search className="text-muted absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform" />
+        <Icons.search className="text-muted-foreground absolute left-3 top-1/2 size-4 -translate-y-1/2 transform" />
         <Input
           placeholder="Search by identifier or description..."
           value={searchTerm}

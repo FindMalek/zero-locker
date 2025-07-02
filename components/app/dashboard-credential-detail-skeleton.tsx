@@ -6,13 +6,13 @@ export function DashboardCredentialDetailSkeleton() {
       {/* Header */}
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-4">
-          <Skeleton className="h-16 w-16 rounded-full" />
+          <Skeleton className="size-16 rounded-full" />
           <div className="space-y-2">
             <Skeleton className="h-8 w-48" />
             <Skeleton className="h-4 w-32" />
           </div>
         </div>
-        <Skeleton className="h-8 w-8" />
+        <Skeleton className="size-8" />
       </div>
 
       {/* Cards */}
@@ -20,7 +20,7 @@ export function DashboardCredentialDetailSkeleton() {
         {Array.from({ length: 4 }).map((_, i) => (
           <div key={i} className="space-y-4 rounded-lg border p-6">
             <div className="flex items-center gap-2">
-              <Skeleton className="h-5 w-5" />
+              <Skeleton className="size-5" />
               <Skeleton className="h-5 w-32" />
             </div>
             <div className="space-y-3">
