@@ -81,7 +81,7 @@ export function MarketingWaitlistForm() {
     if (isLoading) return "Loading..."
 
     if (showPosition && userPosition) {
-      return `You are number ${userPosition} in the waitlist!`
+      return `You are number #${userPosition} in the waitlist!`
     }
 
     return `${displayCount} people have joined the waitlist`
