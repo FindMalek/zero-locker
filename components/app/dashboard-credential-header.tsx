@@ -69,25 +69,6 @@ export function CredentialHeader({
       </div>
 
       <div className="flex flex-shrink-0 items-center gap-2">
-        <Button
-          variant="outline"
-          size="sm"
-          className="h-7 px-2.5"
-          onClick={handleCopyLink}
-        >
-          {isCopied ? (
-            <>
-              <Icons.check className="mr-1 size-3" />
-              <span className="whitespace-nowrap text-xs">Copied</span>
-            </>
-          ) : (
-            <>
-              <Icons.copy className="mr-1 size-3" />
-              <span className="whitespace-nowrap text-xs">Copy link</span>
-            </>
-          )}
-        </Button>
-
         <ItemActionsDropdown
           onShare={() => {
             // TODO: Implement share
