@@ -15,6 +15,8 @@ import {
   CredentialMetadataDto,
   credentialMetadataDtoSchema,
 } from "@/schemas/credential"
+import { CredentialKeyValuePairDto } from "@/schemas/credential/credential-key-value"
+import { GenericEncryptedKeyValuePairDto } from "@/schemas/encryption/encryption"
 import { EntityTypeEnum } from "@/schemas/utils"
 import { TagDto } from "@/schemas/utils/tag"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -35,6 +37,7 @@ import {
 import { useToast } from "@/hooks/use-toast"
 
 import { ContainerSelector } from "@/components/shared/container-selector"
+import { EncryptedKeyValueForm } from "@/components/shared/encrypted-key-value-form"
 import { Icons } from "@/components/shared/icons"
 import { PasswordStrengthMeter } from "@/components/shared/password-strength-meter"
 import { StatusBadge } from "@/components/shared/status-badge"
@@ -65,6 +68,25 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
+
+const convertGenericToCredential = (
+  generic: GenericEncryptedKeyValuePairDto[]
+): CredentialKeyValuePairDto[] => {
+  return generic.map((item) => ({
+    ...item,
+    credentialMetadataId: undefined,
+  }))
+}
+
+const convertCredentialToGeneric = (
+  credential: CredentialKeyValuePairDto[]
+): GenericEncryptedKeyValuePairDto[] => {
+  return credential.map((item) => ({
+    id: item.id,
+    key: item.key,
+    valueEncryption: item.valueEncryption,
+  }))
+}
 
 interface CredentialDialogProps {
   open: boolean
@@ -122,7 +144,7 @@ export function DashboardAddCredentialDialog({
     defaultValues: {
       recoveryEmail: "",
       phoneNumber: "",
-      otherInfo: [],
+      keyValuePairs: [],
       has2FA: false,
     },
   })
@@ -158,7 +180,7 @@ export function DashboardAddCredentialDialog({
     return (
       values.recoveryEmail?.trim() ||
       values.phoneNumber?.trim() ||
-      (values.otherInfo && values.otherInfo.length > 0) ||
+      (values.keyValuePairs && values.keyValuePairs.length > 0) ||
       values.has2FA
     )
   }
@@ -218,7 +240,7 @@ export function DashboardAddCredentialDialog({
         containerId: credentialData.containerId,
       }
 
-      let metadataDto: Omit<CredentialMetadataDto, "credentialId"> | undefined
+      let metadataDto: CredentialMetadataDto | undefined
 
       if (hasMetadataValues()) {
         const metadataValues = metadataForm.getValues()
@@ -229,11 +251,16 @@ export function DashboardAddCredentialDialog({
         if (metadataValues.recoveryEmail?.trim()) {
           metadataDto.recoveryEmail = metadataValues.recoveryEmail
         }
+
         if (metadataValues.phoneNumber?.trim()) {
           metadataDto.phoneNumber = metadataValues.phoneNumber
         }
-        if (metadataValues.otherInfo && metadataValues.otherInfo.length > 0) {
-          metadataDto.otherInfo = metadataValues.otherInfo
+
+        if (
+          metadataValues.keyValuePairs &&
+          metadataValues.keyValuePairs.length > 0
+        ) {
+          metadataDto.keyValuePairs = metadataValues.keyValuePairs
         }
       }
 
@@ -267,7 +294,7 @@ export function DashboardAddCredentialDialog({
               metadataForm.reset({
                 recoveryEmail: "",
                 phoneNumber: "",
-                otherInfo: [],
+                keyValuePairs: [],
                 has2FA: false,
               })
               setSensitiveData({ identifier: "", password: "" })
@@ -672,40 +699,23 @@ export function DashboardAddCredentialDialog({
                             </div>
                           </div>
 
-                          <div className="space-y-2">
-                            <div className="flex items-center gap-2">
-                              <Label className="text-sm font-medium">
-                                Additional Notes
-                              </Label>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Icons.helpCircle className="text-muted-foreground size-3" />
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                  <p>
-                                    Security questions, backup codes, or other
-                                    important account information
-                                  </p>
-                                </TooltipContent>
-                              </Tooltip>
-                            </div>
-                            <Textarea
-                              value={
-                                metadataForm.watch("otherInfo")?.join("\n") ||
-                                ""
-                              }
-                              onChange={(e) =>
-                                metadataForm.setValue(
-                                  "otherInfo",
-                                  e.target.value
-                                    .split("\n")
-                                    .filter((line) => line.trim())
-                                )
-                              }
-                              placeholder="Security questions, backup codes, etc."
-                              className="border-border focus:border-ring focus:ring-ring min-h-[80px] resize-none focus:ring-1"
-                            />
-                          </div>
+                          <EncryptedKeyValueForm
+                            value={convertCredentialToGeneric(
+                              metadataForm.watch("keyValuePairs") || []
+                            )}
+                            onChange={(genericKeyValuePairs) =>
+                              metadataForm.setValue(
+                                "keyValuePairs",
+                                convertGenericToCredential(genericKeyValuePairs)
+                              )
+                            }
+                            label="Additional Information"
+                            description="Security questions, backup codes, or other important account information"
+                            placeholder={{
+                              key: "Enter key (e.g., Security Question)",
+                              value: "Enter value (e.g., Mother's maiden name)",
+                            }}
+                          />
                         </Form>
                       </div>
                     )}

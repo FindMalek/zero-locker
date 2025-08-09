@@ -11,7 +11,7 @@ interface OverviewStatsProps {
   }
 }
 
-export async function OverviewStats({ stats }: OverviewStatsProps) {
+export function OverviewStats({ stats }: OverviewStatsProps) {
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
       <StatsCard
