@@ -6,6 +6,7 @@ model User {
   emailVerified Boolean
 
   image String?
+  plan  UserPlan @default(NORMAL)
 
   createdAt DateTime
   updatedAt DateTime

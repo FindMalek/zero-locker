@@ -1,6 +1,7 @@
 "use client"
 
 import { orpc } from "@/orpc/client"
+import type { EntityType } from "@/schemas/utils"
 import type {
   ContainerOutput,
   CreateContainerInput,
@@ -18,6 +19,9 @@ export const containerKeys = {
     [...containerKeys.lists(), filters] as const,
   details: () => [...containerKeys.all, "detail"] as const,
   detail: (id: string) => [...containerKeys.details(), id] as const,
+  defaults: () => [...containerKeys.all, "defaults"] as const,
+  defaultForEntity: (entityType: EntityType) =>
+    [...containerKeys.defaults(), "entity", entityType] as const,
 }
 
 // Get single container
@@ -185,5 +189,23 @@ export function useDeleteContainer() {
       // Invalidate and refetch container lists
       queryClient.invalidateQueries({ queryKey: containerKeys.lists() })
     },
+  })
+}
+
+// Get default container for a specific entity type
+export function useDefaultContainerForEntity(entityType: EntityType) {
+  return useQuery({
+    queryKey: containerKeys.defaultForEntity(entityType),
+    queryFn: () => orpc.containers.getDefaultForEntity.call({ entityType }),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  })
+}
+
+// Get all default containers for the current user
+export function useUserDefaultContainers() {
+  return useQuery({
+    queryKey: containerKeys.defaults(),
+    queryFn: () => orpc.containers.getUserDefaults.call({}),
+    staleTime: 5 * 60 * 1000, // 5 minutes
   })
 }

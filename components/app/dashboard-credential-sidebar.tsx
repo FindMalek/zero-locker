@@ -8,7 +8,6 @@ import { EntityTypeEnum } from "@/schemas/utils"
 
 import { statusConfig } from "@/config/converter"
 import { getFullFormattedDateAndTime, getRelativeTime } from "@/lib/date-utils"
-import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard"
 
 import { ContainerSelector } from "@/components/shared/container-selector"
 import { Icons } from "@/components/shared/icons"
@@ -40,7 +39,6 @@ export function CredentialSidebar({
 }: CredentialSidebarProps) {
   const [isChangingStatus, setIsChangingStatus] = useState(false)
   const [statusPopoverOpen, setStatusPopoverOpen] = useState(false)
-  const { copy, isCopied } = useCopyToClipboard({ successDuration: 1500 })
 
   const { data: platformsData } = usePlatforms({ page: 1, limit: 100 })
 
@@ -58,10 +56,6 @@ export function CredentialSidebar({
         setIsChangingStatus(false)
       }
     }
-  }
-
-  const handleCopyIdentifier = async () => {
-    await copy(credential.identifier)
   }
 
   return (
@@ -93,27 +87,6 @@ export function CredentialSidebar({
 
       {/* Quick Actions */}
       <div className="flex gap-2">
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant="outline"
-              size="sm"
-              className="flex-1"
-              onClick={handleCopyIdentifier}
-            >
-              {isCopied ? (
-                <Icons.check className="text-success mr-2 size-4" />
-              ) : (
-                <Icons.copy className="mr-2 size-4" />
-              )}
-              Copy ID
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>
-            <p>Copy identifier to clipboard</p>
-          </TooltipContent>
-        </Tooltip>
-
         {platform?.loginUrl && (
           <Tooltip>
             <TooltipTrigger asChild>

@@ -6,9 +6,20 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 // Query keys factory
 export const userKeys = {
   all: ["users"] as const,
+  currentUser: () => [...userKeys.all, "currentUser"] as const,
   waitlistCount: () => [...userKeys.all, "waitlistCount"] as const,
   userCount: () => [...userKeys.all, "userCount"] as const,
   encryptedDataCount: () => [...userKeys.all, "encryptedDataCount"] as const,
+}
+
+// Get current user with plan information
+export function useCurrentUser() {
+  return useQuery({
+    queryKey: userKeys.currentUser(),
+    queryFn: () => orpc.users.getCurrentUser.call({}),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    retry: 1,
+  })
 }
 
 // Join waitlist mutation
@@ -56,5 +67,25 @@ export function useEncryptedDataCount() {
     queryKey: userKeys.encryptedDataCount(),
     queryFn: () => orpc.users.getEncryptedDataCount.call({}),
     staleTime: 5 * 60 * 1000, // 5 minutes
+  })
+}
+
+// Initialize default containers for user
+export function useInitializeDefaultContainers() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: () => orpc.users.initializeDefaultContainers.call({}),
+    onSuccess: (data) => {
+      if (data.success) {
+        // Invalidate containers query to refetch the new default containers
+        queryClient.invalidateQueries({
+          queryKey: ["containers"],
+        })
+      }
+    },
+    onError: (error) => {
+      console.error("Failed to initialize default containers:", error)
+    },
   })
 }
