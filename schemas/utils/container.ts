@@ -20,6 +20,7 @@ export const containerSimpleRoSchema = z.object({
 
   name: z.string(),
   icon: z.string(),
+  isDefault: z.boolean(),
 
   description: z.string().nullable(),
   type: z.nativeEnum(ContainerType),

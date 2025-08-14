@@ -13,6 +13,7 @@ export class ContainerEntity {
       description: entity.description,
 
       icon: entity.icon,
+      isDefault: entity.isDefault,
       type: entity.type,
 
       updatedAt: entity.updatedAt,
@@ -86,6 +87,22 @@ export class ContainerEntity {
         return "Can only store credentials"
       case ContainerType.CARDS_ONLY:
         return "Can only store cards"
+    }
+  }
+
+  /**
+   * Converts EntityType to the corresponding default ContainerType for that entity
+   */
+  static getDefaultContainerTypeForEntity(
+    entityType: EntityType
+  ): ContainerType {
+    switch (entityType) {
+      case EntityTypeEnum.CREDENTIAL:
+        return ContainerType.CREDENTIALS_ONLY
+      case EntityTypeEnum.CARD:
+        return ContainerType.CARDS_ONLY
+      case EntityTypeEnum.SECRET:
+        return ContainerType.SECRETS_ONLY
     }
   }
 }

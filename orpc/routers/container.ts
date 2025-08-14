@@ -1,6 +1,11 @@
 import { ContainerEntity } from "@/entities/utils/container/entity"
 import { authMiddleware } from "@/middleware/auth"
+import {
+  requireContainerPermission,
+  requireDefaultContainerAccess,
+} from "@/middleware/permissions"
 import { database } from "@/prisma/client"
+import { EntityTypeSchema } from "@/schemas/utils"
 import {
   createContainerWithSecretsInputSchema,
   createContainerWithSecretsOutputSchema,
@@ -20,7 +25,9 @@ import {
 } from "@/schemas/utils/dto"
 import { ORPCError, os } from "@orpc/server"
 import type { Prisma } from "@prisma/client"
+import { z } from "zod"
 
+import { Action, PermissionLevel } from "@/lib/permissions"
 import { createEncryptedData } from "@/lib/utils/encryption-helpers"
 import { createTagsAndGetConnections } from "@/lib/utils/tag-helpers"
 
@@ -29,6 +36,9 @@ import type { ORPCContext } from "../types"
 const baseProcedure = os.$context<ORPCContext>()
 const authProcedure = baseProcedure.use(({ context, next }) =>
   authMiddleware({ context, next })
+)
+const authWithDefaultAccessProcedure = authProcedure.use(({ context, next }) =>
+  requireDefaultContainerAccess()({ context, next })
 )
 
 // Get container by ID
@@ -51,7 +61,7 @@ export const getContainer = authProcedure
   })
 
 // List containers with pagination
-export const listContainers = authProcedure
+export const listContainers = authWithDefaultAccessProcedure
   .input(listContainersInputSchema)
   .output(listContainersOutputSchema)
   .handler(async ({ input, context }): Promise<ListContainersOutput> => {
@@ -60,6 +70,9 @@ export const listContainers = authProcedure
 
     const where = {
       userId: context.user.id,
+      ...(context.permissions?.canOnlyAccessDefaultContainers && {
+        isDefault: true,
+      }),
       ...(search && {
         OR: [
           { name: { contains: search, mode: "insensitive" as const } },
@@ -91,6 +104,12 @@ export const listContainers = authProcedure
 
 // Create container
 export const createContainer = authProcedure
+  .use(({ context, next }) =>
+    requireContainerPermission(
+      PermissionLevel.WRITE,
+      Action.CREATE
+    )({ context, next })
+  )
   .input(createContainerInputSchema)
   .output(containerOutputSchema)
   .handler(async ({ input, context }): Promise<ContainerOutput> => {
@@ -116,6 +135,9 @@ export const createContainer = authProcedure
 
 // Update container
 export const updateContainer = authProcedure
+  .use(({ context, next }) =>
+    requireContainerPermission(PermissionLevel.WRITE)({ context, next })
+  )
   .input(updateContainerInputSchema)
   .output(containerOutputSchema)
   .handler(async ({ input, context }): Promise<ContainerOutput> => {
@@ -162,6 +184,9 @@ export const updateContainer = authProcedure
 
 // Delete container
 export const deleteContainer = authProcedure
+  .use(({ context, next }) =>
+    requireContainerPermission(PermissionLevel.ADMIN)({ context, next })
+  )
   .input(deleteContainerInputSchema)
   .output(containerOutputSchema)
   .handler(async ({ input, context }): Promise<ContainerOutput> => {
@@ -186,6 +211,12 @@ export const deleteContainer = authProcedure
 
 // Create container with secrets
 export const createContainerWithSecrets = authProcedure
+  .use(({ context, next }) =>
+    requireContainerPermission(
+      PermissionLevel.WRITE,
+      Action.CREATE
+    )({ context, next })
+  )
   .input(createContainerWithSecretsInputSchema)
   .output(createContainerWithSecretsOutputSchema)
   .handler(
@@ -275,6 +306,48 @@ export const createContainerWithSecrets = authProcedure
     }
   )
 
+// Get default container for a specific entity type
+export const getDefaultContainerForEntity = authProcedure
+  .input(
+    z.object({
+      entityType: EntityTypeSchema,
+    })
+  )
+  .output(containerOutputSchema.nullable())
+  .handler(async ({ input, context }): Promise<ContainerOutput | null> => {
+    const containerType = ContainerEntity.getDefaultContainerTypeForEntity(
+      input.entityType
+    )
+
+    const container = await database.container.findFirst({
+      where: {
+        userId: context.user.id,
+        isDefault: true,
+        type: containerType,
+      },
+    })
+
+    return container ? ContainerEntity.getSimpleRo(container) : null
+  })
+
+// Get all default containers for a user
+export const getUserDefaultContainers = authProcedure
+  .input(z.object({}))
+  .output(z.array(containerOutputSchema))
+  .handler(async ({ context }): Promise<ContainerOutput[]> => {
+    const containers = await database.container.findMany({
+      where: {
+        userId: context.user.id,
+        isDefault: true,
+      },
+      orderBy: {
+        name: "asc",
+      },
+    })
+
+    return containers.map((container) => ContainerEntity.getSimpleRo(container))
+  })
+
 // Export the container router
 export const containerRouter = {
   get: getContainer,
@@ -283,4 +356,6 @@ export const containerRouter = {
   update: updateContainer,
   delete: deleteContainer,
   createWithSecrets: createContainerWithSecrets,
+  getDefaultForEntity: getDefaultContainerForEntity,
+  getUserDefaults: getUserDefaultContainers,
 }

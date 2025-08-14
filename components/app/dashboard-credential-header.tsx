@@ -6,12 +6,9 @@ import type { CredentialOutput } from "@/schemas/credential/dto"
 import { PlatformOutput } from "@/schemas/utils/dto"
 
 import { getLogoDevUrlWithToken, getPlaceholderImage } from "@/lib/utils"
-import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard"
-import { useToast } from "@/hooks/use-toast"
 
 import { Icons } from "@/components/shared/icons"
 import { ItemActionsDropdown } from "@/components/shared/item-actions-dropdown"
-import { Button } from "@/components/ui/button"
 
 interface CredentialHeaderProps {
   credential: CredentialOutput
@@ -24,14 +21,6 @@ export function CredentialHeader({
   platform,
   onDelete,
 }: CredentialHeaderProps) {
-  const { toast } = useToast()
-  const { copy, isCopied } = useCopyToClipboard({ successDuration: 2000 })
-
-  const handleCopyLink = async () => {
-    await copy(window.location.href)
-    toast("Credential link copied to clipboard", "success")
-  }
-
   return (
     <div className="flex items-start justify-between gap-4">
       <div className="flex min-w-0 items-center gap-4">
@@ -69,25 +58,6 @@ export function CredentialHeader({
       </div>
 
       <div className="flex flex-shrink-0 items-center gap-2">
-        <Button
-          variant="outline"
-          size="sm"
-          className="h-7 px-2.5"
-          onClick={handleCopyLink}
-        >
-          {isCopied ? (
-            <>
-              <Icons.check className="mr-1 size-3" />
-              <span className="whitespace-nowrap text-xs">Copied</span>
-            </>
-          ) : (
-            <>
-              <Icons.copy className="mr-1 size-3" />
-              <span className="whitespace-nowrap text-xs">Copy link</span>
-            </>
-          )}
-        </Button>
-
         <ItemActionsDropdown
           onShare={() => {
             // TODO: Implement share
