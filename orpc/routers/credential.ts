@@ -3,6 +3,7 @@ import {
   CredentialQuery,
 } from "@/entities/credential/credential"
 import { authMiddleware } from "@/middleware/auth"
+import { requirePermission } from "@/middleware/permissions"
 import { database } from "@/prisma/client"
 import {
   createCredentialWithMetadataInputSchema,
@@ -26,6 +27,7 @@ import type { Prisma } from "@prisma/client"
 import { z } from "zod"
 
 import { decryptData } from "@/lib/encryption"
+import { Feature, PermissionLevel } from "@/lib/permissions"
 import { getOrReturnEmptyObject } from "@/lib/utils"
 import { createEncryptedData } from "@/lib/utils/encryption-helpers"
 import { createTagsAndGetConnections } from "@/lib/utils/tag-helpers"
@@ -154,6 +156,12 @@ export const listCredentials = authProcedure
 
 // Create credential
 export const createCredential = authProcedure
+  .use(({ context, next }) =>
+    requirePermission({
+      feature: Feature.CREDENTIALS,
+      level: PermissionLevel.WRITE,
+    })({ context, next })
+  )
   .input(createCredentialInputSchema)
   .output(credentialOutputSchema)
   .handler(async ({ input, context }): Promise<CredentialOutput> => {

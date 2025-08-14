@@ -1,6 +1,7 @@
 "use client"
 
 import { orpc } from "@/orpc/client"
+import type { EntityType } from "@/schemas/utils"
 import type {
   ContainerOutput,
   CreateContainerInput,
@@ -8,7 +9,6 @@ import type {
   ListContainersInput,
   UpdateContainerInput,
 } from "@/schemas/utils/dto"
-import type { EntityType } from "@/schemas/utils"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 
 // Query keys factory
@@ -20,7 +20,8 @@ export const containerKeys = {
   details: () => [...containerKeys.all, "detail"] as const,
   detail: (id: string) => [...containerKeys.details(), id] as const,
   defaults: () => [...containerKeys.all, "defaults"] as const,
-  defaultForEntity: (entityType: EntityType) => [...containerKeys.defaults(), "entity", entityType] as const,
+  defaultForEntity: (entityType: EntityType) =>
+    [...containerKeys.defaults(), "entity", entityType] as const,
 }
 
 // Get single container

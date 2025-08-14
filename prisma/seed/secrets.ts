@@ -16,7 +16,10 @@ async function seedSecrets(prisma: PrismaClient) {
   for (const user of users) {
     // Find the default Environment Variables container for each user
     const envContainer = containers.find(
-      (c) => c.userId === user.id && c.name === "Environment Variables" && c.isDefault === true
+      (c) =>
+        c.userId === user.id &&
+        c.name === "Environment Variables" &&
+        c.isDefault === true
     )
 
     // Find the work container for additional secrets (Pro users only)

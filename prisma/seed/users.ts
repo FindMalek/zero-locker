@@ -1,4 +1,4 @@
-import { PrismaClient, UserPlan, ContainerType } from "@prisma/client"
+import { ContainerType, PrismaClient, UserPlan } from "@prisma/client"
 
 import { saltAndHashPassword } from "../../lib/auth/password"
 
@@ -6,7 +6,10 @@ import { saltAndHashPassword } from "../../lib/auth/password"
  * Creates the 3 default containers for a new user in the seeder
  * This is a seeder-specific version to avoid server-only imports
  */
-async function createDefaultContainersForSeeder(prisma: PrismaClient, userId: string) {
+async function createDefaultContainersForSeeder(
+  prisma: PrismaClient,
+  userId: string
+) {
   const defaultContainers = [
     {
       name: "Accounts",
@@ -19,7 +22,8 @@ async function createDefaultContainersForSeeder(prisma: PrismaClient, userId: st
     {
       name: "Cards",
       icon: "💳",
-      description: "Default container for payment cards and financial information",
+      description:
+        "Default container for payment cards and financial information",
       type: ContainerType.CARDS_ONLY,
       isDefault: true,
       userId,
@@ -107,9 +111,14 @@ async function seedUsers(prisma: PrismaClient) {
     // This mimics the real app behavior where users get default containers on signup
     try {
       await createDefaultContainersForSeeder(prisma, user.id)
-      console.log(`✅ Created default containers for ${user.name} (${user.plan})`)
+      console.log(
+        `✅ Created default containers for ${user.name} (${user.plan})`
+      )
     } catch (error) {
-      console.error(`❌ Failed to create default containers for ${user.name}:`, error)
+      console.error(
+        `❌ Failed to create default containers for ${user.name}:`,
+        error
+      )
     }
   }
 

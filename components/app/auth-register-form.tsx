@@ -2,14 +2,13 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
+import { useInitializeDefaultContainers } from "@/orpc/hooks/use-users"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 
 import { signUpSchema, type SignUpFormData } from "@/config/schema"
 import { signUp } from "@/lib/auth/client"
 import { cn } from "@/lib/utils"
-
-import { useInitializeDefaultContainers } from "@/orpc/hooks/use-users"
 
 import { Icons } from "@/components/shared/icons"
 import { Button } from "@/components/ui/button"

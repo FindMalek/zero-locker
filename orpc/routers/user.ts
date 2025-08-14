@@ -6,10 +6,7 @@ import {
   type GetEncryptedDataCountOutput,
   type GetUserCountOutput,
 } from "@/schemas/user/statistics"
-import {
-  currentUserDtoSchema,
-  type CurrentUserDto,
-} from "@/schemas/user/user"
+import { currentUserDtoSchema, type CurrentUserDto } from "@/schemas/user/user"
 import {
   getWaitlistCountOutputSchema,
   joinWaitlistInputSchema,

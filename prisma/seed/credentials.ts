@@ -50,7 +50,8 @@ async function seedCredentials(prisma: PrismaClient) {
   for (const user of users) {
     // Find the user's default containers
     const accountsContainer = containers.find(
-      (c) => c.userId === user.id && c.name === "Accounts" && c.isDefault === true
+      (c) =>
+        c.userId === user.id && c.name === "Accounts" && c.isDefault === true
     )
     const workContainer = containers.find(
       (c) => c.userId === user.id && c.name === "Work"
@@ -88,7 +89,7 @@ async function seedCredentials(prisma: PrismaClient) {
       iv: SEED_ENCRYPTION_CONFIG.CREDENTIAL_PASSWORD_IV,
     })
 
-          // Prepare Google credential - goes to default Accounts container
+    // Prepare Google credential - goes to default Accounts container
     credentialsToCreate.push({
       id: googleCredId,
       identifier: user.email,
@@ -124,7 +125,7 @@ async function seedCredentials(prisma: PrismaClient) {
       iv: SEED_ENCRYPTION_CONFIG.CREDENTIAL_PASSWORD_IV,
     })
 
-          // Prepare GitHub credential - goes to default Accounts container
+    // Prepare GitHub credential - goes to default Accounts container
     credentialsToCreate.push({
       id: githubCredId,
       identifier: `${user.name.replace(" ", "").toLowerCase()}`,

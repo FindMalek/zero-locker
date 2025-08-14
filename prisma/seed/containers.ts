@@ -5,14 +5,14 @@ async function seedContainers(prisma: PrismaClient) {
 
   // Get Pro users who can have additional custom containers
   const proUsers = await prisma.user.findMany({
-    where: { plan: UserPlan.PRO }
+    where: { plan: UserPlan.PRO },
   })
 
   const additionalContainersData = []
 
   for (const user of proUsers) {
     // Pro users get additional custom containers to showcase the Pro features
-    
+
     // Work container - mixed type for work-related items
     additionalContainersData.push({
       id: `container_work_${user.id}`,
@@ -44,7 +44,9 @@ async function seedContainers(prisma: PrismaClient) {
     await prisma.container.createMany({
       data: additionalContainersData,
     })
-    console.log(`✅ Created ${additionalContainersData.length} additional containers for Pro users`)
+    console.log(
+      `✅ Created ${additionalContainersData.length} additional containers for Pro users`
+    )
   }
 
   console.log("✅ Additional containers seeded successfully")
