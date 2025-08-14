@@ -51,7 +51,15 @@ Zero Locker is a secure password management tool designed to store, retrieve, an
    pnpm db:migrate
    ```
 
-5. Start the development server:
+5. Seed the database with sample data:
+
+   ```bash
+   pnpm db:seed
+   ```
+
+   This will create sample users with different plan types and default containers.
+
+6. Start the development server:
    ```bash
    pnpm run dev
    ```

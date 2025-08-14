@@ -14,12 +14,12 @@ async function seedSecrets(prisma: PrismaClient) {
   const encryptedDataToCreate: Prisma.EncryptedDataCreateManyInput[] = []
 
   for (const user of users) {
-    // Find the environment container for each user
+    // Find the default Environment Variables container for each user
     const envContainer = containers.find(
-      (c) => c.userId === user.id && c.name === "Environment Variables"
+      (c) => c.userId === user.id && c.name === "Environment Variables" && c.isDefault === true
     )
 
-    // Find the work container for legacy secrets
+    // Find the work container for additional secrets (Pro users only)
     const workContainer = containers.find(
       (c) => c.userId === user.id && c.name === "Work"
     )
