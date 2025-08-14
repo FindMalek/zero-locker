@@ -69,6 +69,7 @@ export function CredentialForm({ credential, form }: CredentialFormProps) {
           <Input
             {...register("identifier")}
             className="border-border focus:border-ring focus:ring-ring pr-8 focus:ring-1"
+            autoComplete="off"
           />
           <Button
             type="button"
@@ -164,6 +165,7 @@ export function CredentialForm({ credential, form }: CredentialFormProps) {
           {...register("description")}
           placeholder="Add a description for this credential..."
           className="border-border focus:border-ring focus:ring-ring min-h-[80px] resize-none focus:ring-1"
+          autoComplete="off"
         />
       </div>
 

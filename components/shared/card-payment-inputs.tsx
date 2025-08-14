@@ -80,6 +80,7 @@ export function CardPaymentInputs({
             id={`number-${id}`}
             disabled={disabled}
             placeholder="1234 5678 9012 3456"
+            autoComplete="off"
           />
           <div className="text-muted-foreground/80 pointer-events-none absolute inset-y-0 end-0 flex items-center justify-center pe-3 peer-disabled:opacity-50">
             <div className="pointer-events-auto relative">
@@ -126,6 +127,7 @@ export function CardPaymentInputs({
               id={`expiry-${id}`}
               disabled={disabled}
               placeholder="MM/YY"
+              autoComplete="off"
             />
           </div>
           <div className="-ms-px min-w-0 flex-1 focus-within:z-10">
@@ -139,6 +141,7 @@ export function CardPaymentInputs({
               id={`cvc-${id}`}
               disabled={disabled}
               placeholder="123"
+              autoComplete="off"
             />
           </div>
         </div>

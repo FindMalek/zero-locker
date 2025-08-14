@@ -384,7 +384,7 @@ export function DashboardAddCredentialDialog({
             {/* Main Form */}
             <div className="space-y-6 lg:col-span-3">
               <Form {...credentialForm}>
-                <form id="credential-form" className="space-y-6">
+                <form id="credential-form" className="space-y-6" autoComplete="off">
                   {/* Platform Selection */}
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
@@ -481,6 +481,7 @@ export function DashboardAddCredentialDialog({
                         }
                         placeholder="Enter username or email"
                         className="border-border focus:border-ring focus:ring-ring focus:ring-1"
+                        autoComplete="off"
                       />
                     </div>
 
@@ -512,6 +513,7 @@ export function DashboardAddCredentialDialog({
                           onChange={(e) => handlePasswordChange(e.target.value)}
                           placeholder="Enter password"
                           className="pr-14"
+                          autoComplete="new-password"
                         />
                         <div className="absolute inset-y-0 right-10 flex items-center gap-1 pr-1">
                           <Tooltip>
@@ -672,6 +674,7 @@ export function DashboardAddCredentialDialog({
                                 {...metadataForm.register("recoveryEmail")}
                                 placeholder="Recovery email address"
                                 className="border-border focus:border-ring focus:ring-ring focus:ring-1"
+                                autoComplete="off"
                               />
                             </div>
 
@@ -695,6 +698,7 @@ export function DashboardAddCredentialDialog({
                                 {...metadataForm.register("phoneNumber")}
                                 placeholder="Phone number"
                                 className="border-border focus:border-ring focus:ring-ring focus:ring-1"
+                                autoComplete="off"
                               />
                             </div>
                           </div>

@@ -93,6 +93,7 @@ export function MarketingWaitlistForm() {
         <form
           onSubmit={form.handleSubmit(onSubmit)}
           className="flex flex-col gap-2 pt-4 sm:flex-row"
+          autoComplete="off"
         >
           <FormField
             control={form.control}
