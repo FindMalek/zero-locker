@@ -9,6 +9,8 @@ import { signUpSchema, type SignUpFormData } from "@/config/schema"
 import { signUp } from "@/lib/auth/client"
 import { cn } from "@/lib/utils"
 
+import { useInitializeDefaultContainers } from "@/orpc/hooks/use-users"
+
 import { Icons } from "@/components/shared/icons"
 import { Button } from "@/components/ui/button"
 import {
@@ -28,6 +30,7 @@ export function AuthRegisterForm({
 }: React.ComponentPropsWithoutRef<"div">) {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
+  const initializeContainers = useInitializeDefaultContainers()
 
   const form = useForm<SignUpFormData>({
     resolver: zodResolver(signUpSchema),
@@ -54,7 +57,12 @@ export function AuthRegisterForm({
           onRequest: () => {
             setIsLoading(true)
           },
-          onSuccess: () => {
+          onSuccess: async () => {
+            try {
+              await initializeContainers.mutateAsync()
+            } catch (error) {
+              console.error("Failed to create default containers:", error)
+            }
             router.push("/dashboard")
           },
           onError: (ctx) => {

@@ -18,8 +18,10 @@ import {
   type ContainerOutput,
   type ListContainersOutput,
 } from "@/schemas/utils/dto"
+import { EntityTypeSchema } from "@/schemas/utils"
 import { ORPCError, os } from "@orpc/server"
 import type { Prisma } from "@prisma/client"
+import { z } from "zod"
 
 import { createEncryptedData } from "@/lib/utils/encryption-helpers"
 import { createTagsAndGetConnections } from "@/lib/utils/tag-helpers"
@@ -275,6 +277,44 @@ export const createContainerWithSecrets = authProcedure
     }
   )
 
+// Get default container for a specific entity type
+export const getDefaultContainerForEntity = authProcedure
+  .input(z.object({
+    entityType: EntityTypeSchema,
+  }))
+  .output(containerOutputSchema.nullable())
+  .handler(async ({ input, context }): Promise<ContainerOutput | null> => {
+    const containerType = ContainerEntity.getDefaultContainerTypeForEntity(input.entityType)
+
+    const container = await database.container.findFirst({
+      where: {
+        userId: context.user.id,
+        isDefault: true,
+        type: containerType,
+      },
+    })
+
+    return container ? ContainerEntity.getSimpleRo(container) : null
+  })
+
+// Get all default containers for a user
+export const getUserDefaultContainers = authProcedure
+  .input(z.object({}))
+  .output(z.array(containerOutputSchema))
+  .handler(async ({ context }): Promise<ContainerOutput[]> => {
+    const containers = await database.container.findMany({
+      where: {
+        userId: context.user.id,
+        isDefault: true,
+      },
+      orderBy: {
+        name: "asc",
+      },
+    })
+
+    return containers.map(container => ContainerEntity.getSimpleRo(container))
+  })
+
 // Export the container router
 export const containerRouter = {
   get: getContainer,
@@ -283,4 +323,6 @@ export const containerRouter = {
   update: updateContainer,
   delete: deleteContainer,
   createWithSecrets: createContainerWithSecrets,
+  getDefaultForEntity: getDefaultContainerForEntity,
+  getUserDefaults: getUserDefaultContainers,
 }

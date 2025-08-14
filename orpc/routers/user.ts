@@ -1,3 +1,4 @@
+import { authMiddleware } from "@/middleware/auth"
 import { database } from "@/prisma/client"
 import {
   getEncryptedDataCountOutputSchema,
@@ -5,6 +6,10 @@ import {
   type GetEncryptedDataCountOutput,
   type GetUserCountOutput,
 } from "@/schemas/user/statistics"
+import {
+  currentUserDtoSchema,
+  type CurrentUserDto,
+} from "@/schemas/user/user"
 import {
   getWaitlistCountOutputSchema,
   joinWaitlistInputSchema,
@@ -17,12 +22,17 @@ import { ORPCError, os } from "@orpc/server"
 import { Prisma } from "@prisma/client"
 import { z } from "zod"
 
+import { createDefaultContainers } from "@/lib/utils/default-containers"
+
 import type { ORPCContext } from "../types"
 
 const baseProcedure = os.$context<ORPCContext>()
 const publicProcedure = baseProcedure.use(({ context, next }) => {
   return next({ context })
 })
+const authProcedure = baseProcedure.use(({ context, next }) =>
+  authMiddleware({ context, next })
+)
 
 // Join waitlist
 export const joinWaitlist = publicProcedure
@@ -146,10 +156,70 @@ export const getEncryptedDataCount = publicProcedure
     return { count }
   })
 
+// Get current user profile with plan information
+export const getCurrentUser = authProcedure
+  .input(z.object({}))
+  .output(currentUserDtoSchema)
+  .handler(async ({ context }): Promise<CurrentUserDto> => {
+    const user = await database.user.findUnique({
+      where: { id: context.user.id },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        plan: true,
+        image: true,
+        createdAt: true,
+      },
+    })
+
+    if (!user) {
+      throw new ORPCError("NOT_FOUND")
+    }
+
+    return user
+  })
+
+// Initialize default containers for a user
+export const initializeDefaultContainers = authProcedure
+  .input(z.object({}))
+  .output(z.object({ success: z.boolean(), message: z.string() }))
+  .handler(async ({ context }) => {
+    try {
+      // Check if user already has default containers
+      const existingDefaultContainers = await database.container.findMany({
+        where: {
+          userId: context.user.id,
+          isDefault: true,
+        },
+      })
+
+      if (existingDefaultContainers.length > 0) {
+        return {
+          success: false,
+          message: "Default containers already exist for this user",
+        }
+      }
+
+      // Create default containers
+      await createDefaultContainers(context.user.id)
+
+      return {
+        success: true,
+        message: "Default containers created successfully",
+      }
+    } catch (error) {
+      console.error("Error creating default containers:", error)
+      throw new ORPCError("INTERNAL_SERVER_ERROR")
+    }
+  })
+
 // Export the user router
 export const userRouter = {
   joinWaitlist,
   getWaitlistCount,
   getUserCount,
   getEncryptedDataCount,
+  getCurrentUser,
+  initializeDefaultContainers,
 }

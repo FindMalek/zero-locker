@@ -1,10 +1,13 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useContainers } from "@/orpc/hooks/use-containers"
+import { useCurrentUser } from "@/orpc/hooks/use-users"
 import { EntityType } from "@/schemas/utils"
 
 import { validateEntityForContainer } from "@/lib/utils"
+import { ContainerEntity } from "@/entities/utils/container/entity"
+import { UserPlan } from "@prisma/client"
 
 import { DashboardCreateContainerDialog } from "@/components/app/dashboard-create-container-dialog"
 import { Icons } from "@/components/shared/icons"
@@ -32,10 +35,11 @@ export function ContainerSelector({
   disabled = false,
   className,
 }: ContainerSelectorProps) {
+  const [searchQuery, setSearchQuery] = useState("")
   const [popoverOpen, setPopoverOpen] = useState(false)
   const [createDialogOpen, setCreateDialogOpen] = useState(false)
-  const [searchQuery, setSearchQuery] = useState("")
 
+  const { data: currentUser } = useCurrentUser()
   const { data: containersData, refetch } = useContainers({
     page: 1,
     limit: 50,
@@ -43,6 +47,22 @@ export function ContainerSelector({
 
   const containers = containersData?.containers || []
   const currentContainer = containers.find((c) => c.id === currentContainerId)
+
+  const isNormalUser = currentUser?.plan === UserPlan.NORMAL
+  const isContainerSelectionDisabled = disabled || isNormalUser
+
+  useEffect(() => {
+    if (!isNormalUser || currentContainerId || !onContainerChange) return
+
+    const targetType = ContainerEntity.getDefaultContainerTypeForEntity(entityType)
+    const defaultContainer = containers.find(
+      (container) => container.isDefault && container.type === targetType
+    )
+
+    if (defaultContainer) {
+      onContainerChange(defaultContainer.id)
+    }
+  }, [isNormalUser, currentContainerId, containers, entityType, onContainerChange])
 
   // Filter containers that can accept this entity type and match search
   const compatibleContainers = containers
@@ -77,7 +97,7 @@ export function ContainerSelector({
             <PopoverTrigger asChild>
               <button
                 className="border-border bg-card hover:bg-accent w-full rounded-lg border p-2 text-left transition-colors disabled:cursor-not-allowed disabled:opacity-50"
-                disabled={disabled}
+                disabled={isContainerSelectionDisabled}
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
@@ -113,7 +133,7 @@ export function ContainerSelector({
                         size="sm"
                         className="h-8 w-full justify-start gap-2 p-2 text-xs"
                         onClick={() => handleContainerChange(container.id)}
-                        disabled={container.id === currentContainerId}
+                        disabled={container.id === currentContainerId || isNormalUser}
                       >
                         <span className="text-sm">{container.icon}</span>
                         <span className="truncate font-medium">
@@ -158,7 +178,7 @@ export function ContainerSelector({
             <PopoverTrigger asChild>
               <button
                 className="border-muted-foreground/25 bg-muted/10 hover:bg-muted/20 w-full rounded-lg border border-dashed p-2 text-left transition-colors disabled:cursor-not-allowed disabled:opacity-50"
-                disabled={disabled}
+                disabled={isContainerSelectionDisabled}
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
@@ -194,6 +214,7 @@ export function ContainerSelector({
                         size="sm"
                         className="h-8 w-full justify-start gap-2 p-2 text-xs"
                         onClick={() => handleContainerChange(container.id)}
+                        disabled={isNormalUser}
                       >
                         <span className="text-sm">{container.icon}</span>
                         <span className="truncate font-medium">
