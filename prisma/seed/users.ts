@@ -1,6 +1,7 @@
-import { PrismaClient } from "@prisma/client"
+import { PrismaClient, UserPlan } from "@prisma/client"
 
 import { saltAndHashPassword } from "../../lib/auth/password"
+import { createDefaultContainers } from "../../lib/utils/default-containers"
 
 async function seedUsers(prisma: PrismaClient) {
   console.log("🌱 Seeding users...")
@@ -13,6 +14,7 @@ async function seedUsers(prisma: PrismaClient) {
       emailVerified: true,
       image: "https://avatar.vercel.sh/john.doe",
       password: "SecurePass123!",
+      plan: UserPlan.PRO,
       createdAt: new Date(),
       updatedAt: new Date(),
     },
@@ -23,6 +25,7 @@ async function seedUsers(prisma: PrismaClient) {
       emailVerified: true,
       image: "https://avatar.vercel.sh/jane.smith",
       password: "SecurePass123!",
+      plan: UserPlan.NORMAL,
       createdAt: new Date(),
       updatedAt: new Date(),
     },
@@ -33,6 +36,7 @@ async function seedUsers(prisma: PrismaClient) {
       emailVerified: true,
       image: "https://avatar.vercel.sh/mike.johnson",
       password: "SecurePass123!",
+      plan: UserPlan.NORMAL,
       createdAt: new Date(),
       updatedAt: new Date(),
     },
@@ -60,6 +64,9 @@ async function seedUsers(prisma: PrismaClient) {
         userId: user.id,
       },
     })
+
+    // Create default containers for the user (matches real app behavior)
+    await createDefaultContainers(user.id)
   }
 
   console.log("✅ Users seeded successfully")
