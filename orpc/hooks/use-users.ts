@@ -3,8 +3,6 @@
 import { orpc } from "@/orpc/client"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 
-import { containerKeys } from "./use-containers"
-
 // Query keys factory
 export const userKeys = {
   all: ["users"] as const,
@@ -80,9 +78,9 @@ export function useInitializeDefaultContainers() {
     mutationFn: () => orpc.users.initializeDefaultContainers.call({}),
     onSuccess: (data) => {
       if (data.success) {
-        // Invalidate containers queries to refetch the new default containers
+        // Invalidate containers query to refetch the new default containers
         queryClient.invalidateQueries({
-          queryKey: containerKeys.all,
+          queryKey: ["containers"],
         })
       }
     },
