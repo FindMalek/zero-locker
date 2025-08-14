@@ -116,7 +116,7 @@ function CreateContainerButton({
             <p className="font-medium">
               {getUpgradeMessage(Feature.CONTAINERS).title}
             </p>
-            <p className="text-muted-foreground text-xs">
+            <p className="text-xs">
               {getUpgradeMessage(Feature.CONTAINERS).description}
             </p>
           </div>
