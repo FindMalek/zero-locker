@@ -212,6 +212,7 @@ export function DashboardAddSecretForm({
           value={title}
           onChange={(e) => onTitleChange?.(e.target.value)}
           className="w-full"
+          autoComplete="off"
         />
       </div>
 
@@ -247,6 +248,7 @@ export function DashboardAddSecretForm({
                         handlePaste(pair.id, "key", pastedText)
                       }}
                       className="font-mono text-sm"
+                      autoComplete="off"
                     />
                   </div>
                   <div>
@@ -269,6 +271,7 @@ export function DashboardAddSecretForm({
                           handlePaste(pair.id, "value", pastedText)
                         }}
                         className="flex-1 font-mono text-sm"
+                        autoComplete="new-password"
                       />
                     </div>
                   </div>
@@ -327,6 +330,7 @@ export function DashboardAddSecretForm({
               <Input
                 {...field}
                 placeholder="Optional note about this secret..."
+                autoComplete="off"
               />
             </FormControl>
             <FormDescription>

@@ -35,10 +35,13 @@ import {
   generatePassword,
 } from "@/lib/utils/password-helpers"
 import { useToast } from "@/hooks/use-toast"
+import { usePreventAutoSave } from "@/hooks/use-prevent-auto-save"
+import { useAggressiveFormBlocker } from "@/hooks/use-aggressive-form-blocker"
 
 import { ContainerSelector } from "@/components/shared/container-selector"
 import { EncryptedKeyValueForm } from "@/components/shared/encrypted-key-value-form"
 import { Icons } from "@/components/shared/icons"
+import { IsolatedPasswordInput } from "@/components/shared/isolated-password-input"
 import { PasswordStrengthMeter } from "@/components/shared/password-strength-meter"
 import { StatusBadge } from "@/components/shared/status-badge"
 import { TagSelector } from "@/components/shared/tag-selector"
@@ -98,6 +101,12 @@ export function DashboardAddCredentialDialog({
   onOpenChange,
 }: CredentialDialogProps) {
   const { toast } = useToast()
+  
+  // Prevent browser auto-save
+  usePreventAutoSave('credential-form')
+  
+  // Aggressively block form submissions
+  useAggressiveFormBlocker()
 
   const { data: platformsData } = usePlatforms()
   const { data: tagsData } = useTags({ page: 1, limit: 100 })
@@ -186,7 +195,12 @@ export function DashboardAddCredentialDialog({
   }
 
   // Submit handler
-  async function onSubmit() {
+  async function onSubmit(e?: React.FormEvent) {
+    // Prevent default form submission to avoid browser password save detection
+    if (e) {
+      e.preventDefault()
+      e.stopPropagation()
+    }
     if (!sensitiveData.identifier.trim()) {
       toast("Identifier is required", "error")
       return
@@ -384,7 +398,23 @@ export function DashboardAddCredentialDialog({
             {/* Main Form */}
             <div className="space-y-6 lg:col-span-3">
               <Form {...credentialForm}>
-                <form id="credential-form" className="space-y-6">
+                <form 
+                  id="credential-form" 
+                  className="space-y-6" 
+                  autoComplete="off" 
+                  data-testid="vault-form"
+                  onSubmit={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    return false
+                  }}
+                >
+                {/* Hidden honeypot fields to prevent browser auto-save */}
+                <div style={{ display: 'none' }}>
+                  <input type="text" name="username" tabIndex={-1} autoComplete="username" />
+                  <input type="password" name="password" tabIndex={-1} autoComplete="current-password" />
+                </div>
+                  
                   {/* Platform Selection */}
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
@@ -447,15 +477,12 @@ export function DashboardAddCredentialDialog({
                       emptyText="No platforms found."
                     />
                   </div>
-
-                  {/* Basic Credential Info */}
-                  <div className="grid gap-4 sm:grid-cols-2">
+                  
+                  {/* Isolated credential inputs - completely separate from form */}
+                  <div className="grid gap-4 sm:grid-cols-2" data-isolated-inputs="true">
                     <div className="space-y-2">
                       <div className="flex items-center gap-2">
-                        <Label
-                          htmlFor="identifier"
-                          className="text-sm font-medium"
-                        >
+                        <Label className="text-sm font-medium">
                           Username/Email
                         </Label>
                         <Tooltip>
@@ -470,26 +497,26 @@ export function DashboardAddCredentialDialog({
                           </TooltipContent>
                         </Tooltip>
                       </div>
-                      <Input
-                        id="identifier"
-                        value={sensitiveData.identifier}
-                        onChange={(e) =>
-                          setSensitiveData((prev) => ({
-                            ...prev,
-                            identifier: e.target.value,
-                          }))
-                        }
-                        placeholder="Enter username or email"
-                        className="border-border focus:border-ring focus:ring-ring focus:ring-1"
-                      />
+                      <div data-form-isolated="true">
+                        <Input
+                          value={sensitiveData.identifier}
+                          onChange={(e) =>
+                            setSensitiveData((prev) => ({
+                              ...prev,
+                              identifier: e.target.value,
+                            }))
+                          }
+                          placeholder="Enter username or email"
+                          className="border-border focus:border-ring focus:ring-ring focus:ring-1"
+                          autoComplete="off"
+                          data-form-type="isolated"
+                        />
+                      </div>
                     </div>
 
                     <div className="space-y-2">
                       <div className="flex items-center gap-2">
-                        <Label
-                          htmlFor="password"
-                          className="text-sm font-medium"
-                        >
+                        <Label className="text-sm font-medium">
                           Password
                         </Label>
                         <Tooltip>
@@ -504,10 +531,8 @@ export function DashboardAddCredentialDialog({
                           </TooltipContent>
                         </Tooltip>
                       </div>
-                      <div className="relative">
-                        <Input
-                          id="password"
-                          variant="password"
+                      <div className="relative" data-form-isolated="true">
+                        <IsolatedPasswordInput
                           value={sensitiveData.password}
                           onChange={(e) => handlePasswordChange(e.target.value)}
                           placeholder="Enter password"
@@ -672,6 +697,7 @@ export function DashboardAddCredentialDialog({
                                 {...metadataForm.register("recoveryEmail")}
                                 placeholder="Recovery email address"
                                 className="border-border focus:border-ring focus:ring-ring focus:ring-1"
+                                autoComplete="off"
                               />
                             </div>
 
@@ -695,6 +721,7 @@ export function DashboardAddCredentialDialog({
                                 {...metadataForm.register("phoneNumber")}
                                 placeholder="Phone number"
                                 className="border-border focus:border-ring focus:ring-ring focus:ring-1"
+                                autoComplete="off"
                               />
                             </div>
                           </div>
@@ -804,12 +831,12 @@ export function DashboardAddCredentialDialog({
                 Cancel
               </Button>
               <Button
-                type="submit"
-                form="credential-form"
+                type="button"
                 disabled={createCredentialWithMetadataMutation.isPending}
                 onClick={(e) => {
                   e.preventDefault()
-                  onSubmit()
+                  e.stopPropagation()
+                  onSubmit(e)
                 }}
               >
                 {createCredentialWithMetadataMutation.isPending && (
