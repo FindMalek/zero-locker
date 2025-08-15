@@ -158,7 +158,7 @@ export function CredentialKeyValuePairs({ credentialId }: CredentialKeyValuePair
       <Card>
         <CardHeader>
           <div className="flex items-center space-x-2">
-            <Icons.loader className="size-4 animate-spin" />
+            <Icons.spinner className="size-4 animate-spin" />
             <CardTitle>Loading Additional Information...</CardTitle>
           </div>
         </CardHeader>
@@ -225,7 +225,7 @@ export function CredentialKeyValuePairs({ credentialId }: CredentialKeyValuePair
                   className="mt-4"
                   onClick={() => setIsEditing(true)}
                 >
-                  <Icons.plus className="mr-2 size-4" />
+                  <Icons.add className="mr-2 size-4" />
                   Add Information
                 </Button>
               </div>
@@ -303,7 +303,7 @@ export function CredentialKeyValuePairs({ credentialId }: CredentialKeyValuePair
               onClick={handleAddPair}
               className="w-full"
             >
-              <Icons.plus className="mr-2 size-4" />
+              <Icons.add className="mr-2 size-4" />
               Add Pair
             </Button>
 
@@ -328,7 +328,7 @@ export function CredentialKeyValuePairs({ credentialId }: CredentialKeyValuePair
                 >
                   {updateKeyValuePairsMutation.isPending ? (
                     <>
-                      <Icons.loader className="mr-2 size-4 animate-spin" />
+                      <Icons.spinner className="mr-2 size-4 animate-spin" />
                       Saving...
                     </>
                   ) : (
