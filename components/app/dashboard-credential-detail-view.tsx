@@ -1,10 +1,13 @@
 "use client"
 
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import {
   useCredential,
   useUpdateCredential,
+  useUpdateCredentialWithSecuritySettings,
+  useDeleteCredential,
+  useCredentialSecuritySettings,
 } from "@/orpc/hooks/use-credentials"
 import {
   credentialFormDtoSchema,
@@ -27,10 +30,21 @@ import { CredentialFooter } from "@/components/app/dashboard-credential-footer"
 import { CredentialForm } from "@/components/app/dashboard-credential-form"
 import { CredentialHeader } from "@/components/app/dashboard-credential-header"
 import { CredentialSidebar } from "@/components/app/dashboard-credential-sidebar"
+import { CredentialKeyValuePairs } from "@/components/app/dashboard-credential-key-value-pairs"
 import { EmptyState } from "@/components/shared/empty-state"
 import { FloatingSaveToolbar } from "@/components/shared/floating-save-toolbar"
 import { Icons } from "@/components/shared/icons"
 import { Separator } from "@/components/ui/separator"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 
 interface CredentialDetailViewProps {
   credentialId: string
@@ -54,7 +68,15 @@ export function CredentialDetailView({
   } = useCredential(credentialId, {
     initialData: initialData?.credential,
   })
-  const updateCredentialMutation = useUpdateCredential()
+  const updateCredentialMutation = useUpdateCredentialWithSecuritySettings()
+  const updateCredentialBasicMutation = useUpdateCredential() // For status-only updates
+  const deleteCredentialMutation = useDeleteCredential()
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+
+  const {
+    data: securitySettings,
+    isLoading: isLoadingSecuritySettings,
+  } = useCredentialSecuritySettings(credentialId)
 
   const platform = initialData?.platforms.platforms.find(
     (p) => p.id === credential?.platformId
@@ -84,36 +106,38 @@ export function CredentialDetailView({
     handleSubmit,
   } = form
 
-  // Initialize form when credential loads
+  // Initialize form when credential and security settings load
   useEffect(() => {
-    if (credential) {
+    if (credential && securitySettings) {
       const initialFormData: CredentialFormDto = {
         identifier: credential.identifier,
         description: credential.description || "",
         status: credential.status,
         platformId: credential.platformId,
         containerId: credential.containerId || "",
-        // TODO: Get these from credential metadata when available/app/dashboard-credential-detail-view.tsx
-        passwordProtection: true,
-        twoFactorAuth: false,
-        accessLogging: true,
+        passwordProtection: securitySettings.passwordProtection,
+        twoFactorAuth: securitySettings.twoFactorAuth,
+        accessLogging: securitySettings.accessLogging,
       }
       reset(initialFormData)
     }
-  }, [credential, reset])
+  }, [credential, securitySettings, reset])
 
   const handleSave = async (data: CredentialFormDto) => {
     if (!credential) return
 
     try {
-      const updateData: UpdateCredentialInput = {
+      // Use the security settings update endpoint that handles all fields including metadata
+      const updateData = {
         id: credential.id,
         identifier: data.identifier,
-        description: data.description || undefined,
+        description: data.description,
         status: data.status,
         platformId: data.platformId,
-        containerId: data.containerId || undefined,
-        // TODO: Handle metadata fields (passwordProtection, twoFactorAuth, accessLogging)
+        containerId: data.containerId,
+        passwordProtection: data.passwordProtection,
+        twoFactorAuth: data.twoFactorAuth,
+        accessLogging: data.accessLogging,
       }
 
       await updateCredentialMutation.mutateAsync(updateData)
@@ -136,27 +160,46 @@ export function CredentialDetailView({
   }
 
   const handleDiscard = () => {
-    if (credential) {
+    if (credential && securitySettings) {
       const originalData: CredentialFormDto = {
         identifier: credential.identifier,
         description: credential.description || "",
         status: credential.status,
         platformId: credential.platformId,
         containerId: credential.containerId || "",
-        passwordProtection: true,
-        twoFactorAuth: false,
-        accessLogging: true,
+        passwordProtection: securitySettings.passwordProtection,
+        twoFactorAuth: securitySettings.twoFactorAuth,
+        accessLogging: securitySettings.accessLogging,
       }
       reset(originalData)
     }
   }
 
-  const handleDelete = async () => {
+  const handleDelete = () => {
+    setShowDeleteDialog(true)
+  }
+
+  const handleConfirmDelete = async () => {
     if (!credential) return
 
-    // TODO: Implement delete logic
-    console.log("Deleting credential:", credential.id)
-    router.push("/dashboard/credentials")
+    try {
+      await deleteCredentialMutation.mutateAsync({ id: credential.id })
+      toast("Credential deleted successfully", "success")
+      router.push("/dashboard/accounts")
+    } catch (error) {
+      const { message, details } = handleErrors(
+        error,
+        "Failed to delete credential"
+      )
+      toast(
+        details
+          ? `${message}: ${Array.isArray(details) ? details.join(", ") : details}`
+          : message,
+        "error"
+      )
+    } finally {
+      setShowDeleteDialog(false)
+    }
   }
 
   const handleContainerChange = (containerId: string) => {
@@ -172,7 +215,7 @@ export function CredentialDetailView({
         status: status,
       }
 
-      await updateCredentialMutation.mutateAsync(updateData)
+      await updateCredentialBasicMutation.mutateAsync(updateData)
       toast("Status updated successfully", "success")
     } catch (error) {
       const { message, details } = handleErrors(
@@ -188,7 +231,7 @@ export function CredentialDetailView({
     }
   }
 
-  if (isLoading) {
+  if (isLoading || isLoadingSecuritySettings) {
     return <DashboardCredentialDetailSkeleton />
   }
 
@@ -218,6 +261,8 @@ export function CredentialDetailView({
             />
             <Separator />
             <CredentialForm credential={credential} form={form} />
+            <Separator />
+            <CredentialKeyValuePairs credentialId={credential.id} />
             <CredentialFooter credential={credential} />
           </div>
 
@@ -237,6 +282,29 @@ export function CredentialDetailView({
         onSave={handleSubmit(handleSave)}
         onDiscard={handleDiscard}
       />
+
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Credential</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete the credential for{" "}
+              <strong>{credential?.identifier}</strong> on{" "}
+              <strong>{platform.name}</strong>? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmDelete}
+              disabled={deleteCredentialMutation.isPending}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleteCredentialMutation.isPending ? "Deleting..." : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

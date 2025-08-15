@@ -9,4 +9,15 @@ export class CredentialMetadataQuery {
   static getSimpleInclude() {
     return {} satisfies Prisma.CredentialMetadataInclude
   }
+
+  static getInclude() {
+    return {
+      ...this.getSimpleInclude(),
+      keyValuePairs: {
+        include: {
+          valueEncryption: true,
+        },
+      },
+    } satisfies Prisma.CredentialMetadataInclude
+  }
 }
