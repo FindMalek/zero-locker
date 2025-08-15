@@ -240,6 +240,7 @@ export function EncryptedKeyValueForm({
                       }}
                       disabled={disabled || localPair.isEncrypting}
                       className="font-mono text-xs"
+                      autoComplete="off"
                     />
                   </div>
                   <div>
@@ -269,6 +270,7 @@ export function EncryptedKeyValueForm({
                           }}
                           disabled={disabled || localPair.isEncrypting}
                           className={cn("pr-8 font-mono text-xs")}
+                          autoComplete="new-password"
                         />
                       </div>
                     </div>

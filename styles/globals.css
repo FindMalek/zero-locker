@@ -207,3 +207,49 @@
     letter-spacing: var(--tracking-normal);
   }
 }
+
+/* Anti-autofill styles for vault forms */
+@layer utilities {
+  /* Hide password manager icons and autofill indicators */
+  [data-form-isolated] input::-webkit-credentials-auto-fill-button,
+  [data-form-isolated] input::-webkit-strong-password-auto-fill-button {
+    display: none !important;
+    pointer-events: none !important;
+  }
+  
+  /* Prevent autofill styling on isolated inputs */
+  [data-form-isolated] input:-webkit-autofill,
+  [data-form-isolated] input:-webkit-autofill:focus,
+  [data-form-isolated] input:-webkit-autofill:hover,
+  [data-form-isolated] input:-webkit-autofill:active {
+    -webkit-animation: autofill-neutral 0s ease-in-out 0s forwards;
+    -webkit-text-fill-color: inherit !important;
+    -webkit-box-shadow: none !important;
+    transition: background-color 50000s ease-in-out 0s !important;
+  }
+  
+  /* Make isolated inputs completely disconnected from forms */
+  [data-form-isolated] input {
+    -webkit-autofill: none !important;
+    -webkit-autocomplete: off !important;
+    -webkit-appearance: textfield !important;
+    -moz-appearance: textfield !important;
+    form: none !important;
+  }
+  
+  /* Hide browser-generated form icons on isolated inputs */
+  [data-form-isolated] input::-webkit-outer-spin-button,
+  [data-form-isolated] input::-webkit-inner-spin-button,
+  [data-form-isolated] input::-webkit-search-decoration,
+  [data-form-isolated] input::-webkit-search-cancel-button {
+    display: none !important;
+    -webkit-appearance: none !important;
+  }
+}
+
+@keyframes autofill-neutral {
+  to {
+    background: transparent;
+    color: inherit;
+  }
+}
