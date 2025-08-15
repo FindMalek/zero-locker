@@ -87,9 +87,18 @@ export function EncryptedKeyValueForm({
     )
   }
 
-  const handleKeyBlur = (id: string, key: string) => {
+  const handleValueChange = (id: string, newValue: string) => {
+    setLocalPairs((prev) =>
+      prev.map((pair) => (pair.id === id ? { ...pair, value: newValue } : pair))
+    )
+  }
+
+  const handleKeyBlur = (id: string) => {
+    const localPair = localPairs.find((pair) => pair.id === id)
+    if (!localPair) return
+
     // Check for duplicates only on blur (when user finishes typing)
-    const trimmedKey = key.trim()
+    const trimmedKey = localPair.key.trim()
     if (trimmedKey) {
       const isDuplicate = localPairs.some(
         (pair) =>
@@ -109,12 +118,11 @@ export function EncryptedKeyValueForm({
         return
       }
     }
-  }
 
-  const handleValueChange = (id: string, newValue: string) => {
-    setLocalPairs((prev) =>
-      prev.map((pair) => (pair.id === id ? { ...pair, value: newValue } : pair))
-    )
+    // Original encryption logic: encrypt if both key and value are present
+    if (localPair.key.trim() && localPair.value.trim()) {
+      encryptAndUpdatePair(id)
+    }
   }
 
   const handlePaste = (
@@ -204,13 +212,6 @@ export function EncryptedKeyValueForm({
     return value.find((pair) => pair.id === id)
   }
 
-  const handleKeyBlur = (id: string) => {
-    const localPair = localPairs.find((pair) => pair.id === id)
-    if (localPair?.key.trim() && localPair?.value.trim()) {
-      encryptAndUpdatePair(id)
-    }
-  }
-
   const handleValueBlur = (id: string) => {
     const localPair = localPairs.find((pair) => pair.id === id)
     if (localPair?.key.trim() && localPair?.value.trim()) {
@@ -259,7 +260,7 @@ export function EncryptedKeyValueForm({
                       onChange={(e) =>
                         handleKeyChange(localPair.id, e.target.value)
                       }
-                      onBlur={() => handleKeyBlur(localPair.id, localPair.key)}
+                      onBlur={() => handleKeyBlur(localPair.id)}
                       onPaste={(e) => {
                         e.preventDefault()
                         const pastedText = e.clipboardData.getData("text")

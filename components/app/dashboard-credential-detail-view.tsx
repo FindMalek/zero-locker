@@ -290,7 +290,7 @@ export function CredentialDetailView({
           }
           // Key-value pairs save is handled by their own component via window object
           if (hasKeyValueChanges && typeof window !== "undefined") {
-            // @ts-ignore
+            // @ts-expect-error - credentialKeyValuePairs is dynamically added to window object
             window.credentialKeyValuePairs?.save()
           }
         }}
@@ -300,7 +300,7 @@ export function CredentialDetailView({
           }
           // Key-value pairs discard is handled by their own component via window object
           if (hasKeyValueChanges && typeof window !== "undefined") {
-            // @ts-ignore
+            // @ts-expect-error - credentialKeyValuePairs is dynamically added to window object
             window.credentialKeyValuePairs?.cancel()
           }
         }}

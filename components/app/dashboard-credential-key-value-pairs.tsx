@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import {
   useCredentialKeyValuePairs,
   useCredentialKeyValuePairsWithValues,
@@ -43,7 +43,7 @@ function KeyValuePairItem({
   onRemove,
   totalPairs = 1,
 }: {
-  pair: any
+  pair: KeyValuePair
   credentialId: string
   isEditing: boolean
   onKeyChange?: (value: string) => void
@@ -57,7 +57,7 @@ function KeyValuePairItem({
 
   // Only fetch values in view mode when show value is requested
   const shouldFetchValue = Boolean(pair.id) && showValue && !isEditing
-  
+
   const { data: valueData, isLoading: isLoadingValue } =
     useCredentialKeyValuePairValue(
       credentialId,
@@ -211,11 +211,8 @@ export function CredentialKeyValuePairs({
   } = useCredentialKeyValuePairs(credentialId)
 
   // Load values when entering edit mode
-  const {
-    data: keyValuePairsWithValues = [],
-    isLoading: isLoadingValues,
-    error: valuesError,
-  } = useCredentialKeyValuePairsWithValues(credentialId, isEditing)
+  const { data: keyValuePairsWithValues = [], isLoading: isLoadingValues } =
+    useCredentialKeyValuePairsWithValues(credentialId, isEditing)
 
   const updateKeyValuePairsMutation = useUpdateCredentialKeyValuePairs()
 
@@ -253,7 +250,11 @@ export function CredentialKeyValuePairs({
       // Use the pairs with values from the new hook
       setLocalPairs(keyValuePairsWithValues)
       setHasChanges(false)
-    } else if (isEditing && !isLoadingValues && keyValuePairsWithValues.length === 0) {
+    } else if (
+      isEditing &&
+      !isLoadingValues &&
+      keyValuePairsWithValues.length === 0
+    ) {
       // Start with one empty pair if no existing data
       setLocalPairs([{ key: "", value: "" }])
       setHasChanges(false)
@@ -309,7 +310,7 @@ export function CredentialKeyValuePairs({
     setHasChanges(true)
   }
 
-  const handleSave = async () => {
+  const handleSave = useCallback(async () => {
     try {
       // Filter out empty pairs
       const validPairs = localPairs.filter(
@@ -329,16 +330,16 @@ export function CredentialKeyValuePairs({
         error,
         "Failed to update additional information"
       )
-      return { 
-        success: false, 
+      return {
+        success: false,
         error: details
           ? `${message}: ${Array.isArray(details) ? details.join(", ") : details}`
-          : message
+          : message,
       }
     }
-  }
+  }, [localPairs, credentialId, updateKeyValuePairsMutation])
 
-  const handleCancel = () => {
+  const handleCancel = useCallback(() => {
     // Reset to original data
     if (keyValuePairs.length > 0) {
       setLocalPairs(
@@ -355,12 +356,12 @@ export function CredentialKeyValuePairs({
     }
     setIsEditing(false)
     setHasChanges(false)
-  }
+  }, [keyValuePairs])
 
   // Expose data and functions for external use (global save toolbar)
   useEffect(() => {
     if (typeof window !== "undefined") {
-      // @ts-ignore - Attach to window for save toolbar access
+      // @ts-expect-error - Attach to window for save toolbar access
       window.credentialKeyValuePairs = {
         data: localPairs,
         save: handleSave,
@@ -369,7 +370,7 @@ export function CredentialKeyValuePairs({
         isEditing,
       }
     }
-  }, [localPairs, hasChanges, isEditing])
+  }, [localPairs, hasChanges, isEditing, handleSave, handleCancel])
 
   if (isLoading) {
     return (
@@ -457,11 +458,7 @@ export function CredentialKeyValuePairs({
                 Add custom key-value pairs to store additional information like
                 security questions, backup codes, or notes.
               </p>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleEnterEditMode}
-              >
+              <Button variant="outline" size="sm" onClick={handleEnterEditMode}>
                 <Icons.add className="mr-2 size-4" />
                 Add Information
               </Button>
@@ -491,7 +488,7 @@ export function CredentialKeyValuePairs({
                       </div>
                     )}
                     <KeyValuePairItem
-                      pair={pair}
+                      pair={{ ...pair, value: "" }}
                       credentialId={credentialId}
                       isEditing={false}
                     />
@@ -535,8 +532,6 @@ export function CredentialKeyValuePairs({
               Add Another
             </Button>
           </div>
-
-
         </div>
       )}
     </div>
