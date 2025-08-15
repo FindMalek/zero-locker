@@ -12,6 +12,7 @@ import { useForm } from "react-hook-form"
 import { encryptData, exportKey, generateEncryptionKey } from "@/lib/encryption"
 import { handleErrors } from "@/lib/utils"
 import { useToast } from "@/hooks/use-toast"
+import { usePreventAutoSave } from "@/hooks/use-prevent-auto-save"
 
 import { DashboardAddCardForm } from "@/components/app/dashboard-add-card-form"
 import { AddItemDialog } from "@/components/shared/add-item-dialog"
@@ -31,6 +32,9 @@ export function DashboardAddCardDialog({
 }: CardDialogProps) {
   const { toast } = useToast()
   const createCardMutation = useCreateCard()
+  
+  // Prevent browser auto-save
+  usePreventAutoSave('card-form')
   const queryClient = useQueryClient()
 
   const [createMore, setCreateMore] = useState(false)
@@ -207,6 +211,8 @@ export function DashboardAddCardDialog({
             onSubmit()
           }}
           className="space-y-6"
+          autoComplete="off"
+          data-testid="vault-form"
         >
           <DashboardAddCardForm
             form={form}

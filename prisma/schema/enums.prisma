@@ -133,3 +133,13 @@ enum ContainerType {
   CREDENTIALS_ONLY
   CARDS_ONLY
 }
+
+/**
+ * Represents the user plan types.
+ * @property NORMAL - Normal user with limited features (3 default containers only).
+ * @property PRO - Pro user with full features (unlimited containers).
+ */
+enum UserPlan {
+  NORMAL
+  PRO
+}

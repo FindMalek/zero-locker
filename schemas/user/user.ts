@@ -1,3 +1,4 @@
+import { UserPlan } from "@prisma/client"
 import { z } from "zod"
 
 import { UserDto } from "@/config/schema"
@@ -27,3 +28,14 @@ export const listUsersDtoSchema = z.object({
 })
 
 export type ListUsersDto = z.infer<typeof listUsersDtoSchema>
+
+export const currentUserDtoSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  email: z.string(),
+  plan: z.nativeEnum(UserPlan),
+  image: z.string().nullable(),
+  createdAt: z.date(),
+})
+
+export type CurrentUserDto = z.infer<typeof currentUserDtoSchema>

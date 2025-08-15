@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
+import { useInitializeDefaultContainers } from "@/orpc/hooks/use-users"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 
@@ -28,6 +29,7 @@ export function AuthRegisterForm({
 }: React.ComponentPropsWithoutRef<"div">) {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
+  const initializeContainers = useInitializeDefaultContainers()
 
   const form = useForm<SignUpFormData>({
     resolver: zodResolver(signUpSchema),
@@ -54,7 +56,12 @@ export function AuthRegisterForm({
           onRequest: () => {
             setIsLoading(true)
           },
-          onSuccess: () => {
+          onSuccess: async () => {
+            try {
+              await initializeContainers.mutateAsync()
+            } catch (error) {
+              console.error("Failed to create default containers:", error)
+            }
             router.push("/dashboard")
           },
           onError: (ctx) => {
@@ -89,7 +96,7 @@ export function AuthRegisterForm({
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6" autoComplete="off">
           <FormField
             control={form.control}
             name="name"
@@ -136,7 +143,7 @@ export function AuthRegisterForm({
           />
           <Button type="submit" className="w-full" disabled={isLoading}>
             {isLoading ? (
-              <Icons.spinner className="mr-2 h-6 w-6 animate-spin" />
+              <Icons.spinner className="mr-2 size-4 animate-spin" />
             ) : null}
             Create Account
           </Button>

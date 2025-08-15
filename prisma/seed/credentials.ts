@@ -48,9 +48,10 @@ async function seedCredentials(prisma: PrismaClient) {
   ])
 
   for (const user of users) {
-    // Find the user's containers
-    const personalContainer = containers.find(
-      (c) => c.userId === user.id && c.name === "Personal"
+    // Find the user's default containers
+    const accountsContainer = containers.find(
+      (c) =>
+        c.userId === user.id && c.name === "Accounts" && c.isDefault === true
     )
     const workContainer = containers.find(
       (c) => c.userId === user.id && c.name === "Work"
@@ -88,7 +89,7 @@ async function seedCredentials(prisma: PrismaClient) {
       iv: SEED_ENCRYPTION_CONFIG.CREDENTIAL_PASSWORD_IV,
     })
 
-    // Prepare Google credential
+    // Prepare Google credential - goes to default Accounts container
     credentialsToCreate.push({
       id: googleCredId,
       identifier: user.email,
@@ -100,7 +101,7 @@ async function seedCredentials(prisma: PrismaClient) {
       createdAt: new Date(),
       platformId: googlePlatform.id,
       userId: user.id,
-      containerId: personalContainer?.id,
+      containerId: accountsContainer?.id,
     })
 
     // Store tag connections for Google credential
@@ -124,7 +125,7 @@ async function seedCredentials(prisma: PrismaClient) {
       iv: SEED_ENCRYPTION_CONFIG.CREDENTIAL_PASSWORD_IV,
     })
 
-    // Prepare GitHub credential
+    // Prepare GitHub credential - goes to default Accounts container
     credentialsToCreate.push({
       id: githubCredId,
       identifier: `${user.name.replace(" ", "").toLowerCase()}`,
@@ -136,7 +137,7 @@ async function seedCredentials(prisma: PrismaClient) {
       createdAt: new Date(),
       platformId: githubPlatform.id,
       userId: user.id,
-      containerId: workContainer?.id,
+      containerId: accountsContainer?.id,
     })
 
     // Store tag connections for GitHub credential
@@ -155,8 +156,8 @@ async function seedCredentials(prisma: PrismaClient) {
       credentialId: githubCredId,
     })
 
-    // AWS credential if work container exists
-    if (workContainer) {
+    // AWS credential - goes to default Accounts container
+    if (accountsContainer) {
       // Prepare encrypted data for AWS password
       const awsPasswordEncrypted = await encryptDataSync(
         awsPassword,
@@ -181,7 +182,7 @@ async function seedCredentials(prisma: PrismaClient) {
         createdAt: new Date(),
         platformId: awsPlatform.id,
         userId: user.id,
-        containerId: workContainer.id,
+        containerId: accountsContainer.id,
       })
 
       // Store tag connections for AWS credential

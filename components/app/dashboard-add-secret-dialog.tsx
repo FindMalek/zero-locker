@@ -10,6 +10,7 @@ import { useForm } from "react-hook-form"
 import { encryptData, exportKey, generateEncryptionKey } from "@/lib/encryption"
 import { handleErrors, parseKeyValuePairs } from "@/lib/utils"
 import { useToast } from "@/hooks/use-toast"
+import { usePreventAutoSave } from "@/hooks/use-prevent-auto-save"
 
 import { DashboardAddSecretForm } from "@/components/app/dashboard-add-secret-form"
 import { AddItemDialog } from "@/components/shared/add-item-dialog"
@@ -27,6 +28,9 @@ export function DashboardAddSecretDialog({
 }: SecretDialogProps) {
   const { toast } = useToast()
   const createContainerWithSecretsMutation = useCreateContainerWithSecrets()
+  
+  // Prevent browser auto-save
+  usePreventAutoSave('secret-form')
 
   const [title, setTitle] = useState("")
   const [createMore, setCreateMore] = useState(false)
@@ -202,6 +206,8 @@ export function DashboardAddSecretDialog({
             onSubmit()
           }}
           className="space-y-6"
+          autoComplete="off"
+          data-testid="vault-form"
         >
           <DashboardAddSecretForm
             form={form}

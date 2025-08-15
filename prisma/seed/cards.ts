@@ -19,12 +19,12 @@ async function seedCards(prisma: PrismaClient) {
   const cardsToCreate: Prisma.CardCreateManyInput[] = []
 
   for (const user of users) {
-    // Find the finance container for each user
-    const financeContainer = containers.find(
-      (c) => c.userId === user.id && c.name === "Finance"
+    // Find the default Cards container for each user
+    const cardsContainer = containers.find(
+      (c) => c.userId === user.id && c.name === "Cards" && c.isDefault === true
     )
 
-    if (financeContainer) {
+    if (cardsContainer) {
       // Prepare encrypted data for Visa card
       const visaCvvId = `enc_visa_cvv_${user.id}`
       const visaNumberId = `enc_visa_number_${user.id}`
@@ -103,7 +103,7 @@ async function seedCards(prisma: PrismaClient) {
           createdAt: new Date(),
           updatedAt: new Date(),
           userId: user.id,
-          containerId: financeContainer.id,
+          containerId: cardsContainer.id,
           cvvEncryptionId: visaCvvId,
           numberEncryptionId: visaNumberId,
         },
@@ -121,7 +121,7 @@ async function seedCards(prisma: PrismaClient) {
           createdAt: new Date(),
           updatedAt: new Date(),
           userId: user.id,
-          containerId: financeContainer.id,
+          containerId: cardsContainer.id,
           cvvEncryptionId: mcCvvId,
           numberEncryptionId: mcNumberId,
         }
