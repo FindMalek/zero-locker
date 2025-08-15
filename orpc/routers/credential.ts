@@ -1,4 +1,4 @@
-import { 
+import {
   CredentialEntity,
   CredentialQuery,
 } from "@/entities/credential/credential"
@@ -6,13 +6,14 @@ import { CredentialMetadataQuery } from "@/entities/credential/credential-metada
 import { authMiddleware } from "@/middleware/auth"
 import { requirePermission } from "@/middleware/permissions"
 import { database } from "@/prisma/client"
+import { credentialFormDtoSchema } from "@/schemas/credential/credential"
+import { credentialKeyValuePairWithValueRoSchema } from "@/schemas/credential/credential-key-value"
 import {
   createCredentialWithMetadataInputSchema,
   createCredentialWithMetadataOutputSchema,
   type CreateCredentialWithMetadataInput,
   type CreateCredentialWithMetadataOutput,
 } from "@/schemas/credential/credential-with-metadata"
-import { credentialFormDtoSchema } from "@/schemas/credential/credential"
 import {
   createCredentialInputSchema,
   credentialOutputSchema,
@@ -69,41 +70,51 @@ export const getCredential = authProcedure
 // Get credential security settings (decrypted on server for security)
 export const getCredentialSecuritySettings = authProcedure
   .input(getCredentialInputSchema)
-  .output(z.object({ 
-    passwordProtection: z.boolean(),
-    twoFactorAuth: z.boolean(),
-    accessLogging: z.boolean(),
-  }))
-  .handler(async ({ input, context }): Promise<{ 
-    passwordProtection: boolean;
-    twoFactorAuth: boolean;
-    accessLogging: boolean;
-  }> => {
-    const credential = await database.credential.findFirst({
-      where: {
-        id: input.id,
-        userId: context.user.id,
-      },
-      include: CredentialQuery.getInclude(),
+  .output(
+    z.object({
+      passwordProtection: z.boolean(),
+      twoFactorAuth: z.boolean(),
+      accessLogging: z.boolean(),
     })
+  )
+  .handler(
+    async ({
+      input,
+      context,
+    }): Promise<{
+      passwordProtection: boolean
+      twoFactorAuth: boolean
+      accessLogging: boolean
+    }> => {
+      const credential = await database.credential.findFirst({
+        where: {
+          id: input.id,
+          userId: context.user.id,
+        },
+        include: CredentialQuery.getInclude(),
+      })
 
-    if (!credential) {
-      throw new ORPCError("NOT_FOUND")
+      if (!credential) {
+        throw new ORPCError("NOT_FOUND")
+      }
+
+      return await CredentialEntity.getSecuritySettings(credential)
     }
+  )
 
-    return await CredentialEntity.getSecuritySettings(credential)
-  })
-
-// Get credential key-value pairs (decrypted on server for security)
+// Get credential key-value pairs (keys only, no values for security)
 export const getCredentialKeyValuePairs = authProcedure
   .input(getCredentialInputSchema)
-  .output(z.array(z.object({
-    id: z.string(),
-    key: z.string(),
-    value: z.string(),
-    createdAt: z.date(),
-    updatedAt: z.date(),
-  })))
+  .output(
+    z.array(
+      z.object({
+        id: z.string(),
+        key: z.string(),
+        createdAt: z.date(),
+        updatedAt: z.date(),
+      })
+    )
+  )
   .handler(async ({ input, context }) => {
     const credential = await database.credential.findFirst({
       where: {
@@ -122,35 +133,135 @@ export const getCredentialKeyValuePairs = authProcedure
       return []
     }
 
-    // Decrypt all key-value pairs and filter out security settings
-    const decryptedPairs = []
-    for (const kvPair of metadata.keyValuePairs) {
-      // Skip security settings (they're handled separately)
-      if (kvPair.key === 'passwordProtection' || kvPair.key === 'accessLogging') {
-        continue
-      }
+    // Return only keys and metadata, no values for security
+    const pairs = metadata.keyValuePairs
+      .filter(
+        (kvPair) =>
+          kvPair.key !== "passwordProtection" && kvPair.key !== "accessLogging"
+      )
+      .map((kvPair) => ({
+        id: kvPair.id,
+        key: kvPair.key,
+        createdAt: kvPair.createdAt,
+        updatedAt: kvPair.updatedAt,
+      }))
 
-      try {
-        const decryptedValue = await decryptData(
-          kvPair.valueEncryption.encryptedValue,
-          kvPair.valueEncryption.iv,
-          kvPair.valueEncryption.encryptionKey
-        )
+    return pairs
+  })
 
-        decryptedPairs.push({
-          id: kvPair.id,
-          key: kvPair.key,
-          value: decryptedValue,
-          createdAt: kvPair.createdAt,
-          updatedAt: kvPair.updatedAt,
-        })
-      } catch (error) {
-        console.error(`Failed to decrypt key-value pair ${kvPair.id}:`, error)
-        // Skip this pair if decryption fails
-      }
+// Get credential key-value pairs with values (for editing mode)
+export const getCredentialKeyValuePairsWithValues = authProcedure
+  .input(getCredentialInputSchema)
+  .output(z.array(credentialKeyValuePairWithValueRoSchema))
+  .handler(async ({ input, context }) => {
+    const credential = await database.credential.findFirst({
+      where: {
+        id: input.id,
+        userId: context.user.id,
+      },
+      include: CredentialQuery.getInclude(),
+    })
+
+    if (!credential) {
+      throw new ORPCError("NOT_FOUND")
     }
 
-    return decryptedPairs
+    const metadata = credential.metadata?.[0]
+    if (!metadata || !metadata.keyValuePairs) {
+      return []
+    }
+
+    // Filter out security settings and decrypt values
+    const filteredPairs = metadata.keyValuePairs.filter(
+      (kvPair) =>
+        kvPair.key !== "passwordProtection" && kvPair.key !== "accessLogging"
+    )
+
+    const pairsWithValues = await Promise.all(
+      filteredPairs.map(async (kvPair) => {
+        try {
+          const decryptedValue = await decryptData(
+            kvPair.valueEncryption.encryptedValue,
+            kvPair.valueEncryption.iv,
+            kvPair.valueEncryption.encryptionKey
+          )
+
+          return {
+            id: kvPair.id,
+            key: kvPair.key,
+            value: decryptedValue,
+            createdAt: kvPair.createdAt,
+            updatedAt: kvPair.updatedAt,
+          }
+        } catch (error) {
+          console.error(`Failed to decrypt key-value pair ${kvPair.id}:`, error)
+          // Return pair with empty value if decryption fails
+          return {
+            id: kvPair.id,
+            key: kvPair.key,
+            value: "",
+            createdAt: kvPair.createdAt,
+            updatedAt: kvPair.updatedAt,
+          }
+        }
+      })
+    )
+
+    return pairsWithValues
+  })
+
+// Get specific key-value pair value (for viewing)
+export const getCredentialKeyValuePairValue = authProcedure
+  .input(
+    z.object({
+      credentialId: z.string(),
+      keyValuePairId: z.string(),
+    })
+  )
+  .output(
+    z.object({
+      value: z.string(),
+    })
+  )
+  .handler(async ({ input, context }) => {
+    const credential = await database.credential.findFirst({
+      where: {
+        id: input.credentialId,
+        userId: context.user.id,
+      },
+      include: CredentialQuery.getInclude(),
+    })
+
+    if (!credential) {
+      throw new ORPCError("NOT_FOUND")
+    }
+
+    const metadata = credential.metadata?.[0]
+    if (!metadata || !metadata.keyValuePairs) {
+      throw new ORPCError("NOT_FOUND", { message: "Key-value pair not found" })
+    }
+
+    const kvPair = metadata.keyValuePairs.find(
+      (kv) => kv.id === input.keyValuePairId
+    )
+    if (!kvPair) {
+      throw new ORPCError("NOT_FOUND", { message: "Key-value pair not found" })
+    }
+
+    try {
+      const decryptedValue = await decryptData(
+        kvPair.valueEncryption.encryptedValue,
+        kvPair.valueEncryption.iv,
+        kvPair.valueEncryption.encryptionKey
+      )
+
+      return { value: decryptedValue }
+    } catch (error) {
+      console.error(`Failed to decrypt key-value pair ${kvPair.id}:`, error)
+      throw new ORPCError("INTERNAL_SERVER_ERROR", {
+        message: "Failed to decrypt value",
+      })
+    }
   })
 
 // Get credential password (decrypted on server for security)
@@ -421,7 +532,13 @@ export const updateCredentialWithSecuritySettings = authProcedure
   .input(credentialFormDtoSchema.extend({ id: z.string() }))
   .output(credentialOutputSchema)
   .handler(async ({ input, context }): Promise<CredentialOutput> => {
-    const { id, passwordProtection, twoFactorAuth, accessLogging, ...updateData } = input
+    const {
+      id,
+      passwordProtection,
+      twoFactorAuth,
+      accessLogging,
+      ...updateData
+    } = input
 
     // Verify credential ownership
     const existingCredential = await database.credential.findFirst({
@@ -440,7 +557,7 @@ export const updateCredentialWithSecuritySettings = authProcedure
     const updatedCredential = await database.$transaction(async (tx) => {
       // Update basic credential fields first
       const basicUpdatePayload: Prisma.CredentialUpdateInput = {}
-      
+
       if (updateData.identifier !== undefined)
         basicUpdatePayload.identifier = updateData.identifier
       if (updateData.description !== undefined)
@@ -462,7 +579,7 @@ export const updateCredentialWithSecuritySettings = authProcedure
 
       // Handle metadata updates
       let metadata = existingCredential.metadata?.[0]
-      
+
       // Create metadata if it doesn't exist
       if (!metadata) {
         metadata = await tx.credentialMetadata.create({
@@ -483,10 +600,20 @@ export const updateCredentialWithSecuritySettings = authProcedure
       }
 
       // Handle passwordProtection setting
-      await upsertSecuritySetting(tx, metadata.id, 'passwordProtection', passwordProtection)
-      
+      await upsertSecuritySetting(
+        tx,
+        metadata.id,
+        "passwordProtection",
+        passwordProtection
+      )
+
       // Handle accessLogging setting
-      await upsertSecuritySetting(tx, metadata.id, 'accessLogging', accessLogging)
+      await upsertSecuritySetting(
+        tx,
+        metadata.id,
+        "accessLogging",
+        accessLogging
+      )
 
       return credential
     })
@@ -515,10 +642,13 @@ async function upsertSecuritySetting(
   // Generate a random encryption key for this setting
   const crypto = await import("crypto")
   const encryptionKey = crypto.randomBytes(32).toString("base64") // 256-bit key
-  
+
   // Encrypt the boolean value
-  const encryptionResult = await encryptData(JSON.stringify(value), encryptionKey)
-  
+  const encryptionResult = await encryptData(
+    JSON.stringify(value),
+    encryptionKey
+  )
+
   // Create encrypted data entry
   const encryptedDataResult = await createEncryptedData({
     encryptedValue: encryptionResult.encryptedData,
@@ -724,14 +854,18 @@ export const createCredentialWithMetadata = authProcedure
 
 // Update credential key-value pairs
 export const updateCredentialKeyValuePairs = authProcedure
-  .input(z.object({
-    credentialId: z.string(),
-    keyValuePairs: z.array(z.object({
-      id: z.string().optional(),
-      key: z.string(),
-      value: z.string(),
-    })),
-  }))
+  .input(
+    z.object({
+      credentialId: z.string(),
+      keyValuePairs: z.array(
+        z.object({
+          id: z.string().optional(),
+          key: z.string(),
+          value: z.string(),
+        })
+      ),
+    })
+  )
   .output(z.object({ success: z.boolean() }))
   .handler(async ({ input, context }) => {
     const { credentialId, keyValuePairs } = input
@@ -752,7 +886,7 @@ export const updateCredentialKeyValuePairs = authProcedure
     // Use transaction for atomicity
     await database.$transaction(async (tx) => {
       let metadata = credential.metadata?.[0]
-      
+
       // Create metadata if it doesn't exist
       if (!metadata) {
         metadata = await tx.credentialMetadata.create({
@@ -765,21 +899,24 @@ export const updateCredentialKeyValuePairs = authProcedure
       }
 
       // Get existing key-value pairs (excluding security settings)
-      const existingKvPairs = metadata.keyValuePairs?.filter(
-        kv => kv.key !== 'passwordProtection' && kv.key !== 'accessLogging'
-      ) || []
+      const existingKvPairs =
+        metadata.keyValuePairs?.filter(
+          (kv) => kv.key !== "passwordProtection" && kv.key !== "accessLogging"
+        ) || []
 
       // Delete removed key-value pairs
-      const newKeys = keyValuePairs.map(kv => kv.key)
-      const toDelete = existingKvPairs.filter(existing => !newKeys.includes(existing.key))
-      
+      const newKeys = keyValuePairs.map((kv) => kv.key)
+      const toDelete = existingKvPairs.filter(
+        (existing) => !newKeys.includes(existing.key)
+      )
+
       for (const kvPair of toDelete) {
         await tx.credentialKeyValuePair.delete({
-          where: { id: kvPair.id }
+          where: { id: kvPair.id },
         })
         // Also delete the encrypted data
         await tx.encryptedData.delete({
-          where: { id: kvPair.valueEncryptionId }
+          where: { id: kvPair.valueEncryptionId },
         })
       }
 
@@ -787,20 +924,25 @@ export const updateCredentialKeyValuePairs = authProcedure
       for (const kvPair of keyValuePairs) {
         if (!kvPair.key.trim() || !kvPair.value.trim()) continue
 
-        const existingKvPair = existingKvPairs.find(existing => existing.key === kvPair.key)
+        const existingKvPair = existingKvPairs.find(
+          (existing) => existing.key === kvPair.key
+        )
 
         // Generate encryption for the value
         const crypto = await import("crypto")
         const encryptionKey = crypto.randomBytes(32).toString("base64")
         const encryptionResult = await encryptData(kvPair.value, encryptionKey)
-        
+
         const encryptedDataResult = await createEncryptedData({
           encryptedValue: encryptionResult.encryptedData,
           encryptionKey: encryptionKey,
           iv: encryptionResult.iv,
         })
 
-        if (!encryptedDataResult.success || !encryptedDataResult.encryptedData) {
+        if (
+          !encryptedDataResult.success ||
+          !encryptedDataResult.encryptedData
+        ) {
           throw new ORPCError("INTERNAL_SERVER_ERROR", {
             message: "Failed to encrypt key-value pair",
           })
@@ -817,7 +959,7 @@ export const updateCredentialKeyValuePairs = authProcedure
 
           // Delete old encrypted data
           await tx.encryptedData.delete({
-            where: { id: existingKvPair.valueEncryptionId }
+            where: { id: existingKvPair.valueEncryptionId },
           })
         } else {
           // Create new
@@ -841,6 +983,8 @@ export const credentialRouter = {
   getPassword: getCredentialPassword,
   getSecuritySettings: getCredentialSecuritySettings,
   getKeyValuePairs: getCredentialKeyValuePairs,
+  getKeyValuePairsWithValues: getCredentialKeyValuePairsWithValues,
+  getKeyValuePairValue: getCredentialKeyValuePairValue,
   list: listCredentials,
   create: createCredential,
   createWithMetadata: createCredentialWithMetadata,

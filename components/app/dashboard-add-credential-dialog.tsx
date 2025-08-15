@@ -34,9 +34,9 @@ import {
   checkPasswordStrength,
   generatePassword,
 } from "@/lib/utils/password-helpers"
-import { useToast } from "@/hooks/use-toast"
-import { usePreventAutoSave } from "@/hooks/use-prevent-auto-save"
 import { useAggressiveFormBlocker } from "@/hooks/use-aggressive-form-blocker"
+import { usePreventAutoSave } from "@/hooks/use-prevent-auto-save"
+import { useToast } from "@/hooks/use-toast"
 
 import { ContainerSelector } from "@/components/shared/container-selector"
 import { EncryptedKeyValueForm } from "@/components/shared/encrypted-key-value-form"
@@ -101,10 +101,10 @@ export function DashboardAddCredentialDialog({
   onOpenChange,
 }: CredentialDialogProps) {
   const { toast } = useToast()
-  
+
   // Prevent browser auto-save
-  usePreventAutoSave('credential-form')
-  
+  usePreventAutoSave("credential-form")
+
   // Aggressively block form submissions
   useAggressiveFormBlocker()
 
@@ -398,10 +398,10 @@ export function DashboardAddCredentialDialog({
             {/* Main Form */}
             <div className="space-y-6 lg:col-span-3">
               <Form {...credentialForm}>
-                <form 
-                  id="credential-form" 
-                  className="space-y-6" 
-                  autoComplete="off" 
+                <form
+                  id="credential-form"
+                  className="space-y-6"
+                  autoComplete="off"
                   data-testid="vault-form"
                   onSubmit={(e) => {
                     e.preventDefault()
@@ -409,12 +409,22 @@ export function DashboardAddCredentialDialog({
                     return false
                   }}
                 >
-                {/* Hidden honeypot fields to prevent browser auto-save */}
-                <div style={{ display: 'none' }}>
-                  <input type="text" name="username" tabIndex={-1} autoComplete="username" />
-                  <input type="password" name="password" tabIndex={-1} autoComplete="current-password" />
-                </div>
-                  
+                  {/* Hidden honeypot fields to prevent browser auto-save */}
+                  <div style={{ display: "none" }}>
+                    <input
+                      type="text"
+                      name="username"
+                      tabIndex={-1}
+                      autoComplete="username"
+                    />
+                    <input
+                      type="password"
+                      name="password"
+                      tabIndex={-1}
+                      autoComplete="current-password"
+                    />
+                  </div>
+
                   {/* Platform Selection */}
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
@@ -477,9 +487,12 @@ export function DashboardAddCredentialDialog({
                       emptyText="No platforms found."
                     />
                   </div>
-                  
+
                   {/* Isolated credential inputs - completely separate from form */}
-                  <div className="grid gap-4 sm:grid-cols-2" data-isolated-inputs="true">
+                  <div
+                    className="grid gap-4 sm:grid-cols-2"
+                    data-isolated-inputs="true"
+                  >
                     <div className="space-y-2">
                       <div className="flex items-center gap-2">
                         <Label className="text-sm font-medium">
@@ -516,9 +529,7 @@ export function DashboardAddCredentialDialog({
 
                     <div className="space-y-2">
                       <div className="flex items-center gap-2">
-                        <Label className="text-sm font-medium">
-                          Password
-                        </Label>
+                        <Label className="text-sm font-medium">Password</Label>
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <Icons.helpCircle className="text-muted-foreground size-3" />

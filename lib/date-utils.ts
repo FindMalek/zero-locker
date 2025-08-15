@@ -1,7 +1,7 @@
 import {
   differenceInDays,
-  differenceInWeeks,
   differenceInMonths,
+  differenceInWeeks,
   differenceInYears,
   isToday,
   isYesterday,

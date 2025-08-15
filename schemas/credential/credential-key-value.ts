@@ -42,3 +42,15 @@ export const credentialKeyValuePairWithEncryptionRoSchema = z.object({
 export type CredentialKeyValuePairWithEncryptionRo = z.infer<
   typeof credentialKeyValuePairWithEncryptionRoSchema
 >
+
+export const credentialKeyValuePairWithValueRoSchema = z.object({
+  id: z.string(),
+  key: z.string(),
+  value: z.string(),
+  createdAt: z.date(),
+  updatedAt: z.date(),
+})
+
+export type CredentialKeyValuePairWithValueRo = z.infer<
+  typeof credentialKeyValuePairWithValueRoSchema
+>

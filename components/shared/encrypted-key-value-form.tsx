@@ -81,19 +81,7 @@ export function EncryptedKeyValueForm({
   }
 
   const handleKeyChange = (id: string, newKey: string) => {
-    // Check if the new key already exists in other pairs (excluding current pair)
-    const trimmedKey = newKey.trim()
-    if (trimmedKey) {
-      const isDuplicate = localPairs.some(
-        (pair) => pair.id !== id && pair.key.trim().toLowerCase() === trimmedKey.toLowerCase()
-      )
-      
-      if (isDuplicate) {
-        toast("A key with this name already exists. Please use a unique key name.", "error")
-        return
-      }
-    }
-
+    // Always update the local state first for responsive typing
     setLocalPairs((prev) =>
       prev.map((pair) => (pair.id === id ? { ...pair, key: newKey } : pair))
     )
@@ -103,6 +91,38 @@ export function EncryptedKeyValueForm({
     setLocalPairs((prev) =>
       prev.map((pair) => (pair.id === id ? { ...pair, value: newValue } : pair))
     )
+  }
+
+  const handleKeyBlur = (id: string) => {
+    const localPair = localPairs.find((pair) => pair.id === id)
+    if (!localPair) return
+
+    // Check for duplicates only on blur (when user finishes typing)
+    const trimmedKey = localPair.key.trim()
+    if (trimmedKey) {
+      const isDuplicate = localPairs.some(
+        (pair) =>
+          pair.id !== id &&
+          pair.key.trim().toLowerCase() === trimmedKey.toLowerCase()
+      )
+
+      if (isDuplicate) {
+        toast(
+          "A key with this name already exists. Please use a unique key name.",
+          "error"
+        )
+        // Reset the key to empty to force user to choose a different one
+        setLocalPairs((prev) =>
+          prev.map((pair) => (pair.id === id ? { ...pair, key: "" } : pair))
+        )
+        return
+      }
+    }
+
+    // Original encryption logic: encrypt if both key and value are present
+    if (localPair.key.trim() && localPair.value.trim()) {
+      encryptAndUpdatePair(id)
+    }
   }
 
   const handlePaste = (
@@ -190,13 +210,6 @@ export function EncryptedKeyValueForm({
     id: string
   ): GenericEncryptedKeyValuePairDto | undefined => {
     return value.find((pair) => pair.id === id)
-  }
-
-  const handleKeyBlur = (id: string) => {
-    const localPair = localPairs.find((pair) => pair.id === id)
-    if (localPair?.key.trim() && localPair?.value.trim()) {
-      encryptAndUpdatePair(id)
-    }
   }
 
   const handleValueBlur = (id: string) => {
