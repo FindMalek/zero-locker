@@ -8,6 +8,7 @@ import {
 import { AccountStatus } from "@prisma/client"
 
 import { decryptData } from "@/lib/encryption"
+
 import {
   CredentialEntityIncludeDbData,
   CredentialEntitySimpleDbData,
@@ -59,7 +60,9 @@ export class CredentialEntity {
 
     try {
       // Decrypt passwordProtection setting
-      const passwordProtectionKv = kvPairs.find(kv => kv.key === 'passwordProtection')
+      const passwordProtectionKv = kvPairs.find(
+        (kv) => kv.key === "passwordProtection"
+      )
       if (passwordProtectionKv?.valueEncryption) {
         const decryptedValue = await decryptData(
           passwordProtectionKv.valueEncryption.encryptedValue,
@@ -70,7 +73,7 @@ export class CredentialEntity {
       }
 
       // Decrypt accessLogging setting
-      const accessLoggingKv = kvPairs.find(kv => kv.key === 'accessLogging')
+      const accessLoggingKv = kvPairs.find((kv) => kv.key === "accessLogging")
       if (accessLoggingKv?.valueEncryption) {
         const decryptedValue = await decryptData(
           accessLoggingKv.valueEncryption.encryptedValue,

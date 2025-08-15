@@ -51,7 +51,10 @@ export function useCredentialPassword(id: string, enabled: boolean = false) {
 }
 
 // Get credential security settings (decrypted server-side)
-export function useCredentialSecuritySettings(id: string, enabled: boolean = true) {
+export function useCredentialSecuritySettings(
+  id: string,
+  enabled: boolean = true
+) {
   return useQuery({
     queryKey: [...credentialKeys.detail(id), "security-settings"],
     queryFn: () => orpc.credentials.getSecuritySettings.call({ id }),
@@ -60,13 +63,39 @@ export function useCredentialSecuritySettings(id: string, enabled: boolean = tru
   })
 }
 
-// Get credential key-value pairs (decrypted server-side)
-export function useCredentialKeyValuePairs(id: string, enabled: boolean = true) {
+// Get credential key-value pairs (keys only, no values for security)
+export function useCredentialKeyValuePairs(
+  id: string,
+  enabled: boolean = true
+) {
   return useQuery({
     queryKey: [...credentialKeys.detail(id), "key-value-pairs"],
     queryFn: () => orpc.credentials.getKeyValuePairs.call({ id }),
     enabled: !!id && enabled,
     staleTime: 2 * 60 * 1000, // Cache for 2 minutes
+  })
+}
+
+// Get specific key-value pair value (for viewing with eye icon)
+export function useCredentialKeyValuePairValue(
+  credentialId: string,
+  keyValuePairId: string,
+  enabled: boolean = false
+) {
+  return useQuery({
+    queryKey: [
+      ...credentialKeys.detail(credentialId),
+      "key-value-pair-value",
+      keyValuePairId,
+    ],
+    queryFn: () =>
+      orpc.credentials.getKeyValuePairValue.call({
+        credentialId,
+        keyValuePairId,
+      }),
+    enabled: !!credentialId && !!keyValuePairId && enabled,
+    staleTime: 0, // Always fetch fresh for security
+    gcTime: 0, // Don't cache values
   })
 }
 
@@ -213,7 +242,10 @@ export function useUpdateCredentialWithSecuritySettings() {
           context.previousCredential
         )
       }
-      console.error("Failed to update credential with security settings:", error)
+      console.error(
+        "Failed to update credential with security settings:",
+        error
+      )
     },
     onSuccess: (updatedCredential: CredentialOutput, variables) => {
       // Update the cache with the server response
@@ -224,8 +256,8 @@ export function useUpdateCredentialWithSecuritySettings() {
 
       // Invalidate related queries including security settings
       queryClient.invalidateQueries({ queryKey: credentialKeys.lists() })
-      queryClient.invalidateQueries({ 
-        queryKey: [...credentialKeys.detail(variables.id), "security-settings"] 
+      queryClient.invalidateQueries({
+        queryKey: [...credentialKeys.detail(variables.id), "security-settings"],
       })
     },
   })
@@ -239,8 +271,11 @@ export function useUpdateCredentialKeyValuePairs() {
     mutationFn: orpc.credentials.updateKeyValuePairs.call,
     onSuccess: (_, variables) => {
       // Invalidate key-value pairs cache
-      queryClient.invalidateQueries({ 
-        queryKey: [...credentialKeys.detail(variables.credentialId), "key-value-pairs"] 
+      queryClient.invalidateQueries({
+        queryKey: [
+          ...credentialKeys.detail(variables.credentialId),
+          "key-value-pairs",
+        ],
       })
     },
     onError: (error) => {

@@ -82,7 +82,11 @@ export function AuthLoginForm({
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6" autoComplete="off">
+        <form
+          onSubmit={form.handleSubmit(onSubmit)}
+          className="space-y-6"
+          autoComplete="off"
+        >
           <FormField
             control={form.control}
             name="email"

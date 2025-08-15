@@ -85,11 +85,16 @@ export function EncryptedKeyValueForm({
     const trimmedKey = newKey.trim()
     if (trimmedKey) {
       const isDuplicate = localPairs.some(
-        (pair) => pair.id !== id && pair.key.trim().toLowerCase() === trimmedKey.toLowerCase()
+        (pair) =>
+          pair.id !== id &&
+          pair.key.trim().toLowerCase() === trimmedKey.toLowerCase()
       )
-      
+
       if (isDuplicate) {
-        toast("A key with this name already exists. Please use a unique key name.", "error")
+        toast(
+          "A key with this name already exists. Please use a unique key name.",
+          "error"
+        )
         return
       }
     }

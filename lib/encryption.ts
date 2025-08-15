@@ -55,9 +55,13 @@ export async function encryptData(
 
     // Get the auth tag for GCM
     const authTag = cipher.getAuthTag()
-    
+
     // Concatenate ciphertext and auth tag as raw bytes, then base64 encode
-    const combinedBuffer = Buffer.concat([encryptedBuffer, finalBuffer, authTag])
+    const combinedBuffer = Buffer.concat([
+      encryptedBuffer,
+      finalBuffer,
+      authTag,
+    ])
     const encrypted = combinedBuffer.toString("base64")
 
     return {
@@ -247,9 +251,13 @@ export async function encryptDataSync(
 
     // Get the auth tag for GCM
     const authTag = cipher.getAuthTag()
-    
+
     // Concatenate ciphertext and auth tag as raw bytes, then base64 encode
-    const combinedBuffer = Buffer.concat([encryptedBuffer, finalBuffer, authTag])
+    const combinedBuffer = Buffer.concat([
+      encryptedBuffer,
+      finalBuffer,
+      authTag,
+    ])
     const encrypted = combinedBuffer.toString("base64")
 
     return encrypted

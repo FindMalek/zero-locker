@@ -4,10 +4,10 @@ import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import {
   useCredential,
+  useCredentialSecuritySettings,
+  useDeleteCredential,
   useUpdateCredential,
   useUpdateCredentialWithSecuritySettings,
-  useDeleteCredential,
-  useCredentialSecuritySettings,
 } from "@/orpc/hooks/use-credentials"
 import {
   credentialFormDtoSchema,
@@ -29,12 +29,11 @@ import { DashboardCredentialDetailSkeleton } from "@/components/app/dashboard-cr
 import { CredentialFooter } from "@/components/app/dashboard-credential-footer"
 import { CredentialForm } from "@/components/app/dashboard-credential-form"
 import { CredentialHeader } from "@/components/app/dashboard-credential-header"
-import { CredentialSidebar } from "@/components/app/dashboard-credential-sidebar"
 import { CredentialKeyValuePairs } from "@/components/app/dashboard-credential-key-value-pairs"
+import { CredentialSidebar } from "@/components/app/dashboard-credential-sidebar"
 import { EmptyState } from "@/components/shared/empty-state"
 import { FloatingSaveToolbar } from "@/components/shared/floating-save-toolbar"
 import { Icons } from "@/components/shared/icons"
-import { Separator } from "@/components/ui/separator"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -45,6 +44,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import { Separator } from "@/components/ui/separator"
 
 interface CredentialDetailViewProps {
   credentialId: string
@@ -72,11 +72,10 @@ export function CredentialDetailView({
   const updateCredentialBasicMutation = useUpdateCredential() // For status-only updates
   const deleteCredentialMutation = useDeleteCredential()
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+  const [hasKeyValueChanges, setHasKeyValueChanges] = useState(false)
 
-  const {
-    data: securitySettings,
-    isLoading: isLoadingSecuritySettings,
-  } = useCredentialSecuritySettings(credentialId)
+  const { data: securitySettings, isLoading: isLoadingSecuritySettings } =
+    useCredentialSecuritySettings(credentialId)
 
   const platform = initialData?.platforms.platforms.find(
     (p) => p.id === credential?.platformId
@@ -105,6 +104,9 @@ export function CredentialDetailView({
     reset,
     handleSubmit,
   } = form
+
+  // Combined dirty state for floating toolbar
+  const hasChanges = isDirty || hasKeyValueChanges
 
   // Initialize form when credential and security settings load
   useEffect(() => {
@@ -262,7 +264,10 @@ export function CredentialDetailView({
             <Separator />
             <CredentialForm credential={credential} form={form} />
             <Separator />
-            <CredentialKeyValuePairs credentialId={credential.id} />
+            <CredentialKeyValuePairs
+              credentialId={credential.id}
+              onFormChange={setHasKeyValueChanges}
+            />
             <CredentialFooter credential={credential} />
           </div>
 
@@ -278,9 +283,27 @@ export function CredentialDetailView({
       </div>
 
       <FloatingSaveToolbar
-        isVisible={isDirty}
-        onSave={handleSubmit(handleSave)}
-        onDiscard={handleDiscard}
+        isVisible={hasChanges}
+        onSave={() => {
+          if (isDirty) {
+            handleSubmit(handleSave)()
+          }
+          // Key-value pairs save is handled by their own component via window object
+          if (hasKeyValueChanges && typeof window !== "undefined") {
+            // @ts-ignore
+            window.credentialKeyValuePairs?.save()
+          }
+        }}
+        onDiscard={() => {
+          if (isDirty) {
+            handleDiscard()
+          }
+          // Key-value pairs discard is handled by their own component via window object
+          if (hasKeyValueChanges && typeof window !== "undefined") {
+            // @ts-ignore
+            window.credentialKeyValuePairs?.cancel()
+          }
+        }}
       />
 
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
