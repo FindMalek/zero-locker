@@ -76,6 +76,20 @@ export function useCredentialKeyValuePairs(
   })
 }
 
+// Get credential key-value pairs with values (for editing mode)
+export function useCredentialKeyValuePairsWithValues(
+  id: string,
+  enabled: boolean = false
+) {
+  return useQuery({
+    queryKey: [...credentialKeys.detail(id), "key-value-pairs-with-values"],
+    queryFn: () => orpc.credentials.getKeyValuePairsWithValues.call({ id }),
+    enabled: !!id && enabled,
+    staleTime: 0, // Always fetch fresh for security
+    gcTime: 0, // Don't cache sensitive values
+  })
+}
+
 // Get specific key-value pair value (for viewing with eye icon)
 export function useCredentialKeyValuePairValue(
   credentialId: string,

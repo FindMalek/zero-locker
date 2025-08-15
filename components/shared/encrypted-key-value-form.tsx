@@ -81,8 +81,15 @@ export function EncryptedKeyValueForm({
   }
 
   const handleKeyChange = (id: string, newKey: string) => {
-    // Check if the new key already exists in other pairs (excluding current pair)
-    const trimmedKey = newKey.trim()
+    // Always update the local state first for responsive typing
+    setLocalPairs((prev) =>
+      prev.map((pair) => (pair.id === id ? { ...pair, key: newKey } : pair))
+    )
+  }
+
+  const handleKeyBlur = (id: string, key: string) => {
+    // Check for duplicates only on blur (when user finishes typing)
+    const trimmedKey = key.trim()
     if (trimmedKey) {
       const isDuplicate = localPairs.some(
         (pair) =>
@@ -95,13 +102,13 @@ export function EncryptedKeyValueForm({
           "A key with this name already exists. Please use a unique key name.",
           "error"
         )
+        // Reset the key to empty to force user to choose a different one
+        setLocalPairs((prev) =>
+          prev.map((pair) => (pair.id === id ? { ...pair, key: "" } : pair))
+        )
         return
       }
     }
-
-    setLocalPairs((prev) =>
-      prev.map((pair) => (pair.id === id ? { ...pair, key: newKey } : pair))
-    )
   }
 
   const handleValueChange = (id: string, newValue: string) => {
@@ -252,7 +259,7 @@ export function EncryptedKeyValueForm({
                       onChange={(e) =>
                         handleKeyChange(localPair.id, e.target.value)
                       }
-                      onBlur={() => handleKeyBlur(localPair.id)}
+                      onBlur={() => handleKeyBlur(localPair.id, localPair.key)}
                       onPaste={(e) => {
                         e.preventDefault()
                         const pastedText = e.clipboardData.getData("text")

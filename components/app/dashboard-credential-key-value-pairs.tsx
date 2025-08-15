@@ -3,18 +3,18 @@
 import { useEffect, useState } from "react"
 import {
   useCredentialKeyValuePairs,
+  useCredentialKeyValuePairsWithValues,
   useCredentialKeyValuePairValue,
   useUpdateCredentialKeyValuePairs,
 } from "@/orpc/hooks/use-credentials"
 
-import { handleErrors } from "@/lib/utils"
+import { cn, handleErrors } from "@/lib/utils"
 import { useToast } from "@/hooks/use-toast"
 
 import { Icons } from "@/components/shared/icons"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Separator } from "@/components/ui/separator"
 import {
   Tooltip,
   TooltipContent,
@@ -41,6 +41,7 @@ function KeyValuePairItem({
   onKeyChange,
   onValueChange,
   onRemove,
+  totalPairs = 1,
 }: {
   pair: any
   credentialId: string
@@ -48,16 +49,20 @@ function KeyValuePairItem({
   onKeyChange?: (value: string) => void
   onValueChange?: (value: string) => void
   onRemove?: () => void
+  totalPairs?: number
 }) {
   const { toast } = useToast()
   const [showValue, setShowValue] = useState(false)
   const [localValue, setLocalValue] = useState("")
 
+  // Only fetch values in view mode when show value is requested
+  const shouldFetchValue = Boolean(pair.id) && showValue && !isEditing
+  
   const { data: valueData, isLoading: isLoadingValue } =
     useCredentialKeyValuePairValue(
       credentialId,
-      pair.id,
-      showValue && !isEditing
+      pair.id || "", // Provide fallback to avoid undefined
+      shouldFetchValue
     )
 
   useEffect(() => {
@@ -77,101 +82,114 @@ function KeyValuePairItem({
 
   if (isEditing) {
     return (
-      <div className="bg-muted/50 flex items-end gap-3 rounded-lg border p-3">
-        <div className="flex-1">
-          <Label htmlFor={`key-${pair.id}`} className="text-xs">
-            Key
-          </Label>
-          <Input
-            id={`key-${pair.id}`}
-            placeholder="Enter key name"
-            value={pair.key}
-            onChange={(e) => onKeyChange?.(e.target.value)}
-            className="h-8"
-          />
+      <div className="flex items-start gap-2 p-3 sm:gap-3 sm:p-4">
+        <div className="grid flex-1 grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-3">
+          <div>
+            <Input
+              placeholder="Enter key name"
+              value={pair.key}
+              onChange={(e) => onKeyChange?.(e.target.value)}
+              className="font-mono text-xs"
+              autoComplete="off"
+            />
+          </div>
+          <div>
+            <Input
+              variant="password"
+              placeholder="Enter value"
+              value={pair.value}
+              onChange={(e) => onValueChange?.(e.target.value)}
+              className="font-mono text-xs"
+              autoComplete="new-password"
+            />
+          </div>
         </div>
-        <div className="flex-1">
-          <Label htmlFor={`value-${pair.id}`} className="text-xs">
-            Value
-          </Label>
-          <Input
-            id={`value-${pair.id}`}
-            placeholder="Enter value"
-            value={pair.value}
-            onChange={(e) => onValueChange?.(e.target.value)}
-            className="h-8"
-          />
-        </div>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onRemove}
-          className="text-destructive hover:text-destructive hover:bg-destructive/10"
-        >
-          <Icons.trash className="size-4" />
-        </Button>
+        {totalPairs > 1 && (
+          <div className="flex flex-shrink-0 items-center justify-center">
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              onClick={onRemove}
+              className="text-muted-foreground hover:text-destructive flex size-8 items-center justify-center"
+            >
+              <Icons.trash className="size-4" />
+            </Button>
+          </div>
+        )}
       </div>
     )
   }
 
   return (
-    <div className="hover:bg-muted/30 group flex items-center justify-between rounded-sm px-1 py-3 transition-colors">
-      <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-medium">{pair.key}</span>
+    <div className="flex items-start gap-2 p-3 sm:gap-3 sm:p-4">
+      <div className="grid flex-1 grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-3">
+        <div>
+          <Input
+            value={pair.key}
+            readOnly
+            className="font-mono text-xs"
+            autoComplete="off"
+          />
         </div>
-        <div className="mt-1 flex items-center gap-2">
-          {showValue ? (
-            isLoadingValue ? (
-              <div className="text-muted-foreground flex items-center gap-2 text-xs">
-                <Icons.spinner className="size-3 animate-spin" />
-                Decrypting...
+        <div>
+          <div className="flex gap-2">
+            <div className="relative flex-1">
+              <Input
+                type={showValue ? "text" : "password"}
+                value={
+                  showValue
+                    ? isLoadingValue
+                      ? "Decrypting..."
+                      : localValue || "Failed to decrypt"
+                    : "••••••••"
+                }
+                readOnly
+                className="pr-16 font-mono text-xs"
+                autoComplete="off"
+              />
+              <div className="absolute inset-y-0 right-1 flex items-center">
+                <div className="flex items-center gap-0.5">
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setShowValue(!showValue)}
+                        className="h-7 w-7 p-0"
+                        disabled={isLoadingValue}
+                      >
+                        {showValue ? (
+                          <Icons.eyeOff className="size-3" />
+                        ) : (
+                          <Icons.eye className="size-3" />
+                        )}
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      {showValue ? "Hide value" : "Show value"}
+                    </TooltipContent>
+                  </Tooltip>
+                  {showValue && localValue && !isLoadingValue && (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleCopy(localValue)}
+                          className="h-7 w-7 p-0"
+                        >
+                          <Icons.copy className="size-3" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>Copy value</TooltipContent>
+                    </Tooltip>
+                  )}
+                </div>
               </div>
-            ) : (
-              <span className="text-muted-foreground font-mono text-xs">
-                {localValue || "Failed to decrypt"}
-              </span>
-            )
-          ) : (
-            <span className="text-muted-foreground text-xs">••••••••</span>
-          )}
+            </div>
+          </div>
         </div>
-      </div>
-      <div className="flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowValue(!showValue)}
-              className="h-7 w-7 p-0"
-            >
-              {showValue ? (
-                <Icons.eyeOff className="size-3" />
-              ) : (
-                <Icons.eye className="size-3" />
-              )}
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>
-            {showValue ? "Hide value" : "Show value"}
-          </TooltipContent>
-        </Tooltip>
-        {showValue && localValue && (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => handleCopy(localValue)}
-                className="h-7 w-7 p-0"
-              >
-                <Icons.copy className="size-3" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Copy value</TooltipContent>
-          </Tooltip>
-        )}
       </div>
     </div>
   )
@@ -191,6 +209,13 @@ export function CredentialKeyValuePairs({
     isLoading,
     error,
   } = useCredentialKeyValuePairs(credentialId)
+
+  // Load values when entering edit mode
+  const {
+    data: keyValuePairsWithValues = [],
+    isLoading: isLoadingValues,
+    error: valuesError,
+  } = useCredentialKeyValuePairsWithValues(credentialId, isEditing)
 
   const updateKeyValuePairsMutation = useUpdateCredentialKeyValuePairs()
 
@@ -216,6 +241,24 @@ export function CredentialKeyValuePairs({
   useEffect(() => {
     onFormChange?.(hasChanges)
   }, [hasChanges, onFormChange])
+
+  const handleEnterEditMode = async () => {
+    setIsEditing(true)
+    // The hook will automatically load values when isEditing becomes true
+  }
+
+  // Update local pairs when values are loaded in edit mode
+  useEffect(() => {
+    if (isEditing && keyValuePairsWithValues.length > 0 && !isLoadingValues) {
+      // Use the pairs with values from the new hook
+      setLocalPairs(keyValuePairsWithValues)
+      setHasChanges(false)
+    } else if (isEditing && !isLoadingValues && keyValuePairsWithValues.length === 0) {
+      // Start with one empty pair if no existing data
+      setLocalPairs([{ key: "", value: "" }])
+      setHasChanges(false)
+    }
+  }, [isEditing, keyValuePairsWithValues, isLoadingValues])
 
   const handleAddPair = () => {
     const newPair: KeyValuePair = {
@@ -278,20 +321,20 @@ export function CredentialKeyValuePairs({
         keyValuePairs: validPairs,
       })
 
-      toast("Additional information updated successfully", "success")
       setIsEditing(false)
       setHasChanges(false)
+      return { success: true }
     } catch (error) {
       const { message, details } = handleErrors(
         error,
         "Failed to update additional information"
       )
-      toast(
-        details
+      return { 
+        success: false, 
+        error: details
           ? `${message}: ${Array.isArray(details) ? details.join(", ") : details}`
-          : message,
-        "error"
-      )
+          : message
+      }
     }
   }
 
@@ -314,24 +357,33 @@ export function CredentialKeyValuePairs({
     setHasChanges(false)
   }
 
-  // Expose save and cancel functions for external use (save toolbar)
+  // Expose data and functions for external use (global save toolbar)
   useEffect(() => {
     if (typeof window !== "undefined") {
       // @ts-ignore - Attach to window for save toolbar access
       window.credentialKeyValuePairs = {
+        data: localPairs,
         save: handleSave,
         cancel: handleCancel,
         hasChanges,
         isEditing,
       }
     }
-  }, [hasChanges, isEditing])
+  }, [localPairs, hasChanges, isEditing])
 
   if (isLoading) {
     return (
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h3 className="text-lg font-medium">Additional Information</h3>
+      <div className="space-y-2">
+        <div className="flex items-center gap-2">
+          <Label className="text-sm font-medium">Additional Information</Label>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Icons.helpCircle className="text-muted-foreground size-3" />
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Secure key-value pairs for extra credential details</p>
+            </TooltipContent>
+          </Tooltip>
         </div>
         <div className="flex items-center gap-2 py-8">
           <Icons.spinner className="size-4 animate-spin" />
@@ -345,9 +397,17 @@ export function CredentialKeyValuePairs({
 
   if (error) {
     return (
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h3 className="text-lg font-medium">Additional Information</h3>
+      <div className="space-y-2">
+        <div className="flex items-center gap-2">
+          <Label className="text-sm font-medium">Additional Information</Label>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Icons.helpCircle className="text-muted-foreground size-3" />
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Secure key-value pairs for extra credential details</p>
+            </TooltipContent>
+          </Tooltip>
         </div>
         <div className="py-8 text-center">
           <Icons.warning className="text-destructive mx-auto mb-2 size-8" />
@@ -360,21 +420,25 @@ export function CredentialKeyValuePairs({
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <h3 className="text-lg font-medium">Additional Information</h3>
-          <p className="text-muted-foreground text-sm">
-            Secure key-value pairs for extra credential details
-          </p>
-        </div>
+    <div className="space-y-2">
+      <div className="flex items-center gap-2">
+        <Label className="text-sm font-medium">Additional Information</Label>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Icons.helpCircle className="text-muted-foreground size-3" />
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>Secure key-value pairs for extra credential details</p>
+          </TooltipContent>
+        </Tooltip>
         {!isEditing && keyValuePairs.length > 0 && (
           <Button
-            variant="outline"
+            variant="ghost"
             size="sm"
-            onClick={() => setIsEditing(true)}
+            onClick={handleEnterEditMode}
+            className="ml-auto"
           >
-            <Icons.pencil className="mr-2 size-4" />
+            <Icons.pencil className="mr-1 size-3" />
             Edit
           </Button>
         )}
@@ -396,79 +460,83 @@ export function CredentialKeyValuePairs({
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setIsEditing(true)}
+                onClick={handleEnterEditMode}
               >
                 <Icons.add className="mr-2 size-4" />
                 Add Information
               </Button>
             </div>
           ) : (
-            <div className="space-y-1 rounded-lg border p-1">
-              {keyValuePairs.map((pair) => (
-                <KeyValuePairItem
-                  key={pair.id}
-                  pair={pair}
-                  credentialId={credentialId}
-                  isEditing={false}
-                />
-              ))}
+            <div className="overflow-hidden rounded-lg border">
+              <div className="space-y-0">
+                {keyValuePairs.map((pair, index) => (
+                  <div
+                    key={pair.id}
+                    className={cn(index > 0 && "border-border border-t")}
+                  >
+                    {index === 0 && (
+                      <div className="flex items-start gap-2 p-3 pb-2 sm:gap-3 sm:p-4">
+                        <div className="grid flex-1 grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-3">
+                          <div>
+                            <Label className="text-muted-foreground mb-2 block text-xs uppercase tracking-wide">
+                              Key
+                            </Label>
+                          </div>
+                          <div>
+                            <Label className="text-muted-foreground mb-2 block text-xs uppercase tracking-wide">
+                              Value
+                            </Label>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    <KeyValuePairItem
+                      pair={pair}
+                      credentialId={credentialId}
+                      isEditing={false}
+                    />
+                  </div>
+                ))}
+              </div>
             </div>
           )}
         </div>
       ) : (
         // Edit mode
-        <div className="space-y-4 rounded-lg border p-4">
-          <div className="space-y-3">
+        <div className="overflow-hidden rounded-lg border">
+          <div className="space-y-0">
             {localPairs.map((pair, index) => (
-              <KeyValuePairItem
+              <div
                 key={pair.id || index}
-                pair={pair}
-                credentialId={credentialId}
-                isEditing={true}
-                onKeyChange={(value) => handleKeyChange(index, value)}
-                onValueChange={(value) => handleValueChange(index, value)}
-                onRemove={() => handleRemovePair(index)}
-              />
+                className={cn(index > 0 && "border-border border-t")}
+              >
+                <KeyValuePairItem
+                  pair={pair}
+                  credentialId={credentialId}
+                  isEditing={true}
+                  totalPairs={localPairs.length}
+                  onKeyChange={(value) => handleKeyChange(index, value)}
+                  onValueChange={(value) => handleValueChange(index, value)}
+                  onRemove={() => handleRemovePair(index)}
+                />
+              </div>
             ))}
           </div>
 
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleAddPair}
-            className="w-full border-dashed"
-          >
-            <Icons.add className="mr-2 size-4" />
-            Add Pair
-          </Button>
-
-          <div className="flex items-center justify-between border-t pt-3">
-            <div className="text-muted-foreground text-xs">
-              {hasChanges ? "You have unsaved changes" : "No changes"}
-            </div>
-            <div className="flex items-center gap-2">
-              <Button variant="ghost" size="sm" onClick={handleCancel}>
-                Cancel
-              </Button>
-              <Button
-                size="sm"
-                onClick={handleSave}
-                disabled={updateKeyValuePairsMutation.isPending}
-              >
-                {updateKeyValuePairsMutation.isPending ? (
-                  <>
-                    <Icons.spinner className="mr-2 size-4 animate-spin" />
-                    Saving...
-                  </>
-                ) : (
-                  <>
-                    <Icons.save className="mr-2 size-4" />
-                    Save Changes
-                  </>
-                )}
-              </Button>
-            </div>
+          <div className="border-border border-t p-3 sm:p-4">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handleAddPair}
+              className="text-muted-foreground hover:text-foreground flex w-full items-center gap-2"
+            >
+              <Icons.add className="size-4" />
+              Add Another
+            </Button>
           </div>
+
+
         </div>
       )}
     </div>

@@ -7,6 +7,7 @@ import { authMiddleware } from "@/middleware/auth"
 import { requirePermission } from "@/middleware/permissions"
 import { database } from "@/prisma/client"
 import { credentialFormDtoSchema } from "@/schemas/credential/credential"
+import { credentialKeyValuePairWithValueRoSchema } from "@/schemas/credential/credential-key-value"
 import {
   createCredentialWithMetadataInputSchema,
   createCredentialWithMetadataOutputSchema,
@@ -146,6 +147,67 @@ export const getCredentialKeyValuePairs = authProcedure
       }))
 
     return pairs
+  })
+
+// Get credential key-value pairs with values (for editing mode)
+export const getCredentialKeyValuePairsWithValues = authProcedure
+  .input(getCredentialInputSchema)
+  .output(z.array(credentialKeyValuePairWithValueRoSchema))
+  .handler(async ({ input, context }) => {
+    const credential = await database.credential.findFirst({
+      where: {
+        id: input.id,
+        userId: context.user.id,
+      },
+      include: CredentialQuery.getInclude(),
+    })
+
+    if (!credential) {
+      throw new ORPCError("NOT_FOUND")
+    }
+
+    const metadata = credential.metadata?.[0]
+    if (!metadata || !metadata.keyValuePairs) {
+      return []
+    }
+
+    // Filter out security settings and decrypt values
+    const filteredPairs = metadata.keyValuePairs.filter(
+      (kvPair) =>
+        kvPair.key !== "passwordProtection" && kvPair.key !== "accessLogging"
+    )
+
+    const pairsWithValues = await Promise.all(
+      filteredPairs.map(async (kvPair) => {
+        try {
+          const decryptedValue = await decryptData(
+            kvPair.valueEncryption.encryptedValue,
+            kvPair.valueEncryption.iv,
+            kvPair.valueEncryption.encryptionKey
+          )
+
+          return {
+            id: kvPair.id,
+            key: kvPair.key,
+            value: decryptedValue,
+            createdAt: kvPair.createdAt,
+            updatedAt: kvPair.updatedAt,
+          }
+        } catch (error) {
+          console.error(`Failed to decrypt key-value pair ${kvPair.id}:`, error)
+          // Return pair with empty value if decryption fails
+          return {
+            id: kvPair.id,
+            key: kvPair.key,
+            value: "",
+            createdAt: kvPair.createdAt,
+            updatedAt: kvPair.updatedAt,
+          }
+        }
+      })
+    )
+
+    return pairsWithValues
   })
 
 // Get specific key-value pair value (for viewing)
@@ -921,6 +983,7 @@ export const credentialRouter = {
   getPassword: getCredentialPassword,
   getSecuritySettings: getCredentialSecuritySettings,
   getKeyValuePairs: getCredentialKeyValuePairs,
+  getKeyValuePairsWithValues: getCredentialKeyValuePairsWithValues,
   getKeyValuePairValue: getCredentialKeyValuePairValue,
   list: listCredentials,
   create: createCredential,
