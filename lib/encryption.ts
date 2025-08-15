@@ -50,13 +50,15 @@ export async function encryptData(
 
     const cipher = crypto.createCipheriv("aes-256-gcm", keyBuffer, ivBuffer)
 
-    let encrypted = cipher.update(data, "utf8", "base64")
-    encrypted += cipher.final("base64")
+    const encryptedBuffer = cipher.update(data, "utf8")
+    const finalBuffer = cipher.final()
 
     // Get the auth tag for GCM
     const authTag = cipher.getAuthTag()
-    // Append auth tag to encrypted data
-    encrypted += authTag.toString("base64")
+    
+    // Concatenate ciphertext and auth tag as raw bytes, then base64 encode
+    const combinedBuffer = Buffer.concat([encryptedBuffer, finalBuffer, authTag])
+    const encrypted = combinedBuffer.toString("base64")
 
     return {
       encryptedData: encrypted,
@@ -240,12 +242,15 @@ export async function encryptDataSync(
     // Use AES-GCM for consistency with browser
     const cipher = crypto.createCipheriv("aes-256-gcm", keyBuffer, ivBuffer)
 
-    let encrypted = cipher.update(plaintext, "utf8", "base64")
-    encrypted += cipher.final("base64")
+    const encryptedBuffer = cipher.update(plaintext, "utf8")
+    const finalBuffer = cipher.final()
 
-    // Get the auth tag for GCM and append it
+    // Get the auth tag for GCM
     const authTag = cipher.getAuthTag()
-    encrypted += authTag.toString("base64")
+    
+    // Concatenate ciphertext and auth tag as raw bytes, then base64 encode
+    const combinedBuffer = Buffer.concat([encryptedBuffer, finalBuffer, authTag])
+    const encrypted = combinedBuffer.toString("base64")
 
     return encrypted
   } else if (isCBC) {

@@ -5,6 +5,7 @@ import { GenericEncryptedKeyValuePairDto } from "@/schemas/encryption/encryption
 
 import { encryptData, exportKey, generateEncryptionKey } from "@/lib/encryption"
 import { cn } from "@/lib/utils"
+import { useToast } from "@/hooks/use-toast"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -42,6 +43,7 @@ export function EncryptedKeyValueForm({
   className,
   disabled = false,
 }: EncryptedKeyValueFormProps) {
+  const { toast } = useToast()
   const [localPairs, setLocalPairs] = useState<
     Array<{
       id: string
@@ -79,6 +81,19 @@ export function EncryptedKeyValueForm({
   }
 
   const handleKeyChange = (id: string, newKey: string) => {
+    // Check if the new key already exists in other pairs (excluding current pair)
+    const trimmedKey = newKey.trim()
+    if (trimmedKey) {
+      const isDuplicate = localPairs.some(
+        (pair) => pair.id !== id && pair.key.trim().toLowerCase() === trimmedKey.toLowerCase()
+      )
+      
+      if (isDuplicate) {
+        toast("A key with this name already exists. Please use a unique key name.", "error")
+        return
+      }
+    }
+
     setLocalPairs((prev) =>
       prev.map((pair) => (pair.id === id ? { ...pair, key: newKey } : pair))
     )

@@ -1,3 +1,12 @@
+import {
+  differenceInDays,
+  differenceInWeeks,
+  differenceInMonths,
+  differenceInYears,
+  isToday,
+  isYesterday,
+} from "date-fns"
+
 export function formatDate(date: Date | null): string {
   if (!date) return "Never"
   return new Intl.DateTimeFormat("en-US", {
@@ -11,15 +20,22 @@ export function getRelativeTime(date: Date | null): string {
   if (!date) return "Never"
 
   const now = new Date()
-  const diffInMs = now.getTime() - date.getTime()
-  const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24))
 
-  if (diffInDays === 0) return "Today"
-  if (diffInDays === 1) return "Yesterday"
-  if (diffInDays < 7) return `${diffInDays}d ago`
-  if (diffInDays < 30) return `${Math.floor(diffInDays / 7)}w ago`
-  if (diffInDays < 365) return `${Math.floor(diffInDays / 30)}mo ago`
-  return `${Math.floor(diffInDays / 365)}y ago`
+  // Use date-fns timezone-aware functions for today/yesterday detection
+  if (isToday(date)) return "Today"
+  if (isYesterday(date)) return "Yesterday"
+
+  // Use date-fns precise difference calculations
+  const days = differenceInDays(now, date)
+  const weeks = differenceInWeeks(now, date)
+  const months = differenceInMonths(now, date)
+  const years = differenceInYears(now, date)
+
+  // Return appropriate time unit based on the largest meaningful difference
+  if (days < 7) return `${days}d ago`
+  if (weeks < 4) return `${weeks}w ago`
+  if (months < 12) return `${months}mo ago`
+  return `${years}y ago`
 }
 
 export function getPrimaryDate(lastViewed: Date | null, createdAt: Date) {
