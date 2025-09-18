@@ -71,25 +71,19 @@ function ValueInput<T extends BaseKeyValuePair>({
         !!credentialId
     )
 
-  // Use real value when fetched, otherwise use the current value
-  // In edit mode, prioritize user input over fetched value once they start typing
+  // Display value logic (pair.value is the single source of truth):
+  // - pair.value = "" + existing pair = show "••••••••" (masked, can click eye to reveal)
+  // - pair.value = "" + new pair = show "" (empty, ready for input)
+  // - pair.value = "something" = show "something" (user typed or fetched value)
   const displayValue = (() => {
-    // If we have fetched data, use it
-    if (valueData?.value) {
-      return valueData.value
-    }
-
-    // If user has typed something, use their input
     if (pair.value) {
       return pair.value
     }
 
-    // For existing pairs (not temp) that have keys but no values yet, show masked dots
     if (pair.key && pair.id && !pair.id.startsWith("temp_") && credentialId) {
-      return "••••••••" // Placeholder dots to indicate there's a value to reveal
+      return "••••••••"
     }
 
-    // For new/temp pairs, show empty
     return ""
   })()
 
@@ -105,7 +99,6 @@ function ValueInput<T extends BaseKeyValuePair>({
   const handleValueChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const newValue = e.target.value
-      // Clear masked dots when user starts typing
       onValueChange(index, newValue)
     },
     [index, onValueChange]
@@ -113,7 +106,7 @@ function ValueInput<T extends BaseKeyValuePair>({
 
   // Update local state when value is fetched
   useEffect(() => {
-    if (valueData?.value && (!pair.value || pair.value === "••••••••")) {
+    if (valueData?.value && !pair.value) {
       onValueChange(index, valueData.value)
     }
   }, [valueData?.value, pair.value, index, onValueChange])
@@ -202,12 +195,20 @@ export function KeyValuePairManager<T extends BaseKeyValuePair>({
     return value.map((pair) => ({ ...pair }))
   })
 
-  // Sync with external value changes
+  // Sync with external value changes - but only when necessary to avoid overriding user input
   useEffect(() => {
-    if (value.length === 0) {
-      setLocalPairs([{ id: `temp_empty`, key: "", value: "" } as T])
-    } else {
-      setLocalPairs(value.map((pair) => ({ ...pair })))
+    // Only sync if the arrays are fundamentally different (length or IDs changed)
+    // Don't sync if just values changed (user might be typing)
+    const isDifferentStructure =
+      value.length !== localPairs.length ||
+      value.some((pair, index) => pair.id !== localPairs[index]?.id)
+
+    if (isDifferentStructure) {
+      if (value.length === 0) {
+        setLocalPairs([{ id: `temp_empty`, key: "", value: "" } as T])
+      } else {
+        setLocalPairs(value.map((pair) => ({ ...pair })))
+      }
     }
   }, [value])
 

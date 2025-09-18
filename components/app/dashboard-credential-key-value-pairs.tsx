@@ -46,7 +46,7 @@ export function CredentialKeyValuePairs({
 
   // Prepare data for display - always in edit mode
   const displayData: KeyValuePair[] = useMemo(() => {
-    // Use local editing data when available (user is actively editing)
+    // ALWAYS use editingData when it exists (user is actively editing)
     if (editingData.length > 0) {
       return editingData
     }
