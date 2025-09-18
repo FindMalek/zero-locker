@@ -9,7 +9,11 @@ import {
 
 import { handleErrors } from "@/lib/utils"
 import { useToast } from "@/hooks/use-toast"
-import { KeyValuePairManager, type BaseKeyValuePair } from "@/components/shared/key-value-pair-manager"
+
+import {
+  KeyValuePairManager,
+  type BaseKeyValuePair,
+} from "@/components/shared/key-value-pair-manager"
 
 interface KeyValuePair extends BaseKeyValuePair {
   createdAt?: Date
@@ -45,9 +49,11 @@ export function CredentialKeyValuePairs({
   const displayData: KeyValuePair[] = useMemo(() => {
     if (isEditing) {
       // Use local editing data when in edit mode
-      return editingData.length > 0 ? editingData : 
-        keyValuePairsWithValues.length > 0 ? keyValuePairsWithValues :
-        [{ id: `temp_${credentialId}_${Date.now()}`, key: "", value: "" }]
+      return editingData.length > 0
+        ? editingData
+        : keyValuePairsWithValues.length > 0
+          ? keyValuePairsWithValues
+          : [{ id: `temp_${credentialId}_${Date.now()}`, key: "", value: "" }]
     }
     if (!isEditing && keyValuePairs.length > 0) {
       return keyValuePairs.map((kv) => ({
@@ -59,19 +65,31 @@ export function CredentialKeyValuePairs({
       }))
     }
     return []
-  }, [isEditing, keyValuePairs, keyValuePairsWithValues, editingData, credentialId])
+  }, [
+    isEditing,
+    keyValuePairs,
+    keyValuePairsWithValues,
+    editingData,
+    credentialId,
+  ])
 
   // Auto-enter edit mode for empty state
   useEffect(() => {
     if (!isLoading && keyValuePairs.length === 0) {
-      setEditingData([{ id: `temp_${credentialId}_${Date.now()}`, key: "", value: "" }])
+      setEditingData([
+        { id: `temp_${credentialId}_${Date.now()}`, key: "", value: "" },
+      ])
       setIsEditing(true)
     }
   }, [keyValuePairs.length, isLoading, credentialId])
 
   // Initialize editing data when entering edit mode and server data loads
   useEffect(() => {
-    if (isEditing && keyValuePairsWithValues.length > 0 && editingData.length === 0) {
+    if (
+      isEditing &&
+      keyValuePairsWithValues.length > 0 &&
+      editingData.length === 0
+    ) {
       setEditingData(keyValuePairsWithValues)
     }
   }, [isEditing, keyValuePairsWithValues, editingData.length])
@@ -141,8 +159,14 @@ export function CredentialKeyValuePairs({
         isEditing,
       }
     }
-  }, [displayData, editingData, hasChanges, isEditing, handleSave, handleCancel])
-
+  }, [
+    displayData,
+    editingData,
+    hasChanges,
+    isEditing,
+    handleSave,
+    handleCancel,
+  ])
 
   if (isLoading) {
     return (
@@ -179,8 +203,14 @@ export function CredentialKeyValuePairs({
       label="Additional Information"
       description="Secure key-value pairs for extra credential details"
       placeholder={{
-        key: keyValuePairs.length === 0 ? "Enter key (e.g. Security Question)" : "Enter key",
-        value: keyValuePairs.length === 0 ? "Enter value (e.g. Your first pet's name)" : "Enter value",
+        key:
+          keyValuePairs.length === 0
+            ? "Enter key (e.g. Security Question)"
+            : "Enter key",
+        value:
+          keyValuePairs.length === 0
+            ? "Enter value (e.g. Your first pet's name)"
+            : "Enter value",
       }}
       onEnterEditMode={handleEnterEditMode}
       validateDuplicateKeys={true}

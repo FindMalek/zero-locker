@@ -48,15 +48,18 @@ Zero Locker is a secure password management tool designed to store, retrieve, an
    ```
 
    This will start a PostgreSQL database with the following configuration:
+
    - Database: `zero-locker`
    - Username: `postgres`
    - Password: `password`
    - Port: `5432`
 
    **Optional**: To also start pgAdmin for database management:
+
    ```bash
    docker-compose --profile tools up -d
    ```
+
    Access pgAdmin at `http://localhost:5050` (admin@localhost.com / admin)
 
 4. Set up environment variables:
@@ -129,11 +132,13 @@ docker-compose down -v
 If you see `zsh: command not found: docker`, even with Docker Desktop installed:
 
 1. **Make sure Docker Desktop is running:**
+
    - Look for the whale icon 🐳 in your menu bar (top-right)
    - If not there, open Docker Desktop from Applications
    - Wait until it shows "Docker Desktop is running"
 
 2. **Restart your terminal:**
+
    ```bash
    # Close your current terminal and open a new one
    # Or restart your shell session:
@@ -141,16 +146,18 @@ If you see `zsh: command not found: docker`, even with Docker Desktop installed:
    ```
 
 3. **Check if Docker CLI is in your PATH:**
+
    ```bash
    # Check if Docker Desktop created the symlinks
    ls -la /usr/local/bin/docker*
-   
+
    # Or check where Docker might be installed
    which docker
    find /Applications -name "docker" -type f 2>/dev/null
    ```
 
 4. **If Docker Desktop is installed but CLI not found:**
+
    ```bash
    # Add Docker to PATH manually (add to ~/.zshrc)
    echo 'export PATH="/Applications/Docker.app/Contents/Resources/bin:$PATH"' >> ~/.zshrc
@@ -158,6 +165,7 @@ If you see `zsh: command not found: docker`, even with Docker Desktop installed:
    ```
 
 5. **Verify installation:**
+
    ```bash
    docker --version
    docker-compose --version
@@ -181,6 +189,7 @@ If you encounter `docker-credential-desktop: executable file not found in $PATH`
 
 **Permission Issues (Linux):**
 If you get permission denied errors on Linux, add your user to the docker group:
+
 ```bash
 sudo usermod -aG docker $USER
 # Then log out and back in
