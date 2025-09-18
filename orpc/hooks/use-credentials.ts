@@ -284,12 +284,27 @@ export function useUpdateCredentialKeyValuePairs() {
   return useMutation({
     mutationFn: orpc.credentials.updateKeyValuePairs.call,
     onSuccess: (_, variables) => {
-      // Invalidate key-value pairs cache
+      // Invalidate all key-value pairs related queries to ensure fresh data
+      const credentialDetail = credentialKeys.detail(variables.credentialId)
+
+      // Invalidate basic key-value pairs (keys only)
       queryClient.invalidateQueries({
-        queryKey: [
-          ...credentialKeys.detail(variables.credentialId),
-          "key-value-pairs",
-        ],
+        queryKey: [...credentialDetail, "key-value-pairs"],
+      })
+
+      // Invalidate key-value pairs with values (for editing)
+      queryClient.invalidateQueries({
+        queryKey: [...credentialDetail, "key-value-pairs-with-values"],
+      })
+
+      // Invalidate any individual key-value pair values that might be cached
+      queryClient.invalidateQueries({
+        queryKey: [...credentialDetail, "key-value-pair-value"],
+      })
+
+      // Also invalidate the main credential detail to refresh any summary data
+      queryClient.invalidateQueries({
+        queryKey: credentialDetail,
       })
     },
     onError: (error) => {

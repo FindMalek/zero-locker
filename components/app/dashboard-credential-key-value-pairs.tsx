@@ -8,6 +8,7 @@ import {
 } from "@/orpc/hooks/use-credentials"
 
 import { handleErrors } from "@/lib/utils"
+import { useToast } from "@/hooks/use-toast"
 
 import {
   KeyValuePairManager,
@@ -30,16 +31,21 @@ export function CredentialKeyValuePairs({
 }: CredentialKeyValuePairsProps) {
   const [hasChanges, setHasChanges] = useState(false)
   const [editingData, setEditingData] = useState<KeyValuePair[]>([])
+  const { toast } = useToast()
 
   const {
     data: keyValuePairs = [],
     isLoading,
     error,
+    refetch: refetchKeyValuePairs,
   } = useCredentialKeyValuePairs(credentialId)
 
   // Always load values since we're always in edit mode
-  const { data: keyValuePairsWithValues = [], isLoading: isLoadingValues } =
-    useCredentialKeyValuePairsWithValues(credentialId, true)
+  const {
+    data: keyValuePairsWithValues = [],
+    isLoading: isLoadingValues,
+    refetch: refetchKeyValuePairsWithValues,
+  } = useCredentialKeyValuePairsWithValues(credentialId, true)
 
   const updateKeyValuePairsMutation = useUpdateCredentialKeyValuePairs()
 
@@ -84,32 +90,61 @@ export function CredentialKeyValuePairs({
 
   const handleSave = useCallback(async () => {
     try {
-      // Filter valid pairs from editing data
-      const validPairs = editingData.filter(
-        (pair) => pair.key.trim() && pair.value.trim()
-      )
+      // Filter valid pairs and map to API format
+      const validPairs = editingData
+        .filter((pair) => pair.key.trim() && pair.value.trim())
+        .map((pair) => ({
+          id: pair.id?.startsWith("temp_") ? undefined : pair.id, // Don't send temp IDs
+          key: pair.key.trim(),
+          value: pair.value.trim(),
+        }))
 
+      // Perform the mutation - this will trigger cache invalidation
       await updateKeyValuePairsMutation.mutateAsync({
         credentialId,
         keyValuePairs: validPairs,
       })
 
+      // Force refetch both queries to ensure immediate data refresh
+      await Promise.all([
+        refetchKeyValuePairs(),
+        refetchKeyValuePairsWithValues(),
+      ])
+
+      // Show success feedback
+      toast("Additional information saved successfully", "success")
+
+      // Reset local state - fresh data should now be available
       setHasChanges(false)
-      setEditingData([]) // Clear editing data to refresh from server
+      setEditingData([])
+
       return { success: true }
     } catch (error) {
       const { message, details } = handleErrors(
         error,
         "Failed to update additional information"
       )
+
+      // Show error feedback with more details
+      const errorMessage = details
+        ? `${message}: ${Array.isArray(details) ? details.join(", ") : details}`
+        : message
+
+      toast(errorMessage, "error")
+
       return {
         success: false,
-        error: details
-          ? `${message}: ${Array.isArray(details) ? details.join(", ") : details}`
-          : message,
+        error: errorMessage,
       }
     }
-  }, [editingData, credentialId, updateKeyValuePairsMutation])
+  }, [
+    editingData,
+    credentialId,
+    updateKeyValuePairsMutation,
+    toast,
+    refetchKeyValuePairs,
+    refetchKeyValuePairsWithValues,
+  ])
 
   const handleCancel = useCallback(() => {
     setHasChanges(false)
@@ -193,7 +228,7 @@ export function CredentialKeyValuePairs({
             ? "Enter value (e.g. Your first pet's name)"
             : "Enter value",
       }}
-      validateDuplicateKeys={true}
+      validateDuplicateKeys={false}
       disabled={isLoadingValues}
       credentialId={credentialId}
     />
