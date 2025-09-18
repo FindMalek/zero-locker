@@ -3,13 +3,13 @@
 import { useCallback, useEffect, useMemo, useState } from "react"
 import {
   useCredentialKeyValuePairs,
-  useCredentialKeyValuePairsWithValues,
   useUpdateCredentialKeyValuePairs,
 } from "@/orpc/hooks/use-credentials"
 
 import { handleErrors } from "@/lib/utils"
 import { useToast } from "@/hooks/use-toast"
 
+import { DashboardCredentialKeyValuePairsSkeleton } from "@/components/app/dashboard-credential-key-value-pairs-skeleton"
 import {
   KeyValuePairManager,
   type BaseKeyValuePair,
@@ -40,25 +40,23 @@ export function CredentialKeyValuePairs({
     refetch: refetchKeyValuePairs,
   } = useCredentialKeyValuePairs(credentialId)
 
-  // Always load values since we're always in edit mode
-  const {
-    data: keyValuePairsWithValues = [],
-    isLoading: isLoadingValues,
-    refetch: refetchKeyValuePairsWithValues,
-  } = useCredentialKeyValuePairsWithValues(credentialId, true)
+  // Note: Values are now fetched on-demand via eye icon for enhanced security
 
   const updateKeyValuePairsMutation = useUpdateCredentialKeyValuePairs()
 
   // Prepare data for display - always in edit mode
   const displayData: KeyValuePair[] = useMemo(() => {
-    // Use local editing data when available
+    // Use local editing data when available (user is actively editing)
     if (editingData.length > 0) {
       return editingData
     }
 
-    // Use server data with values if available
-    if (keyValuePairsWithValues.length > 0) {
-      return keyValuePairsWithValues
+    // Use server data (keys only) for security - values fetched on-demand
+    if (keyValuePairs.length > 0) {
+      return keyValuePairs.map((pair) => ({
+        ...pair,
+        value: "", // Don't show values until explicitly requested via eye icon
+      }))
     }
 
     // Default empty row for new entries
@@ -69,14 +67,20 @@ export function CredentialKeyValuePairs({
         value: "",
       },
     ]
-  }, [keyValuePairsWithValues, editingData, credentialId])
+  }, [keyValuePairs, editingData, credentialId])
 
-  // Initialize editing data with server data when available
+  // Initialize editing data with server data when available (keys only for security)
   useEffect(() => {
-    if (keyValuePairsWithValues.length > 0 && editingData.length === 0) {
-      setEditingData(keyValuePairsWithValues)
+    if (keyValuePairs.length > 0 && editingData.length === 0) {
+      // Initialize with keys only, values will be fetched on-demand
+      setEditingData(
+        keyValuePairs.map((pair) => ({
+          ...pair,
+          value: "", // Start with empty values for security
+        }))
+      )
     }
-  }, [keyValuePairsWithValues, editingData.length])
+  }, [keyValuePairs, editingData.length])
 
   // Notify parent about form changes
   useEffect(() => {
@@ -105,11 +109,8 @@ export function CredentialKeyValuePairs({
         keyValuePairs: validPairs,
       })
 
-      // Force refetch both queries to ensure immediate data refresh
-      await Promise.all([
-        refetchKeyValuePairs(),
-        refetchKeyValuePairsWithValues(),
-      ])
+      // Force refetch keys to ensure immediate data refresh
+      await refetchKeyValuePairs()
 
       // Show success feedback
       toast("Additional information saved successfully", "success")
@@ -143,7 +144,6 @@ export function CredentialKeyValuePairs({
     updateKeyValuePairsMutation,
     toast,
     refetchKeyValuePairs,
-    refetchKeyValuePairsWithValues,
   ])
 
   const handleCancel = useCallback(() => {
@@ -189,15 +189,7 @@ export function CredentialKeyValuePairs({
   }, [handleSave, handleCancel, hasChanges, displayData])
 
   if (isLoading) {
-    return (
-      <KeyValuePairManager
-        value={[]}
-        onChange={() => {}}
-        label="Additional Information"
-        description="Secure key-value pairs for extra credential details"
-        disabled={true}
-      />
-    )
+    return <DashboardCredentialKeyValuePairsSkeleton />
   }
 
   if (error) {
@@ -229,7 +221,7 @@ export function CredentialKeyValuePairs({
             : "Enter value",
       }}
       validateDuplicateKeys={false}
-      disabled={isLoadingValues}
+      disabled={isLoading}
       credentialId={credentialId}
     />
   )

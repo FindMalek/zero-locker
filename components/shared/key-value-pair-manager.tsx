@@ -42,7 +42,6 @@ interface ValueInputProps<T extends BaseKeyValuePair> {
   pair: T
   index: number
   credentialId?: string
-  isEditing: boolean
   placeholder?: string
   disabled?: boolean
   onValueChange: (index: number, value: string) => void
@@ -54,7 +53,6 @@ function ValueInput<T extends BaseKeyValuePair>({
   pair,
   index,
   credentialId,
-  isEditing,
   placeholder = "Enter value",
   disabled = false,
   onValueChange,
@@ -68,14 +66,32 @@ function ValueInput<T extends BaseKeyValuePair>({
       credentialId || "",
       pair.id || "",
       shouldFetchValue &&
-        !isEditing &&
         !!pair.id &&
         !pair.id.startsWith("temp_") &&
         !!credentialId
     )
 
   // Use real value when fetched, otherwise use the current value
-  const displayValue = valueData?.value || pair.value
+  // In edit mode, prioritize user input over fetched value once they start typing
+  const displayValue = (() => {
+    // If we have fetched data, use it
+    if (valueData?.value) {
+      return valueData.value
+    }
+
+    // If user has typed something, use their input
+    if (pair.value) {
+      return pair.value
+    }
+
+    // For existing pairs (not temp) that have keys but no values yet, show masked dots
+    if (pair.key && pair.id && !pair.id.startsWith("temp_") && credentialId) {
+      return "••••••••" // Placeholder dots to indicate there's a value to reveal
+    }
+
+    // For new/temp pairs, show empty
+    return ""
+  })()
 
   // Check if this item is being processed (e.g., encrypting)
   const isProcessing = getIsProcessing?.(pair) || false
@@ -86,51 +102,40 @@ function ValueInput<T extends BaseKeyValuePair>({
     }
   }, [valueData?.value, isLoadingValue, credentialId, isProcessing])
 
-  if (isEditing) {
-    // Edit mode: regular text input
-    return (
-      <div className="relative">
-        <Input
-          variant="password-copyable"
-          placeholder={placeholder}
-          value={pair.value}
-          onChange={(e) => onValueChange(index, e.target.value)}
-          onBlur={() => onValueBlur?.(index)}
-          disabled={disabled || isProcessing}
-          className="font-mono text-xs"
-          autoComplete="new-password"
-          aria-label={`Value for pair ${index + 1}`}
-          aria-describedby={`value-help-${index}`}
-          role="textbox"
-        />
-        {isProcessing && (
-          <div
-            className="absolute inset-y-0 right-3 flex items-center"
-            aria-hidden="true"
-          >
-            <Icons.spinner className="size-4 animate-spin" />
-          </div>
-        )}
-      </div>
-    )
-  }
+  const handleValueChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const newValue = e.target.value
+      // Clear masked dots when user starts typing
+      onValueChange(index, newValue)
+    },
+    [index, onValueChange]
+  )
 
-  // View mode: password-copyable input with API-driven reveal
+  // Update local state when value is fetched
+  useEffect(() => {
+    if (valueData?.value && (!pair.value || pair.value === "••••••••")) {
+      onValueChange(index, valueData.value)
+    }
+  }, [valueData?.value, pair.value, index, onValueChange])
+
+  // Always in edit mode - no view mode needed
   return (
     <div className="relative">
       <Input
         variant="password-copyable"
+        placeholder={placeholder}
         value={displayValue}
-        readOnly
+        onChange={handleValueChange}
+        onBlur={() => onValueBlur?.(index)}
+        onEyeClick={handleEyeClick}
         disabled={disabled || isProcessing}
         className="font-mono text-xs"
-        onEyeClick={handleEyeClick}
-        aria-label={`Value for pair ${index + 1} (masked)`}
+        autoComplete="new-password"
+        aria-label={`Value for pair ${index + 1}`}
         aria-describedby={`value-help-${index}`}
         role="textbox"
-        aria-readonly="true"
       />
-      {(isLoadingValue || isProcessing) && (
+      {(isProcessing || isLoadingValue) && (
         <div
           className="absolute inset-y-0 right-16 flex items-center"
           aria-hidden="true"
@@ -573,7 +578,6 @@ export function KeyValuePairManager<T extends BaseKeyValuePair>({
                     pair={pair}
                     index={index}
                     credentialId={credentialId}
-                    isEditing={true}
                     placeholder={placeholder.value}
                     disabled={disabled}
                     onValueChange={handleValueChange}
