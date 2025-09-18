@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react"
 import { cn } from "@/lib/utils"
 import { useToast } from "@/hooks/use-toast"
+import { useCredentialKeyValuePairValue } from "@/orpc/hooks/use-credentials"
 
 import { Icons } from "@/components/shared/icons"
 import { Button } from "@/components/ui/button"
@@ -20,6 +21,78 @@ export interface BaseKeyValuePair {
   key: string
   value: string
   [key: string]: any // Allow additional properties
+}
+
+// Internal component for enhanced value input with API integration
+interface EnhancedValueInputProps<T extends BaseKeyValuePair> {
+  pair: T
+  index: number
+  credentialId?: string
+  isEditing: boolean
+  placeholder?: string
+  disabled?: boolean
+  onValueChange: (index: number, value: string) => void
+}
+
+function EnhancedValueInput<T extends BaseKeyValuePair>({
+  pair,
+  index,
+  credentialId,
+  isEditing,
+  placeholder = "Enter value",
+  disabled = false,
+  onValueChange
+}: EnhancedValueInputProps<T>) {
+  const [shouldFetchValue, setShouldFetchValue] = useState(false)
+
+  const { data: valueData, isLoading: isLoadingValue } = useCredentialKeyValuePairValue(
+    credentialId || "",
+    pair.id || "",
+    shouldFetchValue && !isEditing && !!pair.id && !pair.id.startsWith("temp_") && !!credentialId
+  )
+
+  // Use real value when fetched, otherwise use the current value
+  const displayValue = valueData?.value || pair.value
+
+  const handleEyeClick = useCallback(() => {
+    if (!valueData?.value && !isLoadingValue && credentialId) {
+      setShouldFetchValue(true)
+    }
+  }, [valueData?.value, isLoadingValue, credentialId])
+
+  if (isEditing) {
+    // Edit mode: regular text input
+    return (
+      <Input
+        type="text"
+        placeholder={placeholder}
+        value={pair.value}
+        onChange={(e) => onValueChange(index, e.target.value)}
+        disabled={disabled}
+        className="font-mono text-xs"
+        autoComplete="new-password"
+      />
+    )
+  }
+
+  // View mode: password-copyable input with API-driven reveal
+  return (
+    <div className="relative">
+      <Input
+        variant="password-copyable"
+        value={displayValue}
+        readOnly
+        disabled={disabled}
+        className="font-mono text-xs"
+        onEyeClick={handleEyeClick}
+      />
+      {isLoadingValue && (
+        <div className="absolute inset-y-0 right-16 flex items-center">
+          <Icons.spinner className="size-4 animate-spin" />
+        </div>
+      )}
+    </div>
+  )
 }
 
 interface KeyValuePairManagerProps<T extends BaseKeyValuePair> {
@@ -46,6 +119,9 @@ interface KeyValuePairManagerProps<T extends BaseKeyValuePair> {
   
   // Callbacks
   onEnterEditMode?: () => void
+  
+  // Enhanced view mode
+  credentialId?: string // For fetching individual values
 }
 
 export function KeyValuePairManager<T extends BaseKeyValuePair>({
@@ -60,6 +136,7 @@ export function KeyValuePairManager<T extends BaseKeyValuePair>({
   disabled = false,
   className,
   onEnterEditMode,
+  credentialId,
 }: KeyValuePairManagerProps<T>) {
   const { toast } = useToast()
   const [localPairs, setLocalPairs] = useState<T[]>(() => {
@@ -205,15 +282,14 @@ export function KeyValuePairManager<T extends BaseKeyValuePair>({
                         Value
                       </Label>
                     )}
-                    <Input
-                      variant={shouldShowEditMode ? "password" : "default"}
+                    <EnhancedValueInput
+                      pair={pair}
+                      index={index}
+                      credentialId={credentialId}
+                      isEditing={shouldShowEditMode}
                       placeholder={placeholder.value}
-                      value={pair.value}
-                      onChange={(e) => handleValueChange(index, e.target.value)}
-                      readOnly={!shouldShowEditMode}
                       disabled={disabled}
-                      className="font-mono text-xs"
-                      autoComplete={shouldShowEditMode ? "new-password" : "off"}
+                      onValueChange={handleValueChange}
                     />
                   </div>
                 </div>

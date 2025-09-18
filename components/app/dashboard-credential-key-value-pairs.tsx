@@ -25,9 +25,9 @@ export function CredentialKeyValuePairs({
   credentialId,
   onFormChange,
 }: CredentialKeyValuePairsProps) {
-  const { toast } = useToast()
   const [isEditing, setIsEditing] = useState(false)
   const [hasChanges, setHasChanges] = useState(false)
+  const [editingData, setEditingData] = useState<KeyValuePair[]>([])
 
   const {
     data: keyValuePairs = [],
@@ -43,27 +43,38 @@ export function CredentialKeyValuePairs({
 
   // Prepare data for display
   const displayData: KeyValuePair[] = useMemo(() => {
-    if (isEditing && keyValuePairsWithValues.length > 0) {
-      return keyValuePairsWithValues
+    if (isEditing) {
+      // Use local editing data when in edit mode
+      return editingData.length > 0 ? editingData : 
+        keyValuePairsWithValues.length > 0 ? keyValuePairsWithValues :
+        [{ id: `temp_${credentialId}_${Date.now()}`, key: "", value: "" }]
     }
     if (!isEditing && keyValuePairs.length > 0) {
       return keyValuePairs.map((kv) => ({
         id: kv.id,
         key: kv.key,
-        value: "", // Values hidden in view mode
+        value: "••••••••", // Show masked placeholder in view mode
         createdAt: kv.createdAt,
         updatedAt: kv.updatedAt,
       }))
     }
     return []
-  }, [isEditing, keyValuePairs, keyValuePairsWithValues])
+  }, [isEditing, keyValuePairs, keyValuePairsWithValues, editingData, credentialId])
 
   // Auto-enter edit mode for empty state
   useEffect(() => {
     if (!isLoading && keyValuePairs.length === 0) {
+      setEditingData([{ id: `temp_${credentialId}_${Date.now()}`, key: "", value: "" }])
       setIsEditing(true)
     }
-  }, [keyValuePairs.length, isLoading])
+  }, [keyValuePairs.length, isLoading, credentialId])
+
+  // Initialize editing data when entering edit mode and server data loads
+  useEffect(() => {
+    if (isEditing && keyValuePairsWithValues.length > 0 && editingData.length === 0) {
+      setEditingData(keyValuePairsWithValues)
+    }
+  }, [isEditing, keyValuePairsWithValues, editingData.length])
 
   // Notify parent about form changes
   useEffect(() => {
@@ -71,10 +82,12 @@ export function CredentialKeyValuePairs({
   }, [hasChanges, onFormChange])
 
   const handleEnterEditMode = useCallback(() => {
+    // Don't clear existing data - wait for the server data to load
     setIsEditing(true)
   }, [])
 
   const handleChange = useCallback((newValue: KeyValuePair[]) => {
+    setEditingData(newValue)
     setHasChanges(true)
   }, [])
 
@@ -82,8 +95,8 @@ export function CredentialKeyValuePairs({
     if (!isEditing) return { success: true }
 
     try {
-      // Filter valid pairs
-      const validPairs = displayData.filter(
+      // Filter valid pairs from editing data
+      const validPairs = editingData.filter(
         (pair) => pair.key.trim() && pair.value.trim()
       )
 
@@ -94,6 +107,7 @@ export function CredentialKeyValuePairs({
 
       setIsEditing(false)
       setHasChanges(false)
+      setEditingData([]) // Clear editing data
       return { success: true }
     } catch (error) {
       const { message, details } = handleErrors(
@@ -107,11 +121,12 @@ export function CredentialKeyValuePairs({
           : message,
       }
     }
-  }, [isEditing, displayData, credentialId, updateKeyValuePairsMutation])
+  }, [isEditing, editingData, credentialId, updateKeyValuePairsMutation])
 
   const handleCancel = useCallback(() => {
     setIsEditing(false)
     setHasChanges(false)
+    setEditingData([]) // Clear editing data
   }, [])
 
   // Expose data and functions for external use (global save toolbar)
@@ -119,14 +134,14 @@ export function CredentialKeyValuePairs({
     if (typeof window !== "undefined") {
       // @ts-expect-error - Global toolbar integration
       window.credentialKeyValuePairs = {
-        data: displayData,
+        data: isEditing ? editingData : displayData,
         save: handleSave,
         cancel: handleCancel,
         hasChanges,
         isEditing,
       }
     }
-  }, [displayData, hasChanges, isEditing, handleSave, handleCancel])
+  }, [displayData, editingData, hasChanges, isEditing, handleSave, handleCancel])
 
 
   if (isLoading) {
@@ -170,6 +185,7 @@ export function CredentialKeyValuePairs({
       onEnterEditMode={handleEnterEditMode}
       validateDuplicateKeys={true}
       disabled={isLoadingValues}
+      credentialId={credentialId}
     />
   )
 }
