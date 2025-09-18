@@ -1,6 +1,15 @@
 // Check if we're in Node.js or browser environment
 const isNode = typeof window === "undefined"
 
+// Secure ID generation utility for key-value pairs
+export function generateSecureId(prefix: string = "kv"): string {
+  if (typeof crypto !== "undefined" && crypto.randomUUID) {
+    return `${prefix}_${crypto.randomUUID()}`
+  }
+  // Fallback for environments without crypto.randomUUID
+  return `${prefix}_${Math.random().toString(36).substring(2)}_${Date.now().toString(36)}`
+}
+
 // Generate a random encryption key
 export async function generateEncryptionKey(): Promise<CryptoKey | string> {
   if (isNode) {
@@ -16,12 +25,6 @@ export async function generateEncryptionKey(): Promise<CryptoKey | string> {
     true,
     ["encrypt", "decrypt"]
   )
-}
-
-// Convert string to ArrayBuffer (browser only)
-function stringToArrayBuffer(str: string): Uint8Array {
-  const encoder = new TextEncoder()
-  return encoder.encode(str)
 }
 
 // Convert ArrayBuffer to string (browser only)
@@ -55,9 +58,13 @@ export async function encryptData(
 
     // Get the auth tag for GCM
     const authTag = cipher.getAuthTag()
-    
+
     // Concatenate ciphertext and auth tag as raw bytes, then base64 encode
-    const combinedBuffer = Buffer.concat([encryptedBuffer, finalBuffer, authTag])
+    const combinedBuffer = Buffer.concat([
+      encryptedBuffer,
+      finalBuffer,
+      authTag,
+    ])
     const encrypted = combinedBuffer.toString("base64")
 
     return {
@@ -73,7 +80,10 @@ export async function encryptData(
   const ivArray = window.crypto.getRandomValues(new Uint8Array(12))
 
   // Convert data to ArrayBuffer
-  const dataBuffer = stringToArrayBuffer(data)
+  const encoder = new TextEncoder()
+  const dataArray = encoder.encode(data)
+  const dataBuffer = new ArrayBuffer(dataArray.length)
+  new Uint8Array(dataBuffer).set(dataArray)
 
   // Encrypt the data
   const encryptedBuffer = await window.crypto.subtle.encrypt(
@@ -247,9 +257,13 @@ export async function encryptDataSync(
 
     // Get the auth tag for GCM
     const authTag = cipher.getAuthTag()
-    
+
     // Concatenate ciphertext and auth tag as raw bytes, then base64 encode
-    const combinedBuffer = Buffer.concat([encryptedBuffer, finalBuffer, authTag])
+    const combinedBuffer = Buffer.concat([
+      encryptedBuffer,
+      finalBuffer,
+      authTag,
+    ])
     const encrypted = combinedBuffer.toString("base64")
 
     return encrypted

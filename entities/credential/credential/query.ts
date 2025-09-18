@@ -1,4 +1,5 @@
 import { type Prisma } from "@prisma/client"
+
 import { CredentialMetadataQuery } from "../credential-metadata/query"
 
 export type CredentialEntitySimpleDbData = Prisma.CredentialGetPayload<{

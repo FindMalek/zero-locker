@@ -216,7 +216,7 @@
     display: none !important;
     pointer-events: none !important;
   }
-  
+
   /* Prevent autofill styling on isolated inputs */
   [data-form-isolated] input:-webkit-autofill,
   [data-form-isolated] input:-webkit-autofill:focus,
@@ -227,7 +227,7 @@
     -webkit-box-shadow: none !important;
     transition: background-color 50000s ease-in-out 0s !important;
   }
-  
+
   /* Make isolated inputs completely disconnected from forms */
   [data-form-isolated] input {
     -webkit-autofill: none !important;
@@ -236,7 +236,7 @@
     -moz-appearance: textfield !important;
     form: none !important;
   }
-  
+
   /* Hide browser-generated form icons on isolated inputs */
   [data-form-isolated] input::-webkit-outer-spin-button,
   [data-form-isolated] input::-webkit-inner-spin-button,

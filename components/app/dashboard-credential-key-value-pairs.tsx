@@ -1,348 +1,228 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { 
-  useCredentialKeyValuePairs, 
-  useUpdateCredentialKeyValuePairs 
+import { useCallback, useEffect, useMemo, useState } from "react"
+import {
+  useCredentialKeyValuePairs,
+  useUpdateCredentialKeyValuePairs,
 } from "@/orpc/hooks/use-credentials"
+
 import { handleErrors } from "@/lib/utils"
 import { useToast } from "@/hooks/use-toast"
 
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Separator } from "@/components/ui/separator"
-import { Badge } from "@/components/ui/badge"
-import { Icons } from "@/components/shared/icons"
+import { DashboardCredentialKeyValuePairsSkeleton } from "@/components/app/dashboard-credential-key-value-pairs-skeleton"
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip"
+  KeyValuePairManager,
+  type BaseKeyValuePair,
+} from "@/components/shared/key-value-pair-manager"
 
-interface KeyValuePair {
-  id?: string
-  key: string
-  value: string
+interface KeyValuePair extends BaseKeyValuePair {
   createdAt?: Date
   updatedAt?: Date
 }
 
 interface CredentialKeyValuePairsProps {
   credentialId: string
+  onFormChange?: (hasChanges: boolean) => void
 }
 
-export function CredentialKeyValuePairs({ credentialId }: CredentialKeyValuePairsProps) {
-  const { toast } = useToast()
-  const [isEditing, setIsEditing] = useState(false)
-  const [localPairs, setLocalPairs] = useState<KeyValuePair[]>([])
+export function CredentialKeyValuePairs({
+  credentialId,
+  onFormChange,
+}: CredentialKeyValuePairsProps) {
   const [hasChanges, setHasChanges] = useState(false)
+  const [editingData, setEditingData] = useState<KeyValuePair[]>([])
+  const { toast } = useToast()
 
   const {
     data: keyValuePairs = [],
     isLoading,
     error,
+    refetch: refetchKeyValuePairs,
   } = useCredentialKeyValuePairs(credentialId)
+
+  // Note: Values are now fetched on-demand via eye icon for enhanced security
 
   const updateKeyValuePairsMutation = useUpdateCredentialKeyValuePairs()
 
-  // Initialize local pairs when data loads
-  useEffect(() => {
+  // Prepare data for display - always in edit mode
+  const displayData: KeyValuePair[] = useMemo(() => {
+    // ALWAYS use editingData when it exists (user is actively editing)
+    if (editingData.length > 0) {
+      return editingData
+    }
+
+    // Use server data (keys only) for security - values fetched on-demand
     if (keyValuePairs.length > 0) {
-      setLocalPairs(keyValuePairs.map(kv => ({
-        id: kv.id,
-        key: kv.key,
-        value: kv.value,
-        createdAt: kv.createdAt,
-        updatedAt: kv.updatedAt,
-      })))
-    } else {
-      setLocalPairs([])
+      return keyValuePairs.map((pair) => ({
+        ...pair,
+        value: "", // Don't show values until explicitly requested via eye icon
+      }))
     }
-    setHasChanges(false)
-  }, [keyValuePairs])
 
-  const handleAddPair = () => {
-    const newPair: KeyValuePair = {
-      key: "",
-      value: "",
-    }
-    setLocalPairs([...localPairs, newPair])
-    setHasChanges(true)
-  }
+    // Default empty row for new entries
+    return [
+      {
+        id: `temp_${credentialId}_${crypto.randomUUID?.() || Math.random().toString(36)}`,
+        key: "",
+        value: "",
+      },
+    ]
+  }, [keyValuePairs, editingData, credentialId])
 
-  const handleRemovePair = (index: number) => {
-    const updatedPairs = localPairs.filter((_, i) => i !== index)
-    setLocalPairs(updatedPairs)
-    setHasChanges(true)
-  }
-
-  const handleKeyChange = (index: number, newKey: string) => {
-    // Check for duplicate keys
-    const trimmedKey = newKey.trim()
-    if (trimmedKey) {
-      const isDuplicate = localPairs.some(
-        (pair, i) => i !== index && pair.key.trim().toLowerCase() === trimmedKey.toLowerCase()
+  // Initialize editing data with server data when available (keys only for security)
+  useEffect(() => {
+    if (keyValuePairs.length > 0 && editingData.length === 0) {
+      // Initialize with keys only, values will be fetched on-demand
+      setEditingData(
+        keyValuePairs.map((pair) => ({
+          ...pair,
+          value: "", // Start with empty values for security
+        }))
       )
-      
-      if (isDuplicate) {
-        toast("A key with this name already exists. Please use a unique key name.", "error")
-        return
-      }
     }
+  }, [keyValuePairs, editingData.length])
 
-    const updatedPairs = localPairs.map((pair, i) =>
-      i === index ? { ...pair, key: newKey } : pair
-    )
-    setLocalPairs(updatedPairs)
+  // Notify parent about form changes
+  useEffect(() => {
+    onFormChange?.(hasChanges)
+  }, [hasChanges, onFormChange])
+
+  const handleChange = useCallback((newValue: KeyValuePair[]) => {
+    setEditingData(newValue)
     setHasChanges(true)
-  }
+  }, [])
 
-  const handleValueChange = (index: number, newValue: string) => {
-    const updatedPairs = localPairs.map((pair, i) =>
-      i === index ? { ...pair, value: newValue } : pair
-    )
-    setLocalPairs(updatedPairs)
-    setHasChanges(true)
-  }
-
-  const handleSave = async () => {
+  const handleSave = useCallback(async () => {
     try {
-      // Filter out empty pairs
-      const validPairs = localPairs.filter(pair => 
-        pair.key.trim() && pair.value.trim()
-      )
+      // Filter valid pairs and map to API format
+      const validPairs = editingData
+        .filter((pair) => pair.key.trim() && pair.value.trim())
+        .map((pair) => ({
+          id: pair.id?.startsWith("temp_") ? undefined : pair.id, // Don't send temp IDs
+          key: pair.key.trim(),
+          value: pair.value.trim(),
+        }))
 
+      // Perform the mutation - this will trigger cache invalidation
       await updateKeyValuePairsMutation.mutateAsync({
         credentialId,
         keyValuePairs: validPairs,
       })
 
-      toast("Key-value pairs updated successfully", "success")
-      setIsEditing(false)
+      // Force refetch keys to ensure immediate data refresh
+      await refetchKeyValuePairs()
+
+      // Show success feedback
+      toast("Additional information saved successfully", "success")
+
+      // Reset local state - fresh data should now be available
       setHasChanges(false)
+      setEditingData([])
+
+      return { success: true }
     } catch (error) {
       const { message, details } = handleErrors(
         error,
-        "Failed to update key-value pairs"
+        "Failed to update additional information"
       )
-      toast(
-        details
-          ? `${message}: ${Array.isArray(details) ? details.join(", ") : details}`
-          : message,
-        "error"
-      )
-    }
-  }
 
-  const handleCancel = () => {
-    // Reset to original data
-    if (keyValuePairs.length > 0) {
-      setLocalPairs(keyValuePairs.map(kv => ({
-        id: kv.id,
-        key: kv.key,
-        value: kv.value,
-        createdAt: kv.createdAt,
-        updatedAt: kv.updatedAt,
-      })))
-    } else {
-      setLocalPairs([])
+      // Show error feedback with more details
+      const errorMessage = details
+        ? `${message}: ${Array.isArray(details) ? details.join(", ") : details}`
+        : message
+
+      toast(errorMessage, "error")
+
+      return {
+        success: false,
+        error: errorMessage,
+      }
     }
-    setIsEditing(false)
+  }, [
+    editingData,
+    credentialId,
+    updateKeyValuePairsMutation,
+    toast,
+    refetchKeyValuePairs,
+  ])
+
+  const handleCancel = useCallback(() => {
     setHasChanges(false)
-  }
+    setEditingData([]) // Clear editing data to revert changes
+  }, [])
+
+  // Expose save and cancel handlers for external access (e.g., toolbar)
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      // Expose save/cancel handlers on window for toolbar integration
+      // TODO: Replace with proper React context when implementing save toolbar
+      const windowWithCredentials = window as Window & {
+        credentialKeyValuePairs?: {
+          save: () => Promise<{ success: boolean; error?: string }>
+          cancel: () => void
+          hasChanges: boolean
+          data: KeyValuePair[]
+        }
+      }
+
+      windowWithCredentials.credentialKeyValuePairs = {
+        save: handleSave,
+        cancel: handleCancel,
+        hasChanges,
+        data: displayData,
+      }
+    }
+
+    return () => {
+      if (typeof window !== "undefined") {
+        const windowWithCredentials = window as Window & {
+          credentialKeyValuePairs?: {
+            save: () => Promise<{ success: boolean; error?: string }>
+            cancel: () => void
+            hasChanges: boolean
+            data: KeyValuePair[]
+          }
+        }
+        delete windowWithCredentials.credentialKeyValuePairs
+      }
+    }
+  }, [handleSave, handleCancel, hasChanges, displayData])
 
   if (isLoading) {
-    return (
-      <Card>
-        <CardHeader>
-          <div className="flex items-center space-x-2">
-            <Icons.spinner className="size-4 animate-spin" />
-            <CardTitle>Loading Additional Information...</CardTitle>
-          </div>
-        </CardHeader>
-      </Card>
-    )
+    return <DashboardCredentialKeyValuePairsSkeleton />
   }
 
   if (error) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-destructive">Error Loading Data</CardTitle>
-          <CardDescription>
+      <div className="space-y-2">
+        <div className="py-8 text-center">
+          <p className="text-muted-foreground text-sm">
             Failed to load additional information. Please try again.
-          </CardDescription>
-        </CardHeader>
-      </Card>
+          </p>
+        </div>
+      </div>
     )
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle>Additional Information</CardTitle>
-            <CardDescription>
-              Store sensitive key-value pairs with encrypted values
-            </CardDescription>
-          </div>
-          <div className="flex items-center gap-2">
-            {keyValuePairs.length > 0 && (
-              <Badge variant="secondary">
-                {keyValuePairs.length} pair{keyValuePairs.length !== 1 ? 's' : ''}
-              </Badge>
-            )}
-            {!isEditing && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setIsEditing(true)}
-              >
-                <Icons.pencil className="mr-2 size-4" />
-                Edit
-              </Button>
-            )}
-          </div>
-        </div>
-      </CardHeader>
-      <CardContent>
-        {!isEditing ? (
-          // View mode
-          <div className="space-y-4">
-            {keyValuePairs.length === 0 ? (
-              <div className="text-center py-8">
-                <Icons.info className="mx-auto size-12 text-muted-foreground" />
-                <h3 className="mt-4 text-sm font-medium">No additional information</h3>
-                <p className="mt-2 text-sm text-muted-foreground">
-                  Add custom key-value pairs to store additional credential information.
-                </p>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="mt-4"
-                  onClick={() => setIsEditing(true)}
-                >
-                  <Icons.add className="mr-2 size-4" />
-                  Add Information
-                </Button>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {keyValuePairs.map((pair, index) => (
-                  <div key={pair.id || index} className="flex items-center justify-between py-2">
-                    <div className="min-w-0 flex-1">
-                      <div className="text-sm font-medium">{pair.key}</div>
-                      <div className="text-sm text-muted-foreground truncate">
-                        {pair.value}
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => {
-                              navigator.clipboard.writeText(pair.value)
-                              toast("Value copied to clipboard", "success")
-                            }}
-                          >
-                            <Icons.copy className="size-4" />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>Copy value</TooltipContent>
-                      </Tooltip>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        ) : (
-          // Edit mode
-          <div className="space-y-4">
-            <div className="space-y-3">
-              {localPairs.map((pair, index) => (
-                <div key={index} className="flex items-end gap-3">
-                  <div className="flex-1">
-                    <Label htmlFor={`key-${index}`}>Key</Label>
-                    <Input
-                      id={`key-${index}`}
-                      placeholder="Enter key name"
-                      value={pair.key}
-                      onChange={(e) => handleKeyChange(index, e.target.value)}
-                    />
-                  </div>
-                  <div className="flex-1">
-                    <Label htmlFor={`value-${index}`}>Value</Label>
-                    <Input
-                      id={`value-${index}`}
-                      placeholder="Enter value"
-                      value={pair.value}
-                      onChange={(e) => handleValueChange(index, e.target.value)}
-                    />
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleRemovePair(index)}
-                    className="text-destructive hover:text-destructive"
-                  >
-                    <Icons.trash className="size-4" />
-                  </Button>
-                </div>
-              ))}
-            </div>
-
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleAddPair}
-              className="w-full"
-            >
-              <Icons.add className="mr-2 size-4" />
-              Add Pair
-            </Button>
-
-            <Separator />
-
-            <div className="flex items-center justify-between">
-              <div className="text-sm text-muted-foreground">
-                {hasChanges && "You have unsaved changes"}
-              </div>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleCancel}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  size="sm"
-                  onClick={handleSave}
-                  disabled={updateKeyValuePairsMutation.isPending}
-                >
-                  {updateKeyValuePairsMutation.isPending ? (
-                    <>
-                      <Icons.spinner className="mr-2 size-4 animate-spin" />
-                      Saving...
-                    </>
-                  ) : (
-                    <>
-                      <Icons.save className="mr-2 size-4" />
-                      Save Changes
-                    </>
-                  )}
-                </Button>
-              </div>
-            </div>
-          </div>
-        )}
-      </CardContent>
-    </Card>
+    <KeyValuePairManager
+      value={displayData}
+      onChange={handleChange}
+      label="Additional Information"
+      description="Secure key-value pairs for extra credential details"
+      placeholder={{
+        key:
+          keyValuePairs.length === 0
+            ? "Enter key (e.g. Security Question)"
+            : "Enter key",
+        value:
+          keyValuePairs.length === 0
+            ? "Enter value (e.g. Your first pet's name)"
+            : "Enter value",
+      }}
+      validateDuplicateKeys={false}
+      disabled={isLoading}
+      credentialId={credentialId}
+    />
   )
 }

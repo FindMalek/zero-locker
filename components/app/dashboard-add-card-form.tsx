@@ -85,7 +85,11 @@ export function DashboardAddCardForm({
             <FormItem>
               <FormLabel>Card Name</FormLabel>
               <FormControl>
-                <Input {...field} placeholder="e.g., Chase Sapphire" autoComplete="off" />
+                <Input
+                  {...field}
+                  placeholder="e.g., Chase Sapphire"
+                  autoComplete="off"
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -99,7 +103,11 @@ export function DashboardAddCardForm({
             <FormItem>
               <FormLabel>Description</FormLabel>
               <FormControl>
-                <Input {...field} placeholder="e.g., Work card" autoComplete="off" />
+                <Input
+                  {...field}
+                  placeholder="e.g., Work card"
+                  autoComplete="off"
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
