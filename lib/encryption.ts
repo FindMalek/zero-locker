@@ -1,6 +1,15 @@
 // Check if we're in Node.js or browser environment
 const isNode = typeof window === "undefined"
 
+// Secure ID generation utility for key-value pairs
+export function generateSecureId(prefix: string = "kv"): string {
+  if (typeof crypto !== "undefined" && crypto.randomUUID) {
+    return `${prefix}_${crypto.randomUUID()}`
+  }
+  // Fallback for environments without crypto.randomUUID
+  return `${prefix}_${Math.random().toString(36).substring(2)}_${Date.now().toString(36)}`
+}
+
 // Generate a random encryption key
 export async function generateEncryptionKey(): Promise<CryptoKey | string> {
   if (isNode) {

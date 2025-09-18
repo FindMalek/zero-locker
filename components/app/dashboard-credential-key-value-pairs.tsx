@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import {
   useCredentialKeyValuePairs,
   useCredentialKeyValuePairsWithValues,
@@ -49,13 +49,26 @@ export function CredentialKeyValuePairs({
   const displayData: KeyValuePair[] = useMemo(() => {
     if (isEditing) {
       // Use local editing data when in edit mode
-      return editingData.length > 0
-        ? editingData
-        : keyValuePairsWithValues.length > 0
-          ? keyValuePairsWithValues
-          : [{ id: `temp_${credentialId}_${Date.now()}`, key: "", value: "" }]
+      if (editingData.length > 0) {
+        return editingData
+      }
+
+      if (keyValuePairsWithValues.length > 0) {
+        return keyValuePairsWithValues
+      }
+
+      // Default empty row for new entries
+      return [
+        {
+          id: `temp_${credentialId}_${crypto.randomUUID?.() || Math.random().toString(36)}`,
+          key: "",
+          value: "",
+        },
+      ]
     }
-    if (!isEditing && keyValuePairs.length > 0) {
+
+    // View mode - show masked values for security
+    if (keyValuePairs.length > 0) {
       return keyValuePairs.map((kv) => ({
         id: kv.id,
         key: kv.key,
@@ -64,6 +77,8 @@ export function CredentialKeyValuePairs({
         updatedAt: kv.updatedAt,
       }))
     }
+
+    // No data available
     return []
   }, [
     isEditing,
@@ -77,7 +92,11 @@ export function CredentialKeyValuePairs({
   useEffect(() => {
     if (!isLoading && keyValuePairs.length === 0) {
       setEditingData([
-        { id: `temp_${credentialId}_${Date.now()}`, key: "", value: "" },
+        {
+          id: `temp_${credentialId}_${crypto.randomUUID?.() || Math.random().toString(36)}`,
+          key: "",
+          value: "",
+        },
       ])
       setIsEditing(true)
     }
@@ -147,26 +166,50 @@ export function CredentialKeyValuePairs({
     setEditingData([]) // Clear editing data
   }, [])
 
-  // Expose data and functions for external use (global save toolbar)
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      // @ts-expect-error - Global toolbar integration
-      window.credentialKeyValuePairs = {
-        data: isEditing ? editingData : displayData,
-        save: handleSave,
-        cancel: handleCancel,
-        hasChanges,
-        isEditing,
-      }
-    }
-  }, [
-    displayData,
-    editingData,
+  // Create a ref for external access (safer than global window)
+  const componentRef = useRef({
+    data: isEditing ? editingData : displayData,
+    save: handleSave,
+    cancel: handleCancel,
     hasChanges,
     isEditing,
-    handleSave,
-    handleCancel,
-  ])
+  })
+
+  // Update ref when values change - optimized to reduce re-renders
+  useEffect(() => {
+    componentRef.current = {
+      data: isEditing ? editingData : displayData,
+      save: handleSave,
+      cancel: handleCancel,
+      hasChanges,
+      isEditing,
+    }
+  }) // No dependencies - runs on every render but ref assignment is cheap
+
+  // TODO: Replace this with proper React context or callback props
+  // This is still not ideal but much safer than global window exposure
+  useEffect(() => {
+    const parent = document.querySelector(
+      "[data-save-toolbar-parent]"
+    ) as HTMLElement | null
+    if (parent) {
+      // Use a more type-safe approach with a known property
+      ;(
+        parent as HTMLElement & {
+          __credentialKeyValuePairs?: typeof componentRef.current
+        }
+      ).__credentialKeyValuePairs = componentRef.current
+    }
+    return () => {
+      if (parent) {
+        delete (
+          parent as HTMLElement & {
+            __credentialKeyValuePairs?: typeof componentRef.current
+          }
+        ).__credentialKeyValuePairs
+      }
+    }
+  }, []) // Empty deps - runs once on mount, cleanup on unmount
 
   if (isLoading) {
     return (

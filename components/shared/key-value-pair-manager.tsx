@@ -4,8 +4,14 @@ import { useCallback, useEffect, useState } from "react"
 import { useCredentialKeyValuePairValue } from "@/orpc/hooks/use-credentials"
 import { GenericEncryptedKeyValuePairDto } from "@/schemas/encryption/encryption"
 
-import { encryptData, exportKey, generateEncryptionKey } from "@/lib/encryption"
+import {
+  encryptData,
+  exportKey,
+  generateEncryptionKey,
+  generateSecureId,
+} from "@/lib/encryption"
 import { cn } from "@/lib/utils"
+import { useKeyValuePairs } from "@/hooks/use-key-value-pairs"
 import { useToast } from "@/hooks/use-toast"
 
 import { Icons } from "@/components/shared/icons"
@@ -23,13 +29,10 @@ export interface BaseKeyValuePair {
   id?: string
   key: string
   value: string
-  [key: string]: any // Allow additional properties
-}
-
-// Extended interface for encrypted pairs
-export interface EncryptedKeyValuePair extends BaseKeyValuePair {
-  isEncrypting?: boolean
+  createdAt?: Date
+  updatedAt?: Date
   encrypted?: boolean
+  isEncrypting?: boolean
 }
 
 // Persistence strategies
@@ -226,7 +229,7 @@ export function KeyValuePairManager<T extends BaseKeyValuePair>({
 
   const handleAddPair = useCallback(() => {
     const newPair = {
-      id: `temp_${Date.now()}_${Math.random()}`,
+      id: generateSecureId("temp"),
       key: "",
       value: "",
     } as T
@@ -237,6 +240,14 @@ export function KeyValuePairManager<T extends BaseKeyValuePair>({
 
   const handleRemovePair = useCallback(
     (index: number) => {
+      // Bounds checking
+      if (index < 0 || index >= localPairs.length) {
+        console.warn(
+          `Invalid remove index: ${index}, array length: ${localPairs.length}`
+        )
+        return
+      }
+
       const updated = localPairs.filter((_, i) => i !== index)
       setLocalPairs(updated)
       onChange(updated)
@@ -246,6 +257,14 @@ export function KeyValuePairManager<T extends BaseKeyValuePair>({
 
   const handleKeyChange = useCallback(
     (index: number, newKey: string) => {
+      // Bounds checking
+      if (index < 0 || index >= localPairs.length) {
+        console.warn(
+          `Invalid key change index: ${index}, array length: ${localPairs.length}`
+        )
+        return
+      }
+
       const updated = localPairs.map((pair, i) =>
         i === index ? { ...pair, key: newKey } : pair
       )
@@ -257,6 +276,14 @@ export function KeyValuePairManager<T extends BaseKeyValuePair>({
 
   const handleValueChange = useCallback(
     (index: number, newValue: string) => {
+      // Bounds checking
+      if (index < 0 || index >= localPairs.length) {
+        console.warn(
+          `Invalid value change index: ${index}, array length: ${localPairs.length}`
+        )
+        return
+      }
+
       const updated = localPairs.map((pair, i) =>
         i === index ? { ...pair, value: newValue } : pair
       )
@@ -268,7 +295,20 @@ export function KeyValuePairManager<T extends BaseKeyValuePair>({
 
   const handleKeyBlur = useCallback(
     (index: number) => {
+      // Bounds checking - prevent crash if index is invalid
+      if (index < 0 || index >= localPairs.length) {
+        console.warn(
+          `Invalid key blur index: ${index}, array length: ${localPairs.length}`
+        )
+        return
+      }
+
       const pair = localPairs[index]
+      if (!pair) {
+        console.warn(`No pair found at index ${index}`)
+        return
+      }
+
       if (!validateKey(pair.key, index)) {
         // Reset key on validation failure
         handleKeyChange(index, "")
@@ -280,7 +320,18 @@ export function KeyValuePairManager<T extends BaseKeyValuePair>({
   // Handle encryption on blur for encryption mode
   const handleEncryptOnBlur = useCallback(
     async (item: T, index: number) => {
-      if (!item.key.trim() || !item.value.trim() || !onEncryptedChange) {
+      if (!item.key.trim()) {
+        toast("Key cannot be empty", "error")
+        return
+      }
+
+      if (!item.value.trim()) {
+        toast("Value cannot be empty", "error")
+        return
+      }
+
+      if (!onEncryptedChange) {
+        console.warn("No encryption handler provided for encryption mode")
         return
       }
 
@@ -294,12 +345,17 @@ export function KeyValuePairManager<T extends BaseKeyValuePair>({
         // Generate encryption key and encrypt value
         const key = await generateEncryptionKey()
         const encryptResult = await encryptData(item.value, key)
-        const keyString = await exportKey(key as CryptoKey)
+
+        // Validate key is CryptoKey before export
+        if (!key || typeof key !== "object" || !("type" in key)) {
+          throw new Error("Invalid encryption key generated")
+        }
+        const keyString = await exportKey(key)
 
         const encryptedPair: GenericEncryptedKeyValuePairDto = {
           id: item.id?.startsWith("temp_")
-            ? `kv_${Date.now()}`
-            : item.id || `kv_${Date.now()}`,
+            ? generateSecureId("kv")
+            : item.id || generateSecureId("kv"),
           key: item.key,
           valueEncryption: {
             encryptedValue: encryptResult.encryptedData,
@@ -308,10 +364,12 @@ export function KeyValuePairManager<T extends BaseKeyValuePair>({
           },
         }
 
-        // Get current encrypted values
-        const currentEncrypted = (value as any[]).filter(
-          (pair: any) => pair.valueEncryption && pair.id !== item.id
-        ) as GenericEncryptedKeyValuePairDto[]
+        // Get current encrypted values - only relevant in encryption mode
+        const currentEncrypted = Array.isArray(value)
+          ? (value as unknown as GenericEncryptedKeyValuePairDto[]).filter(
+              (pair) => pair?.valueEncryption && pair.id !== item.id
+            )
+          : []
 
         // Add or update the encrypted pair
         const updatedEncrypted = [...currentEncrypted, encryptedPair]
@@ -326,7 +384,13 @@ export function KeyValuePairManager<T extends BaseKeyValuePair>({
         setLocalPairs(clearedLocal)
         onChange(clearedLocal)
       } catch (error) {
-        console.error("Failed to encrypt value:", error)
+        // Log error without sensitive details - only the error type for debugging
+        if (process.env.NODE_ENV === "development") {
+          console.error(
+            "Encryption failed:",
+            error instanceof Error ? error.message : "Unknown error"
+          )
+        }
         toast("Failed to encrypt value", "error")
 
         // Reset encrypting state
@@ -341,8 +405,19 @@ export function KeyValuePairManager<T extends BaseKeyValuePair>({
 
   const handleValueBlur = useCallback(
     async (index: number) => {
+      // Bounds checking - prevent crash if index is invalid
+      if (index < 0 || index >= localPairs.length) {
+        console.warn(
+          `Invalid value blur index: ${index}, array length: ${localPairs.length}`
+        )
+        return
+      }
+
       const pair = localPairs[index]
-      if (!pair) return
+      if (!pair) {
+        console.warn(`No pair found at index ${index}`)
+        return
+      }
 
       // Auto-encrypt on blur if enabled
       if (autoEncryptOnBlur && persistenceMode === "encryption") {
@@ -498,20 +573,17 @@ export function EncryptedKeyValueForm({
   disabled = false,
 }: EncryptedKeyValueFormProps) {
   // Convert encrypted pairs to local format for editing
-  const localValue: EncryptedKeyValuePair[] =
+  const localValue: BaseKeyValuePair[] =
     value.length === 0
       ? []
       : value.map((pair) => ({
-          id: pair.id || `temp_${Date.now()}_${Math.random()}`,
+          id: pair.id || generateSecureId("temp"),
           key: pair.key,
           value: "", // Don't display encrypted values
           encrypted: true,
         }))
 
-  const handleChange = useCallback((newValue: EncryptedKeyValuePair[]) => {
-    // For immediate state updates, we only update if there are actual changes
-    // The encryption happens in onEncryptedChange
-  }, [])
+  // No need for handleChange - encryption happens on blur, not on every keystroke
 
   const handleEncryptedChange = useCallback(
     (encrypted: GenericEncryptedKeyValuePairDto[]) => {
@@ -520,14 +592,14 @@ export function EncryptedKeyValueForm({
     [onChange]
   )
 
-  const getIsProcessing = useCallback((item: EncryptedKeyValuePair) => {
+  const getIsProcessing = useCallback((item: BaseKeyValuePair) => {
     return item.isEncrypting || false
   }, [])
 
   return (
     <KeyValuePairManager
       value={localValue}
-      onChange={handleChange}
+      onChange={() => {}} // Encryption mode doesn't need immediate onChange
       mode="single"
       persistenceMode="encryption"
       label={label}
