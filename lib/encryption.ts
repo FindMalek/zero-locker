@@ -27,12 +27,6 @@ export async function generateEncryptionKey(): Promise<CryptoKey | string> {
   )
 }
 
-// Convert string to ArrayBuffer (browser only)
-function stringToArrayBuffer(str: string): Uint8Array {
-  const encoder = new TextEncoder()
-  return encoder.encode(str)
-}
-
 // Convert ArrayBuffer to string (browser only)
 function arrayBufferToString(buffer: ArrayBuffer): string {
   const decoder = new TextDecoder()
@@ -86,7 +80,10 @@ export async function encryptData(
   const ivArray = window.crypto.getRandomValues(new Uint8Array(12))
 
   // Convert data to ArrayBuffer
-  const dataBuffer = stringToArrayBuffer(data)
+  const encoder = new TextEncoder()
+  const dataArray = encoder.encode(data)
+  const dataBuffer = new ArrayBuffer(dataArray.length)
+  new Uint8Array(dataBuffer).set(dataArray)
 
   // Encrypt the data
   const encryptedBuffer = await window.crypto.subtle.encrypt(

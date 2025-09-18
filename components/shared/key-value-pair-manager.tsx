@@ -11,7 +11,6 @@ import {
   generateSecureId,
 } from "@/lib/encryption"
 import { cn } from "@/lib/utils"
-import { useKeyValuePairs } from "@/hooks/use-key-value-pairs"
 import { useToast } from "@/hooks/use-toast"
 
 import { Icons } from "@/components/shared/icons"
@@ -100,9 +99,15 @@ function ValueInput<T extends BaseKeyValuePair>({
           disabled={disabled || isProcessing}
           className="font-mono text-xs"
           autoComplete="new-password"
+          aria-label={`Value for pair ${index + 1}`}
+          aria-describedby={`value-help-${index}`}
+          role="textbox"
         />
         {isProcessing && (
-          <div className="absolute inset-y-0 right-3 flex items-center">
+          <div
+            className="absolute inset-y-0 right-3 flex items-center"
+            aria-hidden="true"
+          >
             <Icons.spinner className="size-4 animate-spin" />
           </div>
         )}
@@ -120,9 +125,16 @@ function ValueInput<T extends BaseKeyValuePair>({
         disabled={disabled || isProcessing}
         className="font-mono text-xs"
         onEyeClick={handleEyeClick}
+        aria-label={`Value for pair ${index + 1} (masked)`}
+        aria-describedby={`value-help-${index}`}
+        role="textbox"
+        aria-readonly="true"
       />
       {(isLoadingValue || isProcessing) && (
-        <div className="absolute inset-y-0 right-16 flex items-center">
+        <div
+          className="absolute inset-y-0 right-16 flex items-center"
+          aria-hidden="true"
+        >
           <Icons.spinner className="size-4 animate-spin" />
         </div>
       )}
@@ -209,112 +221,146 @@ export function KeyValuePairManager<T extends BaseKeyValuePair>({
       const trimmedKey = key.trim()
       if (!trimmedKey) return true
 
-      const isDuplicate = localPairs.some(
-        (pair, i) =>
-          i !== currentIndex &&
-          pair.key.trim().toLowerCase() === trimmedKey.toLowerCase()
-      )
-
-      if (isDuplicate) {
-        toast(
-          "A key with this name already exists. Please use a unique key name.",
-          "error"
+      // Use functional update to get current state atomically
+      let validationResult = true
+      setLocalPairs((currentPairs) => {
+        const isDuplicate = currentPairs.some(
+          (pair, i) =>
+            i !== currentIndex &&
+            pair.key.trim().toLowerCase() === trimmedKey.toLowerCase()
         )
-        return false
-      }
-      return true
+
+        if (isDuplicate) {
+          toast(
+            "A key with this name already exists. Please use a unique key name.",
+            "error"
+          )
+          validationResult = false
+        }
+
+        return currentPairs // Don't actually change state, just check
+      })
+
+      return validationResult
     },
-    [localPairs, validateDuplicateKeys, toast]
+    [validateDuplicateKeys, toast]
   )
 
   const handleAddPair = useCallback(() => {
-    const newPair = {
-      id: generateSecureId("temp"),
-      key: "",
-      value: "",
-    } as T
-    const updated = [...localPairs, newPair]
-    setLocalPairs(updated)
-    onChange(updated)
-  }, [localPairs, onChange])
+    // Atomic state update to prevent race conditions
+    setLocalPairs((currentPairs) => {
+      const newPair = {
+        id: generateSecureId("temp"),
+        key: "",
+        value: "",
+      } as T
+      const updated = [...currentPairs, newPair]
+
+      // Trigger onChange with the new state
+      onChange(updated)
+      return updated
+    })
+  }, [onChange])
 
   const handleRemovePair = useCallback(
     (index: number) => {
-      // Bounds checking
-      if (index < 0 || index >= localPairs.length) {
-        console.warn(
-          `Invalid remove index: ${index}, array length: ${localPairs.length}`
-        )
-        return
-      }
+      // Atomic state update to prevent race conditions
+      setLocalPairs((currentPairs) => {
+        // Bounds checking with current state
+        if (index < 0 || index >= currentPairs.length) {
+          console.warn(
+            `Invalid remove index: ${index}, array length: ${currentPairs.length}`
+          )
+          return currentPairs
+        }
 
-      const updated = localPairs.filter((_, i) => i !== index)
-      setLocalPairs(updated)
-      onChange(updated)
+        const updated = currentPairs.filter((_, i) => i !== index)
+
+        // Trigger onChange with the new state
+        onChange(updated)
+        return updated
+      })
     },
-    [localPairs, onChange]
+    [onChange]
   )
 
   const handleKeyChange = useCallback(
     (index: number, newKey: string) => {
-      // Bounds checking
-      if (index < 0 || index >= localPairs.length) {
-        console.warn(
-          `Invalid key change index: ${index}, array length: ${localPairs.length}`
-        )
-        return
-      }
+      // Atomic state update to prevent race conditions
+      setLocalPairs((currentPairs) => {
+        // Bounds checking with current state
+        if (index < 0 || index >= currentPairs.length) {
+          console.warn(
+            `Invalid key change index: ${index}, array length: ${currentPairs.length}`
+          )
+          return currentPairs
+        }
 
-      const updated = localPairs.map((pair, i) =>
-        i === index ? { ...pair, key: newKey } : pair
-      )
-      setLocalPairs(updated)
-      onChange(updated)
+        const updated = currentPairs.map((pair, i) =>
+          i === index ? { ...pair, key: newKey } : pair
+        )
+
+        // Trigger onChange with the new state
+        onChange(updated)
+        return updated
+      })
     },
-    [localPairs, onChange]
+    [onChange]
   )
 
   const handleValueChange = useCallback(
     (index: number, newValue: string) => {
-      // Bounds checking
-      if (index < 0 || index >= localPairs.length) {
-        console.warn(
-          `Invalid value change index: ${index}, array length: ${localPairs.length}`
-        )
-        return
-      }
+      // Atomic state update to prevent race conditions
+      setLocalPairs((currentPairs) => {
+        // Bounds checking with current state
+        if (index < 0 || index >= currentPairs.length) {
+          console.warn(
+            `Invalid value change index: ${index}, array length: ${currentPairs.length}`
+          )
+          return currentPairs
+        }
 
-      const updated = localPairs.map((pair, i) =>
-        i === index ? { ...pair, value: newValue } : pair
-      )
-      setLocalPairs(updated)
-      onChange(updated)
+        const updated = currentPairs.map((pair, i) =>
+          i === index ? { ...pair, value: newValue } : pair
+        )
+
+        // Trigger onChange with the new state
+        onChange(updated)
+        return updated
+      })
     },
-    [localPairs, onChange]
+    [onChange]
   )
 
   const handleKeyBlur = useCallback(
     (index: number) => {
-      // Bounds checking - prevent crash if index is invalid
-      if (index < 0 || index >= localPairs.length) {
-        console.warn(
-          `Invalid key blur index: ${index}, array length: ${localPairs.length}`
-        )
-        return
-      }
+      // Use atomic access to current state
+      setLocalPairs((currentPairs) => {
+        // Bounds checking with current state
+        if (index < 0 || index >= currentPairs.length) {
+          console.warn(
+            `Invalid key blur index: ${index}, array length: ${currentPairs.length}`
+          )
+          return currentPairs
+        }
 
-      const pair = localPairs[index]
-      if (!pair) {
-        console.warn(`No pair found at index ${index}`)
-        return
-      }
+        const pair = currentPairs[index]
+        if (!pair) {
+          console.warn(`No pair found at index ${index}`)
+          return currentPairs
+        }
 
-      if (!validateKey(pair.key, index)) {
-        // Reset key on validation failure
-        handleKeyChange(index, "")
-      }
+        if (!validateKey(pair.key, index)) {
+          // Reset key on validation failure - atomic update
+          return currentPairs.map((p, i) =>
+            i === index ? { ...p, key: "" } : p
+          )
+        }
+
+        return currentPairs // No changes needed
+      })
     },
-    [localPairs, validateKey, handleKeyChange]
+    [validateKey]
   )
 
   // Handle encryption on blur for encryption mode
@@ -336,11 +382,12 @@ export function KeyValuePairManager<T extends BaseKeyValuePair>({
       }
 
       try {
-        // Set encrypting state
-        const updated = localPairs.map((pair, i) =>
-          i === index ? ({ ...pair, isEncrypting: true } as T) : pair
+        // Set encrypting state atomically
+        setLocalPairs((currentPairs) =>
+          currentPairs.map((pair, i) =>
+            i === index ? ({ ...pair, isEncrypting: true } as T) : pair
+          )
         )
-        setLocalPairs(updated)
 
         // Generate encryption key and encrypt value
         const key = await generateEncryptionKey()
@@ -375,14 +422,18 @@ export function KeyValuePairManager<T extends BaseKeyValuePair>({
         const updatedEncrypted = [...currentEncrypted, encryptedPair]
         onEncryptedChange(updatedEncrypted)
 
-        // Clear the local value but keep the key
-        const clearedLocal = localPairs.map((pair, i) =>
-          i === index
-            ? ({ ...pair, value: "", isEncrypting: false } as T)
-            : pair
-        )
-        setLocalPairs(clearedLocal)
-        onChange(clearedLocal)
+        // Clear the local value but keep the key - atomic state update
+        setLocalPairs((currentPairs) => {
+          const clearedLocal = currentPairs.map((pair, i) =>
+            i === index
+              ? ({ ...pair, value: "", isEncrypting: false } as T)
+              : pair
+          )
+
+          // Trigger onChange with the new state
+          onChange(clearedLocal)
+          return clearedLocal
+        })
       } catch (error) {
         // Log error without sensitive details - only the error type for debugging
         if (process.env.NODE_ENV === "development") {
@@ -393,11 +444,12 @@ export function KeyValuePairManager<T extends BaseKeyValuePair>({
         }
         toast("Failed to encrypt value", "error")
 
-        // Reset encrypting state
-        const resetLocal = localPairs.map((pair, i) =>
-          i === index ? ({ ...pair, isEncrypting: false } as T) : pair
+        // Reset encrypting state atomically
+        setLocalPairs((currentPairs) =>
+          currentPairs.map((pair, i) =>
+            i === index ? ({ ...pair, isEncrypting: false } as T) : pair
+          )
         )
-        setLocalPairs(resetLocal)
       }
     },
     [localPairs, value, onEncryptedChange, onChange, toast]
@@ -405,34 +457,64 @@ export function KeyValuePairManager<T extends BaseKeyValuePair>({
 
   const handleValueBlur = useCallback(
     async (index: number) => {
-      // Bounds checking - prevent crash if index is invalid
-      if (index < 0 || index >= localPairs.length) {
-        console.warn(
-          `Invalid value blur index: ${index}, array length: ${localPairs.length}`
-        )
-        return
-      }
+      // Get current state atomically to prevent race conditions
+      let currentPair: T | null = null
 
-      const pair = localPairs[index]
-      if (!pair) {
-        console.warn(`No pair found at index ${index}`)
-        return
-      }
+      setLocalPairs((currentPairs) => {
+        // Bounds checking with current state
+        if (index < 0 || index >= currentPairs.length) {
+          console.warn(
+            `Invalid value blur index: ${index}, array length: ${currentPairs.length}`
+          )
+          return currentPairs
+        }
+
+        const pair = currentPairs[index]
+        if (!pair) {
+          console.warn(`No pair found at index ${index}`)
+          return currentPairs
+        }
+
+        currentPair = pair
+        return currentPairs // Don't change state here
+      })
 
       // Auto-encrypt on blur if enabled
-      if (autoEncryptOnBlur && persistenceMode === "encryption") {
-        await handleEncryptOnBlur(pair, index)
+      if (
+        currentPair &&
+        autoEncryptOnBlur &&
+        persistenceMode === "encryption"
+      ) {
+        await handleEncryptOnBlur(currentPair, index)
       }
     },
-    [localPairs, autoEncryptOnBlur, persistenceMode, handleEncryptOnBlur]
+    [autoEncryptOnBlur, persistenceMode, handleEncryptOnBlur]
   )
 
   // Determine current mode state
   const shouldShowEditMode =
     mode === "single" || (mode === "edit-view" && isEditing)
 
+  // Keyboard navigation handler
+  const handleKeyDown = useCallback(
+    (event: React.KeyboardEvent) => {
+      // Allow users to add new pairs with Ctrl+Enter
+      if (event.ctrlKey && event.key === "Enter" && shouldShowEditMode) {
+        event.preventDefault()
+        handleAddPair()
+      }
+    },
+    [shouldShowEditMode, handleAddPair]
+  )
+
   return (
-    <div className={cn("space-y-2", className)}>
+    <div className={cn("space-y-2", className)} onKeyDown={handleKeyDown}>
+      {/* Screen reader description */}
+      <div id="kv-pairs-description" className="sr-only">
+        {description}. Use Tab to navigate between fields. Use Ctrl+Enter to add
+        a new pair in edit mode.
+      </div>
+
       {/* Header */}
       <div className="flex items-center gap-2">
         <Label className="text-sm font-medium">{label}</Label>
@@ -452,16 +534,26 @@ export function KeyValuePairManager<T extends BaseKeyValuePair>({
               size="sm"
               onClick={onEnterEditMode}
               className="ml-auto"
+              aria-label="Edit key-value pairs"
+              title="Edit existing key-value pairs"
             >
-              <Icons.pencil className="mr-1 size-3" />
+              <Icons.pencil className="mr-1 size-3" aria-hidden="true" />
               Edit
             </Button>
           )}
       </div>
 
       {/* Content */}
-      <div className="overflow-hidden rounded-lg border">
-        <div className="space-y-0">
+      <div
+        className="overflow-hidden rounded-lg border"
+        role="region"
+        aria-label={`${label} data entry form`}
+      >
+        <div
+          className="space-y-0"
+          role="group"
+          aria-describedby="kv-pairs-description"
+        >
           {localPairs.map((pair, index) => (
             <div
               key={pair.id || index}
@@ -477,6 +569,10 @@ export function KeyValuePairManager<T extends BaseKeyValuePair>({
                       Key
                     </Label>
                   )}
+                  <div id={`key-help-${index}`} className="sr-only">
+                    Enter a unique key name for this pair. Keys must be unique
+                    within the form.
+                  </div>
                   <Input
                     placeholder={placeholder.key}
                     value={pair.key}
@@ -486,6 +582,9 @@ export function KeyValuePairManager<T extends BaseKeyValuePair>({
                     disabled={disabled}
                     className="font-mono text-xs"
                     autoComplete="off"
+                    aria-label={`Key for pair ${index + 1}`}
+                    aria-describedby={`key-help-${index}`}
+                    role="textbox"
                   />
                 </div>
                 <div>
@@ -494,6 +593,11 @@ export function KeyValuePairManager<T extends BaseKeyValuePair>({
                       Value
                     </Label>
                   )}
+                  <div id={`value-help-${index}`} className="sr-only">
+                    {shouldShowEditMode
+                      ? "Enter the value for this pair. Values are encrypted when saved."
+                      : "This value is masked for security. Click the eye icon to reveal it."}
+                  </div>
                   <ValueInput
                     pair={pair}
                     index={index}
@@ -517,8 +621,11 @@ export function KeyValuePairManager<T extends BaseKeyValuePair>({
                     onClick={() => handleRemovePair(index)}
                     disabled={disabled}
                     className="text-muted-foreground hover:text-destructive flex flex-shrink-0 items-center justify-center"
+                    aria-label={`Remove key-value pair ${index + 1}`}
+                    title={`Remove pair ${index + 1}`}
                   >
-                    <Icons.trash className="size-4" />
+                    <Icons.trash className="size-4" aria-hidden="true" />
+                    <span className="sr-only">Remove pair</span>
                   </Button>
                 </div>
               )}
@@ -534,8 +641,10 @@ export function KeyValuePairManager<T extends BaseKeyValuePair>({
                 onClick={handleAddPair}
                 disabled={disabled}
                 className="text-muted-foreground hover:text-foreground flex w-full items-center gap-2"
+                aria-label="Add another key-value pair"
+                title="Add another key-value pair"
               >
-                <Icons.add className="size-4" />
+                <Icons.add className="size-4" aria-hidden="true" />
                 Add Another
               </Button>
             </div>

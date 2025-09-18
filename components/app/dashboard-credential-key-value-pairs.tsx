@@ -8,7 +8,6 @@ import {
 } from "@/orpc/hooks/use-credentials"
 
 import { handleErrors } from "@/lib/utils"
-import { useToast } from "@/hooks/use-toast"
 
 import {
   KeyValuePairManager,
@@ -187,23 +186,31 @@ export function CredentialKeyValuePairs({
   }) // No dependencies - runs on every render but ref assignment is cheap
 
   // TODO: Replace this with proper React context or callback props
-  // This is still not ideal but much safer than global window exposure
+  // Memory-safe DOM integration with proper cleanup tracking
   useEffect(() => {
-    const parent = document.querySelector(
-      "[data-save-toolbar-parent]"
-    ) as HTMLElement | null
-    if (parent) {
-      // Use a more type-safe approach with a known property
-      ;(
-        parent as HTMLElement & {
-          __credentialKeyValuePairs?: typeof componentRef.current
-        }
-      ).__credentialKeyValuePairs = componentRef.current
+    let targetElement: HTMLElement | null = null
+
+    const setupToolbarIntegration = () => {
+      targetElement = document.querySelector(
+        "[data-save-toolbar-parent]"
+      ) as HTMLElement | null
+      if (targetElement) {
+        ;(
+          targetElement as HTMLElement & {
+            __credentialKeyValuePairs?: typeof componentRef.current
+          }
+        ).__credentialKeyValuePairs = componentRef.current
+      }
     }
+
+    // Set up integration
+    setupToolbarIntegration()
+
+    // Cleanup function that specifically targets the element we modified
     return () => {
-      if (parent) {
+      if (targetElement) {
         delete (
-          parent as HTMLElement & {
+          targetElement as HTMLElement & {
             __credentialKeyValuePairs?: typeof componentRef.current
           }
         ).__credentialKeyValuePairs

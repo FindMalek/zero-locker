@@ -47,6 +47,16 @@ export function useKeyValuePairs<T extends BaseKeyValuePair>({
   // Encryption state
   const [encryptingItems, setEncryptingItems] = useState<Set<string>>(new Set())
 
+  // Cleanup on unmount to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      // Clear all cached data when component unmounts
+      setFetchedValues(new Map())
+      setFetchingItems(new Set())
+      setEncryptingItems(new Set())
+    }
+  }, [])
+
   // Sync with external value changes
   useEffect(() => {
     if (initialValue.length === 0) {
@@ -192,18 +202,26 @@ export function useKeyValuePairs<T extends BaseKeyValuePair>({
       }
 
       const itemId = item.id || generateSecureId("temp")
+      let isCancelled = false
 
       try {
         // Set encrypting state
-        setEncryptingItems((prev) => new Set(prev).add(itemId))
+        setEncryptingItems((prev) => {
+          if (isCancelled) return prev
+          return new Set(prev).add(itemId)
+        })
 
         // Generate encryption key and encrypt value
         const key = await generateEncryptionKey()
+        if (isCancelled) return { success: false }
+
         const encryptResult = await encryptData(item.value, key)
+        if (isCancelled) return { success: false }
 
         // Validate key is CryptoKey before export (browser only)
         if (typeof key === "object" && key && "type" in key) {
           const keyString = await exportKey(key)
+          if (isCancelled) return { success: false }
 
           const encryptedPair: GenericEncryptedKeyValuePairDto = {
             id: item.id?.startsWith("temp_")
@@ -223,7 +241,9 @@ export function useKeyValuePairs<T extends BaseKeyValuePair>({
           )
           const updatedEncrypted = [...currentEncrypted, encryptedPair]
 
-          onEncryptedChange(updatedEncrypted)
+          if (!isCancelled) {
+            onEncryptedChange(updatedEncrypted)
+          }
 
           // Clear encrypting state
           setEncryptingItems((prev) => {
@@ -237,21 +257,23 @@ export function useKeyValuePairs<T extends BaseKeyValuePair>({
           throw new Error("Invalid encryption key generated")
         }
       } catch (error) {
-        // Clear encrypting state
-        setEncryptingItems((prev) => {
-          const newSet = new Set(prev)
-          newSet.delete(itemId)
-          return newSet
-        })
+        // Clear encrypting state only if not cancelled
+        if (!isCancelled) {
+          setEncryptingItems((prev) => {
+            const newSet = new Set(prev)
+            newSet.delete(itemId)
+            return newSet
+          })
 
-        // Log error without sensitive details
-        if (process.env.NODE_ENV === "development") {
-          console.error(
-            "Encryption failed:",
-            error instanceof Error ? error.message : "Unknown error"
-          )
+          // Log error without sensitive details
+          if (process.env.NODE_ENV === "development") {
+            console.error(
+              "Encryption failed:",
+              error instanceof Error ? error.message : "Unknown error"
+            )
+          }
+          onError?.("Failed to encrypt value")
         }
-        onError?.("Failed to encrypt value")
 
         return { success: false }
       }
@@ -262,7 +284,14 @@ export function useKeyValuePairs<T extends BaseKeyValuePair>({
   const clearCache = useCallback(() => {
     setFetchedValues(new Map())
     setFetchingItems(new Set())
+    setEncryptingItems(new Set())
   }, [])
+
+  const cleanup = useCallback(() => {
+    // Comprehensive cleanup for component unmount
+    clearCache()
+    setPairs([])
+  }, [clearCache])
 
   return {
     // State
@@ -283,10 +312,13 @@ export function useKeyValuePairs<T extends BaseKeyValuePair>({
     getValue,
     requestFetch,
     setFetchedValue,
-    clearCache,
 
     // Encryption
     isEncrypting,
     encryptItem,
+
+    // Cleanup
+    clearCache,
+    cleanup,
   }
 }
