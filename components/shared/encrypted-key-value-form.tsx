@@ -1,22 +1,13 @@
 "use client"
 
-import { useState } from "react"
+import { useCallback } from "react"
 import { GenericEncryptedKeyValuePairDto } from "@/schemas/encryption/encryption"
-
 import { encryptData, exportKey, generateEncryptionKey } from "@/lib/encryption"
-import { cn } from "@/lib/utils"
-import { useToast } from "@/hooks/use-toast"
+import { KeyValuePairManager, type BaseKeyValuePair } from "./key-value-pair-manager"
 
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip"
-
-import { Icons } from "./icons"
+interface LocalKeyValuePair extends BaseKeyValuePair {
+  isEncrypting?: boolean
+}
 
 interface EncryptedKeyValueFormProps {
   value: GenericEncryptedKeyValuePairDto[]
@@ -37,130 +28,41 @@ export function EncryptedKeyValueForm({
   label = "Additional Information",
   description = "Store sensitive key-value pairs with encrypted values",
   placeholder = {
-    key: "Enter key ",
+    key: "Enter key",
     value: "Enter value",
   },
   className,
   disabled = false,
 }: EncryptedKeyValueFormProps) {
-  const { toast } = useToast()
-  const [localPairs, setLocalPairs] = useState<
-    Array<{
-      id: string
-      key: string
-      value: string
-      isEncrypting?: boolean
-    }>
-  >(() => {
-    if (value.length === 0) {
-      return [{ id: `temp_${Date.now()}`, key: "", value: "" }]
-    }
-    return value.map((pair) => ({
-      id: pair.id || `temp_${Date.now()}_${Math.random()}`,
-      key: pair.key,
-      value: "", // Don't display encrypted values
-    }))
-  })
+  
+  // Convert encrypted pairs to local format for editing
+  const localValue: LocalKeyValuePair[] = value.length === 0 
+    ? []
+    : value.map((pair) => ({
+        id: pair.id || `temp_${Date.now()}_${Math.random()}`,
+        key: pair.key,
+        value: "", // Don't display encrypted values
+      }))
 
-  const handleAddPair = () => {
-    const newPair = {
-      id: `temp_${Date.now()}_${Math.random()}`,
-      key: "",
-      value: "",
-    }
-    setLocalPairs([...localPairs, newPair])
-  }
+  const handleChange = useCallback((newValue: LocalKeyValuePair[]) => {
+    // For immediate state updates, we only update if there are actual changes
+    // The encryption happens in handleItemBlur
+  }, [])
 
-  const handleRemovePair = async (id: string) => {
-    const updatedLocal = localPairs.filter((pair) => pair.id !== id)
-    setLocalPairs(updatedLocal)
-
-    // Update the parent with encrypted values
-    const updatedValue = value.filter((pair) => pair.id !== id)
-    onChange(updatedValue)
-  }
-
-  const handleKeyChange = (id: string, newKey: string) => {
-    // Always update the local state first for responsive typing
-    setLocalPairs((prev) =>
-      prev.map((pair) => (pair.id === id ? { ...pair, key: newKey } : pair))
-    )
-  }
-
-  const handleValueChange = (id: string, newValue: string) => {
-    setLocalPairs((prev) =>
-      prev.map((pair) => (pair.id === id ? { ...pair, value: newValue } : pair))
-    )
-  }
-
-  const handleKeyBlur = (id: string) => {
-    const localPair = localPairs.find((pair) => pair.id === id)
-    if (!localPair) return
-
-    // Check for duplicates only on blur (when user finishes typing)
-    const trimmedKey = localPair.key.trim()
-    if (trimmedKey) {
-      const isDuplicate = localPairs.some(
-        (pair) =>
-          pair.id !== id &&
-          pair.key.trim().toLowerCase() === trimmedKey.toLowerCase()
-      )
-
-      if (isDuplicate) {
-        toast(
-          "A key with this name already exists. Please use a unique key name.",
-          "error"
-        )
-        // Reset the key to empty to force user to choose a different one
-        setLocalPairs((prev) =>
-          prev.map((pair) => (pair.id === id ? { ...pair, key: "" } : pair))
-        )
-        return
-      }
-    }
-
-    // Original encryption logic: encrypt if both key and value are present
-    if (localPair.key.trim() && localPair.value.trim()) {
-      encryptAndUpdatePair(id)
-    }
-  }
-
-  const handlePaste = (
-    id: string,
-    field: "key" | "value",
-    pastedText: string
-  ) => {
-    if (field === "key") {
-      handleKeyChange(id, pastedText)
-    } else {
-      handleValueChange(id, pastedText)
-    }
-  }
-
-  const encryptAndUpdatePair = async (id: string) => {
-    const localPair = localPairs.find((pair) => pair.id === id)
-    if (!localPair || !localPair.key.trim() || !localPair.value.trim()) {
+  const handleItemBlur = useCallback(async (item: LocalKeyValuePair, index: number) => {
+    if (!item.key.trim() || !item.value.trim()) {
       return
     }
 
     try {
-      // Set encrypting state
-      setLocalPairs((prev) =>
-        prev.map((pair) =>
-          pair.id === id ? { ...pair, isEncrypting: true } : pair
-        )
-      )
-
       // Generate encryption key and encrypt value
       const key = await generateEncryptionKey()
-      const encryptResult = await encryptData(localPair.value, key)
+      const encryptResult = await encryptData(item.value, key)
       const keyString = await exportKey(key as CryptoKey)
 
       const encryptedPair: GenericEncryptedKeyValuePairDto = {
-        id: localPair.id.startsWith("temp_")
-          ? `kv_${Date.now()}`
-          : localPair.id,
-        key: localPair.key,
+        id: item.id.startsWith("temp_") ? `kv_${Date.now()}` : item.id,
+        key: item.key,
         valueEncryption: {
           encryptedValue: encryptResult.encryptedData,
           iv: encryptResult.iv,
@@ -169,7 +71,7 @@ export function EncryptedKeyValueForm({
       }
 
       // Update the parent with the new encrypted pair
-      const existingIndex = value.findIndex((pair) => pair.id === id)
+      const existingIndex = value.findIndex((pair) => pair.id === item.id)
       let updatedValue: GenericEncryptedKeyValuePairDto[]
 
       if (existingIndex >= 0) {
@@ -180,165 +82,29 @@ export function EncryptedKeyValueForm({
       }
 
       onChange(updatedValue)
-
-      // Update local state - clear the value and update ID if it was temporary
-      setLocalPairs((prev) =>
-        prev.map((pair) =>
-          pair.id === id
-            ? {
-                ...pair,
-                id: encryptedPair.id || pair.id,
-                value: "", // Clear the value after encryption
-                isEncrypting: false,
-              }
-            : pair
-        )
-      )
     } catch (error) {
       console.error("Failed to encrypt value:", error)
-
-      // Reset encrypting state on error
-      setLocalPairs((prev) =>
-        prev.map((pair) =>
-          pair.id === id ? { ...pair, isEncrypting: false } : pair
-        )
-      )
     }
-  }
+  }, [value, onChange])
 
-  const getEncryptedPair = (
-    id: string
-  ): GenericEncryptedKeyValuePairDto | undefined => {
-    return value.find((pair) => pair.id === id)
-  }
-
-  const handleValueBlur = (id: string) => {
-    const localPair = localPairs.find((pair) => pair.id === id)
-    if (localPair?.key.trim() && localPair?.value.trim()) {
-      encryptAndUpdatePair(id)
-    }
-  }
+  const getIsProcessing = useCallback((item: LocalKeyValuePair) => {
+    return item.isEncrypting || false
+  }, [])
 
   return (
-    <div className={cn("space-y-2", className)}>
-      <div className="flex items-center gap-2">
-        <Label className="text-sm font-medium">{label}</Label>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Icons.helpCircle className="text-muted-foreground size-3" />
-          </TooltipTrigger>
-          <TooltipContent>
-            <p>{description}</p>
-          </TooltipContent>
-        </Tooltip>
-      </div>
-
-      <div className="overflow-hidden rounded-lg border">
-        <div className="space-y-0">
-          {localPairs.map((localPair, index) => {
-            const encryptedPair = getEncryptedPair(localPair.id)
-            const hasEncryptedValue = Boolean(encryptedPair)
-
-            return (
-              <div
-                key={localPair.id}
-                className={cn(
-                  "flex items-start gap-2 p-3 sm:gap-3 sm:p-4",
-                  index > 0 && "border-border border-t"
-                )}
-              >
-                <div className="grid flex-1 grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-3">
-                  <div>
-                    {index === 0 && (
-                      <Label className="text-muted-foreground mb-2 block text-xs uppercase tracking-wide">
-                        Key
-                      </Label>
-                    )}
-                    <Input
-                      placeholder={placeholder.key}
-                      value={localPair.key}
-                      onChange={(e) =>
-                        handleKeyChange(localPair.id, e.target.value)
-                      }
-                      onBlur={() => handleKeyBlur(localPair.id)}
-                      onPaste={(e) => {
-                        e.preventDefault()
-                        const pastedText = e.clipboardData.getData("text")
-                        handlePaste(localPair.id, "key", pastedText)
-                      }}
-                      disabled={disabled || localPair.isEncrypting}
-                      className="font-mono text-xs"
-                      autoComplete="off"
-                    />
-                  </div>
-                  <div>
-                    {index === 0 && (
-                      <Label className="text-muted-foreground mb-2 block text-xs uppercase tracking-wide">
-                        Value
-                      </Label>
-                    )}
-                    <div className="flex gap-2">
-                      <div className="relative flex-1">
-                        <Input
-                          variant="password"
-                          placeholder={
-                            hasEncryptedValue
-                              ? "Value encrypted and saved"
-                              : placeholder.value
-                          }
-                          value={localPair.value}
-                          onChange={(e) =>
-                            handleValueChange(localPair.id, e.target.value)
-                          }
-                          onBlur={() => handleValueBlur(localPair.id)}
-                          onPaste={(e) => {
-                            e.preventDefault()
-                            const pastedText = e.clipboardData.getData("text")
-                            handlePaste(localPair.id, "value", pastedText)
-                          }}
-                          disabled={disabled || localPair.isEncrypting}
-                          className={cn("pr-8 font-mono text-xs")}
-                          autoComplete="new-password"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {localPairs.length > 1 && (
-                  <div className={cn("flex", index === 0 ? "pt-6" : "pt-0")}>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleRemovePair(localPair.id)}
-                      disabled={disabled || localPair.isEncrypting}
-                      title="Remove this key-value pair"
-                      className="text-muted-foreground hover:text-destructive flex flex-shrink-0 items-center justify-center"
-                    >
-                      <Icons.trash className="size-4" />
-                    </Button>
-                  </div>
-                )}
-              </div>
-            )
-          })}
-
-          <div className="border-border border-t p-3 sm:p-4">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={handleAddPair}
-              disabled={disabled}
-              className="text-muted-foreground hover:text-foreground flex w-full items-center gap-2"
-            >
-              <Icons.add className="size-4" />
-              Add Another
-            </Button>
-          </div>
-        </div>
-      </div>
-    </div>
+    <KeyValuePairManager
+      value={localValue}
+      onChange={handleChange}
+      mode="single"
+      label={label}
+      description={description}
+      placeholder={placeholder}
+      className={className}
+      disabled={disabled}
+      validateDuplicateKeys={true}
+      autoProcessOnBlur={true}
+      onItemBlur={handleItemBlur}
+      getIsProcessing={getIsProcessing}
+    />
   )
 }
