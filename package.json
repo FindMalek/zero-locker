@@ -18,7 +18,12 @@
     "db:deploy": "prisma migrate deploy",
     "db:format": "prisma format",
     "db:reset": "prisma migrate reset",
-    "db:update": "pnpm i --save-dev prisma@latest && pnpm i @prisma/client@latest && pnpm i @prisma/adapter-neon@latest"
+    "db:update": "pnpm i --save-dev prisma@latest && pnpm i @prisma/client@latest && pnpm i @prisma/adapter-neon@latest",
+    "docker:up": "docker-compose up -d postgres",
+    "docker:down": "docker-compose down",
+    "docker:logs": "docker-compose logs postgres",
+    "docker:psql": "docker-compose exec postgres psql -U postgres -d zerolocker",
+    "docker:reset": "docker-compose down -v && docker-compose up -d postgres"
   },
   "prisma": {
     "schema": "./prisma/schema/",
