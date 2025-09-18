@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import {
   useCredentialKeyValuePairs,
   useCredentialKeyValuePairsWithValues,
@@ -28,7 +28,6 @@ export function CredentialKeyValuePairs({
   credentialId,
   onFormChange,
 }: CredentialKeyValuePairsProps) {
-  const [isEditing, setIsEditing] = useState(false)
   const [hasChanges, setHasChanges] = useState(false)
   const [editingData, setEditingData] = useState<KeyValuePair[]>([])
 
@@ -38,89 +37,45 @@ export function CredentialKeyValuePairs({
     error,
   } = useCredentialKeyValuePairs(credentialId)
 
-  // Load values when entering edit mode
+  // Always load values since we're always in edit mode
   const { data: keyValuePairsWithValues = [], isLoading: isLoadingValues } =
-    useCredentialKeyValuePairsWithValues(credentialId, isEditing)
+    useCredentialKeyValuePairsWithValues(credentialId, true)
 
   const updateKeyValuePairsMutation = useUpdateCredentialKeyValuePairs()
 
-  // Prepare data for display
+  // Prepare data for display - always in edit mode
   const displayData: KeyValuePair[] = useMemo(() => {
-    if (isEditing) {
-      // Use local editing data when in edit mode
-      if (editingData.length > 0) {
-        return editingData
-      }
-
-      if (keyValuePairsWithValues.length > 0) {
-        return keyValuePairsWithValues
-      }
-
-      // Default empty row for new entries
-      return [
-        {
-          id: `temp_${credentialId}_${crypto.randomUUID?.() || Math.random().toString(36)}`,
-          key: "",
-          value: "",
-        },
-      ]
+    // Use local editing data when available
+    if (editingData.length > 0) {
+      return editingData
     }
 
-    // View mode - show masked values for security
-    if (keyValuePairs.length > 0) {
-      return keyValuePairs.map((kv) => ({
-        id: kv.id,
-        key: kv.key,
-        value: "••••••••", // Show masked placeholder in view mode
-        createdAt: kv.createdAt,
-        updatedAt: kv.updatedAt,
-      }))
+    // Use server data with values if available
+    if (keyValuePairsWithValues.length > 0) {
+      return keyValuePairsWithValues
     }
 
-    // No data available
-    return []
-  }, [
-    isEditing,
-    keyValuePairs,
-    keyValuePairsWithValues,
-    editingData,
-    credentialId,
-  ])
+    // Default empty row for new entries
+    return [
+      {
+        id: `temp_${credentialId}_${crypto.randomUUID?.() || Math.random().toString(36)}`,
+        key: "",
+        value: "",
+      },
+    ]
+  }, [keyValuePairsWithValues, editingData, credentialId])
 
-  // Auto-enter edit mode for empty state
+  // Initialize editing data with server data when available
   useEffect(() => {
-    if (!isLoading && keyValuePairs.length === 0) {
-      setEditingData([
-        {
-          id: `temp_${credentialId}_${crypto.randomUUID?.() || Math.random().toString(36)}`,
-          key: "",
-          value: "",
-        },
-      ])
-      setIsEditing(true)
-    }
-  }, [keyValuePairs.length, isLoading, credentialId])
-
-  // Initialize editing data when entering edit mode and server data loads
-  useEffect(() => {
-    if (
-      isEditing &&
-      keyValuePairsWithValues.length > 0 &&
-      editingData.length === 0
-    ) {
+    if (keyValuePairsWithValues.length > 0 && editingData.length === 0) {
       setEditingData(keyValuePairsWithValues)
     }
-  }, [isEditing, keyValuePairsWithValues, editingData.length])
+  }, [keyValuePairsWithValues, editingData.length])
 
   // Notify parent about form changes
   useEffect(() => {
     onFormChange?.(hasChanges)
   }, [hasChanges, onFormChange])
-
-  const handleEnterEditMode = useCallback(() => {
-    // Don't clear existing data - wait for the server data to load
-    setIsEditing(true)
-  }, [])
 
   const handleChange = useCallback((newValue: KeyValuePair[]) => {
     setEditingData(newValue)
@@ -128,8 +83,6 @@ export function CredentialKeyValuePairs({
   }, [])
 
   const handleSave = useCallback(async () => {
-    if (!isEditing) return { success: true }
-
     try {
       // Filter valid pairs from editing data
       const validPairs = editingData.filter(
@@ -141,9 +94,8 @@ export function CredentialKeyValuePairs({
         keyValuePairs: validPairs,
       })
 
-      setIsEditing(false)
       setHasChanges(false)
-      setEditingData([]) // Clear editing data
+      setEditingData([]) // Clear editing data to refresh from server
       return { success: true }
     } catch (error) {
       const { message, details } = handleErrors(
@@ -157,74 +109,55 @@ export function CredentialKeyValuePairs({
           : message,
       }
     }
-  }, [isEditing, editingData, credentialId, updateKeyValuePairsMutation])
+  }, [editingData, credentialId, updateKeyValuePairsMutation])
 
   const handleCancel = useCallback(() => {
-    setIsEditing(false)
     setHasChanges(false)
-    setEditingData([]) // Clear editing data
+    setEditingData([]) // Clear editing data to revert changes
   }, [])
 
-  // Create a ref for external access (safer than global window)
-  const componentRef = useRef({
-    data: isEditing ? editingData : displayData,
-    save: handleSave,
-    cancel: handleCancel,
-    hasChanges,
-    isEditing,
-  })
-
-  // Update ref when values change - optimized to reduce re-renders
+  // Expose save and cancel handlers for external access (e.g., toolbar)
   useEffect(() => {
-    componentRef.current = {
-      data: isEditing ? editingData : displayData,
-      save: handleSave,
-      cancel: handleCancel,
-      hasChanges,
-      isEditing,
-    }
-  }) // No dependencies - runs on every render but ref assignment is cheap
+    if (typeof window !== "undefined") {
+      // Expose save/cancel handlers on window for toolbar integration
+      // TODO: Replace with proper React context when implementing save toolbar
+      const windowWithCredentials = window as Window & {
+        credentialKeyValuePairs?: {
+          save: () => Promise<{ success: boolean; error?: string }>
+          cancel: () => void
+          hasChanges: boolean
+          data: KeyValuePair[]
+        }
+      }
 
-  // TODO: Replace this with proper React context or callback props
-  // Memory-safe DOM integration with proper cleanup tracking
-  useEffect(() => {
-    let targetElement: HTMLElement | null = null
-
-    const setupToolbarIntegration = () => {
-      targetElement = document.querySelector(
-        "[data-save-toolbar-parent]"
-      ) as HTMLElement | null
-      if (targetElement) {
-        ;(
-          targetElement as HTMLElement & {
-            __credentialKeyValuePairs?: typeof componentRef.current
-          }
-        ).__credentialKeyValuePairs = componentRef.current
+      windowWithCredentials.credentialKeyValuePairs = {
+        save: handleSave,
+        cancel: handleCancel,
+        hasChanges,
+        data: displayData,
       }
     }
 
-    // Set up integration
-    setupToolbarIntegration()
-
-    // Cleanup function that specifically targets the element we modified
     return () => {
-      if (targetElement) {
-        delete (
-          targetElement as HTMLElement & {
-            __credentialKeyValuePairs?: typeof componentRef.current
+      if (typeof window !== "undefined") {
+        const windowWithCredentials = window as Window & {
+          credentialKeyValuePairs?: {
+            save: () => Promise<{ success: boolean; error?: string }>
+            cancel: () => void
+            hasChanges: boolean
+            data: KeyValuePair[]
           }
-        ).__credentialKeyValuePairs
+        }
+        delete windowWithCredentials.credentialKeyValuePairs
       }
     }
-  }, []) // Empty deps - runs once on mount, cleanup on unmount
+  }, [handleSave, handleCancel, hasChanges, displayData])
 
   if (isLoading) {
     return (
       <KeyValuePairManager
         value={[]}
         onChange={() => {}}
-        mode="edit-view"
-        isEditing={false}
         label="Additional Information"
         description="Secure key-value pairs for extra credential details"
         disabled={true}
@@ -248,8 +181,6 @@ export function CredentialKeyValuePairs({
     <KeyValuePairManager
       value={displayData}
       onChange={handleChange}
-      mode="edit-view"
-      isEditing={isEditing}
       label="Additional Information"
       description="Secure key-value pairs for extra credential details"
       placeholder={{
@@ -262,7 +193,6 @@ export function CredentialKeyValuePairs({
             ? "Enter value (e.g. Your first pet's name)"
             : "Enter value",
       }}
-      onEnterEditMode={handleEnterEditMode}
       validateDuplicateKeys={true}
       disabled={isLoadingValues}
       credentialId={credentialId}

@@ -91,7 +91,7 @@ function ValueInput<T extends BaseKeyValuePair>({
     return (
       <div className="relative">
         <Input
-          type="text"
+          variant="password-copyable"
           placeholder={placeholder}
           value={pair.value}
           onChange={(e) => onValueChange(index, e.target.value)}
@@ -148,8 +148,6 @@ interface KeyValuePairManagerProps<T extends BaseKeyValuePair> {
   onChange: (value: T[]) => void
 
   // Configuration
-  mode?: "single" | "edit-view"
-  isEditing?: boolean
   persistenceMode?: PersistenceMode
 
   // Content
@@ -165,9 +163,6 @@ interface KeyValuePairManagerProps<T extends BaseKeyValuePair> {
   disabled?: boolean
   className?: string
 
-  // Callbacks
-  onEnterEditMode?: () => void
-
   // API mode (for existing credentials)
   credentialId?: string
 
@@ -182,8 +177,6 @@ interface KeyValuePairManagerProps<T extends BaseKeyValuePair> {
 export function KeyValuePairManager<T extends BaseKeyValuePair>({
   value,
   onChange,
-  mode = "single",
-  isEditing = true,
   persistenceMode = "none",
   label = "Key-Value Pairs",
   description = "Manage key-value pair data",
@@ -191,7 +184,6 @@ export function KeyValuePairManager<T extends BaseKeyValuePair>({
   validateDuplicateKeys = true,
   disabled = false,
   className,
-  onEnterEditMode,
   credentialId,
   onEncryptedChange,
   autoEncryptOnBlur = false,
@@ -452,7 +444,7 @@ export function KeyValuePairManager<T extends BaseKeyValuePair>({
         )
       }
     },
-    [localPairs, value, onEncryptedChange, onChange, toast]
+    [value, onEncryptedChange, onChange, toast]
   )
 
   const handleValueBlur = useCallback(
@@ -491,20 +483,16 @@ export function KeyValuePairManager<T extends BaseKeyValuePair>({
     [autoEncryptOnBlur, persistenceMode, handleEncryptOnBlur]
   )
 
-  // Determine current mode state
-  const shouldShowEditMode =
-    mode === "single" || (mode === "edit-view" && isEditing)
-
   // Keyboard navigation handler
   const handleKeyDown = useCallback(
     (event: React.KeyboardEvent) => {
       // Allow users to add new pairs with Ctrl+Enter
-      if (event.ctrlKey && event.key === "Enter" && shouldShowEditMode) {
+      if (event.ctrlKey && event.key === "Enter") {
         event.preventDefault()
         handleAddPair()
       }
     },
-    [shouldShowEditMode, handleAddPair]
+    [handleAddPair]
   )
 
   return (
@@ -526,21 +514,6 @@ export function KeyValuePairManager<T extends BaseKeyValuePair>({
             <p>{description}</p>
           </TooltipContent>
         </Tooltip>
-        {mode === "edit-view" &&
-          !isEditing &&
-          localPairs.some((p) => p.key || p.value) && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onEnterEditMode}
-              className="ml-auto"
-              aria-label="Edit key-value pairs"
-              title="Edit existing key-value pairs"
-            >
-              <Icons.pencil className="mr-1 size-3" aria-hidden="true" />
-              Edit
-            </Button>
-          )}
       </div>
 
       {/* Content */}
@@ -578,7 +551,6 @@ export function KeyValuePairManager<T extends BaseKeyValuePair>({
                     value={pair.key}
                     onChange={(e) => handleKeyChange(index, e.target.value)}
                     onBlur={() => handleKeyBlur(index)}
-                    readOnly={!shouldShowEditMode}
                     disabled={disabled}
                     className="font-mono text-xs"
                     autoComplete="off"
@@ -594,15 +566,14 @@ export function KeyValuePairManager<T extends BaseKeyValuePair>({
                     </Label>
                   )}
                   <div id={`value-help-${index}`} className="sr-only">
-                    {shouldShowEditMode
-                      ? "Enter the value for this pair. Values are encrypted when saved."
-                      : "This value is masked for security. Click the eye icon to reveal it."}
+                    Enter the value for this pair. Values are encrypted when
+                    saved.
                   </div>
                   <ValueInput
                     pair={pair}
                     index={index}
                     credentialId={credentialId}
-                    isEditing={shouldShowEditMode}
+                    isEditing={true}
                     placeholder={placeholder.value}
                     disabled={disabled}
                     onValueChange={handleValueChange}
@@ -612,7 +583,7 @@ export function KeyValuePairManager<T extends BaseKeyValuePair>({
                 </div>
               </div>
 
-              {shouldShowEditMode && localPairs.length > 1 && (
+              {localPairs.length > 1 && (
                 <div className={cn("flex", index === 0 ? "pt-6" : "pt-0")}>
                   <Button
                     type="button"
@@ -632,23 +603,21 @@ export function KeyValuePairManager<T extends BaseKeyValuePair>({
             </div>
           ))}
 
-          {shouldShowEditMode && (
-            <div className="border-border border-t p-3 sm:p-4">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={handleAddPair}
-                disabled={disabled}
-                className="text-muted-foreground hover:text-foreground flex w-full items-center gap-2"
-                aria-label="Add another key-value pair"
-                title="Add another key-value pair"
-              >
-                <Icons.add className="size-4" aria-hidden="true" />
-                Add Another
-              </Button>
-            </div>
-          )}
+          <div className="border-border border-t p-3 sm:p-4">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handleAddPair}
+              disabled={disabled}
+              className="text-muted-foreground hover:text-foreground flex w-full items-center gap-2"
+              aria-label="Add another key-value pair"
+              title="Add another key-value pair"
+            >
+              <Icons.add className="size-4" aria-hidden="true" />
+              Add Another
+            </Button>
+          </div>
         </div>
       </div>
     </div>
@@ -709,7 +678,6 @@ export function EncryptedKeyValueForm({
     <KeyValuePairManager
       value={localValue}
       onChange={() => {}} // Encryption mode doesn't need immediate onChange
-      mode="single"
       persistenceMode="encryption"
       label={label}
       description={description}
