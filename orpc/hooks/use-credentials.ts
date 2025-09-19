@@ -8,6 +8,7 @@ import type {
   ListCredentialsInput,
   ListCredentialsOutput,
   UpdateCredentialInput,
+  UpdateCredentialPasswordInput,
 } from "@/schemas/credential/dto"
 import {
   useMutation,
@@ -309,6 +310,35 @@ export function useUpdateCredentialKeyValuePairs() {
     },
     onError: (error) => {
       console.error("Failed to update credential key-value pairs:", error)
+    },
+  })
+}
+
+// Update credential password with history mutation
+export function useUpdateCredentialPassword() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (input: UpdateCredentialPasswordInput) =>
+      orpc.credentials.updatePassword.call(input),
+    onSuccess: (data, variables) => {
+      // Invalidate credential queries to trigger refetch
+      queryClient.invalidateQueries({
+        queryKey: credentialKeys.detail(variables.id),
+      })
+
+      // Also invalidate password-specific queries if they exist
+      queryClient.invalidateQueries({
+        queryKey: ["credential-password", variables.id],
+      })
+
+      // Invalidate lists in case displayed data changes
+      queryClient.invalidateQueries({
+        queryKey: credentialKeys.lists(),
+      })
+    },
+    onError: (error) => {
+      console.error("Failed to update credential password:", error)
     },
   })
 }

@@ -73,6 +73,7 @@ export function CredentialDetailView({
   const deleteCredentialMutation = useDeleteCredential()
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [hasKeyValueChanges, setHasKeyValueChanges] = useState(false)
+  const [hasPasswordChanges, setHasPasswordChanges] = useState(false)
 
   const { data: securitySettings, isLoading: isLoadingSecuritySettings } =
     useCredentialSecuritySettings(credentialId)
@@ -106,7 +107,7 @@ export function CredentialDetailView({
   } = form
 
   // Combined dirty state for floating toolbar
-  const hasChanges = isDirty || hasKeyValueChanges
+  const hasChanges = isDirty || hasKeyValueChanges || hasPasswordChanges
 
   // Initialize form when credential and security settings load
   useEffect(() => {
@@ -175,6 +176,7 @@ export function CredentialDetailView({
       }
       reset(originalData)
     }
+    setHasPasswordChanges(false)
   }
 
   const handleDelete = () => {
@@ -262,7 +264,11 @@ export function CredentialDetailView({
               onDelete={handleDelete}
             />
             <Separator />
-            <CredentialForm credential={credential} form={form} />
+            <CredentialForm
+              credential={credential}
+              form={form}
+              onPasswordChange={setHasPasswordChanges}
+            />
             <Separator />
             <CredentialKeyValuePairs
               credentialId={credential.id}
@@ -293,6 +299,11 @@ export function CredentialDetailView({
             // @ts-expect-error - credentialKeyValuePairs is dynamically added to window object
             window.credentialKeyValuePairs?.save()
           }
+          // Password save is handled by the form component via window object
+          if (hasPasswordChanges && typeof window !== "undefined") {
+            // @ts-expect-error - credentialPasswordSave is dynamically added to window object
+            window.credentialPasswordSave?.()
+          }
         }}
         onDiscard={() => {
           if (isDirty) {
@@ -302,6 +313,11 @@ export function CredentialDetailView({
           if (hasKeyValueChanges && typeof window !== "undefined") {
             // @ts-expect-error - credentialKeyValuePairs is dynamically added to window object
             window.credentialKeyValuePairs?.cancel()
+          }
+          // Password discard is handled by the form component via window object
+          if (hasPasswordChanges && typeof window !== "undefined") {
+            // @ts-expect-error - credentialPasswordDiscard is dynamically added to window object
+            window.credentialPasswordDiscard?.()
           }
         }}
       />
