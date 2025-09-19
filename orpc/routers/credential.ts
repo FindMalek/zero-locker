@@ -22,6 +22,7 @@ import {
   listCredentialsInputSchema,
   listCredentialsOutputSchema,
   updateCredentialInputSchema,
+  updateCredentialPasswordInputSchema,
   type CredentialOutput,
   type ListCredentialsOutput,
 } from "@/schemas/credential/dto"
@@ -527,6 +528,68 @@ export const updateCredential = authProcedure
     return CredentialEntity.getSimpleRo(updatedCredential)
   })
 
+// Update credential password with version control history
+export const updateCredentialPassword = authProcedure
+  .input(updateCredentialPasswordInputSchema)
+  .output(z.object({ success: z.boolean() }))
+  .handler(async ({ input, context }) => {
+    const { id, passwordEncryption } = input
+
+    // Verify credential ownership and get current password encryption
+    const existingCredential = await database.credential.findFirst({
+      where: {
+        id,
+        userId: context.user.id,
+      },
+      include: {
+        passwordEncryption: true,
+      },
+    })
+
+    if (!existingCredential) {
+      throw new ORPCError("NOT_FOUND")
+    }
+
+    // Use transaction for atomicity
+    await database.$transaction(async (tx) => {
+      // Create new encrypted data for the new password
+      const newPasswordEncryptionResult = await createEncryptedData({
+        encryptedValue: passwordEncryption.encryptedValue,
+        encryptionKey: passwordEncryption.encryptionKey,
+        iv: passwordEncryption.iv,
+      })
+
+      if (
+        !newPasswordEncryptionResult.success ||
+        !newPasswordEncryptionResult.encryptedData
+      ) {
+        throw new ORPCError("INTERNAL_SERVER_ERROR", {
+          message: "Failed to encrypt new password",
+        })
+      }
+
+      // Create history entry with the old password
+      await tx.credentialHistory.create({
+        data: {
+          credentialId: id,
+          userId: context.user.id,
+          passwordEncryptionId: existingCredential.passwordEncryptionId,
+          changedAt: new Date(),
+        },
+      })
+
+      // Update credential with new password
+      await tx.credential.update({
+        where: { id },
+        data: {
+          passwordEncryptionId: newPasswordEncryptionResult.encryptedData.id,
+        },
+      })
+    })
+
+    return { success: true }
+  })
+
 // Update credential with security settings
 export const updateCredentialWithSecuritySettings = authProcedure
   .input(credentialFormDtoSchema.extend({ id: z.string() }))
@@ -989,6 +1052,7 @@ export const credentialRouter = {
   create: createCredential,
   createWithMetadata: createCredentialWithMetadata,
   update: updateCredential,
+  updatePassword: updateCredentialPassword,
   updateWithSecuritySettings: updateCredentialWithSecuritySettings,
   updateKeyValuePairs: updateCredentialKeyValuePairs,
   delete: deleteCredential,
