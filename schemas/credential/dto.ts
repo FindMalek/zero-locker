@@ -36,10 +36,23 @@ export const listCredentialsOutputSchema = z.object({
   limit: z.number().int(),
 })
 
+// Update credential password with history
+export const updateCredentialPasswordInputSchema = z.object({
+  id: z.string().min(1, "Credential ID is required"),
+  passwordEncryption: z.object({
+    encryptedValue: z.string().min(1, "Encrypted value is required"),
+    iv: z.string().min(1, "IV is required"),
+    encryptionKey: z.string().min(1, "Encryption key is required"),
+  }),
+})
+
 // Export types
 export type CreateCredentialInput = z.infer<typeof createCredentialInputSchema>
 export type GetCredentialInput = z.infer<typeof getCredentialInputSchema>
 export type UpdateCredentialInput = z.infer<typeof updateCredentialInputSchema>
+export type UpdateCredentialPasswordInput = z.infer<
+  typeof updateCredentialPasswordInputSchema
+>
 export type DeleteCredentialInput = z.infer<typeof deleteCredentialInputSchema>
 export type ListCredentialsInput = z.infer<typeof listCredentialsInputSchema>
 

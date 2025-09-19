@@ -8,15 +8,19 @@ import { Button } from "@/components/ui/button"
 import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard"
 
 export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
-  variant?: "default" | "password" | "password-copyable"
+variant?: "default" | "password" | "password-copyable"
+onEyeClick?: () => void
 }
 
 const Input = React.forwardRef<HTMLInputElement, InputProps>(
-  ({ className, type, variant = "default", ...props }, ref) => {
+  ({ className, type, variant = "default", onEyeClick, ...props }, ref) => {
     const [isVisible, setIsVisible] = React.useState(false)
     const { isCopied, copy } = useCopyToClipboard()
     
-    const toggleVisibility = () => setIsVisible((prev) => !prev)
+    const toggleVisibility = () => {
+      setIsVisible((prev) => !prev)
+      onEyeClick?.() // Call custom eye click handler if provided
+    }
 
     const handleCopy = async () => {
       if (props.value) {

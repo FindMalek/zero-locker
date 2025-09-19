@@ -8,6 +8,7 @@ import type {
   ListCredentialsInput,
   ListCredentialsOutput,
   UpdateCredentialInput,
+  UpdateCredentialPasswordInput,
 } from "@/schemas/credential/dto"
 import {
   useMutation,
@@ -47,6 +48,69 @@ export function useCredentialPassword(id: string, enabled: boolean = false) {
     enabled: !!id && enabled,
     staleTime: 0, // Always fetch fresh for security
     gcTime: 0, // Don't cache passwords
+  })
+}
+
+// Get credential security settings (decrypted server-side)
+export function useCredentialSecuritySettings(
+  id: string,
+  enabled: boolean = true
+) {
+  return useQuery({
+    queryKey: [...credentialKeys.detail(id), "security-settings"],
+    queryFn: () => orpc.credentials.getSecuritySettings.call({ id }),
+    enabled: !!id && enabled,
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+  })
+}
+
+// Get credential key-value pairs (keys only, no values for security)
+export function useCredentialKeyValuePairs(
+  id: string,
+  enabled: boolean = true
+) {
+  return useQuery({
+    queryKey: [...credentialKeys.detail(id), "key-value-pairs"],
+    queryFn: () => orpc.credentials.getKeyValuePairs.call({ id }),
+    enabled: !!id && enabled,
+    staleTime: 2 * 60 * 1000, // Cache for 2 minutes
+  })
+}
+
+// Get credential key-value pairs with values (for editing mode)
+export function useCredentialKeyValuePairsWithValues(
+  id: string,
+  enabled: boolean = false
+) {
+  return useQuery({
+    queryKey: [...credentialKeys.detail(id), "key-value-pairs-with-values"],
+    queryFn: () => orpc.credentials.getKeyValuePairsWithValues.call({ id }),
+    enabled: !!id && enabled,
+    staleTime: 0, // Always fetch fresh for security
+    gcTime: 0, // Don't cache sensitive values
+  })
+}
+
+// Get specific key-value pair value (for viewing with eye icon)
+export function useCredentialKeyValuePairValue(
+  credentialId: string,
+  keyValuePairId: string,
+  enabled: boolean = false
+) {
+  return useQuery({
+    queryKey: [
+      ...credentialKeys.detail(credentialId),
+      "key-value-pair-value",
+      keyValuePairId,
+    ],
+    queryFn: () =>
+      orpc.credentials.getKeyValuePairValue.call({
+        credentialId,
+        keyValuePairId,
+      }),
+    enabled: !!credentialId && !!keyValuePairId && enabled,
+    staleTime: 0, // Always fetch fresh for security
+    gcTime: 0, // Don't cache values
   })
 }
 
@@ -162,6 +226,119 @@ export function useUpdateCredential() {
 
       // Invalidate related queries
       queryClient.invalidateQueries({ queryKey: credentialKeys.lists() })
+    },
+  })
+}
+
+// Update credential with security settings mutation
+export function useUpdateCredentialWithSecuritySettings() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: orpc.credentials.updateWithSecuritySettings.call,
+    onMutate: async (input) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({
+        queryKey: credentialKeys.detail(input.id),
+      })
+
+      // Snapshot the previous value
+      const previousCredential = queryClient.getQueryData<CredentialOutput>(
+        credentialKeys.detail(input.id)
+      )
+
+      return { previousCredential }
+    },
+    onError: (error, input, context) => {
+      // Rollback the cache to the previous value
+      if (context?.previousCredential) {
+        queryClient.setQueryData(
+          credentialKeys.detail(input.id),
+          context.previousCredential
+        )
+      }
+      console.error(
+        "Failed to update credential with security settings:",
+        error
+      )
+    },
+    onSuccess: (updatedCredential: CredentialOutput, variables) => {
+      // Update the cache with the server response
+      queryClient.setQueryData(
+        credentialKeys.detail(updatedCredential.id),
+        updatedCredential
+      )
+
+      // Invalidate related queries including security settings
+      queryClient.invalidateQueries({ queryKey: credentialKeys.lists() })
+      queryClient.invalidateQueries({
+        queryKey: [...credentialKeys.detail(variables.id), "security-settings"],
+      })
+    },
+  })
+}
+
+// Update credential key-value pairs mutation
+export function useUpdateCredentialKeyValuePairs() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: orpc.credentials.updateKeyValuePairs.call,
+    onSuccess: (_, variables) => {
+      // Invalidate all key-value pairs related queries to ensure fresh data
+      const credentialDetail = credentialKeys.detail(variables.credentialId)
+
+      // Invalidate basic key-value pairs (keys only)
+      queryClient.invalidateQueries({
+        queryKey: [...credentialDetail, "key-value-pairs"],
+      })
+
+      // Invalidate key-value pairs with values (for editing)
+      queryClient.invalidateQueries({
+        queryKey: [...credentialDetail, "key-value-pairs-with-values"],
+      })
+
+      // Invalidate any individual key-value pair values that might be cached
+      queryClient.invalidateQueries({
+        queryKey: [...credentialDetail, "key-value-pair-value"],
+      })
+
+      // Also invalidate the main credential detail to refresh any summary data
+      queryClient.invalidateQueries({
+        queryKey: credentialDetail,
+      })
+    },
+    onError: (error) => {
+      console.error("Failed to update credential key-value pairs:", error)
+    },
+  })
+}
+
+// Update credential password with history mutation
+export function useUpdateCredentialPassword() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (input: UpdateCredentialPasswordInput) =>
+      orpc.credentials.updatePassword.call(input),
+    onSuccess: (data, variables) => {
+      // Invalidate credential queries to trigger refetch
+      queryClient.invalidateQueries({
+        queryKey: credentialKeys.detail(variables.id),
+      })
+
+      // Also invalidate password-specific queries if they exist
+      queryClient.invalidateQueries({
+        queryKey: ["credential-password", variables.id],
+      })
+
+      // Invalidate lists in case displayed data changes
+      queryClient.invalidateQueries({
+        queryKey: credentialKeys.lists(),
+      })
+    },
+    onError: (error) => {
+      console.error("Failed to update credential password:", error)
     },
   })
 }

@@ -7,6 +7,8 @@ import {
 } from "@/schemas/credential"
 import { AccountStatus } from "@prisma/client"
 
+import { decryptData } from "@/lib/encryption"
+
 import {
   CredentialEntityIncludeDbData,
   CredentialEntitySimpleDbData,
@@ -37,6 +39,59 @@ export class CredentialEntity {
     return {
       ...this.getSimpleRo(entity),
       tags: entity.tags.map((tag) => TagEntity.getSimpleRo(tag)),
+    }
+  }
+
+  // Helper method to extract security settings from metadata with decryption
+  static async getSecuritySettings(entity: CredentialEntityIncludeDbData) {
+    const metadata = entity.metadata?.[0]
+    if (!metadata) {
+      return {
+        passwordProtection: true, // Default value when no metadata exists
+        twoFactorAuth: false, // Default value when no metadata exists
+        accessLogging: true, // Default value when no metadata exists
+      }
+    }
+
+    // Look for security settings in key-value pairs and decrypt them
+    const kvPairs = metadata.keyValuePairs || []
+    let passwordProtection = true // Default value
+    let accessLogging = true // Default value
+
+    try {
+      // Decrypt passwordProtection setting
+      const passwordProtectionKv = kvPairs.find(
+        (kv) => kv.key === "passwordProtection"
+      )
+      if (passwordProtectionKv?.valueEncryption) {
+        const decryptedValue = await decryptData(
+          passwordProtectionKv.valueEncryption.encryptedValue,
+          passwordProtectionKv.valueEncryption.iv,
+          passwordProtectionKv.valueEncryption.encryptionKey
+        )
+        passwordProtection = JSON.parse(decryptedValue)
+      }
+
+      // Decrypt accessLogging setting
+      const accessLoggingKv = kvPairs.find((kv) => kv.key === "accessLogging")
+      if (accessLoggingKv?.valueEncryption) {
+        const decryptedValue = await decryptData(
+          accessLoggingKv.valueEncryption.encryptedValue,
+          accessLoggingKv.valueEncryption.iv,
+          accessLoggingKv.valueEncryption.encryptionKey
+        )
+        accessLogging = JSON.parse(decryptedValue)
+      }
+    } catch (error) {
+      console.error("Failed to decrypt security settings:", error)
+      // Fall back to defaults if decryption fails - this is intentional behavior
+      // We don't want to expose raw encrypted values to the client
+    }
+
+    return {
+      passwordProtection,
+      twoFactorAuth: metadata.has2FA, // This comes directly from the metadata table
+      accessLogging,
     }
   }
 

@@ -1,13 +1,13 @@
 "use client"
 
-import React, { useState } from "react"
-import { useCredentialPassword } from "@/orpc/hooks/use-credentials"
+import React from "react"
 import type { CredentialFormDto } from "@/schemas/credential/credential"
 import type { CredentialOutput } from "@/schemas/credential/dto"
 import { UseFormReturn } from "react-hook-form"
 
 import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard"
 
+import { DashboardCredentialPasswordField } from "@/components/app/dashboard-credential-password-field"
 import { Icons } from "@/components/shared/icons"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -24,24 +24,18 @@ import {
 interface CredentialFormProps {
   credential?: CredentialOutput
   form: UseFormReturn<CredentialFormDto>
+  onPasswordChange?: (hasChanges: boolean) => void
 }
 
-export function CredentialForm({ credential, form }: CredentialFormProps) {
-  const [showPassword, setShowPassword] = useState(false)
+export function CredentialForm({
+  credential,
+  form,
+  onPasswordChange,
+}: CredentialFormProps) {
   const { copy, isCopied } = useCopyToClipboard({ successDuration: 1000 })
 
   const { register, watch, setValue } = form
   const formData = watch()
-
-  const { data: passwordData, isLoading: isLoadingPassword } =
-    useCredentialPassword(
-      credential?.id || "",
-      showPassword && Boolean(credential?.id)
-    )
-
-  const handlePasswordToggle = () => {
-    setShowPassword(!showPassword)
-  }
 
   const handleCopy = async (text: string) => {
     await copy(text)
@@ -88,60 +82,10 @@ export function CredentialForm({ credential, form }: CredentialFormProps) {
       </div>
 
       {/* Password */}
-      <div className="space-y-1.5">
-        <div className="flex items-center gap-2">
-          <Label className="text-foreground text-sm font-medium">
-            Password
-          </Label>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Icons.helpCircle className="text-muted-foreground size-3" />
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>
-                The password is encrypted and stored securely. Click the eye
-                icon to reveal it.
-              </p>
-            </TooltipContent>
-          </Tooltip>
-        </div>
-        <div className="relative">
-          <Input
-            type={showPassword ? "text" : "password"}
-            value={showPassword ? passwordData?.password || "" : "••••••••••••"}
-            readOnly
-            className="border-border focus:border-ring focus:ring-ring pr-16 focus:ring-1"
-          />
-          <div className="absolute right-1 top-1/2 flex -translate-y-1/2 items-center gap-1">
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              className="hover:bg-muted"
-              onClick={() => handleCopy(passwordData?.password || "")}
-              disabled={!showPassword || !passwordData?.password}
-            >
-              <Icons.copy className="size-4" />
-            </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              className="hover:bg-muted"
-              onClick={handlePasswordToggle}
-              disabled={isLoadingPassword}
-            >
-              {isLoadingPassword ? (
-                <div className="border-muted-foreground size-4 animate-spin rounded-full border border-t-transparent" />
-              ) : showPassword ? (
-                <Icons.eyeOff className="size-4" />
-              ) : (
-                <Icons.eye className="size-4" />
-              )}
-            </Button>
-          </div>
-        </div>
-      </div>
+      <DashboardCredentialPasswordField
+        credential={credential}
+        onPasswordChange={onPasswordChange}
+      />
 
       {/* Description */}
       <div className="space-y-1.5">
