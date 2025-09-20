@@ -30,17 +30,13 @@ import {
   getPlaceholderImage,
   handleErrors,
 } from "@/lib/utils"
-import {
-  checkPasswordStrength,
-  generatePassword,
-} from "@/lib/utils/password-helpers"
+import { checkPasswordStrength } from "@/lib/utils/password-helpers"
 import { useAggressiveFormBlocker } from "@/hooks/use-aggressive-form-blocker"
 import { usePreventAutoSave } from "@/hooks/use-prevent-auto-save"
 import { useToast } from "@/hooks/use-toast"
 
 import { ContainerSelector } from "@/components/shared/container-selector"
 import { Icons } from "@/components/shared/icons"
-import { IsolatedPasswordInput } from "@/components/shared/isolated-password-input"
 import { EncryptedKeyValueForm } from "@/components/shared/key-value-pair-manager"
 import { PasswordStrengthMeter } from "@/components/shared/password-strength-meter"
 import { StatusBadge } from "@/components/shared/status-badge"
@@ -127,7 +123,6 @@ export function DashboardAddCredentialDialog({
   const [createMore, setCreateMore] = useState(false)
   const [showAdvanced, setShowAdvanced] = useState(false)
   const [statusPopoverOpen, setStatusPopoverOpen] = useState(false)
-  const [isGenerating, setIsGenerating] = useState(false)
 
   // Forms
   const credentialForm = useForm<CredentialDto>({
@@ -163,17 +158,14 @@ export function DashboardAddCredentialDialog({
   )
 
   // Password handling
-  const handleGeneratePassword = () => {
-    setIsGenerating(true)
-    const newPassword = generatePassword()
-    setSensitiveData((prev) => ({ ...prev, password: newPassword }))
-    setPasswordStrength(checkPasswordStrength(newPassword))
 
-    // Reset animation after 300ms
-    setTimeout(() => setIsGenerating(false), 300)
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const password = e.target.value
+    setSensitiveData((prev) => ({ ...prev, password }))
+    setPasswordStrength(checkPasswordStrength(password))
   }
 
-  const handlePasswordChange = (password: string) => {
+  const handlePasswordGenerate = (password: string) => {
     setSensitiveData((prev) => ({ ...prev, password }))
     setPasswordStrength(checkPasswordStrength(password))
   }
@@ -352,7 +344,6 @@ export function DashboardAddCredentialDialog({
       setCreateMore(false)
       setShowAdvanced(false)
       setPasswordStrength(null)
-      setIsGenerating(false)
     }
     onOpenChange(open)
   }
@@ -542,34 +533,20 @@ export function DashboardAddCredentialDialog({
                           </TooltipContent>
                         </Tooltip>
                       </div>
-                      <div className="relative" data-form-isolated="true">
-                        <IsolatedPasswordInput
+                      <div data-form-isolated="true">
+                        <Input
+                          variant="password-full"
                           value={sensitiveData.password}
-                          onChange={(e) => handlePasswordChange(e.target.value)}
-                          placeholder="Enter password"
-                          className="pr-14"
+                          onChange={handlePasswordChange}
+                          onGenerate={handlePasswordGenerate}
+                          showGenerateButton={true}
+                          placeholder="En.ter password"
+                          autoComplete="new-password"
+                          data-lpignore="true"
+                          data-1p-ignore="true"
+                          data-bwignore="true"
+                          data-form-type="isolated"
                         />
-                        <div className="absolute inset-y-0 right-10 flex items-center gap-1 pr-1">
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="icon"
-                                onClick={handleGeneratePassword}
-                              >
-                                <Icons.refresh
-                                  className={`size-3 transition-transform duration-300 ${
-                                    isGenerating ? "rotate-180" : ""
-                                  }`}
-                                />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p>Generate password</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </div>
                       </div>
                       {passwordStrength && (
                         <PasswordStrengthMeter score={passwordStrength.score} />

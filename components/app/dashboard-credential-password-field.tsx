@@ -9,12 +9,9 @@ import type { CredentialOutput } from "@/schemas/credential/dto"
 
 import { encryptData, exportKey, generateEncryptionKey } from "@/lib/encryption"
 import { handleErrors } from "@/lib/utils"
-import { generatePassword } from "@/lib/utils/password-helpers"
-import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard"
 import { useToast } from "@/hooks/use-toast"
 
 import { Icons } from "@/components/shared/icons"
-import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
@@ -32,40 +29,28 @@ export function DashboardCredentialPasswordField({
   credential,
   onPasswordChange,
 }: PasswordFieldProps) {
-  const [showPassword, setShowPassword] = useState(false)
   const [currentPassword, setCurrentPassword] = useState("")
   const [isPasswordModified, setIsPasswordModified] = useState(false)
 
-  const { copy, isCopied } = useCopyToClipboard({ successDuration: 1000 })
   const { toast } = useToast()
   const updatePasswordMutation = useUpdateCredentialPassword()
 
   const { data: passwordData, isLoading: isLoadingPassword } =
-    useCredentialPassword(
-      credential?.id || "",
-      showPassword && Boolean(credential?.id)
-    )
+    useCredentialPassword(credential?.id || "", Boolean(credential?.id))
 
-  const handlePasswordToggle = () => {
-    setShowPassword(!showPassword)
-  }
-
-  const handleCopy = async (text: string) => {
-    await copy(text)
-  }
-
-  const handlePasswordChange = (value: string) => {
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value
     setCurrentPassword(value)
     const hasChanged = value !== (passwordData?.password || "")
     setIsPasswordModified(hasChanged)
     onPasswordChange?.(hasChanged)
   }
 
-  const generateSecurePassword = () => {
-    // Use the existing robust password generation function
-    const password = generatePassword(16)
-    handlePasswordChange(password)
-    setShowPassword(true) // Show the generated password
+  const handleGenerate = (password: string) => {
+    setCurrentPassword(password)
+    const hasChanged = password !== (passwordData?.password || "")
+    setIsPasswordModified(hasChanged)
+    onPasswordChange?.(hasChanged)
   }
 
   const savePasswordChanges = useCallback(async () => {
@@ -115,12 +100,12 @@ export function DashboardCredentialPasswordField({
     onPasswordChange?.(false)
   }, [passwordData?.password, onPasswordChange])
 
-  // Sync current password with fetched data when password is revealed
+  // Sync current password with fetched data when loaded
   useEffect(() => {
-    if (showPassword && passwordData?.password && !isPasswordModified) {
+    if (passwordData?.password && !isPasswordModified) {
       setCurrentPassword(passwordData.password)
     }
-  }, [showPassword, passwordData?.password, isPasswordModified])
+  }, [passwordData?.password, isPasswordModified])
 
   // Expose save and discard functions to parent via window object for floating toolbar
   useEffect(() => {
@@ -156,67 +141,17 @@ export function DashboardCredentialPasswordField({
           </TooltipContent>
         </Tooltip>
       </div>
-      <div className="relative">
-        <Input
-          type={showPassword ? "text" : "password"}
-          value={
-            showPassword
-              ? currentPassword || passwordData?.password || ""
-              : "••••••••••••"
-          }
-          onChange={(e) => handlePasswordChange(e.target.value)}
-          readOnly={!showPassword}
-          placeholder="Enter password"
-          className="border-border focus:border-ring focus:ring-ring pr-20 focus:ring-1"
-          autoComplete="current-password"
-        />
-        <div className="absolute right-1 top-1/2 flex -translate-y-1/2 items-center gap-1">
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="hover:bg-muted"
-            onClick={generateSecurePassword}
-            title="Generate secure password"
-          >
-            <Icons.refresh className="size-4" />
-          </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="hover:bg-muted"
-            onClick={() =>
-              handleCopy(currentPassword || passwordData?.password || "")
-            }
-            disabled={
-              !showPassword || (!currentPassword && !passwordData?.password)
-            }
-          >
-            {isCopied ? (
-              <Icons.check className="size-4" />
-            ) : (
-              <Icons.copy className="size-4" />
-            )}
-          </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="hover:bg-muted"
-            onClick={handlePasswordToggle}
-            disabled={isLoadingPassword}
-          >
-            {isLoadingPassword ? (
-              <div className="border-muted-foreground size-4 animate-spin rounded-full border border-t-transparent" />
-            ) : showPassword ? (
-              <Icons.eyeOff className="size-4" />
-            ) : (
-              <Icons.eye className="size-4" />
-            )}
-          </Button>
-        </div>
-      </div>
+      <Input
+        variant="password-full"
+        value={currentPassword || passwordData?.password || ""}
+        onChange={handlePasswordChange}
+        onGenerate={handleGenerate}
+        showGenerateButton={true}
+        placeholder="Enter password"
+        autoComplete="current-password"
+        isLoading={isLoadingPassword}
+        className="border-border focus:border-ring focus:ring-ring focus:ring-1"
+      />
     </div>
   )
 }
