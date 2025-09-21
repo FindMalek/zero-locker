@@ -16,6 +16,8 @@ export type DatabaseClient = PrismaClient | PrismaTransactionClient
  * @param tx Optional transaction client
  * @returns Database client (transaction if provided, otherwise global client)
  */
-export function getDatabaseClient(tx?: PrismaTransactionClient): DatabaseClient {
+export function getDatabaseClient(
+  tx?: PrismaTransactionClient
+): DatabaseClient {
   return tx || database
 }

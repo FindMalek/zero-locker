@@ -105,21 +105,27 @@ export const createCard = authProcedure
         tx
       )
 
-      const cvvEncryptionResult = await createEncryptedData({
-        encryptedValue: input.cvvEncryption.encryptedValue,
-        encryptionKey: input.cvvEncryption.encryptionKey,
-        iv: input.cvvEncryption.iv,
-      }, tx)
+      const cvvEncryptionResult = await createEncryptedData(
+        {
+          encryptedValue: input.cvvEncryption.encryptedValue,
+          encryptionKey: input.cvvEncryption.encryptionKey,
+          iv: input.cvvEncryption.iv,
+        },
+        tx
+      )
 
       if (!cvvEncryptionResult.success || !cvvEncryptionResult.encryptedData) {
         throw new ORPCError("INTERNAL_SERVER_ERROR")
       }
 
-      const numberEncryptionResult = await createEncryptedData({
-        encryptedValue: input.numberEncryption.encryptedValue,
-        encryptionKey: input.numberEncryption.encryptionKey,
-        iv: input.numberEncryption.iv,
-      }, tx)
+      const numberEncryptionResult = await createEncryptedData(
+        {
+          encryptedValue: input.numberEncryption.encryptedValue,
+          encryptionKey: input.numberEncryption.encryptionKey,
+          iv: input.numberEncryption.iv,
+        },
+        tx
+      )
 
       if (
         !numberEncryptionResult.success ||

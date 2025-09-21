@@ -251,11 +251,14 @@ export const createContainerWithSecrets = authProcedure
           const createdSecrets = []
           for (const secretData of secretsData) {
             // Use the helper function for consistency
-            const encryptionResult = await createEncryptedData({
-              iv: secretData.valueEncryption.iv,
-              encryptedValue: secretData.valueEncryption.encryptedValue,
-              encryptionKey: secretData.valueEncryption.encryptionKey,
-            }, tx)
+            const encryptionResult = await createEncryptedData(
+              {
+                iv: secretData.valueEncryption.iv,
+                encryptedValue: secretData.valueEncryption.encryptedValue,
+                encryptionKey: secretData.valueEncryption.encryptionKey,
+              },
+              tx
+            )
 
             if (!encryptionResult.success || !encryptionResult.encryptedData) {
               throw new ORPCError("INTERNAL_SERVER_ERROR")

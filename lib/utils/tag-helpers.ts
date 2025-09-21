@@ -1,6 +1,9 @@
+import {
+  getDatabaseClient,
+  type PrismaTransactionClient,
+} from "@/prisma/client"
 import type { TagDto } from "@/schemas/utils/tag"
 import type { Prisma, Tag } from "@prisma/client"
-import { getDatabaseClient, type PrismaTransactionClient } from "@/prisma/client"
 
 import { generateTagColor } from "./color-helpers"
 
@@ -31,11 +34,24 @@ export async function createTagsAndGetConnections(
     where: {
       name: { in: tags.map((tag) => tag.name) },
       userId,
-      containerId: containerId || null,
+      OR: [{ containerId: containerId || null }, { containerId: null }],
     },
   })
 
-  const existingTagNames = new Set(existingTags.map((tag) => tag.name))
+  const existingTagsByName = new Map<string, Tag>()
+  for (const tag of existingTags) {
+    const existingTag = existingTagsByName.get(tag.name)
+    if (!existingTag) {
+      existingTagsByName.set(tag.name, tag)
+    } else if (
+      tag.containerId === (containerId || null) &&
+      existingTag.containerId === null
+    ) {
+      existingTagsByName.set(tag.name, tag)
+    }
+  }
+
+  const existingTagNames = new Set(existingTagsByName.keys())
   const tagsToCreate = tags.filter((tag) => !existingTagNames.has(tag.name))
 
   let newTags: Tag[] = []
@@ -58,7 +74,7 @@ export async function createTagsAndGetConnections(
     })
   }
 
-  const allTags = [...existingTags, ...newTags]
+  const allTags = [...Array.from(existingTagsByName.values()), ...newTags]
   const tagConnections = allTags.map((tag) => ({ id: tag.id }))
 
   return { connect: tagConnections }

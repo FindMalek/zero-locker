@@ -93,11 +93,14 @@ export const createSecret = authProcedure
   .output(secretOutputSchema)
   .handler(async ({ input, context }): Promise<SecretOutput> => {
     const secret = await database.$transaction(async (tx) => {
-      const valueEncryptionResult = await createEncryptedData({
-        encryptedValue: input.valueEncryption.encryptedValue,
-        encryptionKey: input.valueEncryption.encryptionKey,
-        iv: input.valueEncryption.iv,
-      }, tx)
+      const valueEncryptionResult = await createEncryptedData(
+        {
+          encryptedValue: input.valueEncryption.encryptedValue,
+          encryptionKey: input.valueEncryption.encryptionKey,
+          iv: input.valueEncryption.iv,
+        },
+        tx
+      )
 
       if (
         !valueEncryptionResult.success ||

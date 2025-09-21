@@ -401,11 +401,14 @@ export const createCredential = authProcedure
       )
 
       // Create encrypted data for password
-      const passwordEncryptionResult = await createEncryptedData({
-        encryptedValue: input.passwordEncryption.encryptedValue,
-        encryptionKey: input.passwordEncryption.encryptionKey,
-        iv: input.passwordEncryption.iv,
-      }, tx)
+      const passwordEncryptionResult = await createEncryptedData(
+        {
+          encryptedValue: input.passwordEncryption.encryptedValue,
+          encryptionKey: input.passwordEncryption.encryptionKey,
+          iv: input.passwordEncryption.iv,
+        },
+        tx
+      )
 
       if (
         !passwordEncryptionResult.success ||
@@ -823,11 +826,14 @@ export const createCredentialWithMetadata = authProcedure
           )
 
           // Create encrypted data for password
-          const passwordEncryptionResult = await createEncryptedData({
-            encryptedValue: credentialData.passwordEncryption.encryptedValue,
-            encryptionKey: credentialData.passwordEncryption.encryptionKey,
-            iv: credentialData.passwordEncryption.iv,
-          }, tx)
+          const passwordEncryptionResult = await createEncryptedData(
+            {
+              encryptedValue: credentialData.passwordEncryption.encryptedValue,
+              encryptionKey: credentialData.passwordEncryption.encryptionKey,
+              iv: credentialData.passwordEncryption.iv,
+            },
+            tx
+          )
 
           if (
             !passwordEncryptionResult.success ||
@@ -866,11 +872,14 @@ export const createCredentialWithMetadata = authProcedure
             if (metadata.keyValuePairs && metadata.keyValuePairs.length > 0) {
               for (const kvPair of metadata.keyValuePairs) {
                 // Create encrypted data for the value
-                const valueEncryptionResult = await createEncryptedData({
-                  encryptedValue: kvPair.valueEncryption.encryptedValue,
-                  encryptionKey: kvPair.valueEncryption.encryptionKey,
-                  iv: kvPair.valueEncryption.iv,
-                }, tx)
+                const valueEncryptionResult = await createEncryptedData(
+                  {
+                    encryptedValue: kvPair.valueEncryption.encryptedValue,
+                    encryptionKey: kvPair.valueEncryption.encryptionKey,
+                    iv: kvPair.valueEncryption.iv,
+                  },
+                  tx
+                )
 
                 if (
                   !valueEncryptionResult.success ||

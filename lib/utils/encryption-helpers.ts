@@ -1,7 +1,9 @@
+import {
+  getDatabaseClient,
+  type PrismaTransactionClient,
+} from "@/prisma/client"
 import type { EncryptedDataDto } from "@/schemas/encryption/encryption"
-import { getDatabaseClient, type DatabaseClient, type PrismaTransactionClient } from "@/prisma/client"
 
-// Function overloads for better API
 export async function createEncryptedData(data: EncryptedDataDto): Promise<{
   success: boolean
   encryptedData?: { id: string }
@@ -24,7 +26,7 @@ export async function createEncryptedData(
   error?: string
 }> {
   const client = getDatabaseClient(tx)
-  
+
   try {
     const encryptedData = await client.encryptedData.create({
       data: {
