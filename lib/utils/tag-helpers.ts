@@ -1,6 +1,6 @@
-import { database } from "@/prisma/client"
 import type { TagDto } from "@/schemas/utils/tag"
 import type { Prisma, Tag } from "@prisma/client"
+import { getDatabaseClient, type PrismaTransactionClient } from "@/prisma/client"
 
 import { generateTagColor } from "./color-helpers"
 
@@ -8,12 +8,26 @@ export async function createTagsAndGetConnections(
   tags: TagDto[],
   userId: string,
   containerId?: string
+): Promise<Prisma.TagCreateNestedManyWithoutContainerInput>
+export async function createTagsAndGetConnections(
+  tags: TagDto[],
+  userId: string,
+  containerId: string | undefined,
+  tx: PrismaTransactionClient
+): Promise<Prisma.TagCreateNestedManyWithoutContainerInput>
+export async function createTagsAndGetConnections(
+  tags: TagDto[],
+  userId: string,
+  containerId?: string,
+  tx?: PrismaTransactionClient
 ): Promise<Prisma.TagCreateNestedManyWithoutContainerInput> {
   if (!tags || tags.length === 0) {
     return { connect: [] }
   }
 
-  const existingTags = await database.tag.findMany({
+  const client = getDatabaseClient(tx)
+
+  const existingTags = await client.tag.findMany({
     where: {
       name: { in: tags.map((tag) => tag.name) },
       userId,
@@ -33,9 +47,9 @@ export async function createTagsAndGetConnections(
       containerId: containerId || null,
     }))
 
-    await database.tag.createMany({ data: createData })
+    await client.tag.createMany({ data: createData })
 
-    newTags = await database.tag.findMany({
+    newTags = await client.tag.findMany({
       where: {
         name: { in: tagsToCreate.map((tag) => tag.name) },
         userId,

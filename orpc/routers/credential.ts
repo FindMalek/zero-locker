@@ -391,37 +391,41 @@ export const createCredential = authProcedure
       })
     }
 
-    const tagConnections = await createTagsAndGetConnections(
-      input.tags,
-      context.user.id,
-      input.containerId
-    )
+    // Use transaction for atomicity
+    const credential = await database.$transaction(async (tx) => {
+      const tagConnections = await createTagsAndGetConnections(
+        input.tags,
+        context.user.id,
+        input.containerId,
+        tx
+      )
 
-    // Create encrypted data for password
-    const passwordEncryptionResult = await createEncryptedData({
-      encryptedValue: input.passwordEncryption.encryptedValue,
-      encryptionKey: input.passwordEncryption.encryptionKey,
-      iv: input.passwordEncryption.iv,
-    })
+      // Create encrypted data for password
+      const passwordEncryptionResult = await createEncryptedData({
+        encryptedValue: input.passwordEncryption.encryptedValue,
+        encryptionKey: input.passwordEncryption.encryptionKey,
+        iv: input.passwordEncryption.iv,
+      }, tx)
 
-    if (
-      !passwordEncryptionResult.success ||
-      !passwordEncryptionResult.encryptedData
-    ) {
-      throw new ORPCError("INTERNAL_SERVER_ERROR")
-    }
+      if (
+        !passwordEncryptionResult.success ||
+        !passwordEncryptionResult.encryptedData
+      ) {
+        throw new ORPCError("INTERNAL_SERVER_ERROR")
+      }
 
-    const credential = await database.credential.create({
-      data: {
-        identifier: input.identifier,
-        passwordEncryptionId: passwordEncryptionResult.encryptedData.id,
-        status: input.status,
-        platformId: input.platformId,
-        description: input.description,
-        userId: context.user.id,
-        tags: tagConnections,
-        ...getOrReturnEmptyObject(input.containerId, "containerId"),
-      },
+      return await tx.credential.create({
+        data: {
+          identifier: input.identifier,
+          passwordEncryptionId: passwordEncryptionResult.encryptedData.id,
+          status: input.status,
+          platformId: input.platformId,
+          description: input.description,
+          userId: context.user.id,
+          tags: tagConnections,
+          ...getOrReturnEmptyObject(input.containerId, "containerId"),
+        },
+      })
     })
 
     return CredentialEntity.getSimpleRo(credential)
@@ -810,28 +814,27 @@ export const createCredentialWithMetadata = authProcedure
           })
         }
 
-        const tagConnections = await createTagsAndGetConnections(
-          credentialData.tags,
-          context.user.id,
-          credentialData.containerId
-        )
-
-        // Create encrypted data for password
-        const passwordEncryptionResult = await createEncryptedData({
-          encryptedValue: credentialData.passwordEncryption.encryptedValue,
-          encryptionKey: credentialData.passwordEncryption.encryptionKey,
-          iv: credentialData.passwordEncryption.iv,
-        })
-
-        if (
-          !passwordEncryptionResult.success ||
-          !passwordEncryptionResult.encryptedData
-        ) {
-          throw new ORPCError("INTERNAL_SERVER_ERROR")
-        }
-
-        // Use transaction for atomicity
         const result = await database.$transaction(async (tx) => {
+          const tagConnections = await createTagsAndGetConnections(
+            credentialData.tags,
+            context.user.id,
+            credentialData.containerId,
+            tx
+          )
+
+          // Create encrypted data for password
+          const passwordEncryptionResult = await createEncryptedData({
+            encryptedValue: credentialData.passwordEncryption.encryptedValue,
+            encryptionKey: credentialData.passwordEncryption.encryptionKey,
+            iv: credentialData.passwordEncryption.iv,
+          }, tx)
+
+          if (
+            !passwordEncryptionResult.success ||
+            !passwordEncryptionResult.encryptedData
+          ) {
+            throw new ORPCError("INTERNAL_SERVER_ERROR")
+          }
           const credential = await tx.credential.create({
             data: {
               identifier: credentialData.identifier,
@@ -867,7 +870,7 @@ export const createCredentialWithMetadata = authProcedure
                   encryptedValue: kvPair.valueEncryption.encryptedValue,
                   encryptionKey: kvPair.valueEncryption.encryptionKey,
                   iv: kvPair.valueEncryption.iv,
-                })
+                }, tx)
 
                 if (
                   !valueEncryptionResult.success ||

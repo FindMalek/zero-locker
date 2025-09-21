@@ -113,21 +113,24 @@ export const createContainer = authProcedure
   .input(createContainerInputSchema)
   .output(containerOutputSchema)
   .handler(async ({ input, context }): Promise<ContainerOutput> => {
-    const tagConnections = await createTagsAndGetConnections(
-      input.tags,
-      context.user.id,
-      undefined
-    )
+    const container = await database.$transaction(async (tx) => {
+      const tagConnections = await createTagsAndGetConnections(
+        input.tags,
+        context.user.id,
+        undefined,
+        tx
+      )
 
-    const container = await database.container.create({
-      data: {
-        name: input.name,
-        icon: input.icon,
-        description: input.description,
-        type: input.type,
-        userId: context.user.id,
-        tags: tagConnections,
-      },
+      return await tx.container.create({
+        data: {
+          name: input.name,
+          icon: input.icon,
+          description: input.description,
+          type: input.type,
+          userId: context.user.id,
+          tags: tagConnections,
+        },
+      })
     })
 
     return ContainerEntity.getSimpleRo(container)
@@ -229,7 +232,8 @@ export const createContainerWithSecrets = authProcedure
           const tagConnections = await createTagsAndGetConnections(
             containerData.tags,
             context.user.id,
-            undefined
+            undefined,
+            tx
           )
 
           const container = await tx.container.create({
@@ -251,7 +255,7 @@ export const createContainerWithSecrets = authProcedure
               iv: secretData.valueEncryption.iv,
               encryptedValue: secretData.valueEncryption.encryptedValue,
               encryptionKey: secretData.valueEncryption.encryptionKey,
-            })
+            }, tx)
 
             if (!encryptionResult.success || !encryptionResult.encryptedData) {
               throw new ORPCError("INTERNAL_SERVER_ERROR")
