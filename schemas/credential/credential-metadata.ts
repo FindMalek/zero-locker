@@ -3,8 +3,8 @@ import { z } from "zod"
 import { credentialKeyValuePairDtoSchema } from "./credential-key-value"
 
 export const credentialMetadataDtoSchema = z.object({
-  recoveryEmail: z.string().email().optional(),
-  phoneNumber: z.string().optional(),
+  recoveryEmail: z.string().email().optional().or(z.literal("")),
+  phoneNumber: z.string().optional().or(z.literal("")),
   has2FA: z.boolean(),
 
   keyValuePairs: z.array(credentialKeyValuePairDtoSchema).optional(),

@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import Image from "next/image"
+import { CredentialKeyValuePairEntity } from "@/entities/credential/credential-key-value"
 import {
   useCreateCredentialWithMetadata,
   usePlatforms,
@@ -68,25 +69,6 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 
-const convertGenericToCredential = (
-  generic: GenericEncryptedKeyValuePairDto[]
-): CredentialKeyValuePairDto[] => {
-  return generic.map((item) => ({
-    ...item,
-    credentialMetadataId: undefined,
-  }))
-}
-
-const convertCredentialToGeneric = (
-  credential: CredentialKeyValuePairDto[]
-): GenericEncryptedKeyValuePairDto[] => {
-  return credential.map((item) => ({
-    id: item.id,
-    key: item.key,
-    valueEncryption: item.valueEncryption,
-  }))
-}
-
 interface CredentialDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -116,6 +98,11 @@ export function DashboardAddCredentialDialog({
     identifier: "",
     password: "",
   })
+
+  // Store plain text key-value pairs for encryption
+  const [plainKeyValuePairs, setPlainKeyValuePairs] = useState<
+    Array<{ id: string; key: string; value: string }>
+  >([])
   const [passwordStrength, setPasswordStrength] = useState<{
     score: number
     feedback: string
@@ -157,8 +144,6 @@ export function DashboardAddCredentialDialog({
     (p) => p.id === credentialForm.watch("platformId")
   )
 
-  // Password handling
-
   const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const password = e.target.value
     setSensitiveData((prev) => ({ ...prev, password }))
@@ -175,7 +160,6 @@ export function DashboardAddCredentialDialog({
     setStatusPopoverOpen(false)
   }
 
-  // Check if metadata has values
   const hasMetadataValues = () => {
     const values = metadataForm.getValues()
     return (
@@ -186,9 +170,7 @@ export function DashboardAddCredentialDialog({
     )
   }
 
-  // Submit handler
   async function onSubmit(e?: React.FormEvent) {
-    // Prevent default form submission to avoid browser password save detection
     if (e) {
       e.preventDefault()
       e.stopPropagation()
@@ -221,7 +203,21 @@ export function DashboardAddCredentialDialog({
         return
       }
 
+      // Encrypt key-value pairs before validation and submission
       if (hasMetadataValues()) {
+        if (plainKeyValuePairs.length > 0) {
+          try {
+            const encryptedPairs =
+              await CredentialKeyValuePairEntity.encryptKeyValuePairs(
+                plainKeyValuePairs
+              )
+            metadataForm.setValue("keyValuePairs", encryptedPairs)
+          } catch (error) {
+            toast("Failed to encrypt additional information", "error")
+            return
+          }
+        }
+
         const metadataValid = await metadataForm.trigger()
         if (!metadataValid) {
           toast("Please check the additional information fields", "error")
@@ -250,6 +246,7 @@ export function DashboardAddCredentialDialog({
 
       if (hasMetadataValues()) {
         const metadataValues = metadataForm.getValues()
+
         metadataDto = {
           has2FA: metadataValues.has2FA,
         }
@@ -715,17 +712,25 @@ export function DashboardAddCredentialDialog({
                           </div>
 
                           <EncryptedKeyValueForm
-                            value={convertCredentialToGeneric(
-                              metadataForm.watch("keyValuePairs") || []
-                            )}
-                            onChange={(genericKeyValuePairs) =>
+                            value={plainKeyValuePairs}
+                            onChange={(
+                              pairs: Array<{
+                                id: string
+                                key: string
+                                value: string
+                              }>
+                            ) => {
+                              setPlainKeyValuePairs(pairs)
                               metadataForm.setValue(
                                 "keyValuePairs",
-                                convertGenericToCredential(genericKeyValuePairs)
+                                pairs.map((pair) =>
+                                  CredentialKeyValuePairEntity.convertFromKeyValueManager(
+                                    pair
+                                  )
+                                )
                               )
-                            }
+                            }}
                             label="Additional Information"
-                            description="Security questions, backup codes, or other important account information"
                             placeholder={{
                               key: "Enter key (e.g., Security Question)",
                               value: "Enter value (e.g., Mother's maiden name)",

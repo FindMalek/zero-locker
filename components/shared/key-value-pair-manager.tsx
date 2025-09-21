@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { useCredentialKeyValuePairValue } from "@/orpc/hooks/use-credentials"
 import { GenericEncryptedKeyValuePairDto } from "@/schemas/encryption/encryption"
 
@@ -197,6 +197,11 @@ export function KeyValuePairManager<T extends BaseKeyValuePair>({
 
   // Sync with external value changes - but only when necessary to avoid overriding user input
   useEffect(() => {
+    // In encryption mode, don't sync with external value changes to avoid overriding user input
+    if (persistenceMode === "encryption") {
+      return
+    }
+
     // Only sync if the arrays are fundamentally different (length or IDs changed)
     // Don't sync if just values changed (user might be typing)
     const isDifferentStructure =
@@ -210,7 +215,7 @@ export function KeyValuePairManager<T extends BaseKeyValuePair>({
         setLocalPairs(value.map((pair) => ({ ...pair })))
       }
     }
-  }, [value])
+  }, [value, persistenceMode])
 
   const validateKey = useCallback(
     (key: string, currentIndex: number) => {
@@ -364,15 +369,23 @@ export function KeyValuePairManager<T extends BaseKeyValuePair>({
   // Handle encryption on blur for encryption mode
   const handleEncryptOnBlur = useCallback(
     async (item: T, index: number) => {
-      if (!item.key.trim()) {
-        toast("Key cannot be empty", "error")
+      console.log(`🔐 handleEncryptOnBlur called for index ${index}:`, {
+        key: item.key,
+        value: item.value ? "***" : "empty",
+      })
+
+      // Only validate and encrypt if both key and value have content
+      // Don't show error toasts for empty fields during normal editing
+      if (!item.key.trim() || !item.value.trim()) {
+        console.log(
+          `❌ Skipping encryption for index ${index} - missing key or value`
+        )
         return
       }
 
-      if (!item.value.trim()) {
-        toast("Value cannot be empty", "error")
-        return
-      }
+      console.log(
+        `✅ Proceeding with encryption for index ${index}, key: "${item.key}"`
+      )
 
       if (!onEncryptedChange) {
         console.warn("No encryption handler provided for encryption mode")
@@ -418,6 +431,10 @@ export function KeyValuePairManager<T extends BaseKeyValuePair>({
 
         // Add or update the encrypted pair
         const updatedEncrypted = [...currentEncrypted, encryptedPair]
+        console.log(
+          `🔐 Encryption complete for "${item.key}". Total encrypted pairs:`,
+          updatedEncrypted.length
+        )
         onEncryptedChange(updatedEncrypted)
 
         // Clear the local value but keep the key - atomic state update
@@ -455,10 +472,20 @@ export function KeyValuePairManager<T extends BaseKeyValuePair>({
 
   const handleValueBlur = useCallback(
     async (index: number) => {
+      console.log(`👁️ handleValueBlur called for index ${index}`)
+
       // Get current state atomically to prevent race conditions
       let currentPair: T | null = null
 
       setLocalPairs((currentPairs) => {
+        console.log(
+          `👁️ Current pairs in blur handler:`,
+          currentPairs.map((p) => ({
+            key: p.key,
+            value: p.value ? "***" : "empty",
+          }))
+        )
+
         // Bounds checking with current state
         if (index < 0 || index >= currentPairs.length) {
           console.warn(
@@ -473,17 +500,32 @@ export function KeyValuePairManager<T extends BaseKeyValuePair>({
           return currentPairs
         }
 
+        console.log(`👁️ Found pair for blur at index ${index}:`, {
+          key: pair.key,
+          value: pair.value ? "***" : "empty",
+        })
         currentPair = pair
         return currentPairs // Don't change state here
       })
 
       // Auto-encrypt on blur if enabled
+      console.log(`👁️ Checking encryption conditions:`, {
+        currentPair: !!currentPair,
+        autoEncryptOnBlur,
+        persistenceMode,
+        shouldEncrypt:
+          currentPair && autoEncryptOnBlur && persistenceMode === "encryption",
+      })
+
       if (
         currentPair &&
         autoEncryptOnBlur &&
         persistenceMode === "encryption"
       ) {
+        console.log(`✅ Calling handleEncryptOnBlur for index ${index}`)
         await handleEncryptOnBlur(currentPair, index)
+      } else {
+        console.log(`❌ Not calling encryption for index ${index}`)
       }
     },
     [autoEncryptOnBlur, persistenceMode, handleEncryptOnBlur]
@@ -631,13 +673,13 @@ export function KeyValuePairManager<T extends BaseKeyValuePair>({
 
 // Convenience export for encrypted key-value form (legacy compatibility)
 export interface EncryptedKeyValueFormProps {
-  value: GenericEncryptedKeyValuePairDto[]
-  onChange: (value: GenericEncryptedKeyValuePairDto[]) => void
+  value?: Array<{ id: string; key: string; value: string }>
+  onChange: (value: Array<{ id: string; key: string; value: string }>) => void
   label?: string
   description?: string
   placeholder?: {
-    key?: string
-    value?: string
+    key: string
+    value: string
   }
   className?: string
   disabled?: boolean
@@ -647,7 +689,6 @@ export function EncryptedKeyValueForm({
   value = [],
   onChange,
   label = "Additional Information",
-  description = "Store sensitive key-value pairs with encrypted values",
   placeholder = {
     key: "Enter key",
     value: "Enter value",
@@ -655,44 +696,17 @@ export function EncryptedKeyValueForm({
   className,
   disabled = false,
 }: EncryptedKeyValueFormProps) {
-  // Convert encrypted pairs to local format for editing
-  const localValue: BaseKeyValuePair[] =
-    value.length === 0
-      ? []
-      : value.map((pair) => ({
-          id: pair.id || generateSecureId("temp"),
-          key: pair.key,
-          value: "", // Don't display encrypted values
-          encrypted: true,
-        }))
-
-  // No need for handleChange - encryption happens on blur, not on every keystroke
-
-  const handleEncryptedChange = useCallback(
-    (encrypted: GenericEncryptedKeyValuePairDto[]) => {
-      onChange(encrypted)
-    },
-    [onChange]
-  )
-
-  const getIsProcessing = useCallback((item: BaseKeyValuePair) => {
-    return item.isEncrypting || false
-  }, [])
-
   return (
     <KeyValuePairManager
-      value={localValue}
-      onChange={() => {}} // Encryption mode doesn't need immediate onChange
-      persistenceMode="encryption"
+      value={value}
+      onChange={onChange}
       label={label}
-      description={description}
+      description="Store sensitive key-value pairs with encrypted values"
       placeholder={placeholder}
       className={className}
       disabled={disabled}
       validateDuplicateKeys={true}
-      autoEncryptOnBlur={true}
-      onEncryptedChange={handleEncryptedChange}
-      getIsProcessing={getIsProcessing}
+      persistenceMode="none"
     />
   )
 }
