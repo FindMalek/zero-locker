@@ -144,7 +144,6 @@ export function DashboardAddSecretDialog({
             }
           },
           onError: (error) => {
-            console.error("Error in onSubmit:", error)
             const { message, details } = handleErrors(
               error,
               "Failed to save secret"
@@ -159,7 +158,6 @@ export function DashboardAddSecretDialog({
         }
       )
     } catch (error) {
-      console.error("Error in encryption:", error)
       const { message, details } = handleErrors(
         error,
         "Failed to encrypt secret"

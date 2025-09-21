@@ -16,9 +16,7 @@ import {
   CredentialMetadataDto,
   credentialMetadataDtoSchema,
 } from "@/schemas/credential"
-import { CredentialKeyValuePairDto } from "@/schemas/credential/credential-key-value"
-import { GenericEncryptedKeyValuePairDto } from "@/schemas/encryption/encryption"
-import { EntityTypeEnum } from "@/schemas/utils"
+import { EntityTypeEnum, type BaseKeyValuePair } from "@/schemas/utils"
 import { TagDto } from "@/schemas/utils/tag"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
@@ -101,7 +99,7 @@ export function DashboardAddCredentialDialog({
 
   // Store plain text key-value pairs for encryption
   const [plainKeyValuePairs, setPlainKeyValuePairs] = useState<
-    Array<{ id: string; key: string; value: string }>
+    BaseKeyValuePair[]
   >([])
   const [passwordStrength, setPasswordStrength] = useState<{
     score: number
@@ -212,7 +210,7 @@ export function DashboardAddCredentialDialog({
                 plainKeyValuePairs
               )
             metadataForm.setValue("keyValuePairs", encryptedPairs)
-          } catch (error) {
+          } catch {
             toast("Failed to encrypt additional information", "error")
             return
           }
@@ -713,13 +711,7 @@ export function DashboardAddCredentialDialog({
 
                           <EncryptedKeyValueForm
                             value={plainKeyValuePairs}
-                            onChange={(
-                              pairs: Array<{
-                                id: string
-                                key: string
-                                value: string
-                              }>
-                            ) => {
+                            onChange={(pairs: BaseKeyValuePair[]) => {
                               setPlainKeyValuePairs(pairs)
                               metadataForm.setValue(
                                 "keyValuePairs",

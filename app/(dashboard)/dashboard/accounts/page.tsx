@@ -29,8 +29,7 @@ async function getInitialData() {
       credentials: credentialsResponse,
       platforms: platformsResponse,
     }
-  } catch (error) {
-    console.error("Failed to fetch initial data:", error)
+  } catch {
     return {
       credentials: {
         credentials: [],

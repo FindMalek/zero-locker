@@ -59,9 +59,7 @@ export function AuthRegisterForm({
           onSuccess: async () => {
             try {
               await initializeContainers.mutateAsync()
-            } catch (error) {
-              console.error("Failed to create default containers:", error)
-            }
+            } catch {}
             router.push("/dashboard")
           },
           onError: (ctx) => {
@@ -87,7 +85,6 @@ export function AuthRegisterForm({
         variant: "destructive",
         description: error instanceof Error ? error.message : "Unknown error",
       })
-      console.error(error)
     } finally {
       setIsLoading(false)
     }

@@ -91,8 +91,7 @@ export function DashboardCreateContainerDialog({
       if (onContainerCreated) {
         onContainerCreated(result.id)
       }
-    } catch (error) {
-      console.error(error)
+    } catch {
       toast("Failed to create container. Please try again.", "error")
     }
   }

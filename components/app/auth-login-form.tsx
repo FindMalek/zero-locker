@@ -69,11 +69,10 @@ export function AuthLoginForm({
           variant: "destructive",
         })
       }
-    } catch (error) {
+    } catch {
       toast("Something went wrong. Please try again.", {
         variant: "destructive",
       })
-      console.error(error)
     } finally {
       setIsLoading(false)
     }

@@ -5,15 +5,13 @@ import {
   useCredentialKeyValuePairs,
   useUpdateCredentialKeyValuePairs,
 } from "@/orpc/hooks/use-credentials"
+import { type BaseKeyValuePair } from "@/schemas/utils"
 
 import { handleErrors } from "@/lib/utils"
 import { useToast } from "@/hooks/use-toast"
 
 import { DashboardCredentialKeyValuePairsSkeleton } from "@/components/app/dashboard-credential-key-value-pairs-skeleton"
-import {
-  KeyValuePairManager,
-  type BaseKeyValuePair,
-} from "@/components/shared/key-value-pair-manager"
+import { KeyValuePairManager } from "@/components/shared/key-value-pair-manager"
 
 interface KeyValuePair extends BaseKeyValuePair {
   createdAt?: Date

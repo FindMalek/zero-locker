@@ -5,6 +5,7 @@ import {
   type CredentialKeyValuePairWithEncryptionRo,
 } from "@/schemas/credential/credential-key-value"
 import { type GenericEncryptedKeyValuePairDto } from "@/schemas/encryption/encryption"
+import { type BaseKeyValuePair } from "@/schemas/utils"
 
 import { encryptData, exportKey, generateEncryptionKey } from "@/lib/encryption"
 
@@ -75,11 +76,9 @@ export class CredentialKeyValuePairEntity {
     }
   }
 
-  static convertFromKeyValueManager(pair: {
-    id: string
-    key: string
-    value: string
-  }): CredentialKeyValuePairDto {
+  static convertFromKeyValueManager(
+    pair: BaseKeyValuePair
+  ): CredentialKeyValuePairDto {
     return {
       id: pair.id,
       key: pair.key,
@@ -92,11 +91,9 @@ export class CredentialKeyValuePairEntity {
     }
   }
 
-  static async encryptKeyValuePair(pair: {
-    id: string
-    key: string
-    value: string
-  }): Promise<GenericEncryptedKeyValuePairDto> {
+  static async encryptKeyValuePair(
+    pair: BaseKeyValuePair
+  ): Promise<GenericEncryptedKeyValuePairDto> {
     if (!pair.key.trim() || !pair.value.trim()) {
       throw new Error("Both key and value are required for encryption")
     }
@@ -117,7 +114,7 @@ export class CredentialKeyValuePairEntity {
   }
 
   static async encryptKeyValuePairs(
-    pairs: Array<{ id: string; key: string; value: string }>
+    pairs: BaseKeyValuePair[]
   ): Promise<GenericEncryptedKeyValuePairDto[]> {
     const validPairs = pairs.filter(
       (pair) => pair.key.trim() && pair.value.trim()
