@@ -1,5 +1,6 @@
 import { useCurrentUser } from "@/orpc/hooks/use-users"
 import { UserPlan } from "@prisma/client"
+import { getPermissionConfig } from "../utils"
 
 /**
  * Custom hook that centralizes user permission logic
@@ -9,41 +10,29 @@ import { UserPlan } from "@prisma/client"
 export function useUserPermissions() {
   const { data: currentUser } = useCurrentUser()
 
-  // Handle loading state - if no user data, assume normal user for safety
-  if (!currentUser) {
-    return {
-      isNormalUser: true,
-      isProUser: false,
-      canCreateContainers: false,
-      canSelectContainers: false,
-      canDeleteContainers: false,
-      canUpdateContainers: false,
-      hasUnlimitedContainers: false,
-      maxContainers: 3,
-      shouldShowUpgradePrompts: true,
-      shouldPreSelectDefaultContainer: true,
-    }
-  }
-
-  const isNormalUser = currentUser.plan === UserPlan.NORMAL
-  const isProUser = currentUser.plan === UserPlan.PRO
+  // Handle loading state - if no user data, use normal user plan as default
+  const userPlan = currentUser?.plan ?? UserPlan.NORMAL
+  const config = getPermissionConfig(userPlan)
+  
+  const isNormalUser = config.plan === UserPlan.NORMAL
+  const isProUser = config.plan === UserPlan.PRO
 
   return {
     // User type checks
     isNormalUser,
     isProUser,
 
-    // Feature permissions
-    canCreateContainers: isProUser,
-    canSelectContainers: isProUser,
-    canDeleteContainers: isProUser,
-    canUpdateContainers: isProUser,
+    // Feature permissions - all derived from canonical config
+    canCreateContainers: config.features.containers.create,
+    canSelectContainers: config.features.containers.create, // Allow selection if can create
+    canDeleteContainers: config.features.containers.delete,
+    canUpdateContainers: config.features.containers.update,
 
-    // Container limits
-    hasUnlimitedContainers: isProUser,
-    maxContainers: isNormalUser ? 3 : Infinity,
+    // Container limits - all derived from canonical config
+    hasUnlimitedContainers: config.features.containers.unlimited,
+    maxContainers: config.features.containers.maxCount,
 
-    // UI behavior
+    // UI behavior - derived from plan type
     shouldShowUpgradePrompts: isNormalUser,
     shouldPreSelectDefaultContainer: isNormalUser,
   }
