@@ -169,13 +169,16 @@ export function requireDefaultContainerAccess() {
     // This can be used in container list/get operations
     const isNormalUser = user.plan === UserPlan.NORMAL
 
+    const mergedPermissions = {
+      ...(context.permissions || {}),
+      isNormalUser,
+      canOnlyAccessDefaultContainers: isNormalUser,
+    }
+
     return next({
       context: {
         ...context,
-        permissions: {
-          isNormalUser,
-          canOnlyAccessDefaultContainers: isNormalUser,
-        },
+        permissions: mergedPermissions,
       },
     })
   }
