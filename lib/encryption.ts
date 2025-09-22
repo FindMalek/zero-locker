@@ -143,10 +143,11 @@ export async function decryptData(
       )
       decipher.setAuthTag(authTag)
 
-      let decrypted = decipher.update(ciphertext, undefined, "utf8")
-      decrypted += decipher.final("utf8")
+      const decryptedUpdate = decipher.update(ciphertext)
+      const decryptedFinal = decipher.final()
+      const decryptedBuffer = Buffer.concat([decryptedUpdate, decryptedFinal])
 
-      return decrypted
+      return decryptedBuffer.toString("utf8")
     } else if (isCBC) {
       // Handle AES-CBC decryption (legacy seeded data)
       const decipher = crypto.createDecipheriv(
