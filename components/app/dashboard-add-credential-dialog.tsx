@@ -36,7 +36,7 @@ import { useToast } from "@/hooks/use-toast"
 
 import { ContainerSelector } from "@/components/shared/container-selector"
 import { Icons } from "@/components/shared/icons"
-import { EncryptedKeyValueForm } from "@/components/shared/key-value-pair-manager"
+import { KeyValuePairManager } from "@/components/shared/key-value-pair-manager"
 import { PasswordStrengthMeter } from "@/components/shared/password-strength-meter"
 import { StatusBadge } from "@/components/shared/status-badge"
 import { TagSelector } from "@/components/shared/tag-selector"
@@ -709,7 +709,7 @@ export function DashboardAddCredentialDialog({
                             </div>
                           </div>
 
-                          <EncryptedKeyValueForm
+                          <KeyValuePairManager
                             value={plainKeyValuePairs}
                             onChange={(pairs: BaseKeyValuePair[]) => {
                               setPlainKeyValuePairs(pairs)
@@ -723,10 +723,13 @@ export function DashboardAddCredentialDialog({
                               )
                             }}
                             label="Additional Information"
+                            description="Store sensitive key-value pairs with encrypted values"
                             placeholder={{
                               key: "Enter key (e.g., Security Question)",
                               value: "Enter value (e.g., Mother's maiden name)",
                             }}
+                            validateDuplicateKeys={true}
+                            persistenceMode="none"
                           />
                         </Form>
                       </div>
