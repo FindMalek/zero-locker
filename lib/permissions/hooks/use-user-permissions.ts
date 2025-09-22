@@ -38,4 +38,4 @@ export function useUserPermissions() {
   }
 }
 
-export type UserPermissions = ReturnType<typeof useUserPermissions>
+export type { UserPermissions } from "../types"
