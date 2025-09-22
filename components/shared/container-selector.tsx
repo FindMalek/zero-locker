@@ -9,7 +9,7 @@ import {
   Feature,
   getUpgradeMessage,
   useUserPermissions,
-  type UserPermissions,
+  type UserPermissionFlags,
 } from "@/lib/permissions"
 import { validateEntityForContainer } from "@/lib/utils"
 
@@ -142,7 +142,7 @@ function ContainerSelectorContent({
   currentContainerId?: string | null
   onContainerSelect: (id: string) => void
   onCreateClick: () => void
-  permissions: UserPermissions
+  permissions: UserPermissionFlags
 }) {
   return (
     <PopoverContent align="end" className="w-72 p-0">

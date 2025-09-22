@@ -5,7 +5,7 @@ import { UserPlan } from "@prisma/client"
  * Centralized location for all permission-related type definitions
  */
 
-export interface UserPermissions {
+export interface UserPermissionFlags {
   // User type checks
   isNormalUser: boolean
   isProUser: boolean
@@ -49,6 +49,9 @@ export enum PermissionLevel {
   WRITE = "write",
   ADMIN = "admin",
 }
+
+// Type alias for the hook's return type
+export type UseUserPermissionsReturn = UserPermissionFlags
 
 // Features enum for type safety and scalability
 export enum Feature {
