@@ -111,6 +111,16 @@ function getUserPermissionLevel(
           return PermissionLevel.NONE
       }
 
+    case Feature.CREDENTIALS:
+      switch (userPlan) {
+        case UserPlan.PRO:
+          return PermissionLevel.WRITE // Pro users can create credentials
+        case UserPlan.NORMAL:
+          return PermissionLevel.NONE // Not available
+        default:
+          return PermissionLevel.NONE
+      }
+
     default:
       return PermissionLevel.NONE
   }
