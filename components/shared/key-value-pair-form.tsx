@@ -8,40 +8,35 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 
-export type PersistenceMode = "api" | "encryption" | "none"
-
-export interface KeyValuePairManagerProps<T extends BaseKeyValuePair> {
+export interface KeyValuePairFormProps<T extends BaseKeyValuePair> {
   value: T[]
   onChange: (value: T[]) => void
-  persistenceMode?: PersistenceMode
   label?: string
-  description?: string
   placeholder?: {
     key: string
     value: string
   }
-  validateDuplicateKeys?: boolean
   disabled?: boolean
   className?: string
-  credentialId?: string
-  onEncryptedChange?: (value: unknown[]) => void
-  autoEncryptOnBlur?: boolean
-  getIsProcessing?: (item: T) => boolean
+  validateDuplicateKeys?: boolean
+  showPasswordField?: boolean
 }
 
-export function KeyValuePairManager<T extends BaseKeyValuePair>({
+export function KeyValuePairForm<T extends BaseKeyValuePair>({
   value = [],
   onChange,
   label = "Key-Value Pairs",
-  description,
   placeholder = { key: "Enter key", value: "Enter value" },
   disabled = false,
   className,
-}: KeyValuePairManagerProps<T>) {
+  validateDuplicateKeys = false,
+  showPasswordField = false,
+}: KeyValuePairFormProps<T>) {
   const [localPairs, setLocalPairs] = useState<T[]>(() =>
     value.length > 0 ? value : [{ key: "", value: "" } as T]
   )
 
+  // Sync with external value changes
   useEffect(() => {
     if (
       value.length !== localPairs.length ||
@@ -51,32 +46,51 @@ export function KeyValuePairManager<T extends BaseKeyValuePair>({
     }
   }, [value, localPairs.length, localPairs])
 
+  const updatePairs = useCallback(
+    (newPairs: T[]) => {
+      setLocalPairs(newPairs)
+      onChange(newPairs)
+    },
+    [onChange]
+  )
+
   const handleAddPair = useCallback(() => {
     const newPair = { key: "", value: "" } as T
-    setLocalPairs((prev) => [...prev, newPair])
-    onChange([...localPairs, newPair])
-  }, [localPairs, onChange])
+    updatePairs([...localPairs, newPair])
+  }, [localPairs, updatePairs])
 
   const handleRemovePair = useCallback(
     (index: number) => {
       if (index < 0 || index >= localPairs.length) return
       const updated = localPairs.filter((_, i) => i !== index)
-      setLocalPairs(updated)
-      onChange(updated)
+      updatePairs(updated)
     },
-    [localPairs, onChange]
+    [localPairs, updatePairs]
   )
 
   const handleKeyChange = useCallback(
     (index: number, newKey: string) => {
       if (index < 0 || index >= localPairs.length) return
+
+      // Validate duplicate keys if enabled
+      if (validateDuplicateKeys && newKey.trim()) {
+        const isDuplicate = localPairs.some(
+          (pair, i) =>
+            i !== index &&
+            pair.key.trim().toLowerCase() === newKey.trim().toLowerCase()
+        )
+        if (isDuplicate) {
+          // Could add toast notification here
+          return
+        }
+      }
+
       const updated = localPairs.map((pair, i) =>
         i === index ? { ...pair, key: newKey } : pair
       )
-      setLocalPairs(updated)
-      onChange(updated)
+      updatePairs(updated)
     },
-    [localPairs, onChange]
+    [localPairs, updatePairs, validateDuplicateKeys]
   )
 
   const handleValueChange = useCallback(
@@ -85,25 +99,20 @@ export function KeyValuePairManager<T extends BaseKeyValuePair>({
       const updated = localPairs.map((pair, i) =>
         i === index ? { ...pair, value: newValue } : pair
       )
-      setLocalPairs(updated)
-      onChange(updated)
+      updatePairs(updated)
     },
-    [localPairs, onChange]
+    [localPairs, updatePairs]
   )
 
   return (
     <div className={className}>
-      <div className="space-y-2">
-        <Label className="text-sm font-medium">{label}</Label>
-        {description && (
-          <p className="text-muted-foreground text-xs">{description}</p>
-        )}
-      </div>
+      <Label className="pb-6 text-sm font-medium">{label}</Label>
 
       <div className="border-border divide-border divide-y rounded-lg border">
         {localPairs.map((pair, index) => (
           <div key={pair.id || index} className="p-3 sm:p-4">
             <div className="grid flex-1 grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-3">
+              {/* Key Field */}
               <div>
                 {index === 0 && (
                   <Label className="text-muted-foreground mb-2 block text-xs uppercase tracking-wide">
@@ -119,42 +128,47 @@ export function KeyValuePairManager<T extends BaseKeyValuePair>({
                   autoComplete="off"
                 />
               </div>
-              <div>
+
+              {/* Value Field */}
+              <div className="relative">
                 {index === 0 && (
                   <Label className="text-muted-foreground mb-2 block text-xs uppercase tracking-wide">
                     Value
                   </Label>
                 )}
-                <Input
-                  variant="password-copyable"
-                  placeholder={placeholder.value}
-                  value={pair.value}
-                  onChange={(e) => handleValueChange(index, e.target.value)}
-                  disabled={disabled}
-                  className="font-mono text-xs"
-                  autoComplete="new-password"
-                />
+                <div className="flex gap-2">
+                  <Input
+                    variant={
+                      showPasswordField ? "password-copyable" : "default"
+                    }
+                    placeholder={placeholder.value}
+                    value={pair.value}
+                    onChange={(e) => handleValueChange(index, e.target.value)}
+                    disabled={disabled}
+                    className="flex-1 font-mono text-xs"
+                    autoComplete={showPasswordField ? "new-password" : "off"}
+                  />
+
+                  {/* Remove Button */}
+                  {localPairs.length > 1 && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleRemovePair(index)}
+                      disabled={disabled}
+                      className="text-muted-foreground hover:text-destructive flex-shrink-0"
+                    >
+                      <Icons.trash className="size-4" />
+                    </Button>
+                  )}
+                </div>
               </div>
             </div>
-
-            {localPairs.length > 1 && (
-              <div className="mt-2 flex justify-end">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => handleRemovePair(index)}
-                  disabled={disabled}
-                  className="text-muted-foreground hover:text-destructive"
-                >
-                  <Icons.trash className="size-4" />
-                  Remove
-                </Button>
-              </div>
-            )}
           </div>
         ))}
 
+        {/* Add Button */}
         <div className="border-border border-t p-3 sm:p-4">
           <Button
             type="button"

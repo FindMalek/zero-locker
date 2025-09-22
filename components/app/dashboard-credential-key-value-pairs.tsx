@@ -11,7 +11,7 @@ import { handleErrors } from "@/lib/utils"
 import { useToast } from "@/hooks/use-toast"
 
 import { DashboardCredentialKeyValuePairsSkeleton } from "@/components/app/dashboard-credential-key-value-pairs-skeleton"
-import { KeyValuePairManager } from "@/components/shared/key-value-pair-manager"
+import { EncryptedKeyValueDisplay } from "@/components/shared/encrypted-key-value-display"
 
 interface KeyValuePair extends BaseKeyValuePair {
   createdAt?: Date
@@ -203,11 +203,11 @@ export function CredentialKeyValuePairs({
   }
 
   return (
-    <KeyValuePairManager
+    <EncryptedKeyValueDisplay
       value={displayData}
       onChange={handleChange}
+      credentialId={credentialId}
       label="Additional Information"
-      description="Secure key-value pairs for extra credential details"
       placeholder={{
         key:
           keyValuePairs.length === 0
@@ -220,7 +220,6 @@ export function CredentialKeyValuePairs({
       }}
       validateDuplicateKeys={false}
       disabled={isLoading}
-      credentialId={credentialId}
     />
   )
 }
