@@ -38,13 +38,12 @@ export function KeyValuePairForm<T extends BaseKeyValuePair>({
 
   // Sync with external value changes
   useEffect(() => {
-    if (
-      value.length !== localPairs.length ||
-      value.some((pair, index) => pair.id !== localPairs[index]?.id)
-    ) {
-      setLocalPairs(value.length === 0 ? [{ key: "", value: "" } as T] : value)
+    if (value.length === 0) {
+      setLocalPairs([{ key: "", value: "" } as T])
+    } else {
+      setLocalPairs(value)
     }
-  }, [value, localPairs.length, localPairs])
+  }, [value])
 
   const updatePairs = useCallback(
     (newPairs: T[]) => {
