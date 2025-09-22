@@ -34,7 +34,19 @@ export function usePreventAutoSave(formId?: string) {
 
     // Apply immediately and on DOM changes
     applyAntiAutofill()
-    const observer = new MutationObserver(applyAntiAutofill)
+    
+    let scheduled = false
+    const throttledApplyAntiAutofill = () => {
+      if (!scheduled) {
+        scheduled = true
+        requestAnimationFrame(() => {
+          applyAntiAutofill()
+          scheduled = false
+        })
+      }
+    }
+    
+    const observer = new MutationObserver(throttledApplyAntiAutofill)
     observer.observe(document.body, { childList: true, subtree: true })
 
     return () => observer.disconnect()
