@@ -1,5 +1,6 @@
 import { useCurrentUser } from "@/orpc/hooks/use-users"
 import { UserPlan } from "@prisma/client"
+
 import { getPermissionConfig } from "../utils"
 
 /**
@@ -13,7 +14,7 @@ export function useUserPermissions() {
   // Handle loading state - if no user data, use normal user plan as default
   const userPlan = currentUser?.plan ?? UserPlan.NORMAL
   const config = getPermissionConfig(userPlan)
-  
+
   const isNormalUser = config.plan === UserPlan.NORMAL
   const isProUser = config.plan === UserPlan.PRO
 

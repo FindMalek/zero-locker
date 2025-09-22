@@ -34,7 +34,7 @@ export function usePreventAutoSave(formId?: string) {
 
     // Apply immediately and on DOM changes
     applyAntiAutofill()
-    
+
     let scheduled = false
     const throttledApplyAntiAutofill = () => {
       if (!scheduled) {
@@ -45,7 +45,7 @@ export function usePreventAutoSave(formId?: string) {
         })
       }
     }
-    
+
     const observer = new MutationObserver(throttledApplyAntiAutofill)
     observer.observe(document.body, { childList: true, subtree: true })
 
