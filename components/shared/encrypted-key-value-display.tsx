@@ -54,7 +54,6 @@ export function EncryptedKeyValueDisplay<T extends BaseKeyValuePair>({
 
   const handleAddPair = useCallback(() => {
     const newPair = {
-      id: `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       key: "",
       value: "",
     } as T
@@ -120,7 +119,7 @@ export function EncryptedKeyValueDisplay<T extends BaseKeyValuePair>({
     async (index: number) => {
       const pair = value[index]
 
-      if (!pair?.id || !credentialId) return
+      if (!pair?.id || !credentialId || pair.id.startsWith("temp_")) return
 
       try {
         // Check if we already have cached data
@@ -163,14 +162,17 @@ export function EncryptedKeyValueDisplay<T extends BaseKeyValuePair>({
 
   const getDisplayValueForPair = useCallback(
     (pair: T) => {
+      // If we have a decrypted value for this pair, show the ACTUAL value
       if (pair.id && decryptedValues[pair.id]) {
         return decryptedValues[pair.id].value
       }
 
-      if (pair.id) {
+      // Only show dots for existing database pairs (not temporary or new pairs)
+      if (pair.id && !pair.id.startsWith("temp_")) {
         return "••••••••"
       }
 
+      // For new pairs or temporary pairs, show the actual value for editing
       return pair.value
     },
     [decryptedValues]
@@ -214,7 +216,9 @@ export function EncryptedKeyValueDisplay<T extends BaseKeyValuePair>({
                     value={getDisplayValueForPair(pair)}
                     onChange={(e) => handleValueChange(index, e.target.value)}
                     onEyeClick={
-                      pair.id ? () => handleEyeClick(index) : undefined
+                      pair.id && !pair.id.startsWith("temp_")
+                        ? () => handleEyeClick(index)
+                        : undefined
                     }
                     disabled={disabled}
                     className="flex-1 font-mono text-xs"

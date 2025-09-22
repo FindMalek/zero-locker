@@ -60,7 +60,6 @@ export function CredentialKeyValuePairs({
     // Default empty row for new entries
     return [
       {
-        id: `temp_${credentialId}_${crypto.randomUUID?.() || Math.random().toString(36)}`,
         key: "",
         value: "",
       },
@@ -69,7 +68,7 @@ export function CredentialKeyValuePairs({
 
   // Initialize editing data with server data when available (keys only for security)
   useEffect(() => {
-    if (keyValuePairs.length > 0 && editingData.length === 0) {
+    if (keyValuePairs.length > 0 && editingData.length === 0 && !hasChanges) {
       // Initialize with keys only, values will be fetched on-demand
       setEditingData(
         keyValuePairs.map((pair) => ({
@@ -78,7 +77,7 @@ export function CredentialKeyValuePairs({
         }))
       )
     }
-  }, [keyValuePairs, editingData.length])
+  }, [keyValuePairs, editingData.length, hasChanges])
 
   // Notify parent about form changes
   useEffect(() => {
@@ -92,19 +91,30 @@ export function CredentialKeyValuePairs({
 
   const handleSave = useCallback(async () => {
     try {
-      // Filter valid pairs and map to API format
-      const validPairs = editingData
-        .filter((pair) => pair.key.trim() && pair.value.trim())
+      // Get existing pairs that are still in editingData (not deleted)
+      const existingPairsToKeep = editingData
+        .filter((pair) => pair.id) // Has ID = existing pair
         .map((pair) => ({
-          id: pair.id?.startsWith("temp_") ? undefined : pair.id, // Don't send temp IDs
-          key: pair.key.trim(),
-          value: pair.value.trim(),
+          id: pair.id,
+          key: pair.key!.trim(),
+          value: "preserve", // API should ignore this for existing pairs with IDs
         }))
+
+      // Get new pairs (no ID) with values
+      const newPairs = editingData
+        .filter((pair) => !pair.id && pair.value?.trim() && pair.key?.trim())
+        .map((pair) => ({
+          key: pair.key!.trim(),
+          value: pair.value!.trim(),
+        }))
+
+      // Combine existing (not deleted) + new pairs
+      const allPairsPayload = [...existingPairsToKeep, ...newPairs]
 
       // Perform the mutation - this will trigger cache invalidation
       await updateKeyValuePairsMutation.mutateAsync({
         credentialId,
-        keyValuePairs: validPairs,
+        keyValuePairs: allPairsPayload,
       })
 
       // Force refetch keys to ensure immediate data refresh
@@ -138,6 +148,7 @@ export function CredentialKeyValuePairs({
     }
   }, [
     editingData,
+    keyValuePairs,
     credentialId,
     updateKeyValuePairsMutation,
     toast,
