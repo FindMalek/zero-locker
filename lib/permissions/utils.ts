@@ -187,12 +187,15 @@ export function getUpgradeMessage(feature: Feature): {
  * This function considers both permission levels and resource limits (e.g., container count limits).
  *
  * @param userPlan - The user's subscription plan
- * @param currentCount - Current number of resources the user has
- * @param action - The action to check (Action.CREATE, Action.UPDATE, or Action.DELETE)
+ * @param currentCount - Current number of resources the user has (not used for READ actions)
+ * @param action - The action to check (Action.READ, Action.CREATE, Action.UPDATE, or Action.DELETE)
  * @returns true if the user can perform the action, false otherwise
  *
  * @example
  * ```typescript
+ * // Check if user can read containers (available to all plans)
+ * const canRead = canPerformAction(UserPlan.NORMAL, 0, Action.READ) // true
+ *
  * // Check if normal user can create another container (max 3)
  * const canCreate = canPerformAction(UserPlan.NORMAL, 2, Action.CREATE) // true
  * const canCreateMore = canPerformAction(UserPlan.NORMAL, 3, Action.CREATE) // false
@@ -209,6 +212,8 @@ export function canPerformAction(
   const config = getPermissionConfig(userPlan)
 
   switch (action) {
+    case Action.READ:
+      return hasPermission(userPlan, Feature.CONTAINERS, PermissionLevel.READ)
     case Action.CREATE:
       return (
         config.features.containers.create &&
