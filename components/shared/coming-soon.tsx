@@ -3,9 +3,9 @@
 import type React from "react"
 import { useEffect, useState } from "react"
 
-import { Icons } from "@/components/shared/icons"
-
 import { cn } from "@/lib/utils"
+
+import { Icons } from "@/components/shared/icons"
 
 export type DevelopmentStage =
   | "planned"
@@ -47,7 +47,11 @@ export function ComingSoon({
     label: string
     icon: React.ReactNode
   }> = [
-    { id: "planned", label: "Planned", icon: <Icons.pencil className="size-4" /> },
+    {
+      id: "planned",
+      label: "Planned",
+      icon: <Icons.pencil className="size-4" />,
+    },
     {
       id: "design",
       label: "Design Interface",
@@ -58,7 +62,11 @@ export function ComingSoon({
       label: "Development",
       icon: <Icons.code className="size-4" />,
     },
-    { id: "testing", label: "Testing", icon: <Icons.testTube className="size-4" /> },
+    {
+      id: "testing",
+      label: "Testing",
+      icon: <Icons.testTube className="size-4" />,
+    },
     {
       id: "production",
       label: "Production Ready",

@@ -112,7 +112,6 @@ export function DashboardViewControls({
         </PopoverTrigger>
         <PopoverContent className="w-80 p-0" align="end">
           <div className="space-y-4 p-4">
-            {/* View Mode */}
             {hasViewMode && (
               <>
                 <div className="space-y-3">
@@ -178,7 +177,6 @@ export function DashboardViewControls({
               </>
             )}
 
-            {/* Show Archived Toggle */}
             {hasArchived && (
               <>
                 <div className="flex items-center justify-between">
@@ -195,7 +193,6 @@ export function DashboardViewControls({
               </>
             )}
 
-            {/* Display Properties */}
             {hasDisplayProperties && (
               <div className="space-y-3">
                 <div className="text-muted-foreground text-xs font-medium uppercase tracking-wide">

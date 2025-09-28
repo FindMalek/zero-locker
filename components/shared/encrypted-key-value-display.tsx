@@ -39,11 +39,10 @@ export function EncryptedKeyValueDisplay<T extends BaseKeyValuePair>({
   className,
   validateDuplicateKeys = false,
 }: EncryptedKeyValueDisplayProps<T>) {
-  // Track decrypted values from manual queries
+  const queryClient = useQueryClient()
   const [decryptedValues, setDecryptedValues] = useState<
     Record<string, DecryptedValueState>
   >({})
-  const queryClient = useQueryClient()
 
   const updatePairs = useCallback(
     (newPairs: T[]) => {
@@ -65,7 +64,6 @@ export function EncryptedKeyValueDisplay<T extends BaseKeyValuePair>({
       if (index < 0 || index >= value.length) return
       const pair = value[index]
 
-      // Cleanup any decrypted state for this pair
       if (pair.id && decryptedValues[pair.id]) {
         setDecryptedValues((prev) => {
           const newState = { ...prev }
@@ -84,7 +82,6 @@ export function EncryptedKeyValueDisplay<T extends BaseKeyValuePair>({
     (index: number, newKey: string) => {
       if (index < 0 || index >= value.length) return
 
-      // Validate duplicate keys if enabled
       if (validateDuplicateKeys && newKey.trim()) {
         const isDuplicate = value.some(
           (pair, i) =>
@@ -122,7 +119,6 @@ export function EncryptedKeyValueDisplay<T extends BaseKeyValuePair>({
       if (!pair?.id || !credentialId || pair.id.startsWith("temp_")) return
 
       try {
-        // Check if we already have cached data
         const queryKey = [
           ...credentialKeys.detail(credentialId),
           "key-value-pair-value",
@@ -132,7 +128,6 @@ export function EncryptedKeyValueDisplay<T extends BaseKeyValuePair>({
         let result = queryClient.getQueryData<{ value: string }>(queryKey)
 
         if (!result) {
-          // Fetch manually if not cached
           result = await queryClient.fetchQuery({
             queryKey,
             queryFn: () =>
@@ -162,17 +157,14 @@ export function EncryptedKeyValueDisplay<T extends BaseKeyValuePair>({
 
   const getDisplayValueForPair = useCallback(
     (pair: T) => {
-      // If we have a decrypted value for this pair, show the ACTUAL value
       if (pair.id && decryptedValues[pair.id]) {
         return decryptedValues[pair.id].value
       }
 
-      // Only show dots for existing database pairs (not temporary or new pairs)
       if (pair.id && !pair.id.startsWith("temp_")) {
         return "••••••••"
       }
 
-      // For new pairs or temporary pairs, show the actual value for editing
       return pair.value
     },
     [decryptedValues]

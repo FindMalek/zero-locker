@@ -36,7 +36,6 @@ export function KeyValuePairForm<T extends BaseKeyValuePair>({
     value.length > 0 ? value : [{ key: "", value: "" } as T]
   )
 
-  // Sync with external value changes
   useEffect(() => {
     if (value.length === 0) {
       setLocalPairs([{ key: "", value: "" } as T])
@@ -167,7 +166,6 @@ export function KeyValuePairForm<T extends BaseKeyValuePair>({
           </div>
         ))}
 
-        {/* Add Button */}
         <div className="border-border border-t p-3 sm:p-4">
           <Button
             type="button"
