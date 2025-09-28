@@ -85,7 +85,6 @@ export function CredentialSidebar({
         </PopoverContent>
       </Popover>
 
-      {/* Quick Actions */}
       <div className="flex gap-2">
         {platform?.loginUrl && (
           <Tooltip>
@@ -107,7 +106,6 @@ export function CredentialSidebar({
         )}
       </div>
 
-      {/* Container Section */}
       <div className="space-y-3">
         <ContainerSelector
           currentContainerId={credential.containerId}
@@ -118,7 +116,6 @@ export function CredentialSidebar({
 
       <Separator />
 
-      {/* Timeline */}
       <div className="space-y-3">
         <Label className="text-sm font-medium">Timeline</Label>
         <div className="space-y-2 text-sm">

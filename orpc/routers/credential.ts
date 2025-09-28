@@ -936,7 +936,7 @@ export const updateCredentialKeyValuePairs = authProcedure
         z.object({
           id: z.string().optional(),
           key: z.string(),
-          value: z.string(),
+          value: z.string().optional(),
         })
       ),
     })
@@ -997,46 +997,79 @@ export const updateCredentialKeyValuePairs = authProcedure
 
       // Update or create key-value pairs
       for (const kvPair of keyValuePairs) {
-        if (!kvPair.key.trim() || !kvPair.value.trim()) continue
+        if (!kvPair.key.trim()) continue
 
         const existingKvPair = existingKvPairs.find(
           (existing) => existing.key === kvPair.key
         )
 
-        // Generate encryption for the value
-        const crypto = await import("crypto")
-        const encryptionKey = crypto.randomBytes(32).toString("base64")
-        const encryptionResult = await encryptData(kvPair.value, encryptionKey)
-
-        const encryptedDataResult = await createEncryptedData({
-          encryptedValue: encryptionResult.encryptedData,
-          encryptionKey: encryptionKey,
-          iv: encryptionResult.iv,
-        })
-
-        if (
-          !encryptedDataResult.success ||
-          !encryptedDataResult.encryptedData
-        ) {
-          throw new ORPCError("INTERNAL_SERVER_ERROR", {
-            message: "Failed to encrypt key-value pair",
-          })
-        }
-
         if (existingKvPair) {
-          // Update existing
-          await tx.credentialKeyValuePair.update({
-            where: { id: existingKvPair.id },
-            data: {
-              valueEncryptionId: encryptedDataResult.encryptedData.id,
-            },
+          // For existing pairs, only update if a new value is provided
+          if (kvPair.value && kvPair.value.trim()) {
+            // Generate encryption for the new value
+            const crypto = await import("crypto")
+            const encryptionKey = crypto.randomBytes(32).toString("base64")
+            const encryptionResult = await encryptData(
+              kvPair.value,
+              encryptionKey
+            )
+
+            const encryptedDataResult = await createEncryptedData({
+              encryptedValue: encryptionResult.encryptedData,
+              encryptionKey: encryptionKey,
+              iv: encryptionResult.iv,
+            })
+
+            if (
+              !encryptedDataResult.success ||
+              !encryptedDataResult.encryptedData
+            ) {
+              throw new ORPCError("INTERNAL_SERVER_ERROR", {
+                message: "Failed to encrypt key-value pair",
+              })
+            }
+
+            // Update existing with new encrypted value
+            await tx.credentialKeyValuePair.update({
+              where: { id: existingKvPair.id },
+              data: {
+                valueEncryptionId: encryptedDataResult.encryptedData.id,
+              },
+            })
+
+            // Delete old encrypted data
+            await tx.encryptedData.delete({
+              where: { id: existingKvPair.valueEncryptionId },
+            })
+          }
+          // If no value provided, preserve existing (no update needed)
+        } else {
+          // Create new pair - value is required for new pairs
+          if (!kvPair.value || !kvPair.value.trim()) continue
+
+          // Generate encryption for the value
+          const crypto = await import("crypto")
+          const encryptionKey = crypto.randomBytes(32).toString("base64")
+          const encryptionResult = await encryptData(
+            kvPair.value,
+            encryptionKey
+          )
+
+          const encryptedDataResult = await createEncryptedData({
+            encryptedValue: encryptionResult.encryptedData,
+            encryptionKey: encryptionKey,
+            iv: encryptionResult.iv,
           })
 
-          // Delete old encrypted data
-          await tx.encryptedData.delete({
-            where: { id: existingKvPair.valueEncryptionId },
-          })
-        } else {
+          if (
+            !encryptedDataResult.success ||
+            !encryptedDataResult.encryptedData
+          ) {
+            throw new ORPCError("INTERNAL_SERVER_ERROR", {
+              message: "Failed to encrypt key-value pair",
+            })
+          }
+
           // Create new
           await tx.credentialKeyValuePair.create({
             data: {

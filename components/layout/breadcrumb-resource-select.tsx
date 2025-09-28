@@ -43,10 +43,9 @@ export function BreadcrumbResourceSelect({
   const router = useRouter()
   const [open, setOpen] = useState(false)
 
-  // Conditionally fetch data based on resource type
-  const shouldFetchCredentials = resourceType === "accounts"
   const shouldFetchCards = resourceType === "cards"
   const shouldFetchSecrets = resourceType === "secrets"
+  const shouldFetchCredentials = resourceType === "accounts"
 
   const { data: credentials, isLoading: isLoadingCredentials } = useCredentials(
     { page: 1, limit: 100 },
@@ -69,7 +68,6 @@ export function BreadcrumbResourceSelect({
     { enabled: shouldFetchSecrets }
   )
 
-  // Only fetch platforms when needed for accounts
   const { data: platforms } = usePlatforms(
     {
       page: 1,
@@ -78,7 +76,6 @@ export function BreadcrumbResourceSelect({
     { enabled: shouldFetchCredentials }
   )
 
-  // Helper function to get platform info
   const getPlatform = (platformId: string) => {
     return (
       platforms?.platforms.find((p) => p.id === platformId) || {
@@ -89,7 +86,6 @@ export function BreadcrumbResourceSelect({
     )
   }
 
-  // Get the appropriate data and loading state
   let items: Array<{
     id: string
     name: string

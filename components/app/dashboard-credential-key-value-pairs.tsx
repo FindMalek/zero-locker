@@ -21,11 +21,13 @@ interface KeyValuePair extends BaseKeyValuePair {
 interface CredentialKeyValuePairsProps {
   credentialId: string
   onFormChange?: (hasChanges: boolean) => void
+  onDataChange?: (pairs: KeyValuePair[], hasChanges: boolean) => void
 }
 
 export function CredentialKeyValuePairs({
   credentialId,
   onFormChange,
+  onDataChange,
 }: CredentialKeyValuePairsProps) {
   const [hasChanges, setHasChanges] = useState(false)
   const [editingData, setEditingData] = useState<KeyValuePair[]>([])
@@ -84,23 +86,25 @@ export function CredentialKeyValuePairs({
     onFormChange?.(hasChanges)
   }, [hasChanges, onFormChange])
 
-  const handleChange = useCallback((newValue: KeyValuePair[]) => {
-    setEditingData(newValue)
-    setHasChanges(true)
-  }, [])
+  const handleChange = useCallback(
+    (newValue: KeyValuePair[]) => {
+      setEditingData(newValue)
+      setHasChanges(true)
+      onDataChange?.(newValue, true)
+    },
+    [onDataChange]
+  )
 
   const handleSave = useCallback(async () => {
     try {
-      // Get existing pairs that are still in editingData (not deleted)
       const existingPairsToKeep = editingData
         .filter((pair) => pair.id) // Has ID = existing pair
         .map((pair) => ({
-          id: pair.id,
+          id: pair.id!,
           key: pair.key!.trim(),
-          value: "preserve", // API should ignore this for existing pairs with IDs
+          // Don't include value - server will preserve existing encrypted value
         }))
 
-      // Get new pairs (no ID) with values
       const newPairs = editingData
         .filter((pair) => !pair.id && pair.value?.trim() && pair.key?.trim())
         .map((pair) => ({
@@ -108,22 +112,16 @@ export function CredentialKeyValuePairs({
           value: pair.value!.trim(),
         }))
 
-      // Combine existing (not deleted) + new pairs
       const allPairsPayload = [...existingPairsToKeep, ...newPairs]
 
-      // Perform the mutation - this will trigger cache invalidation
       await updateKeyValuePairsMutation.mutateAsync({
         credentialId,
         keyValuePairs: allPairsPayload,
       })
 
-      // Force refetch keys to ensure immediate data refresh
       await refetchKeyValuePairs()
 
-      // Show success feedback
       toast("Additional information saved successfully", "success")
-
-      // Reset local state - fresh data should now be available
       setHasChanges(false)
       setEditingData([])
 
@@ -134,7 +132,6 @@ export function CredentialKeyValuePairs({
         "Failed to update additional information"
       )
 
-      // Show error feedback with more details
       const errorMessage = details
         ? `${message}: ${Array.isArray(details) ? details.join(", ") : details}`
         : message
@@ -157,10 +154,10 @@ export function CredentialKeyValuePairs({
 
   const handleCancel = useCallback(() => {
     setHasChanges(false)
-    setEditingData([]) // Clear editing data to revert changes
-  }, [])
+    setEditingData([])
+    onDataChange?.([], false)
+  }, [onDataChange])
 
-  // Expose save and cancel handlers for external access (e.g., toolbar)
   useEffect(() => {
     if (typeof window !== "undefined") {
       // Expose save/cancel handlers on window for toolbar integration

@@ -10,6 +10,7 @@ import {
   isIndividualResourcePage,
 } from "@/lib/utils/breadcrumb-helpers"
 
+import { BreadcrumbResourceSelect } from "@/components/layout/breadcrumb-resource-select"
 import { Icons } from "@/components/shared/icons"
 import {
   Breadcrumb,
@@ -19,8 +20,6 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
-
-import { BreadcrumbResourceSelect } from "./breadcrumb-resource-select"
 
 export function DashboardDynamicBreadcrumb() {
   const pathname = usePathname()
@@ -33,7 +32,6 @@ export function DashboardDynamicBreadcrumb() {
           const href = `/${pathSegments.slice(0, index + 1).join("/")}`
           const isLast = index === pathSegments.length - 1
 
-          // Check if this is an individual resource page
           const isIndividualPage = isIndividualResourcePage(pathSegments, index)
           const resourceType = isIndividualPage
             ? getResourceType(pathSegments[index - 1])

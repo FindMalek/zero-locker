@@ -64,7 +64,6 @@ export function DashboardCredentialPasswordField({
     }
 
     try {
-      // Encrypt the new password
       const key = await generateEncryptionKey()
       const encryptResult = await encryptData(currentPassword, key)
       const keyString = await exportKey(key as CryptoKey)
@@ -100,14 +99,12 @@ export function DashboardCredentialPasswordField({
     onPasswordChange?.(false)
   }, [passwordData?.password, onPasswordChange])
 
-  // Sync current password with fetched data when loaded
   useEffect(() => {
     if (passwordData?.password && !isPasswordModified) {
       setCurrentPassword(passwordData.password)
     }
   }, [passwordData?.password, isPasswordModified])
 
-  // Expose save and discard functions to parent via window object for floating toolbar
   useEffect(() => {
     if (typeof window !== "undefined" && credential?.id) {
       // @ts-expect-error - dynamically adding to window object
