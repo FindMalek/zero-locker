@@ -78,38 +78,33 @@ export function DashboardAddCredentialDialog({
 }: CredentialDialogProps) {
   const { toast } = useToast()
 
-  // Prevent browser auto-save
+  useAggressiveFormBlocker()
   usePreventAutoSave("credential-form")
 
-  // Aggressively block form submissions
-  useAggressiveFormBlocker()
-
   const { data: platformsData } = usePlatforms()
+  const createCredentialWithMetadataMutation = useCreateCredentialWithMetadata()
   const { data: tagsData } = useTags({ page: 1, limit: 100 })
 
   const platforms = platformsData?.platforms || []
   const availableTags = tagsData?.tags || []
-
-  const createCredentialWithMetadataMutation = useCreateCredentialWithMetadata()
 
   const [sensitiveData, setSensitiveData] = useState({
     identifier: "",
     password: "",
   })
 
-  // Store plain text key-value pairs for encryption
-  const [plainKeyValuePairs, setPlainKeyValuePairs] = useState<
-    BaseKeyValuePair[]
-  >([])
-  const [passwordStrength, setPasswordStrength] = useState<{
-    score: number
-    feedback: string
-  } | null>(null)
   const [createMore, setCreateMore] = useState(false)
   const [showAdvanced, setShowAdvanced] = useState(false)
   const [statusPopoverOpen, setStatusPopoverOpen] = useState(false)
 
-  // Forms
+  const [passwordStrength, setPasswordStrength] = useState<{
+    score: number
+    feedback: string
+  } | null>(null)
+  const [plainKeyValuePairs, setPlainKeyValuePairs] = useState<
+    BaseKeyValuePair[]
+  >([])
+
   const credentialForm = useForm<CredentialDto>({
     resolver: zodResolver(credentialDtoSchema),
     defaultValues: {
@@ -201,7 +196,6 @@ export function DashboardAddCredentialDialog({
         return
       }
 
-      // Encrypt key-value pairs before validation and submission
       if (hasMetadataValues()) {
         if (plainKeyValuePairs.length > 0) {
           try {
@@ -209,7 +203,10 @@ export function DashboardAddCredentialDialog({
               await CredentialKeyValuePairEntity.encryptKeyValuePairs(
                 plainKeyValuePairs
               )
-            metadataForm.setValue("keyValuePairs", encryptedPairs)
+            const credentialPairs = encryptedPairs.map((p) =>
+              CredentialKeyValuePairEntity.convertGenericToCredential(p)
+            )
+            metadataForm.setValue("keyValuePairs", credentialPairs)
           } catch {
             toast("Failed to encrypt additional information", "error")
             return
@@ -258,7 +255,7 @@ export function DashboardAddCredentialDialog({
         }
 
         if (
-          metadataValues.keyValuePairs &&
+          Array.isArray(metadataValues.keyValuePairs) &&
           metadataValues.keyValuePairs.length > 0
         ) {
           metadataDto.keyValuePairs = metadataValues.keyValuePairs
@@ -381,7 +378,6 @@ export function DashboardAddCredentialDialog({
 
         <ResponsiveDialogBody className="max-h-[60vh] space-y-6 overflow-y-auto">
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-4">
-            {/* Main Form */}
             <div className="space-y-6 lg:col-span-3">
               <Form {...credentialForm}>
                 <form
@@ -395,7 +391,6 @@ export function DashboardAddCredentialDialog({
                     return false
                   }}
                 >
-                  {/* Hidden honeypot fields to prevent browser auto-save */}
                   <div style={{ display: "none" }}>
                     <input
                       type="text"
@@ -411,7 +406,6 @@ export function DashboardAddCredentialDialog({
                     />
                   </div>
 
-                  {/* Platform Selection */}
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
                       <Label htmlFor="platform" className="text-sm font-medium">
@@ -474,7 +468,6 @@ export function DashboardAddCredentialDialog({
                     />
                   </div>
 
-                  {/* Isolated credential inputs - completely separate from form */}
                   <div
                     className="grid gap-4 sm:grid-cols-2"
                     data-isolated-inputs="true"
@@ -549,7 +542,6 @@ export function DashboardAddCredentialDialog({
                     </div>
                   </div>
 
-                  {/* Description */}
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
                       <Label className="text-sm font-medium">Description</Label>
@@ -569,7 +561,6 @@ export function DashboardAddCredentialDialog({
                     />
                   </div>
 
-                  {/* Tags */}
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
                       <Label className="text-sm font-medium">Tags</Label>
@@ -604,7 +595,6 @@ export function DashboardAddCredentialDialog({
                     />
                   </div>
 
-                  {/* Advanced Settings */}
                   <div>
                     <Button
                       type="button"
@@ -634,7 +624,6 @@ export function DashboardAddCredentialDialog({
                     {showAdvanced && (
                       <div className="bg-muted/55 space-y-4 p-4">
                         <Form {...metadataForm}>
-                          {/* Two-Factor Authentication */}
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
                               <Label className="text-sm font-medium">
@@ -777,7 +766,6 @@ export function DashboardAddCredentialDialog({
                 </Popover>
               </div>
 
-              {/* Container */}
               <div className="space-y-2">
                 <Label className="text-sm font-medium">Container</Label>
                 <ContainerSelector

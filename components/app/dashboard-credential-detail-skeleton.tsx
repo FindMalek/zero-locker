@@ -3,7 +3,6 @@ import { Skeleton } from "@/components/ui/skeleton"
 export function DashboardCredentialDetailSkeleton() {
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-4">
           <Skeleton className="size-16 rounded-full" />
@@ -15,7 +14,6 @@ export function DashboardCredentialDetailSkeleton() {
         <Skeleton className="size-8" />
       </div>
 
-      {/* Cards */}
       <div className="grid gap-6 md:grid-cols-2">
         {Array.from({ length: 4 }).map((_, i) => (
           <div key={i} className="space-y-4 rounded-lg border p-6">

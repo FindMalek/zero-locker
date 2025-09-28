@@ -30,9 +30,18 @@ export async function createTagsAndGetConnections(
 
   const client = getDatabaseClient(tx)
 
+  const normalizedTags = Array.from(
+    new Map(
+      tags.map((t) => [
+        t.name.trim(),
+        { ...t, name: t.name.trim().toLowerCase() },
+      ])
+    ).values()
+  )
+
   const existingTags = await client.tag.findMany({
     where: {
-      name: { in: tags.map((tag) => tag.name) },
+      name: { in: normalizedTags.map((tag) => tag.name) },
       userId,
       OR: [{ containerId: containerId || null }, { containerId: null }],
     },
@@ -52,7 +61,9 @@ export async function createTagsAndGetConnections(
   }
 
   const existingTagNames = new Set(existingTagsByName.keys())
-  const tagsToCreate = tags.filter((tag) => !existingTagNames.has(tag.name))
+  const tagsToCreate = normalizedTags.filter(
+    (tag) => !existingTagNames.has(tag.name)
+  )
 
   let newTags: Tag[] = []
   if (tagsToCreate.length > 0) {
@@ -63,7 +74,11 @@ export async function createTagsAndGetConnections(
       containerId: containerId || null,
     }))
 
-    await client.tag.createMany({ data: createData })
+    await client.tag.createMany({
+      data: createData,
+      // NOTE: Requires relevant unique index; see note below.
+      skipDuplicates: true,
+    })
 
     newTags = await client.tag.findMany({
       where: {

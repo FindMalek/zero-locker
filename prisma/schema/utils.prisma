@@ -63,6 +63,7 @@ model Tag {
   containerId String?
   container   Container? @relation(fields: [containerId], references: [id])
 
+  @@unique([name, userId, containerId])
   @@index([userId])
   @@index([containerId])
   @@map("tag")

@@ -27,10 +27,9 @@ export function DashboardAddSecretDialog({
   onOpenChange,
 }: SecretDialogProps) {
   const { toast } = useToast()
-  const createContainerWithSecretsMutation = useCreateContainerWithSecrets()
-
-  // Prevent browser auto-save
   usePreventAutoSave("secret-form")
+
+  const createContainerWithSecretsMutation = useCreateContainerWithSecrets()
 
   const [title, setTitle] = useState("")
   const [createMore, setCreateMore] = useState(false)

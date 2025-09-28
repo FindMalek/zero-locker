@@ -48,7 +48,7 @@ import { Separator } from "@/components/ui/separator"
 
 interface CredentialDetailViewProps {
   credentialId: string
-  initialData?: {
+  initialData: {
     credential: CredentialOutput
     platforms: ListPlatformsOutput
   }
@@ -66,7 +66,7 @@ export function CredentialDetailView({
     isLoading,
     error,
   } = useCredential(credentialId, {
-    initialData: initialData?.credential,
+    initialData: initialData.credential,
   })
   const updateCredentialMutation = useUpdateCredentialWithSecuritySettings()
   const updateCredentialBasicMutation = useUpdateCredential() // For status-only updates
@@ -78,14 +78,6 @@ export function CredentialDetailView({
   const { data: securitySettings, isLoading: isLoadingSecuritySettings } =
     useCredentialSecuritySettings(credentialId)
 
-  const platform = initialData?.platforms.platforms.find(
-    (p) => p.id === credential?.platformId
-  )
-  if (!platform) {
-    throw new Error("Platform not found")
-  }
-
-  // Form setup with react-hook-form and zod
   const form = useForm<CredentialFormDto>({
     resolver: zodResolver(credentialFormDtoSchema),
     defaultValues: {
@@ -106,10 +98,8 @@ export function CredentialDetailView({
     handleSubmit,
   } = form
 
-  // Combined dirty state for floating toolbar
   const hasChanges = isDirty || hasKeyValueChanges || hasPasswordChanges
 
-  // Initialize form when credential and security settings load
   useEffect(() => {
     if (credential && securitySettings) {
       const initialFormData: CredentialFormDto = {
@@ -130,7 +120,6 @@ export function CredentialDetailView({
     if (!credential) return
 
     try {
-      // Use the security settings update endpoint that handles all fields including metadata
       const updateData = {
         id: credential.id,
         identifier: data.identifier,
@@ -145,7 +134,6 @@ export function CredentialDetailView({
 
       await updateCredentialMutation.mutateAsync(updateData)
 
-      // Reset form dirty state after successful save
       reset(data)
       toast("Credential updated successfully", "success")
     } catch (error) {
@@ -253,6 +241,24 @@ export function CredentialDetailView({
     )
   }
 
+  const platform = initialData.platforms.platforms.find(
+    (p) => p.id === credential.platformId
+  )
+
+  if (!platform) {
+    return (
+      <div className="flex min-h-[400px] items-center justify-center">
+        <EmptyState
+          icon={() => <Icons.warning className="size-12" />}
+          title="Platform unavailable"
+          description="We couldn't load platform info for this credential."
+          actionLabel="Go back"
+          onAction={() => router.back()}
+        />
+      </div>
+    )
+  }
+
   return (
     <div className="bg-background min-h-screen">
       <div className="mx-auto max-w-6xl p-4">
@@ -290,19 +296,27 @@ export function CredentialDetailView({
 
       <FloatingSaveToolbar
         isVisible={hasChanges}
-        onSave={() => {
-          if (isDirty) {
-            handleSubmit(handleSave)()
-          }
-          // Key-value pairs save is handled by their own component via window object
-          if (hasKeyValueChanges && typeof window !== "undefined") {
-            // @ts-expect-error - credentialKeyValuePairs is dynamically added to window object
-            window.credentialKeyValuePairs?.save()
-          }
-          // Password save is handled by the form component via window object
-          if (hasPasswordChanges && typeof window !== "undefined") {
-            // @ts-expect-error - credentialPasswordSave is dynamically added to window object
-            window.credentialPasswordSave?.()
+        onSave={async () => {
+          try {
+            // 1) Save main form
+            if (isDirty) {
+              await handleSubmit(handleSave)()
+            }
+            // 2) Save key-value pairs
+            if (hasKeyValueChanges && typeof window !== "undefined") {
+              // @ts-expect-error - dynamic window API
+              const kvResult = await window.credentialKeyValuePairs?.save()
+              if (kvResult?.success) setHasKeyValueChanges(false)
+            }
+            // 3) Save password
+            if (hasPasswordChanges && typeof window !== "undefined") {
+              // @ts-expect-error - dynamic window API
+              await window.credentialPasswordSave?.()
+              setHasPasswordChanges(false)
+            }
+          } catch (error) {
+            console.error("Save failed:", error)
+            toast("Failed to save changes", "error")
           }
         }}
         onDiscard={() => {

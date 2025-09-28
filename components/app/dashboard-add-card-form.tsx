@@ -202,7 +202,7 @@ export function DashboardAddCardForm({
                 getLabel={(tag) => tag.name}
                 createTag={(name) => ({
                   name,
-                  color: generateTagColor(name, "pastel"),
+                  color: generateTagColor(name, "earthy"),
                   userId: undefined,
                   containerId: undefined,
                 })}

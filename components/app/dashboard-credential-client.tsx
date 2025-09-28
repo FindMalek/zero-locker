@@ -30,7 +30,6 @@ export function DashboardCredentialsClient({
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc")
   const [showArchived, setShowArchived] = useState(false)
 
-  // Toggle functions for multiselect filters
   const toggleStatusFilter = (status: string) => {
     setStatusFilters((prev) =>
       prev.includes(status)

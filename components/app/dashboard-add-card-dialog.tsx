@@ -31,11 +31,10 @@ export function DashboardAddCardDialog({
   availableTags = [],
 }: CardDialogProps) {
   const { toast } = useToast()
-  const createCardMutation = useCreateCard()
-
-  // Prevent browser auto-save
   usePreventAutoSave("card-form")
+
   const queryClient = useQueryClient()
+  const createCardMutation = useCreateCard()
 
   const [createMore, setCreateMore] = useState(false)
   const [sensitiveData, setSensitiveData] = useState({

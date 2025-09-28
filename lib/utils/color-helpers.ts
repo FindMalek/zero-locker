@@ -1,75 +1,6 @@
-// Color palettes for tag generation
-const tagColorPalettes = {
-  vibrant: [
-    "#FF6B6B",
-    "#4ECDC4",
-    "#45B7D1",
-    "#96CEB4",
-    "#FFEAA7",
-    "#DDA0DD",
-    "#98D8C8",
-    "#F7DC6F",
-    "#BB8FCE",
-    "#F8C471",
-    "#82E0AA",
-    "#F1948A",
-    "#85C1E9",
-    "#D2B4DE",
-  ],
-  pastel: [
-    "#FFB3BA",
-    "#BAFFC9",
-    "#BAE1FF",
-    "#FFFFBA",
-    "#FFD3E0",
-    "#E0BBE4",
-    "#C5E3F6",
-    "#FFDFBA",
-    "#B3E5D1",
-    "#FFCCCB",
-    "#D1C4E9",
-    "#C8E6C9",
-    "#FFCDD2",
-    "#E1F5FE",
-    "#F3E5F5",
-  ],
-  professional: [
-    "#3498DB",
-    "#2ECC71",
-    "#E74C3C",
-    "#F39C12",
-    "#9B59B6",
-    "#1ABC9C",
-    "#34495E",
-    "#E67E22",
-    "#8E44AD",
-    "#27AE60",
-    "#2980B9",
-    "#C0392B",
-    "#D35400",
-    "#7F8C8D",
-    "#16A085",
-  ],
-  earthy: [
-    "#8B4513",
-    "#228B22",
-    "#4682B4",
-    "#CD853F",
-    "#9ACD32",
-    "#20B2AA",
-    "#808080",
-    "#B22222",
-    "#32CD32",
-    "#4169E1",
-    "#FF8C00",
-    "#8FBC8F",
-    "#DC143C",
-    "#00CED1",
-    "#9932CC",
-  ],
-}
+import { TAG_COLOR_PALETTES } from "@/config/consts"
 
-export type ColorPalette = keyof typeof tagColorPalettes
+export type ColorPalette = keyof typeof TAG_COLOR_PALETTES
 
 /**
  * Generate a consistent color for a tag based on its name
@@ -90,7 +21,7 @@ export function generateTagColor(
   }
 
   // Get the color palette
-  const colors = tagColorPalettes[palette]
+  const colors = TAG_COLOR_PALETTES[palette]
 
   // Use the hash to select a color (ensure positive index)
   const index = Math.abs(hash) % colors.length
@@ -107,7 +38,7 @@ export function generateTagColors(
   tagNames: string[],
   palette: ColorPalette = "pastel"
 ): Record<string, string> {
-  const colors = tagColorPalettes[palette]
+  const colors = TAG_COLOR_PALETTES[palette]
   const usedColors = new Set<string>()
   const tagColorMap: Record<string, string> = {}
 
@@ -145,7 +76,7 @@ export function generateTagColors(
  * @returns A hex color string
  */
 export function getRandomTagColor(palette: ColorPalette = "pastel"): string {
-  const colors = tagColorPalettes[palette]
+  const colors = TAG_COLOR_PALETTES[palette]
   return colors[Math.floor(Math.random() * colors.length)]
 }
 
@@ -215,7 +146,7 @@ export function rgbToHex(r: number, g: number, b: number): string {
  * @returns Array of palette names
  */
 export function getAvailablePalettes(): ColorPalette[] {
-  return Object.keys(tagColorPalettes) as ColorPalette[]
+  return Object.keys(TAG_COLOR_PALETTES) as ColorPalette[]
 }
 
 /**
@@ -224,5 +155,5 @@ export function getAvailablePalettes(): ColorPalette[] {
  * @returns Array of hex color strings
  */
 export function getPaletteColors(palette: ColorPalette): string[] {
-  return [...tagColorPalettes[palette]]
+  return [...TAG_COLOR_PALETTES[palette]]
 }
