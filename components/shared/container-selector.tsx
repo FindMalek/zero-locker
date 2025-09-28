@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useMemo, useState } from "react"
+import { ContainerType } from "@prisma/client"
 import { ContainerEntity } from "@/entities/utils/container/entity"
 import { useContainers } from "@/orpc/hooks/use-containers"
 import { EntityType } from "@/schemas/utils"
@@ -30,16 +31,15 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 
-// Types
 interface ContainerData {
   id: string
   name: string
   icon: string
   description?: string | null
-  type: string
+  type: ContainerType
+  isDefault: boolean
 }
 
-// Reusable container list component
 function ContainerList({
   containers,
   currentContainerId,
@@ -73,7 +73,6 @@ function ContainerList({
   )
 }
 
-// Reusable create button with conditional tooltip
 function CreateContainerButton({
   canCreate,
   onCreateClick,
@@ -126,7 +125,6 @@ function CreateContainerButton({
   )
 }
 
-// Reusable popover content
 function ContainerSelectorContent({
   searchQuery,
   onSearchChange,
@@ -158,7 +156,6 @@ function ContainerSelectorContent({
           />
         </div>
 
-        {/* Compatible Containers */}
         {containers.length > 0 ? (
           <ContainerList
             containers={containers}
