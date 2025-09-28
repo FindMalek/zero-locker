@@ -122,7 +122,7 @@ export const getCredentialKeyValuePairs = authProcedure
         id: input.id,
         userId: context.user.id,
       },
-      include: CredentialQuery.getInclude(),
+      include: CredentialQuery.getInclude(), // Note: Uses full include but only returns safe fields
     })
 
     if (!credential) {
