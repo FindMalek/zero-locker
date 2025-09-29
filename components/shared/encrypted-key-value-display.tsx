@@ -157,6 +157,10 @@ export function EncryptedKeyValueDisplay<T extends BaseKeyValuePair>({
 
   const getDisplayValueForPair = useCallback(
     (pair: T) => {
+      if (pair.value?.length) {
+        return pair.value
+      }
+
       if (pair.id && decryptedValues[pair.id]) {
         return decryptedValues[pair.id].value
       }

@@ -40,26 +40,20 @@ export function CredentialKeyValuePairs({
     refetch: refetchKeyValuePairs,
   } = useCredentialKeyValuePairs(credentialId)
 
-  // Note: Values are now fetched on-demand via eye icon for enhanced security
-
   const updateKeyValuePairsMutation = useUpdateCredentialKeyValuePairs()
 
-  // Prepare data for display - always in edit mode
   const displayData: KeyValuePair[] = useMemo(() => {
-    // ALWAYS use editingData when it exists (user is actively editing)
     if (editingData.length > 0) {
       return editingData
     }
 
-    // Use server data (keys only) for security - values fetched on-demand
     if (keyValuePairs.length > 0) {
       return keyValuePairs.map((pair) => ({
         ...pair,
-        value: "", // Don't show values until explicitly requested via eye icon
+        value: "",
       }))
     }
 
-    // Default empty row for new entries
     return [
       {
         key: "",
@@ -68,20 +62,17 @@ export function CredentialKeyValuePairs({
     ]
   }, [keyValuePairs, editingData, credentialId])
 
-  // Initialize editing data with server data when available (keys only for security)
   useEffect(() => {
     if (keyValuePairs.length > 0 && editingData.length === 0 && !hasChanges) {
-      // Initialize with keys only, values will be fetched on-demand
       setEditingData(
         keyValuePairs.map((pair) => ({
           ...pair,
-          value: "", // Start with empty values for security
+          value: "",
         }))
       )
     }
   }, [keyValuePairs, editingData.length, hasChanges])
 
-  // Notify parent about form changes
   useEffect(() => {
     onFormChange?.(hasChanges)
   }, [hasChanges, onFormChange])
@@ -97,12 +88,19 @@ export function CredentialKeyValuePairs({
 
   const handleSave = useCallback(async () => {
     try {
-      const existingPairsToKeep = editingData
-        .filter((pair) => pair.id) // Has ID = existing pair
+      const existingPairsKeepingValue = editingData
+        .filter((pair) => pair.id && !pair.value?.trim())
         .map((pair) => ({
           id: pair.id!,
           key: pair.key!.trim(),
-          // Don't include value - server will preserve existing encrypted value
+        }))
+
+      const existingPairsWithNewValue = editingData
+        .filter((pair) => pair.id && pair.value?.trim())
+        .map((pair) => ({
+          id: pair.id!,
+          key: pair.key!.trim(),
+          value: pair.value!.trim(),
         }))
 
       const newPairs = editingData
@@ -112,7 +110,11 @@ export function CredentialKeyValuePairs({
           value: pair.value!.trim(),
         }))
 
-      const allPairsPayload = [...existingPairsToKeep, ...newPairs]
+      const allPairsPayload = [
+        ...existingPairsKeepingValue,
+        ...existingPairsWithNewValue,
+        ...newPairs,
+      ]
 
       await updateKeyValuePairsMutation.mutateAsync({
         credentialId,

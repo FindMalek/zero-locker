@@ -1,12 +1,12 @@
 "use client"
 
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
-import { useCards } from "@/orpc/hooks/use-cards"
-import { useCredentials } from "@/orpc/hooks/use-credentials"
+import { useCard, useCards } from "@/orpc/hooks/use-cards"
+import { useCredential, useCredentials } from "@/orpc/hooks/use-credentials"
 import { usePlatforms } from "@/orpc/hooks/use-platforms"
-import { useSecrets } from "@/orpc/hooks/use-secrets"
+import { useSecret, useSecrets } from "@/orpc/hooks/use-secrets"
 
 import { getLogoDevUrlWithToken, getPlaceholderImage } from "@/lib/utils"
 import type { ResourceType } from "@/lib/utils/breadcrumb-helpers"
@@ -76,6 +76,19 @@ export function BreadcrumbResourceSelect({
     { enabled: shouldFetchCredentials }
   )
 
+  // Fetch individual resources when they're not found in the list
+  const { data: individualCredential } = useCredential(currentId, {
+    enabled: shouldFetchCredentials && !!currentId,
+  })
+
+  const { data: individualCard } = useCard(
+    shouldFetchCards && !!currentId ? currentId : ""
+  )
+
+  const { data: individualSecret } = useSecret(
+    shouldFetchSecrets && !!currentId ? currentId : ""
+  )
+
   const getPlatform = (platformId: string) => {
     return (
       platforms?.platforms.find((p) => p.id === platformId) || {
@@ -86,54 +99,109 @@ export function BreadcrumbResourceSelect({
     )
   }
 
-  let items: Array<{
-    id: string
-    name: string
-    logo?: string
-    platformName?: string
-  }> = []
-  let isLoading = false
-  let currentItem:
-    | { id: string; name: string; logo?: string; platformName?: string }
-    | undefined
+  const { items, isLoading, currentItem } = useMemo(() => {
+    let baseItems: Array<{
+      id: string
+      name: string
+      logo?: string
+      platformName?: string
+    }> = []
+    let loading = false
+    let current:
+      | { id: string; name: string; logo?: string; platformName?: string }
+      | undefined
 
-  switch (resourceType) {
-    case "accounts":
-      isLoading = isLoadingCredentials
-      if (credentials?.credentials) {
-        items = credentials.credentials.map((cred) => {
-          const platform = getPlatform(cred.platformId)
-          return {
-            id: cred.id,
-            name: cred.identifier,
+    switch (resourceType) {
+      case "accounts":
+        loading = isLoadingCredentials
+        if (credentials?.credentials) {
+          baseItems = credentials.credentials.map((cred) => {
+            const platform = getPlatform(cred.platformId)
+            return {
+              id: cred.id,
+              name: cred.identifier,
+              logo: platform.logo,
+              platformName: platform.name,
+            }
+          })
+        }
+
+        // Check if current item is in the list
+        current = baseItems.find((item) => item.id === currentId)
+
+        // If not found and we have individual data, add it to the list
+        if (!current && individualCredential) {
+          const platform = getPlatform(individualCredential.platformId)
+          current = {
+            id: individualCredential.id,
+            name: individualCredential.identifier,
             logo: platform.logo,
             platformName: platform.name,
           }
-        })
-        currentItem = items.find((item) => item.id === currentId)
-      }
-      break
-    case "cards":
-      isLoading = isLoadingCards
-      if (cards?.cards) {
-        items = cards.cards.map((card) => ({
-          id: card.id,
-          name: card.name,
-        }))
-        currentItem = items.find((item) => item.id === currentId)
-      }
-      break
-    case "secrets":
-      isLoading = isLoadingSecrets
-      if (secrets?.secrets) {
-        items = secrets.secrets.map((secret) => ({
-          id: secret.id,
-          name: secret.name,
-        }))
-        currentItem = items.find((item) => item.id === currentId)
-      }
-      break
-  }
+          baseItems = [current, ...baseItems]
+        }
+        break
+
+      case "cards":
+        loading = isLoadingCards
+        if (cards?.cards) {
+          baseItems = cards.cards.map((card) => ({
+            id: card.id,
+            name: card.name,
+          }))
+        }
+
+        current = baseItems.find((item) => item.id === currentId)
+
+        if (!current && individualCard) {
+          current = {
+            id: individualCard.id,
+            name: individualCard.name,
+          }
+          baseItems = [current, ...baseItems]
+        }
+        break
+
+      case "secrets":
+        loading = isLoadingSecrets
+        if (secrets?.secrets) {
+          baseItems = secrets.secrets.map((secret) => ({
+            id: secret.id,
+            name: secret.name,
+          }))
+        }
+
+        current = baseItems.find((item) => item.id === currentId)
+
+        if (!current && individualSecret) {
+          current = {
+            id: individualSecret.id,
+            name: individualSecret.name,
+          }
+          baseItems = [current, ...baseItems]
+        }
+        break
+    }
+
+    return {
+      items: baseItems,
+      isLoading: loading,
+      currentItem: current,
+    }
+  }, [
+    resourceType,
+    credentials,
+    cards,
+    secrets,
+    currentId,
+    isLoadingCredentials,
+    isLoadingCards,
+    isLoadingSecrets,
+    individualCredential,
+    individualCard,
+    individualSecret,
+    getPlatform,
+  ])
 
   const handleSelect = (newId: string) => {
     if (newId !== currentId) {
@@ -156,8 +224,24 @@ export function BreadcrumbResourceSelect({
     )
   }
 
-  if (!currentItem) {
+  // Only show UUID fallback if we've finished loading and still don't have the item
+  if (!currentItem && !isLoading) {
     return <BreadcrumbPage>{currentId}</BreadcrumbPage>
+  }
+
+  // Show loading state if we don't have the current item yet
+  if (!currentItem) {
+    return (
+      <div className="flex max-w-[200px] items-center justify-between">
+        <div className="flex flex-1 items-center gap-2">
+          {resourceType === "accounts" && (
+            <Skeleton className="size-4 shrink-0 rounded-full" />
+          )}
+          <Skeleton className="size-4 min-w-[120px] flex-1" />
+        </div>
+        <Icons.chevronDown className="ml-2 size-4 shrink-0" />
+      </div>
+    )
   }
 
   return (

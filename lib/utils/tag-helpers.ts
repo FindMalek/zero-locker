@@ -30,39 +30,46 @@ export async function createTagsAndGetConnections(
 
   const client = getDatabaseClient(tx)
 
-  const normalizedTags = Array.from(
-    new Map(
-      tags.map((t) => [
-        t.name.trim(),
-        { ...t, name: t.name.trim().toLowerCase() },
-      ])
-    ).values()
+  // Build a map keyed by the lower-cased, trimmed name, but keep each tag's original trimmed case
+  const tagMap = new Map(
+    tags
+      .map((t) => {
+        const trimmedName = t.name.trim()
+        if (!trimmedName) return null
+        return [trimmedName.toLowerCase(), { ...t, name: trimmedName }]
+      })
+      .filter(Boolean) as [string, TagDto][]
   )
+  const normalizedTags = Array.from(tagMap.values())
+  const normalizedNames = Array.from(tagMap.keys())
 
+  // Look up existing tags case-insensitively
   const existingTags = await client.tag.findMany({
     where: {
-      name: { in: normalizedTags.map((tag) => tag.name) },
+      name: { in: normalizedNames, mode: "insensitive" },
       userId,
       OR: [{ containerId: containerId || null }, { containerId: null }],
     },
   })
 
+  // Deduplicate by the lower-cased key, preferring container-specific tags over container-null
   const existingTagsByName = new Map<string, Tag>()
   for (const tag of existingTags) {
-    const existingTag = existingTagsByName.get(tag.name)
+    const key = tag.name.trim().toLowerCase()
+    const existingTag = existingTagsByName.get(key)
     if (!existingTag) {
-      existingTagsByName.set(tag.name, tag)
+      existingTagsByName.set(key, tag)
     } else if (
       tag.containerId === (containerId || null) &&
       existingTag.containerId === null
     ) {
-      existingTagsByName.set(tag.name, tag)
+      existingTagsByName.set(key, tag)
     }
   }
 
-  const existingTagNames = new Set(existingTagsByName.keys())
+  // Only create those tags whose lower-cased name isn't already present
   const tagsToCreate = normalizedTags.filter(
-    (tag) => !existingTagNames.has(tag.name)
+    (tag) => !existingTagsByName.has(tag.name.toLowerCase())
   )
 
   let newTags: Tag[] = []

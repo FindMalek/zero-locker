@@ -274,7 +274,6 @@ export function DashboardAddCredentialDialog({
             if (!createMore) {
               handleDialogOpenChange(false)
             } else {
-              // Reset for creating another
               credentialForm.reset({
                 identifier: "",
                 description: "",
