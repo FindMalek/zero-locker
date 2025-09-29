@@ -7,7 +7,6 @@ import type {
 } from "@/schemas/utils/dto"
 import { useQuery, type UseQueryOptions } from "@tanstack/react-query"
 
-// Query keys factory
 export const platformKeys = {
   all: ["platforms"] as const,
   lists: () => [...platformKeys.all, "list"] as const,

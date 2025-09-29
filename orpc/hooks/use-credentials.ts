@@ -329,7 +329,7 @@ export function useUpdateCredentialPassword() {
 
       // Also invalidate password-specific queries if they exist
       queryClient.invalidateQueries({
-        queryKey: ["credential-password", variables.id],
+        queryKey: [...credentialKeys.detail(variables.id), "password"],
       })
 
       // Invalidate lists in case displayed data changes
