@@ -97,54 +97,61 @@ export const createCard = authProcedure
       input.expiryDate
     )
 
-    const tagConnections = await createTagsAndGetConnections(
-      input.tags,
-      context.user.id,
-      input.containerId
-    )
+    const card = await database.$transaction(async (tx) => {
+      const tagConnections = await createTagsAndGetConnections(
+        input.tags,
+        context.user.id,
+        input.containerId,
+        tx
+      )
 
-    // Create encrypted data for CVV
-    const cvvEncryptionResult = await createEncryptedData({
-      encryptedValue: input.cvvEncryption.encryptedValue,
-      encryptionKey: input.cvvEncryption.encryptionKey,
-      iv: input.cvvEncryption.iv,
-    })
+      const cvvEncryptionResult = await createEncryptedData(
+        {
+          encryptedValue: input.cvvEncryption.encryptedValue,
+          encryptionKey: input.cvvEncryption.encryptionKey,
+          iv: input.cvvEncryption.iv,
+        },
+        tx
+      )
 
-    if (!cvvEncryptionResult.success || !cvvEncryptionResult.encryptedData) {
-      throw new ORPCError("INTERNAL_SERVER_ERROR")
-    }
+      if (!cvvEncryptionResult.success || !cvvEncryptionResult.encryptedData) {
+        throw new ORPCError("INTERNAL_SERVER_ERROR")
+      }
 
-    // Create encrypted data for card number
-    const numberEncryptionResult = await createEncryptedData({
-      encryptedValue: input.numberEncryption.encryptedValue,
-      encryptionKey: input.numberEncryption.encryptionKey,
-      iv: input.numberEncryption.iv,
-    })
+      const numberEncryptionResult = await createEncryptedData(
+        {
+          encryptedValue: input.numberEncryption.encryptedValue,
+          encryptionKey: input.numberEncryption.encryptionKey,
+          iv: input.numberEncryption.iv,
+        },
+        tx
+      )
 
-    if (
-      !numberEncryptionResult.success ||
-      !numberEncryptionResult.encryptedData
-    ) {
-      throw new ORPCError("INTERNAL_SERVER_ERROR")
-    }
+      if (
+        !numberEncryptionResult.success ||
+        !numberEncryptionResult.encryptedData
+      ) {
+        throw new ORPCError("INTERNAL_SERVER_ERROR")
+      }
 
-    const card = await database.card.create({
-      data: {
-        name: input.name,
-        description: input.description,
-        type: input.type,
-        provider: input.provider,
-        status: input.status,
-        expiryDate,
-        billingAddress: input.billingAddress,
-        cardholderName: input.cardholderName,
-        cardholderEmail: input.cardholderEmail,
-        userId: context.user.id,
-        tags: tagConnections,
-        cvvEncryptionId: cvvEncryptionResult.encryptedData.id,
-        numberEncryptionId: numberEncryptionResult.encryptedData.id,
-        ...getOrReturnEmptyObject(input.containerId, "containerId"),
-      },
+      return await tx.card.create({
+        data: {
+          name: input.name,
+          description: input.description,
+          type: input.type,
+          provider: input.provider,
+          status: input.status,
+          expiryDate,
+          billingAddress: input.billingAddress,
+          cardholderName: input.cardholderName,
+          cardholderEmail: input.cardholderEmail,
+          userId: context.user.id,
+          tags: tagConnections,
+          cvvEncryptionId: cvvEncryptionResult.encryptedData.id,
+          numberEncryptionId: numberEncryptionResult.encryptedData.id,
+          ...getOrReturnEmptyObject(input.containerId, "containerId"),
+        },
+      })
     })
 
     return CardEntity.getSimpleRo(card)

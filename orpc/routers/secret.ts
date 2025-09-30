@@ -92,28 +92,32 @@ export const createSecret = authProcedure
   .input(createSecretInputSchema)
   .output(secretOutputSchema)
   .handler(async ({ input, context }): Promise<SecretOutput> => {
-    // Create encrypted data for value
-    const valueEncryptionResult = await createEncryptedData({
-      encryptedValue: input.valueEncryption.encryptedValue,
-      encryptionKey: input.valueEncryption.encryptionKey,
-      iv: input.valueEncryption.iv,
-    })
+    const secret = await database.$transaction(async (tx) => {
+      const valueEncryptionResult = await createEncryptedData(
+        {
+          encryptedValue: input.valueEncryption.encryptedValue,
+          encryptionKey: input.valueEncryption.encryptionKey,
+          iv: input.valueEncryption.iv,
+        },
+        tx
+      )
 
-    if (
-      !valueEncryptionResult.success ||
-      !valueEncryptionResult.encryptedData
-    ) {
-      throw new ORPCError("INTERNAL_SERVER_ERROR")
-    }
+      if (
+        !valueEncryptionResult.success ||
+        !valueEncryptionResult.encryptedData
+      ) {
+        throw new ORPCError("INTERNAL_SERVER_ERROR")
+      }
 
-    const secret = await database.secret.create({
-      data: {
-        name: input.name,
-        note: input.note,
-        valueEncryptionId: valueEncryptionResult.encryptedData.id,
-        containerId: input.containerId,
-        userId: context.user.id,
-      },
+      return await tx.secret.create({
+        data: {
+          name: input.name,
+          note: input.note,
+          valueEncryptionId: valueEncryptionResult.encryptedData.id,
+          containerId: input.containerId,
+          userId: context.user.id,
+        },
+      })
     })
 
     return SecretEntity.getSimpleRo(secret)

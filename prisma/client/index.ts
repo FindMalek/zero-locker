@@ -30,3 +30,4 @@ if (env.NODE_ENV !== "production") {
 
 export { database }
 export * from "@prisma/client"
+export * from "./database-client"

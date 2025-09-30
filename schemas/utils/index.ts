@@ -1,3 +1,4 @@
+export * from "./base-key-value-pair"
 export * from "./container"
 export * from "./container-with-secrets"
 export * from "./utils"

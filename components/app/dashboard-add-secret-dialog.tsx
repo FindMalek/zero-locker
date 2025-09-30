@@ -9,6 +9,7 @@ import { useForm } from "react-hook-form"
 
 import { encryptData, exportKey, generateEncryptionKey } from "@/lib/encryption"
 import { handleErrors, parseKeyValuePairs } from "@/lib/utils"
+import { usePreventAutoSave } from "@/hooks/use-prevent-auto-save"
 import { useToast } from "@/hooks/use-toast"
 
 import { DashboardAddSecretForm } from "@/components/app/dashboard-add-secret-form"
@@ -26,6 +27,8 @@ export function DashboardAddSecretDialog({
   onOpenChange,
 }: SecretDialogProps) {
   const { toast } = useToast()
+  usePreventAutoSave("secret-form")
+
   const createContainerWithSecretsMutation = useCreateContainerWithSecrets()
 
   const [title, setTitle] = useState("")
@@ -140,7 +143,6 @@ export function DashboardAddSecretDialog({
             }
           },
           onError: (error) => {
-            console.error("Error in onSubmit:", error)
             const { message, details } = handleErrors(
               error,
               "Failed to save secret"
@@ -155,7 +157,6 @@ export function DashboardAddSecretDialog({
         }
       )
     } catch (error) {
-      console.error("Error in encryption:", error)
       const { message, details } = handleErrors(
         error,
         "Failed to encrypt secret"
@@ -202,6 +203,8 @@ export function DashboardAddSecretDialog({
             onSubmit()
           }}
           className="space-y-6"
+          autoComplete="off"
+          data-testid="vault-form"
         >
           <DashboardAddSecretForm
             form={form}

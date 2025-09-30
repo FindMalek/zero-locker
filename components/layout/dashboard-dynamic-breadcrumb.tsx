@@ -5,7 +5,12 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 
 import { capitalizeFirstLetter } from "@/lib/utils"
+import {
+  getResourceType,
+  isIndividualResourcePage,
+} from "@/lib/utils/breadcrumb-helpers"
 
+import { BreadcrumbResourceSelect } from "@/components/layout/breadcrumb-resource-select"
 import { Icons } from "@/components/shared/icons"
 import {
   Breadcrumb,
@@ -26,16 +31,30 @@ export function DashboardDynamicBreadcrumb() {
         {pathSegments.map((segment, index) => {
           const href = `/${pathSegments.slice(0, index + 1).join("/")}`
           const isLast = index === pathSegments.length - 1
-          const capitalizedSegment = capitalizeFirstLetter(segment)
+
+          const isIndividualPage = isIndividualResourcePage(pathSegments, index)
+          const resourceType = isIndividualPage
+            ? getResourceType(pathSegments[index - 1])
+            : null
 
           return (
             <React.Fragment key={href}>
               <BreadcrumbItem>
                 {isLast ? (
-                  <BreadcrumbPage>{capitalizedSegment}</BreadcrumbPage>
+                  isIndividualPage && resourceType ? (
+                    <BreadcrumbResourceSelect
+                      resourceType={resourceType}
+                      currentId={segment}
+                      basePath={`/${pathSegments.slice(0, index).join("/")}`}
+                    />
+                  ) : (
+                    <BreadcrumbPage>
+                      {capitalizeFirstLetter(segment)}
+                    </BreadcrumbPage>
+                  )
                 ) : (
                   <BreadcrumbLink asChild>
-                    <Link href={href}>{capitalizedSegment}</Link>
+                    <Link href={href}>{capitalizeFirstLetter(segment)}</Link>
                   </BreadcrumbLink>
                 )}
               </BreadcrumbItem>

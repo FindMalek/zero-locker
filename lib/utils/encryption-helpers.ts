@@ -1,13 +1,34 @@
-import { database } from "@/prisma/client"
+import {
+  getDatabaseClient,
+  type PrismaTransactionClient,
+} from "@/prisma/client"
 import type { EncryptedDataDto } from "@/schemas/encryption/encryption"
 
 export async function createEncryptedData(data: EncryptedDataDto): Promise<{
   success: boolean
   encryptedData?: { id: string }
   error?: string
+}>
+export async function createEncryptedData(
+  data: EncryptedDataDto,
+  tx: PrismaTransactionClient
+): Promise<{
+  success: boolean
+  encryptedData?: { id: string }
+  error?: string
+}>
+export async function createEncryptedData(
+  data: EncryptedDataDto,
+  tx?: PrismaTransactionClient
+): Promise<{
+  success: boolean
+  encryptedData?: { id: string }
+  error?: string
 }> {
+  const client = getDatabaseClient(tx)
+
   try {
-    const encryptedData = await database.encryptedData.create({
+    const encryptedData = await client.encryptedData.create({
       data: {
         iv: data.iv,
         encryptedValue: data.encryptedValue,

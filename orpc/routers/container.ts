@@ -1,6 +1,11 @@
 import { ContainerEntity } from "@/entities/utils/container/entity"
 import { authMiddleware } from "@/middleware/auth"
+import {
+  requireContainerPermission,
+  requireDefaultContainerAccess,
+} from "@/middleware/permissions"
 import { database } from "@/prisma/client"
+import { EntityTypeSchema } from "@/schemas/utils"
 import {
   createContainerWithSecretsInputSchema,
   createContainerWithSecretsOutputSchema,
@@ -20,7 +25,9 @@ import {
 } from "@/schemas/utils/dto"
 import { ORPCError, os } from "@orpc/server"
 import type { Prisma } from "@prisma/client"
+import { z } from "zod"
 
+import { Action, PermissionLevel } from "@/lib/permissions"
 import { createEncryptedData } from "@/lib/utils/encryption-helpers"
 import { createTagsAndGetConnections } from "@/lib/utils/tag-helpers"
 
@@ -30,9 +37,12 @@ const baseProcedure = os.$context<ORPCContext>()
 const authProcedure = baseProcedure.use(({ context, next }) =>
   authMiddleware({ context, next })
 )
+const authWithDefaultAccessProcedure = authProcedure.use(({ context, next }) =>
+  requireDefaultContainerAccess()({ context, next })
+)
 
 // Get container by ID
-export const getContainer = authProcedure
+export const getContainer = authWithDefaultAccessProcedure
   .input(getContainerInputSchema)
   .output(containerOutputSchema)
   .handler(async ({ input, context }): Promise<ContainerOutput> => {
@@ -40,6 +50,9 @@ export const getContainer = authProcedure
       where: {
         id: input.id,
         userId: context.user.id,
+        ...(context.permissions?.canOnlyAccessDefaultContainers && {
+          isDefault: true,
+        }),
       },
     })
 
@@ -51,7 +64,7 @@ export const getContainer = authProcedure
   })
 
 // List containers with pagination
-export const listContainers = authProcedure
+export const listContainers = authWithDefaultAccessProcedure
   .input(listContainersInputSchema)
   .output(listContainersOutputSchema)
   .handler(async ({ input, context }): Promise<ListContainersOutput> => {
@@ -60,6 +73,9 @@ export const listContainers = authProcedure
 
     const where = {
       userId: context.user.id,
+      ...(context.permissions?.canOnlyAccessDefaultContainers && {
+        isDefault: true,
+      }),
       ...(search && {
         OR: [
           { name: { contains: search, mode: "insensitive" as const } },
@@ -90,32 +106,50 @@ export const listContainers = authProcedure
   })
 
 // Create container
-export const createContainer = authProcedure
+export const createContainer = authWithDefaultAccessProcedure
+  .use(({ context, next }) =>
+    requireContainerPermission(
+      PermissionLevel.WRITE,
+      Action.CREATE
+    )({ context, next })
+  )
   .input(createContainerInputSchema)
   .output(containerOutputSchema)
   .handler(async ({ input, context }): Promise<ContainerOutput> => {
-    const tagConnections = await createTagsAndGetConnections(
-      input.tags,
-      context.user.id,
-      undefined
-    )
+    if (context.permissions?.canOnlyAccessDefaultContainers) {
+      throw new ORPCError("FORBIDDEN", {
+        message: "Your plan only allows access to default containers.",
+      })
+    }
 
-    const container = await database.container.create({
-      data: {
-        name: input.name,
-        icon: input.icon,
-        description: input.description,
-        type: input.type,
-        userId: context.user.id,
-        tags: tagConnections,
-      },
+    const container = await database.$transaction(async (tx) => {
+      const tagConnections = await createTagsAndGetConnections(
+        input.tags,
+        context.user.id,
+        undefined,
+        tx
+      )
+
+      return await tx.container.create({
+        data: {
+          name: input.name,
+          icon: input.icon,
+          description: input.description,
+          type: input.type,
+          userId: context.user.id,
+          tags: tagConnections,
+        },
+      })
     })
 
     return ContainerEntity.getSimpleRo(container)
   })
 
 // Update container
-export const updateContainer = authProcedure
+export const updateContainer = authWithDefaultAccessProcedure
+  .use(({ context, next }) =>
+    requireContainerPermission(PermissionLevel.WRITE)({ context, next })
+  )
   .input(updateContainerInputSchema)
   .output(containerOutputSchema)
   .handler(async ({ input, context }): Promise<ContainerOutput> => {
@@ -126,6 +160,9 @@ export const updateContainer = authProcedure
       where: {
         id,
         userId: context.user.id,
+        ...(context.permissions?.canOnlyAccessDefaultContainers && {
+          isDefault: true,
+        }),
       },
     })
 
@@ -161,7 +198,10 @@ export const updateContainer = authProcedure
   })
 
 // Delete container
-export const deleteContainer = authProcedure
+export const deleteContainer = authWithDefaultAccessProcedure
+  .use(({ context, next }) =>
+    requireContainerPermission(PermissionLevel.ADMIN)({ context, next })
+  )
   .input(deleteContainerInputSchema)
   .output(containerOutputSchema)
   .handler(async ({ input, context }): Promise<ContainerOutput> => {
@@ -170,6 +210,9 @@ export const deleteContainer = authProcedure
       where: {
         id: input.id,
         userId: context.user.id,
+        ...(context.permissions?.canOnlyAccessDefaultContainers && {
+          isDefault: true,
+        }),
       },
     })
 
@@ -185,11 +228,23 @@ export const deleteContainer = authProcedure
   })
 
 // Create container with secrets
-export const createContainerWithSecrets = authProcedure
+export const createContainerWithSecrets = authWithDefaultAccessProcedure
+  .use(({ context, next }) =>
+    requireContainerPermission(
+      PermissionLevel.WRITE,
+      Action.CREATE
+    )({ context, next })
+  )
   .input(createContainerWithSecretsInputSchema)
   .output(createContainerWithSecretsOutputSchema)
   .handler(
     async ({ input, context }): Promise<CreateContainerWithSecretsOutput> => {
+      if (context.permissions?.canOnlyAccessDefaultContainers) {
+        throw new ORPCError("FORBIDDEN", {
+          message: "Your plan only allows access to default containers.",
+        })
+      }
+
       const { container: containerData, secrets: secretsData } = input
 
       try {
@@ -198,7 +253,8 @@ export const createContainerWithSecrets = authProcedure
           const tagConnections = await createTagsAndGetConnections(
             containerData.tags,
             context.user.id,
-            undefined
+            undefined,
+            tx
           )
 
           const container = await tx.container.create({
@@ -216,11 +272,14 @@ export const createContainerWithSecrets = authProcedure
           const createdSecrets = []
           for (const secretData of secretsData) {
             // Use the helper function for consistency
-            const encryptionResult = await createEncryptedData({
-              iv: secretData.valueEncryption.iv,
-              encryptedValue: secretData.valueEncryption.encryptedValue,
-              encryptionKey: secretData.valueEncryption.encryptionKey,
-            })
+            const encryptionResult = await createEncryptedData(
+              {
+                iv: secretData.valueEncryption.iv,
+                encryptedValue: secretData.valueEncryption.encryptedValue,
+                encryptionKey: secretData.valueEncryption.encryptionKey,
+              },
+              tx
+            )
 
             if (!encryptionResult.success || !encryptionResult.encryptedData) {
               throw new ORPCError("INTERNAL_SERVER_ERROR")
@@ -275,6 +334,48 @@ export const createContainerWithSecrets = authProcedure
     }
   )
 
+// Get default container for a specific entity type
+export const getDefaultContainerForEntity = authProcedure
+  .input(
+    z.object({
+      entityType: EntityTypeSchema,
+    })
+  )
+  .output(containerOutputSchema.nullable())
+  .handler(async ({ input, context }): Promise<ContainerOutput | null> => {
+    const containerType = ContainerEntity.getDefaultContainerTypeForEntity(
+      input.entityType
+    )
+
+    const container = await database.container.findFirst({
+      where: {
+        userId: context.user.id,
+        isDefault: true,
+        type: containerType,
+      },
+    })
+
+    return container ? ContainerEntity.getSimpleRo(container) : null
+  })
+
+// Get all default containers for a user
+export const getUserDefaultContainers = authProcedure
+  .input(z.object({}))
+  .output(z.array(containerOutputSchema))
+  .handler(async ({ context }): Promise<ContainerOutput[]> => {
+    const containers = await database.container.findMany({
+      where: {
+        userId: context.user.id,
+        isDefault: true,
+      },
+      orderBy: {
+        name: "asc",
+      },
+    })
+
+    return containers.map((container) => ContainerEntity.getSimpleRo(container))
+  })
+
 // Export the container router
 export const containerRouter = {
   get: getContainer,
@@ -283,4 +384,6 @@ export const containerRouter = {
   update: updateContainer,
   delete: deleteContainer,
   createWithSecrets: createContainerWithSecrets,
+  getDefaultForEntity: getDefaultContainerForEntity,
+  getUserDefaults: getUserDefaultContainers,
 }

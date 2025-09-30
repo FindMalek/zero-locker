@@ -140,8 +140,6 @@ export const CardExpiryDateUtils = {
     setValue: (fieldName: string, value: string | Date) => void,
     fieldName: string = "expiryDate"
   ): { success: boolean; error?: string } {
-    console.log("Expiry change:", value) // Debug log
-
     // Remove spaces around the slash
     const cleanedValue = value.replace(/\s*\/\s*/g, "/")
 
@@ -155,12 +153,10 @@ export const CardExpiryDateUtils = {
 
     // Try to parse and validate the date
     const result = this.processExpiryDate(cleanedValue)
-    console.log("Parse result:", result) // Debug log
 
     if (result.success && result.date) {
       // If successfully parsed, use the Date object
       setValue(fieldName, result.date)
-      console.log("Set date object:", result.date) // Debug log
       return { success: true }
     }
 

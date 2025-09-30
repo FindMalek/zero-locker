@@ -10,8 +10,8 @@ model Health {
  * Represents a platform where credentials and environment variables can be associated.
  * @property id - Unique identifier for the platform. Type: String. Generated using cuid().
  * @property name - Name of the platform. Type: String.
- * @property logo - Logo of the platform. Type: String. Optional.
- * @property description - Description of the platform. Type: String. Optional.
+ * @property logo - Logo of the platform. Type: String.
+ * @property loginUrl - Login URL of the platform. Type: String.
  * @property status - Status of the platform. Type: PlatformStatus. Defaults to PENDING.
  * @property createdAt - Timestamp when the platform was created. Type: DateTime. Defaults to current time.
  * @property updatedAt - Timestamp when the platform was last updated. Type: DateTime. Updated automatically.
@@ -22,8 +22,8 @@ model Platform {
   id String @id @default(cuid())
 
   name     String
-  logo     String?
-  loginUrl String?
+  logo     String
+  loginUrl String
 
   status PlatformStatus @default(PENDING)
 
@@ -52,7 +52,7 @@ model Tag {
   id String @id @default(cuid())
 
   name  String
-  color String?
+  color String
 
   cards       Card[]
   credentials Credential[]
@@ -63,6 +63,7 @@ model Tag {
   containerId String?
   container   Container? @relation(fields: [containerId], references: [id])
 
+  @@unique([name, userId, containerId])
   @@index([userId])
   @@index([containerId])
   @@map("tag")
@@ -75,6 +76,7 @@ model Tag {
  * @property description - Description of the container. Type: String. Optional.
  * @property icon - Icon of the container. Type: String. Optional.
  * @property type - Type of the container defining what entities it can hold. Type: ContainerType. Defaults to MIXED.
+ * @property isDefault - Whether this is the default container for its type. Type: Boolean. Defaults to false.
  * @property createdAt - Timestamp when the container was created. Type: DateTime. Defaults to current time.
  * @property updatedAt - Timestamp when the container was last updated. Type: DateTime. Updated automatically.
  * @property user - User who owns the container. Type: User. Relation to User model.
@@ -83,12 +85,14 @@ model Tag {
  * @property environmentVariables - Environment variables stored in the container. Type: EnvironmentVariable[]. Relation to EnvironmentVariable model.
  * @property cards - Cards stored in the container. Type: Card[]. Relation to Card model.
  * @property tags - Tags associated with the container. Type: Tag[]. Relation to Tag model.
+ * @constraint unique(userId, type, isDefault) - Ensures a user can have at most one default container per type.
  */
 model Container {
   id String @id @default(cuid())
 
-  name String
-  icon String
+  name      String
+  icon      String
+  isDefault Boolean @default(false)
 
   description String?
 
@@ -105,7 +109,9 @@ model Container {
   userId String
   user   User   @relation(fields: [userId], references: [id])
 
+  @@unique([userId, type, isDefault], name: "user_default_container_per_type")
   @@index([userId])
   @@index([type])
+  @@index([isDefault])
   @@map("container")
 }

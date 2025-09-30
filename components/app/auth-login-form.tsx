@@ -69,11 +69,10 @@ export function AuthLoginForm({
           variant: "destructive",
         })
       }
-    } catch (error) {
+    } catch {
       toast("Something went wrong. Please try again.", {
         variant: "destructive",
       })
-      console.error(error)
     } finally {
       setIsLoading(false)
     }
@@ -82,7 +81,11 @@ export function AuthLoginForm({
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <form
+          onSubmit={form.handleSubmit(onSubmit)}
+          className="space-y-6"
+          autoComplete="off"
+        >
           <FormField
             control={form.control}
             name="email"
@@ -134,7 +137,7 @@ export function AuthLoginForm({
           />
           <Button type="submit" className="w-full" disabled={isLoading}>
             {isLoading ? (
-              <Icons.spinner className="mr-2 h-6 w-6 animate-spin" />
+              <Icons.spinner className="mr-2 size-4 animate-spin" />
             ) : null}
             Login
           </Button>

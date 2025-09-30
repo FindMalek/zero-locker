@@ -1,66 +1,56 @@
-import { ContainerType, PrismaClient } from "@prisma/client"
+import { ContainerType, PrismaClient, UserPlan } from "@prisma/client"
 
 async function seedContainers(prisma: PrismaClient) {
-  console.log("🌱 Seeding containers...")
+  console.log("🌱 Seeding additional containers...")
 
-  const users = await prisma.user.findMany()
-  const containersData = []
+  // Get Pro users who can have additional custom containers
+  const proUsers = await prisma.user.findMany({
+    where: { plan: UserPlan.PRO },
+  })
 
-  for (const user of users) {
-    // Personal container - mixed type (default)
-    containersData.push({
-      id: `container_personal_${user.id}`,
-      name: "Personal",
-      icon: "🏠",
-      description: "Personal accounts and credentials",
-      type: ContainerType.MIXED,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      userId: user.id,
-    })
+  const additionalContainersData = []
 
-    // Work container - mixed type for both credentials and secrets
-    containersData.push({
+  for (const user of proUsers) {
+    // Pro users get additional custom containers to showcase the Pro features
+
+    // Work container - mixed type for work-related items
+    additionalContainersData.push({
       id: `container_work_${user.id}`,
       name: "Work",
       icon: "💼",
       description: "Work-related accounts and credentials",
       type: ContainerType.MIXED,
+      isDefault: false, // Custom container, not default
       createdAt: new Date(),
       updatedAt: new Date(),
       userId: user.id,
     })
 
-    // Finance container - for cards only
-    containersData.push({
+    // Finance container - mixed type for personal finance
+    additionalContainersData.push({
       id: `container_finance_${user.id}`,
       name: "Finance",
       icon: "💰",
-      description: "Financial accounts and payment information",
-      type: ContainerType.CARDS_ONLY,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      userId: user.id,
-    })
-
-    // Environment secrets container - for secrets only (enables env operations)
-    containersData.push({
-      id: `container_env_${user.id}`,
-      name: "Environment Variables",
-      icon: "🔧",
-      description: "Environment variables and API keys for development",
-      type: ContainerType.SECRETS_ONLY,
+      description: "Personal finance and banking information",
+      type: ContainerType.MIXED,
+      isDefault: false, // Custom container, not default
       createdAt: new Date(),
       updatedAt: new Date(),
       userId: user.id,
     })
   }
 
-  await prisma.container.createMany({
-    data: containersData,
-  })
+  if (additionalContainersData.length > 0) {
+    await prisma.container.createMany({
+      data: additionalContainersData,
+      skipDuplicates: true,
+    })
+    console.log(
+      `✅ Created ${additionalContainersData.length} additional containers for Pro users`
+    )
+  }
 
-  console.log("✅ Containers seeded successfully")
+  console.log("✅ Additional containers seeded successfully")
 }
 
 export { seedContainers }

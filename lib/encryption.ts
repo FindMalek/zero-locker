@@ -1,6 +1,15 @@
 // Check if we're in Node.js or browser environment
 const isNode = typeof window === "undefined"
 
+// Secure ID generation utility for key-value pairs
+export function generateSecureId(prefix: string = "kv"): string {
+  if (typeof crypto !== "undefined" && crypto.randomUUID) {
+    return `${prefix}_${crypto.randomUUID()}`
+  }
+  // Fallback for environments without crypto.randomUUID
+  return `${prefix}_${Math.random().toString(36).substring(2)}_${Date.now().toString(36)}`
+}
+
 // Generate a random encryption key
 export async function generateEncryptionKey(): Promise<CryptoKey | string> {
   if (isNode) {
@@ -16,12 +25,6 @@ export async function generateEncryptionKey(): Promise<CryptoKey | string> {
     true,
     ["encrypt", "decrypt"]
   )
-}
-
-// Convert string to ArrayBuffer (browser only)
-function stringToArrayBuffer(str: string): Uint8Array {
-  const encoder = new TextEncoder()
-  return encoder.encode(str)
 }
 
 // Convert ArrayBuffer to string (browser only)
@@ -40,18 +43,29 @@ export async function encryptData(
   iv: string
 }> {
   if (isNode) {
-    // Node.js encryption
+    // Node.js encryption - use AES-GCM to match browser behavior
     const crypto = await import("crypto")
     const keyString = typeof key === "string" ? key : ""
-    const ivString = iv || crypto.randomBytes(16).toString("base64")
+    const ivString = iv || crypto.randomBytes(12).toString("base64") // 12 bytes for AES-GCM
 
     const keyBuffer = Buffer.from(keyString, "base64")
     const ivBuffer = Buffer.from(ivString, "base64")
 
-    const cipher = crypto.createCipheriv("aes-256-cbc", keyBuffer, ivBuffer)
+    const cipher = crypto.createCipheriv("aes-256-gcm", keyBuffer, ivBuffer)
 
-    let encrypted = cipher.update(data, "utf8", "base64")
-    encrypted += cipher.final("base64")
+    const encryptedBuffer = cipher.update(data, "utf8")
+    const finalBuffer = cipher.final()
+
+    // Get the auth tag for GCM
+    const authTag = cipher.getAuthTag()
+
+    // Concatenate ciphertext and auth tag as raw bytes, then base64 encode
+    const combinedBuffer = Buffer.concat([
+      encryptedBuffer,
+      finalBuffer,
+      authTag,
+    ])
+    const encrypted = combinedBuffer.toString("base64")
 
     return {
       encryptedData: encrypted,
@@ -66,7 +80,10 @@ export async function encryptData(
   const ivArray = window.crypto.getRandomValues(new Uint8Array(12))
 
   // Convert data to ArrayBuffer
-  const dataBuffer = stringToArrayBuffer(data)
+  const encoder = new TextEncoder()
+  const dataArray = encoder.encode(data)
+  const dataBuffer = new ArrayBuffer(dataArray.length)
+  new Uint8Array(dataBuffer).set(dataArray)
 
   // Encrypt the data
   const encryptedBuffer = await window.crypto.subtle.encrypt(
@@ -90,7 +107,7 @@ export async function encryptData(
   }
 }
 
-// Decrypt data - works in both Node.js and browser
+// Decrypt data - works in both Node.js and browser, handles both AES-GCM and AES-CBC
 export async function decryptData(
   encryptedData: string,
   iv: string,
@@ -104,12 +121,50 @@ export async function decryptData(
     const keyBuffer = Buffer.from(keyString, "base64")
     const ivBuffer = Buffer.from(iv, "base64")
 
-    const decipher = crypto.createDecipheriv("aes-256-cbc", keyBuffer, ivBuffer)
+    // Detect encryption algorithm based on IV length
+    const isGCM = ivBuffer.length === 12 // AES-GCM uses 12-byte IV
+    const isCBC = ivBuffer.length === 16 // AES-CBC uses 16-byte IV
 
-    let decrypted = decipher.update(encryptedData, "base64", "utf8")
-    decrypted += decipher.final("utf8")
+    if (isGCM) {
+      // Handle AES-GCM decryption (data from browser)
+      // Browser's Web Crypto API includes auth tag in the encrypted data automatically
+      const encryptedBuffer = Buffer.from(encryptedData, "base64")
 
-    return decrypted
+      // For browser-generated data, the auth tag is included in the encrypted buffer
+      // Extract the last 16 bytes as auth tag
+      const authTagLength = 16
+      const ciphertext = encryptedBuffer.subarray(0, -authTagLength)
+      const authTag = encryptedBuffer.subarray(-authTagLength)
+
+      const decipher = crypto.createDecipheriv(
+        "aes-256-gcm",
+        keyBuffer,
+        ivBuffer
+      )
+      decipher.setAuthTag(authTag)
+
+      const decryptedUpdate = decipher.update(ciphertext)
+      const decryptedFinal = decipher.final()
+      const decryptedBuffer = Buffer.concat([decryptedUpdate, decryptedFinal])
+
+      return decryptedBuffer.toString("utf8")
+    } else if (isCBC) {
+      // Handle AES-CBC decryption (legacy seeded data)
+      const decipher = crypto.createDecipheriv(
+        "aes-256-cbc",
+        keyBuffer,
+        ivBuffer
+      )
+
+      let decrypted = decipher.update(encryptedData, "base64", "utf8")
+      decrypted += decipher.final("utf8")
+
+      return decrypted
+    } else {
+      throw new Error(
+        `Unsupported IV length: ${ivBuffer.length} bytes. Expected 12 bytes (AES-GCM) or 16 bytes (AES-CBC).`
+      )
+    }
   }
 
   // Browser decryption
@@ -190,10 +245,40 @@ export async function encryptDataSync(
   const keyBuffer = Buffer.from(key, "base64")
   const ivBuffer = Buffer.from(iv, "base64")
 
-  const cipher = crypto.createCipheriv("aes-256-cbc", keyBuffer, ivBuffer)
+  // Detect encryption algorithm based on IV length
+  const isGCM = ivBuffer.length === 12 // AES-GCM uses 12-byte IV
+  const isCBC = ivBuffer.length === 16 // AES-CBC uses 16-byte IV
 
-  let encrypted = cipher.update(plaintext, "utf8", "base64")
-  encrypted += cipher.final("base64")
+  if (isGCM) {
+    // Use AES-GCM for consistency with browser
+    const cipher = crypto.createCipheriv("aes-256-gcm", keyBuffer, ivBuffer)
 
-  return encrypted
+    const encryptedBuffer = cipher.update(plaintext, "utf8")
+    const finalBuffer = cipher.final()
+
+    // Get the auth tag for GCM
+    const authTag = cipher.getAuthTag()
+
+    // Concatenate ciphertext and auth tag as raw bytes, then base64 encode
+    const combinedBuffer = Buffer.concat([
+      encryptedBuffer,
+      finalBuffer,
+      authTag,
+    ])
+    const encrypted = combinedBuffer.toString("base64")
+
+    return encrypted
+  } else if (isCBC) {
+    // Legacy AES-CBC for backward compatibility
+    const cipher = crypto.createCipheriv("aes-256-cbc", keyBuffer, ivBuffer)
+
+    let encrypted = cipher.update(plaintext, "utf8", "base64")
+    encrypted += cipher.final("base64")
+
+    return encrypted
+  } else {
+    throw new Error(
+      `Unsupported IV length: ${ivBuffer.length} bytes. Expected 12 bytes (AES-GCM) or 16 bytes (AES-CBC).`
+    )
+  }
 }

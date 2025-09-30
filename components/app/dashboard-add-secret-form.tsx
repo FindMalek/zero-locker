@@ -212,6 +212,7 @@ export function DashboardAddSecretForm({
           value={title}
           onChange={(e) => onTitleChange?.(e.target.value)}
           className="w-full"
+          autoComplete="off"
         />
       </div>
 
@@ -247,6 +248,7 @@ export function DashboardAddSecretForm({
                         handlePaste(pair.id, "key", pastedText)
                       }}
                       className="font-mono text-sm"
+                      autoComplete="off"
                     />
                   </div>
                   <div>
@@ -269,6 +271,7 @@ export function DashboardAddSecretForm({
                           handlePaste(pair.id, "value", pastedText)
                         }}
                         className="flex-1 font-mono text-sm"
+                        autoComplete="new-password"
                       />
                     </div>
                   </div>
@@ -279,12 +282,12 @@ export function DashboardAddSecretForm({
                     <Button
                       type="button"
                       variant="ghost"
-                      size="sm"
+                      size="icon"
                       onClick={() => removeKeyValuePair(pair.id)}
                       title="Remove this key-value pair"
-                      className="text-muted-foreground hover:text-destructive h-9 w-9 flex-shrink-0 p-0"
+                      className="text-muted-foreground hover:text-destructive flex flex-shrink-0 items-center justify-center"
                     >
-                      <Icons.close className="h-4 w-4" />
+                      <Icons.trash className="size-4" />
                     </Button>
                   </div>
                 )}
@@ -299,7 +302,7 @@ export function DashboardAddSecretForm({
                 onClick={addKeyValuePair}
                 className="text-muted-foreground hover:text-foreground flex w-full items-center gap-2"
               >
-                <Icons.add className="h-4 w-4" />
+                <Icons.add className="size-4" />
                 Add Another
               </Button>
             </div>
@@ -327,6 +330,7 @@ export function DashboardAddSecretForm({
               <Input
                 {...field}
                 placeholder="Optional note about this secret..."
+                autoComplete="off"
               />
             </FormControl>
             <FormDescription>

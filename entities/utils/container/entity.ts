@@ -13,6 +13,7 @@ export class ContainerEntity {
       description: entity.description,
 
       icon: entity.icon,
+      isDefault: entity.isDefault,
       type: entity.type,
 
       updatedAt: entity.updatedAt,
@@ -58,6 +59,50 @@ export class ContainerEntity {
         return [EntityTypeEnum.CREDENTIAL]
       case ContainerType.CARDS_ONLY:
         return [EntityTypeEnum.CARD]
+    }
+  }
+
+  static convertContainerTypeToLabel(containerType: ContainerType): string {
+    switch (containerType) {
+      case ContainerType.MIXED:
+        return "Mixed"
+      case ContainerType.SECRETS_ONLY:
+        return "Secrets Only"
+      case ContainerType.CREDENTIALS_ONLY:
+        return "Credentials Only"
+      case ContainerType.CARDS_ONLY:
+        return "Cards Only"
+    }
+  }
+
+  static convertContainerTypeToDescription(
+    containerType: ContainerType
+  ): string {
+    switch (containerType) {
+      case ContainerType.MIXED:
+        return "Can store all types of items"
+      case ContainerType.SECRETS_ONLY:
+        return "Can only store secrets"
+      case ContainerType.CREDENTIALS_ONLY:
+        return "Can only store credentials"
+      case ContainerType.CARDS_ONLY:
+        return "Can only store cards"
+    }
+  }
+
+  /**
+   * Converts EntityType to the corresponding default ContainerType for that entity
+   */
+  static getDefaultContainerTypeForEntity(
+    entityType: EntityType
+  ): ContainerType {
+    switch (entityType) {
+      case EntityTypeEnum.CREDENTIAL:
+        return ContainerType.CREDENTIALS_ONLY
+      case EntityTypeEnum.CARD:
+        return ContainerType.CARDS_ONLY
+      case EntityTypeEnum.SECRET:
+        return ContainerType.SECRETS_ONLY
     }
   }
 }

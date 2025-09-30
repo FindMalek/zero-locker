@@ -10,13 +10,11 @@ import { UseFormReturn } from "react-hook-form"
 
 import { cn, getMetadataLabels } from "@/lib/utils"
 import { CardExpiryDateUtils } from "@/lib/utils/card-expiry-helpers"
+import { generateTagColor } from "@/lib/utils/color-helpers"
 
 import { CardPaymentInputs } from "@/components/shared/card-payment-inputs"
 import { CardStatusIndicator } from "@/components/shared/card-status-indicator"
-import {
-  getRandomSoftColor,
-  TagSelector,
-} from "@/components/shared/tag-selector"
+import { TagSelector } from "@/components/shared/tag-selector"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -87,7 +85,11 @@ export function DashboardAddCardForm({
             <FormItem>
               <FormLabel>Card Name</FormLabel>
               <FormControl>
-                <Input {...field} placeholder="e.g., Chase Sapphire" />
+                <Input
+                  {...field}
+                  placeholder="e.g., Chase Sapphire"
+                  autoComplete="off"
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -101,7 +103,11 @@ export function DashboardAddCardForm({
             <FormItem>
               <FormLabel>Description</FormLabel>
               <FormControl>
-                <Input {...field} placeholder="e.g., Work card" />
+                <Input
+                  {...field}
+                  placeholder="e.g., Work card"
+                  autoComplete="off"
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -148,6 +154,7 @@ export function DashboardAddCardForm({
                   {...field}
                   placeholder="John Doe"
                   onChange={(e) => field.onChange(e.target.value.toUpperCase())}
+                  autoComplete="off"
                 />
               </FormControl>
               <FormMessage />
@@ -195,7 +202,7 @@ export function DashboardAddCardForm({
                 getLabel={(tag) => tag.name}
                 createTag={(name) => ({
                   name,
-                  color: getRandomSoftColor(),
+                  color: generateTagColor(name, "earthy"),
                   userId: undefined,
                   containerId: undefined,
                 })}
@@ -218,7 +225,7 @@ export function DashboardAddCardForm({
           >
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-2">
-                <Plus className="h-4 w-4" />
+                <Plus className="size-4" />
                 <span className="font-medium">Additional Information</span>
               </div>
               {hasMetadataValues() && (
@@ -232,7 +239,7 @@ export function DashboardAddCardForm({
                 {showMetadata ? "Hide" : "Optional"}
               </span>
               <ChevronDown
-                className={`h-4 w-4 transition-transform ${showMetadata ? "rotate-180" : ""}`}
+                className={`size-4 transition-transform ${showMetadata ? "rotate-180" : ""}`}
               />
             </div>
           </Button>
@@ -250,6 +257,7 @@ export function DashboardAddCardForm({
                     <Input
                       {...field}
                       placeholder="123 Main St, City, State 12345"
+                      autoComplete="off"
                     />
                   </FormControl>
                   <FormMessage />
@@ -269,6 +277,7 @@ export function DashboardAddCardForm({
                         {...field}
                         type="email"
                         placeholder="john@example.com"
+                        autoComplete="off"
                       />
                     </FormControl>
                     <FormMessage />
