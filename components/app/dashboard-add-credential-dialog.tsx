@@ -523,7 +523,7 @@ export function DashboardAddCredentialDialog({
                           onChange={handlePasswordChange}
                           onGenerate={handlePasswordGenerate}
                           showGenerateButton={true}
-                          placeholder="En.ter password"
+                          placeholder="Enter password"
                           autoComplete="new-password"
                           data-lpignore="true"
                           data-1p-ignore="true"

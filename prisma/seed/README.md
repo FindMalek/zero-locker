@@ -25,18 +25,21 @@ The seeding process uses a dedicated encryption utility (`./encryption.ts`) that
 - **Email**: <john.doe@example.com>
 - **Password**: SecurePass123!
 - **Avatar**: <https://avatar.vercel.sh/john.doe>
+- **Plan**: NORMAL
 
 ### 2. Jane Smith
 
 - **Email**: <jane.smith@example.com>
 - **Password**: SecurePass123!
 - **Avatar**: <https://avatar.vercel.sh/jane.smith>
+- **Plan**: PRO
 
 ### 3. Mike Johnson
 
 - **Email**: <mike.johnson@example.com>
 - **Password**: SecurePass123!
 - **Avatar**: <https://avatar.vercel.sh/mike.johnson>
+- **Plan**: NORMAL
 
 ## Seeded Platforms
 

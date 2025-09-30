@@ -116,7 +116,7 @@ function getUserPermissionLevel(
         case UserPlan.PRO:
           return PermissionLevel.WRITE // Pro users can create credentials
         case UserPlan.NORMAL:
-          return PermissionLevel.NONE // Not available
+          return PermissionLevel.WRITE // Normal users can also create credentials
         default:
           return PermissionLevel.NONE
       }
@@ -178,8 +178,9 @@ export function getUpgradeMessage(feature: Feature): {
       description: "Upgrade to export your data in various formats.",
     },
     [Feature.CREDENTIALS]: {
-      title: "You can only use Credentials on a Pro plan",
-      description: "and above. Upgrade to Pro to continue.",
+      title: "Credential management is available",
+      description:
+        "You can create and manage credentials with your current plan.",
     },
   }
 

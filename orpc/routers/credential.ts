@@ -4,7 +4,10 @@ import {
 } from "@/entities/credential/credential"
 import { CredentialMetadataQuery } from "@/entities/credential/credential-metadata/query"
 import { authMiddleware } from "@/middleware/auth"
-import { requirePermission } from "@/middleware/permissions"
+import {
+  requireDefaultContainerAccess,
+  requirePermission,
+} from "@/middleware/permissions"
 import { database } from "@/prisma/client"
 import { credentialFormDtoSchema } from "@/schemas/credential/credential"
 import { credentialKeyValuePairWithValueRoSchema } from "@/schemas/credential/credential-key-value"
@@ -42,6 +45,9 @@ import type { ORPCContext } from "../types"
 const baseProcedure = os.$context<ORPCContext>()
 const authProcedure = baseProcedure.use(({ context, next }) =>
   authMiddleware({ context, next })
+)
+const authWithDefaultAccessProcedure = authProcedure.use(({ context, next }) =>
+  requireDefaultContainerAccess()({ context, next })
 )
 
 // Get credential by ID
@@ -357,7 +363,7 @@ export const listCredentials = authProcedure
   })
 
 // Create credential
-export const createCredential = authProcedure
+export const createCredential = authWithDefaultAccessProcedure
   .use(({ context, next }) =>
     requirePermission({
       feature: Feature.CREDENTIALS,
@@ -374,6 +380,25 @@ export const createCredential = authProcedure
 
     if (!platform) {
       throw new ORPCError("NOT_FOUND")
+    }
+
+    // Check if Normal user is trying to use non-default container
+    if (
+      context.permissions?.canOnlyAccessDefaultContainers &&
+      input.containerId
+    ) {
+      const container = await database.container.findFirst({
+        where: {
+          id: input.containerId,
+          userId: context.user.id,
+          isDefault: true,
+        },
+      })
+      if (!container) {
+        throw new ORPCError("FORBIDDEN", {
+          message: "Your plan only allows using default containers.",
+        })
+      }
     }
 
     try {
@@ -799,7 +824,7 @@ export const deleteCredential = authProcedure
   })
 
 // Create credential with metadata
-export const createCredentialWithMetadata = authProcedure
+export const createCredentialWithMetadata = authWithDefaultAccessProcedure
   .use(({ context, next }) =>
     requirePermission({
       feature: Feature.CREDENTIALS,
@@ -820,6 +845,25 @@ export const createCredentialWithMetadata = authProcedure
 
         if (!platform) {
           throw new ORPCError("NOT_FOUND")
+        }
+
+        // Check if Normal user is trying to use non-default container
+        if (
+          context.permissions?.canOnlyAccessDefaultContainers &&
+          credentialData.containerId
+        ) {
+          const container = await database.container.findFirst({
+            where: {
+              id: credentialData.containerId,
+              userId: context.user.id,
+              isDefault: true,
+            },
+          })
+          if (!container) {
+            throw new ORPCError("FORBIDDEN", {
+              message: "Your plan only allows using default containers.",
+            })
+          }
         }
 
         const result = await database.$transaction(async (tx) => {
