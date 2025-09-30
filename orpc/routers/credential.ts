@@ -458,33 +458,6 @@ export const updateCredential = authProcedure
       throw new ORPCError("NOT_FOUND")
     }
 
-    // Check for duplicate identifier if identifier or platformId is being updated
-    if (
-      updateData.identifier !== undefined ||
-      updateData.platformId !== undefined
-    ) {
-      const newIdentifier =
-        updateData.identifier ?? existingCredential.identifier
-      const newPlatformId =
-        updateData.platformId ?? existingCredential.platformId
-
-      const duplicateCredential = await database.credential.findFirst({
-        where: {
-          identifier: newIdentifier,
-          platformId: newPlatformId,
-          userId: context.user.id,
-          NOT: { id }, // Exclude current credential
-        },
-      })
-
-      if (duplicateCredential) {
-        throw new ORPCError("CONFLICT", {
-          message:
-            "A credential with this identifier already exists for this platform",
-        })
-      }
-    }
-
     // Process the update data
     const updatePayload: Prisma.CredentialUpdateInput = {}
 
@@ -532,12 +505,25 @@ export const updateCredential = authProcedure
       }
     }
 
-    const updatedCredential = await database.credential.update({
-      where: { id },
-      data: updatePayload,
-    })
+    try {
+      const updatedCredential = await database.credential.update({
+        where: { id },
+        data: updatePayload,
+      })
 
-    return CredentialEntity.getSimpleRo(updatedCredential)
+      return CredentialEntity.getSimpleRo(updatedCredential)
+    } catch (error) {
+      if (
+        error instanceof PrismaClientKnownRequestError &&
+        error.code === "P2002"
+      ) {
+        throw new ORPCError("CONFLICT", {
+          message:
+            "A credential with this identifier already exists for this platform",
+        })
+      }
+      throw error
+    }
   })
 
 // Update credential password with version control history

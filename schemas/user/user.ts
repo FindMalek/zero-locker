@@ -32,10 +32,10 @@ export type ListUsersDto = z.infer<typeof listUsersDtoSchema>
 export const currentUserDtoSchema = z.object({
   id: z.string(),
   name: z.string(),
-  email: z.string(),
+  email: z.string().email(),
   plan: z.nativeEnum(UserPlan),
   image: z.string().nullable(),
-  createdAt: z.date(),
+  createdAt: z.union([z.date(), z.string().datetime()]),
 })
 
 export type CurrentUserDto = z.infer<typeof currentUserDtoSchema>

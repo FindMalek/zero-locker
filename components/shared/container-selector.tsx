@@ -10,8 +10,8 @@ import {
   Feature,
   getUpgradeMessage,
   useUserPermissions,
-  type UserPermissionFlags,
 } from "@/lib/permissions"
+import type { UserPermissionFlags } from "@/lib/permissions/types"
 import { validateEntityForContainer } from "@/lib/utils"
 
 import { DashboardCreateContainerDialog } from "@/components/app/dashboard-create-container-dialog"
@@ -267,7 +267,21 @@ export function ContainerSelector({
   }
 
   const handleContainerCreated = async (containerId: string) => {
-    await refetch()
+    // Re-fetch to get the newly created container
+    const result = await refetch()
+    const createdContainer = result.data?.containers.find(
+      (container) => container.id === containerId
+    )
+
+    // If the container doesn't exist or isn't compatible, bail out
+    if (
+      !createdContainer ||
+      !validateEntityForContainer(createdContainer.type, entityType)
+    ) {
+      return
+    }
+
+    // Otherwise proceed with selection
     if (onContainerChange) {
       await handleContainerChange(containerId)
     }

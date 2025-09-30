@@ -42,7 +42,7 @@ const authWithDefaultAccessProcedure = authProcedure.use(({ context, next }) =>
 )
 
 // Get container by ID
-export const getContainer = authProcedure
+export const getContainer = authWithDefaultAccessProcedure
   .input(getContainerInputSchema)
   .output(containerOutputSchema)
   .handler(async ({ input, context }): Promise<ContainerOutput> => {
@@ -50,6 +50,9 @@ export const getContainer = authProcedure
       where: {
         id: input.id,
         userId: context.user.id,
+        ...(context.permissions?.canOnlyAccessDefaultContainers && {
+          isDefault: true,
+        }),
       },
     })
 
@@ -103,7 +106,7 @@ export const listContainers = authWithDefaultAccessProcedure
   })
 
 // Create container
-export const createContainer = authProcedure
+export const createContainer = authWithDefaultAccessProcedure
   .use(({ context, next }) =>
     requireContainerPermission(
       PermissionLevel.WRITE,
@@ -113,6 +116,12 @@ export const createContainer = authProcedure
   .input(createContainerInputSchema)
   .output(containerOutputSchema)
   .handler(async ({ input, context }): Promise<ContainerOutput> => {
+    if (context.permissions?.canOnlyAccessDefaultContainers) {
+      throw new ORPCError("FORBIDDEN", {
+        message: "Your plan only allows access to default containers.",
+      })
+    }
+
     const container = await database.$transaction(async (tx) => {
       const tagConnections = await createTagsAndGetConnections(
         input.tags,
@@ -137,7 +146,7 @@ export const createContainer = authProcedure
   })
 
 // Update container
-export const updateContainer = authProcedure
+export const updateContainer = authWithDefaultAccessProcedure
   .use(({ context, next }) =>
     requireContainerPermission(PermissionLevel.WRITE)({ context, next })
   )
@@ -151,6 +160,9 @@ export const updateContainer = authProcedure
       where: {
         id,
         userId: context.user.id,
+        ...(context.permissions?.canOnlyAccessDefaultContainers && {
+          isDefault: true,
+        }),
       },
     })
 
@@ -186,7 +198,7 @@ export const updateContainer = authProcedure
   })
 
 // Delete container
-export const deleteContainer = authProcedure
+export const deleteContainer = authWithDefaultAccessProcedure
   .use(({ context, next }) =>
     requireContainerPermission(PermissionLevel.ADMIN)({ context, next })
   )
@@ -198,6 +210,9 @@ export const deleteContainer = authProcedure
       where: {
         id: input.id,
         userId: context.user.id,
+        ...(context.permissions?.canOnlyAccessDefaultContainers && {
+          isDefault: true,
+        }),
       },
     })
 
@@ -213,7 +228,7 @@ export const deleteContainer = authProcedure
   })
 
 // Create container with secrets
-export const createContainerWithSecrets = authProcedure
+export const createContainerWithSecrets = authWithDefaultAccessProcedure
   .use(({ context, next }) =>
     requireContainerPermission(
       PermissionLevel.WRITE,
@@ -224,6 +239,12 @@ export const createContainerWithSecrets = authProcedure
   .output(createContainerWithSecretsOutputSchema)
   .handler(
     async ({ input, context }): Promise<CreateContainerWithSecretsOutput> => {
+      if (context.permissions?.canOnlyAccessDefaultContainers) {
+        throw new ORPCError("FORBIDDEN", {
+          message: "Your plan only allows access to default containers.",
+        })
+      }
+
       const { container: containerData, secrets: secretsData } = input
 
       try {

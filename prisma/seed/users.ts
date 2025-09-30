@@ -40,6 +40,7 @@ async function createDefaultContainersForSeeder(
 
   const createdContainers = await prisma.container.createMany({
     data: defaultContainers,
+    skipDuplicates: true,
   })
 
   return createdContainers

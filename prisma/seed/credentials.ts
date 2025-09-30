@@ -53,6 +53,12 @@ async function seedCredentials(prisma: PrismaClient) {
       (c) =>
         c.userId === user.id && c.name === "Accounts" && c.isDefault === true
     )
+    if (!accountsContainer) {
+      console.warn(
+        `⚠️  Skipping credential seeding for ${user.email}: missing default "Accounts" container`
+      )
+      continue
+    }
     const workContainer = containers.find(
       (c) => c.userId === user.id && c.name === "Work"
     )
@@ -101,7 +107,7 @@ async function seedCredentials(prisma: PrismaClient) {
       createdAt: new Date(),
       platformId: googlePlatform.id,
       userId: user.id,
-      containerId: accountsContainer?.id,
+      containerId: accountsContainer.id,
     })
 
     // Store tag connections for Google credential
@@ -128,7 +134,7 @@ async function seedCredentials(prisma: PrismaClient) {
     // Prepare GitHub credential - goes to default Accounts container
     credentialsToCreate.push({
       id: githubCredId,
-      identifier: `${user.name.replace(" ", "").toLowerCase()}`,
+      identifier: `${user.name.replace(/\s+/g, "").toLowerCase()}`,
       passwordEncryptionId: githubPasswordEncId,
       status: AccountStatus.ACTIVE,
       description: "GitHub account",
@@ -137,7 +143,7 @@ async function seedCredentials(prisma: PrismaClient) {
       createdAt: new Date(),
       platformId: githubPlatform.id,
       userId: user.id,
-      containerId: accountsContainer?.id,
+      containerId: accountsContainer.id,
     })
 
     // Store tag connections for GitHub credential
@@ -174,7 +180,7 @@ async function seedCredentials(prisma: PrismaClient) {
       // Prepare AWS credential
       credentialsToCreate.push({
         id: awsCredId,
-        identifier: `${user.name.replace(" ", ".").toLowerCase()}@company.com`,
+        identifier: `${user.name.replace(/\s+/g, ".").toLowerCase()}@company.com`,
         passwordEncryptionId: awsPasswordEncId,
         status: AccountStatus.ACTIVE,
         description: "AWS account",
