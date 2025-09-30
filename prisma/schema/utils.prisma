@@ -76,6 +76,7 @@ model Tag {
  * @property description - Description of the container. Type: String. Optional.
  * @property icon - Icon of the container. Type: String. Optional.
  * @property type - Type of the container defining what entities it can hold. Type: ContainerType. Defaults to MIXED.
+ * @property isDefault - Whether this is the default container for its type. Type: Boolean. Defaults to false.
  * @property createdAt - Timestamp when the container was created. Type: DateTime. Defaults to current time.
  * @property updatedAt - Timestamp when the container was last updated. Type: DateTime. Updated automatically.
  * @property user - User who owns the container. Type: User. Relation to User model.
@@ -84,6 +85,7 @@ model Tag {
  * @property environmentVariables - Environment variables stored in the container. Type: EnvironmentVariable[]. Relation to EnvironmentVariable model.
  * @property cards - Cards stored in the container. Type: Card[]. Relation to Card model.
  * @property tags - Tags associated with the container. Type: Tag[]. Relation to Tag model.
+ * @constraint unique(userId, type, isDefault) - Ensures a user can have at most one default container per type.
  */
 model Container {
   id String @id @default(cuid())
@@ -107,6 +109,7 @@ model Container {
   userId String
   user   User   @relation(fields: [userId], references: [id])
 
+  @@unique([userId, type, isDefault], name: "user_default_container_per_type")
   @@index([userId])
   @@index([type])
   @@index([isDefault])

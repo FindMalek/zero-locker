@@ -43,6 +43,7 @@ async function seedContainers(prisma: PrismaClient) {
   if (additionalContainersData.length > 0) {
     await prisma.container.createMany({
       data: additionalContainersData,
+      skipDuplicates: true,
     })
     console.log(
       `✅ Created ${additionalContainersData.length} additional containers for Pro users`

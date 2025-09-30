@@ -183,7 +183,7 @@ export const initializeDefaultContainers = authProcedure
   .output(z.object({ success: z.boolean(), message: z.string() }))
   .handler(async ({ context }) => {
     try {
-      // Check if user already has default containers
+      // Check if user already has all default containers
       const existingDefaultContainers = await database.container.findMany({
         where: {
           userId: context.user.id,
@@ -191,7 +191,8 @@ export const initializeDefaultContainers = authProcedure
         },
       })
 
-      if (existingDefaultContainers.length > 0) {
+      const expectedDefaultCount = 3
+      if (existingDefaultContainers.length >= expectedDefaultCount) {
         return {
           success: false,
           message: "Default containers already exist for this user",

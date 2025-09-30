@@ -39,6 +39,7 @@ export async function createDefaultContainers(userId: string) {
   try {
     const createdContainers = await database.container.createMany({
       data: defaultContainers,
+      skipDuplicates: true,
     })
 
     console.log(

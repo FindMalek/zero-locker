@@ -163,11 +163,7 @@ export function DashboardAddCredentialDialog({
     )
   }
 
-  async function onSubmit(e?: React.FormEvent) {
-    if (e) {
-      e.preventDefault()
-      e.stopPropagation()
-    }
+  async function onSubmit() {
     if (!sensitiveData.identifier.trim()) {
       toast("Identifier is required", "error")
       return
@@ -807,11 +803,7 @@ export function DashboardAddCredentialDialog({
               <Button
                 type="button"
                 disabled={createCredentialWithMetadataMutation.isPending}
-                onClick={(e) => {
-                  e.preventDefault()
-                  e.stopPropagation()
-                  onSubmit(e)
-                }}
+                onClick={() => onSubmit()}
               >
                 {createCredentialWithMetadataMutation.isPending && (
                   <Icons.spinner className="mr-2 size-4 animate-spin" />

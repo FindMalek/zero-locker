@@ -6,6 +6,8 @@ import { credentialKeys } from "@/orpc/hooks/use-credentials"
 import { type BaseKeyValuePair } from "@/schemas/utils"
 import { useQueryClient } from "@tanstack/react-query"
 
+import { useToast } from "@/hooks/use-toast"
+
 import { Icons } from "@/components/shared/icons"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -39,7 +41,9 @@ export function EncryptedKeyValueDisplay<T extends BaseKeyValuePair>({
   className,
   validateDuplicateKeys = false,
 }: EncryptedKeyValueDisplayProps<T>) {
+  const { toast } = useToast()
   const queryClient = useQueryClient()
+
   const [decryptedValues, setDecryptedValues] = useState<
     Record<string, DecryptedValueState>
   >({})
@@ -150,6 +154,7 @@ export function EncryptedKeyValueDisplay<T extends BaseKeyValuePair>({
         }
       } catch (error) {
         console.error("Failed to decrypt value:", error)
+        toast("Failed to decrypt value. Please try again.", "error")
       }
     },
     [value, credentialId, queryClient]
