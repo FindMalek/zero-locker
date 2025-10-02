@@ -1,0 +1,409 @@
+---
+globs: middleware/**/*
+---
+
+# Middleware Folder - Next.js Middleware and oRPC Middleware
+
+The `/middleware` folder contains Next.js middleware for request handling and oRPC middleware for API route protection and permissions.
+
+## Structure Overview
+
+```
+middleware/
+├── auth.ts             # oRPC authentication middleware
+├── index.ts            # Next.js middleware
+└── permissions.ts      # oRPC permission middleware
+```
+
+## Next.js Middleware (`index.ts`)
+
+### Request Interception
+```tsx
+import { NextResponse } from "next/server"
+import type { NextRequest } from "next/server"
+
+export function middleware(request: NextRequest) {
+  // Get the pathname of the request
+  const pathname = request.nextUrl.pathname
+
+  // Check if the request is for a protected route
+  if (pathname.startsWith("/dashboard")) {
+    // Check for authentication
+    const session = request.cookies.get("better-auth.session_token")
+    
+    if (!session) {
+      // Redirect to login if not authenticated
+      return NextResponse.redirect(new URL("/login", request.url))
+    }
+  }
+
+  // Check for API routes
+  if (pathname.startsWith("/api/orpc")) {
+    // Add CORS headers for API routes
+    const response = NextResponse.next()
+    
+    response.headers.set("Access-Control-Allow-Origin", "*")
+    response.headers.set("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS")
+    response.headers.set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+    
+    return response
+  }
+
+  return NextResponse.next()
+}
+
+export const config = {
+  matcher: [
+    "/dashboard/:path*",
+    "/api/orpc/:path*",
+  ],
+}
+```
+
+### Route Protection
+```tsx
+// Protect dashboard routes
+const protectedRoutes = ["/dashboard"]
+const authRoutes = ["/login", "/register"]
+
+export function middleware(request: NextRequest) {
+  const pathname = request.nextUrl.pathname
+  const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route))
+  const isAuthRoute = authRoutes.some(route => pathname.startsWith(route))
+  
+  if (isProtectedRoute) {
+    const session = request.cookies.get("better-auth.session_token")
+    
+    if (!session) {
+      return NextResponse.redirect(new URL("/login", request.url))
+    }
+  }
+  
+  if (isAuthRoute) {
+    const session = request.cookies.get("better-auth.session_token")
+    
+    if (session) {
+      return NextResponse.redirect(new URL("/dashboard", request.url))
+    }
+  }
+  
+  return NextResponse.next()
+}
+```
+
+## oRPC Authentication Middleware (`auth.ts`)
+
+### Base Middleware Structure
+```tsx
+import type { AuthenticatedContext, PublicContext } from "@/orpc/types"
+import { ORPCError } from "@orpc/server"
+import type { MiddlewareNextFn } from "@orpc/server"
+
+// Public middleware - no authentication required
+export const publicMiddleware = async ({
+  context,
+  next,
+}: {
+  context: PublicContext
+  next: MiddlewareNextFn<PublicContext>
+}) => {
+  return next({ context })
+}
+
+// Authentication middleware - requires valid session
+export const authMiddleware = async ({
+  context,
+  next,
+}: {
+  context: PublicContext
+  next: MiddlewareNextFn<unknown>
+}) => {
+  if (!context.session || !context.user) {
+    throw new ORPCError("UNAUTHORIZED")
+  }
+
+  return next({
+    context: {
+      ...context,
+      session: context.session,
+      user: context.user,
+    },
+  })
+}
+```
+
+### Context Type Safety
+```tsx
+// Ensure type safety for authenticated context
+export const authMiddleware = async ({
+  context,
+  next,
+}: {
+  context: PublicContext
+  next: MiddlewareNextFn<AuthenticatedContext>
+}) => {
+  if (!context.session || !context.user) {
+    throw new ORPCError("UNAUTHORIZED")
+  }
+
+  return next({
+    context: {
+      ...context,
+      session: context.session,
+      user: context.user,
+    } as AuthenticatedContext,
+  })
+}
+```
+
+## Permission Middleware (`permissions.ts`)
+
+### Feature-Based Permissions
+```tsx
+import { ORPCError } from "@orpc/server"
+import type { MiddlewareNextFn } from "@orpc/server"
+import { Feature, Action } from "@/lib/permissions"
+import type { AuthenticatedContext } from "@/orpc/types"
+
+// Check if user has permission for a specific feature and action
+export const requirePermission = (feature: Feature, action: Action) => {
+  return async ({ context, next }: { context: AuthenticatedContext; next: MiddlewareNextFn<unknown> }) => {
+    const hasPermission = await checkUserPermission(context.user, feature, action)
+    
+    if (!hasPermission) {
+      throw new ORPCError("FORBIDDEN", `Insufficient permissions for ${feature}:${action}`)
+    }
+
+    return next({ context })
+  }
+}
+
+// Check user permissions based on plan and feature
+async function checkUserPermission(user: User, feature: Feature, action: Action): Promise<boolean> {
+  switch (feature) {
+    case Feature.CONTAINERS:
+      switch (action) {
+        case Action.CREATE:
+          return user.plan !== UserPlan.FREE
+        case Action.UPDATE:
+          return user.plan !== UserPlan.FREE
+        case Action.DELETE:
+          return user.plan !== UserPlan.FREE
+        case Action.READ:
+          return true
+        default:
+          return false
+      }
+    case Feature.CREDENTIALS:
+      // All users can manage credentials
+      return true
+    case Feature.EXPORTS:
+      return user.plan !== UserPlan.FREE
+    default:
+      return false
+  }
+}
+```
+
+### Container Access Control
+```tsx
+// Require access to default container
+export const requireDefaultContainerAccess = () => {
+  return async ({ context, next }: { context: AuthenticatedContext; next: MiddlewareNextFn<unknown> }) => {
+    const defaultContainer = await getDefaultContainer(context.user.id)
+    
+    if (!defaultContainer) {
+      throw new ORPCError("NOT_FOUND", "Default container not found")
+    }
+
+    return next({ context })
+  }
+}
+
+// Require access to specific container
+export const requireContainerAccess = (containerId: string) => {
+  return async ({ context, next }: { context: AuthenticatedContext; next: MiddlewareNextFn<unknown> }) => {
+    const container = await database.container.findFirst({
+      where: {
+        id: containerId,
+        userId: context.user.id,
+      },
+    })
+    
+    if (!container) {
+      throw new ORPCError("FORBIDDEN", "Container access denied")
+    }
+
+    return next({ context })
+  }
+}
+```
+
+### Plan-Based Restrictions
+```tsx
+// Require Pro plan for certain features
+export const requireProPlan = () => {
+  return async ({ context, next }: { context: AuthenticatedContext; next: MiddlewareNextFn<unknown> }) => {
+    if (context.user.plan === UserPlan.FREE) {
+      throw new ORPCError("FORBIDDEN", "Pro plan required for this feature")
+    }
+
+    return next({ context })
+  }
+}
+
+// Check container limits
+export const checkContainerLimits = () => {
+  return async ({ context, next }: { context: AuthenticatedContext; next: MiddlewareNextFn<unknown> }) => {
+    if (context.user.plan === UserPlan.FREE) {
+      const containerCount = await database.container.count({
+        where: { userId: context.user.id },
+      })
+      
+      if (containerCount >= 1) {
+        throw new ORPCError("FORBIDDEN", "Container limit reached for free plan")
+      }
+    }
+
+    return next({ context })
+  }
+}
+```
+
+## Middleware Composition
+
+### Chaining Middleware
+```tsx
+// Base procedure with context
+const baseProcedure = os.$context<ORPCContext>()
+
+// Add authentication
+const authProcedure = baseProcedure.use(({ context, next }) =>
+  authMiddleware({ context, next })
+)
+
+// Add permissions
+const permissionProcedure = authProcedure.use(({ context, next }) =>
+  requirePermission(Feature.CONTAINERS, Action.CREATE)({ context, next })
+)
+
+// Add container access
+const containerProcedure = permissionProcedure.use(({ context, next }) =>
+  requireDefaultContainerAccess()({ context, next })
+)
+
+// Use in route definition
+export const createCredential = containerProcedure
+  .input(createCredentialInputSchema)
+  .output(credentialOutputSchema)
+  .handler(async ({ input, context }) => {
+    // Implementation
+  })
+```
+
+### Conditional Middleware
+```tsx
+// Apply middleware conditionally
+export const createConditionalProcedure = (requiresAuth: boolean) => {
+  let procedure = baseProcedure
+  
+  if (requiresAuth) {
+    procedure = procedure.use(({ context, next }) =>
+      authMiddleware({ context, next })
+    )
+  }
+  
+  return procedure
+}
+```
+
+## Error Handling
+
+### Standard Error Responses
+```tsx
+// Use standard oRPC error codes
+throw new ORPCError("UNAUTHORIZED")
+throw new ORPCError("FORBIDDEN")
+throw new ORPCError("NOT_FOUND")
+throw new ORPCError("BAD_REQUEST", "Custom error message")
+```
+
+### Custom Error Messages
+```tsx
+// Provide specific error messages
+export const requirePermission = (feature: Feature, action: Action) => {
+  return async ({ context, next }) => {
+    const hasPermission = await checkUserPermission(context.user, feature, action)
+    
+    if (!hasPermission) {
+      throw new ORPCError(
+        "FORBIDDEN", 
+        `You need a ${getRequiredPlan(feature, action)} plan to ${action} ${feature}`
+      )
+    }
+
+    return next({ context })
+  }
+}
+```
+
+## Best Practices
+
+### 1. Middleware Order
+- Apply authentication before permissions
+- Apply general permissions before specific ones
+- Use consistent middleware chains
+
+### 2. Error Handling
+- Use appropriate error codes
+- Provide meaningful error messages
+- Log security violations
+
+### 3. Performance
+- Cache permission checks when possible
+- Use efficient database queries
+- Avoid unnecessary middleware
+
+### 4. Security
+- Never bypass authentication
+- Validate all inputs
+- Use principle of least privilege
+
+### 5. Type Safety
+- Use proper TypeScript types
+- Ensure context type safety
+- Validate middleware parameters
+
+### 6. Testing
+- Test middleware in isolation
+- Test error conditions
+- Test permission boundaries
+
+## Common Patterns
+
+### Route Protection
+```tsx
+// Protect specific routes
+const protectedRoutes = ["/dashboard", "/settings"]
+const isProtected = protectedRoutes.some(route => pathname.startsWith(route))
+```
+
+### Plan-Based Access
+```tsx
+// Check user plan
+if (user.plan === UserPlan.FREE && feature === Feature.EXPORTS) {
+  throw new ORPCError("FORBIDDEN", "Pro plan required")
+}
+```
+
+### Resource Ownership
+```tsx
+// Ensure user owns the resource
+const resource = await database.resource.findFirst({
+  where: { id: resourceId, userId: user.id },
+})
+
+if (!resource) {
+  throw new ORPCError("FORBIDDEN", "Resource access denied")
+}
+```
