@@ -1,0 +1,503 @@
+---
+alwaysApply: true
+---
+# Zero Locker Coding Rules
+
+## Naming Conventions
+
+### Files
+- **Components**: `kebab-case.tsx` (e.g., `dashboard-credential-form.tsx`)
+- **Pages**: `page.tsx` or `route.ts` for API routes
+- **Schemas**: `kebab-case.ts` (e.g., `credential-form-dto.ts`)
+- **Entities**: `entity.ts`, `query.ts`, `index.ts`
+- **Hooks**: `use-kebab-case.ts` (e.g., `use-copy-to-clipboard.ts`)
+- **Types**: `kebab-case.d.ts` (e.g., `dashboard.d.ts`)
+- **Utilities**: `kebab-case.ts` (e.g., `date-utils.ts`)
+
+### Functions
+- **camelCase** for functions and methods (e.g., `getUserById`, `createCredential`)
+- **PascalCase** for React components (e.g., `DashboardCredentialForm`)
+- **UPPER_SNAKE_CASE** for constants (e.g., `DEFAULT_PAGE_SIZE`, `MAX_PASSWORD_LENGTH`)
+
+### Variables
+- **camelCase** for variables (e.g., `userCredentials`, `isLoading`)
+- **UPPER_SNAKE_CASE** for constants (e.g., `API_BASE_URL`)
+- **PascalCase** for classes and types (e.g., `CredentialEntity`, `UserPermissions`)
+
+### Database
+- **snake_case** for database fields (e.g., `user_id`, `created_at`)
+- **camelCase** for Prisma model fields (e.g., `userId`, `createdAt`)
+- **PascalCase** for Prisma models (e.g., `User`, `Credential`)
+
+## File Structure
+
+### Component Organization
+```
+components/
+├── app/                 # Application-specific components
+│   ├── auth-*.tsx      # Authentication components
+│   ├── dashboard-*.tsx # Dashboard components
+│   └── marketing-*.tsx # Marketing components
+├── layout/             # Layout components
+├── shared/             # Shared utility components
+└── ui/                 # Base UI components (shadcn/ui)
+```
+
+### Entity Organization
+```
+entities/
+├── credential/
+│   ├── credential/
+│   │   ├── entity.ts   # Transformation logic
+│   │   ├── query.ts    # Database query helpers
+│   │   └── index.ts    # Barrel exports
+│   └── credential-metadata/
+└── index.ts            # Main barrel export
+```
+
+### API Organization
+```
+orpc/
+├── routers/
+│   ├── credential.ts   # Credential routes
+│   ├── card.ts         # Card routes
+│   └── index.ts        # Router aggregation
+├── hooks/
+│   ├── use-credentials.ts
+│   └── use-cards.ts
+└── client/
+```
+
+### Schema Organization
+```
+schemas/
+├── credential/
+│   ├── credential.ts           # Entity schemas
+│   ├── credential-metadata.ts  # Metadata schemas
+│   └── dto.ts                  # DTO schemas
+├── utils/
+│   ├── base-key-value-pair.ts
+│   └── utils.ts
+└── index.ts
+```
+
+## Import Rules
+
+### Absolute Imports
+- **Use absolute imports** for top-level files: `@/components`, `@/lib`, `@/entities`
+- **Example**:
+  ```tsx
+  // ✅ Do
+  import { CredentialEntity } from "@/entities/credential"
+  import { Button } from "@/components/ui/button"
+  import { useCredentials } from "@/orpc/hooks/use-credentials"
+
+  // ❌ Avoid
+  import { CredentialEntity } from "../../entities/credential"
+  ```
+
+### Import Order
+1. **React imports**
+2. **Third-party libraries**
+3. **Internal imports (absolute)**
+4. **Relative imports**
+5. **Type-only imports**
+
+```tsx
+// ✅ Do
+import React from "react"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+
+import { Button } from "@/components/ui/button"
+import { CredentialEntity } from "@/entities/credential"
+import { useCredentials } from "@/orpc/hooks/use-credentials"
+
+import { FormField } from "./form-field"
+import type { CredentialFormProps } from "./types"
+```
+
+### Barrel Exports
+- **Always use barrel exports** for clean imports
+- **Example**:
+  ```tsx
+  // entities/index.ts
+  export * from "./credential"
+  export * from "./card"
+  export * from "./secrets"
+
+  // Usage
+  import { CredentialEntity, CardEntity } from "@/entities"
+  ```
+
+## TypeScript Rules
+
+### Type Definitions
+- **Use interfaces** for object shapes
+- **Use types** for unions, primitives, and computed types
+- **Export types** with `export type`
+
+```tsx
+// ✅ Do
+export interface CredentialFormProps {
+  data?: Credential
+  onSubmit: (data: CreateCredentialInput) => void
+}
+
+export type CredentialStatus = "active" | "suspended" | "deleted"
+
+export type CreateCredentialInput = z.infer<typeof createCredentialInputSchema>
+
+// ❌ Avoid
+export type CredentialFormProps = {
+  data?: Credential
+  onSubmit: (data: any) => void
+}
+```
+
+### Strict Mode
+- **Enable strict mode** in `tsconfig.json`
+- **No `any` types** - use proper typing
+- **No implicit any** - explicit type annotations
+
+```tsx
+// ✅ Do
+export function processCredential(credential: Credential): CredentialRo {
+  return CredentialEntity.getSimpleRo(credential)
+}
+
+// ❌ Avoid
+export function processCredential(credential: any): any {
+  return credential
+}
+```
+
+## React Rules
+
+### Component Structure
+- **Functional components** only
+- **Use TypeScript** for all components
+- **Define props interface** for each component
+
+```tsx
+// ✅ Do
+interface CredentialFormProps {
+  data?: Credential
+  onSubmit: (data: CreateCredentialInput) => void
+  onCancel: () => void
+}
+
+export function CredentialForm({ data, onSubmit, onCancel }: CredentialFormProps) {
+  // Component logic
+}
+
+// ❌ Avoid
+export function CredentialForm(props: any) {
+  // No type safety
+}
+```
+
+### Hooks Usage
+- **Custom hooks** for reusable logic
+- **React Hook Form** for form management
+- **TanStack Query** for server state
+
+```tsx
+// ✅ Do
+export function useCredentialForm(data?: Credential) {
+  const form = useForm<CreateCredentialInput>({
+    resolver: zodResolver(createCredentialInputSchema),
+    defaultValues: data ? {
+      identifier: data.identifier,
+      platformId: data.platformId,
+    } : undefined,
+  })
+
+  return form
+}
+
+// ❌ Avoid
+export function CredentialForm() {
+  const [formData, setFormData] = useState({})
+  // Manual form state management
+}
+```
+
+## Security Rules
+
+### Data Protection
+- **Never log sensitive data** in production
+- **Always encrypt passwords** before storage
+- **Use client-safe entity transformations**
+
+```tsx
+// ✅ Do
+export function createCredential(input: CreateCredentialInput) {
+  const encryptedPassword = await encryptData(input.password, key, iv)
+  
+  return database.credential.create({
+    data: {
+      ...input,
+      passwordEncryptionId: encryptedPassword.id,
+    },
+  })
+}
+
+// ❌ Avoid
+export function createCredential(input: CreateCredentialInput) {
+  console.log("Password:", input.password) // Security risk
+  
+  return database.credential.create({
+    data: input, // Password stored in plain text
+  })
+}
+```
+
+### Input Validation
+- **Validate all inputs** with Zod schemas
+- **Sanitize user input** before processing
+- **Use parameterized queries** for database operations
+
+```tsx
+// ✅ Do
+export const createCredential = authProcedure
+  .input(createCredentialInputSchema)
+  .handler(async ({ input, context }) => {
+    // Input is validated by schema
+    return CredentialService.create(input, context.user.id)
+  })
+
+// ❌ Avoid
+export const createCredential = authProcedure.handler(async ({ input }) => {
+  // No validation, potential security risk
+  return database.credential.create({ data: input })
+})
+```
+
+### Authentication
+- **Always check authentication** for protected routes
+- **Validate user permissions** before operations
+- **Use middleware** for consistent security
+
+```tsx
+// ✅ Do
+export const updateCredential = authProcedure
+  .use(requirePermission(Feature.CREDENTIALS, Action.UPDATE))
+  .handler(async ({ input, context }) => {
+    // User is authenticated and has permission
+    return CredentialService.update(input, context.user.id)
+  })
+
+// ❌ Avoid
+export const updateCredential = baseProcedure.handler(async ({ input }) => {
+  // No authentication check
+  return database.credential.update({ where: { id: input.id }, data: input })
+})
+```
+
+## Performance Rules
+
+### Database Queries
+- **Use appropriate includes** to avoid N+1 queries
+- **Implement pagination** for list endpoints
+- **Use indexes** for frequently queried fields
+
+```tsx
+// ✅ Do
+export const listCredentials = authProcedure
+  .input(listCredentialsInputSchema)
+  .handler(async ({ input, context }) => {
+    const credentials = await database.credential.findMany({
+      where: { userId: context.user.id },
+      include: CredentialQuery.getClientSafeInclude(),
+      skip: (input.page - 1) * input.limit,
+      take: input.limit,
+    })
+    
+    return credentials.map(credential => CredentialEntity.getRo(credential))
+  })
+
+// ❌ Avoid
+export const listCredentials = authProcedure.handler(async ({ context }) => {
+  const credentials = await database.credential.findMany({
+    where: { userId: context.user.id },
+  })
+  
+  // N+1 query problem
+  const credentialsWithPlatforms = await Promise.all(
+    credentials.map(async (credential) => {
+      const platform = await database.platform.findUnique({
+        where: { id: credential.platformId },
+      })
+      return { ...credential, platform }
+    })
+  )
+})
+```
+
+### Component Optimization
+- **Use React.memo** for expensive components
+- **Implement useMemo** for expensive calculations
+- **Use useCallback** for stable function references
+
+```tsx
+// ✅ Do
+export const CredentialList = React.memo(function CredentialList({ 
+  credentials, 
+  onSelect 
+}: CredentialListProps) {
+  const sortedCredentials = useMemo(() => {
+    return credentials.sort((a, b) => a.identifier.localeCompare(b.identifier))
+  }, [credentials])
+
+  const handleSelect = useCallback((id: string) => {
+    onSelect(id)
+  }, [onSelect])
+
+  return (
+    <div>
+      {sortedCredentials.map(credential => (
+        <CredentialItem 
+          key={credential.id} 
+          credential={credential} 
+          onSelect={handleSelect}
+        />
+      ))}
+    </div>
+  )
+})
+
+// ❌ Avoid
+export function CredentialList({ credentials, onSelect }: CredentialListProps) {
+  // No memoization, re-renders on every parent update
+  const sortedCredentials = credentials.sort((a, b) => 
+    a.identifier.localeCompare(b.identifier)
+  )
+
+  return (
+    <div>
+      {sortedCredentials.map(credential => (
+        <CredentialItem 
+          key={credential.id} 
+          credential={credential} 
+          onSelect={onSelect} // New function reference every render
+        />
+      ))}
+    </div>
+  )
+}
+```
+
+## Error Handling Rules
+
+### API Errors
+- **Use standard error codes** (oRPCError)
+- **Provide meaningful error messages**
+- **Log errors** for debugging
+
+```tsx
+// ✅ Do
+export const getCredential = authProcedure
+  .handler(async ({ input, context }) => {
+    try {
+      const credential = await database.credential.findFirst({
+        where: { id: input.id, userId: context.user.id },
+      })
+
+      if (!credential) {
+        throw new ORPCError("NOT_FOUND", "Credential not found")
+      }
+
+      return CredentialEntity.getSimpleRo(credential)
+    } catch (error) {
+      console.error("Failed to get credential:", error)
+      throw new ORPCError("INTERNAL_SERVER_ERROR")
+    }
+  })
+
+// ❌ Avoid
+export const getCredential = authProcedure.handler(async ({ input, context }) => {
+  const credential = await database.credential.findFirst({
+    where: { id: input.id, userId: context.user.id },
+  })
+  
+  return credential // May return null, no error handling
+})
+```
+
+### Form Errors
+- **Use React Hook Form** error handling
+- **Display validation errors** clearly
+- **Handle submission errors** gracefully
+
+```tsx
+// ✅ Do
+export function CredentialForm({ onSubmit }: Props) {
+  const form = useForm<CreateCredentialInput>({
+    resolver: zodResolver(createCredentialInputSchema),
+  })
+
+  const handleSubmit = async (data: CreateCredentialInput) => {
+    try {
+      await onSubmit(data)
+      form.reset()
+    } catch (error) {
+      form.setError("root", {
+        message: "Failed to create credential. Please try again.",
+      })
+    }
+  }
+
+  return (
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(handleSubmit)}>
+        <FormField
+          control={form.control}
+          name="identifier"
+          render={({ field }) => (
+            <FormItem>
+              <FormControl>
+                <Input {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        {form.formState.errors.root && (
+          <div className="text-red-500">{form.formState.errors.root.message}</div>
+        )}
+      </form>
+    </Form>
+  )
+}
+```
+
+## Linting and Formatting
+
+### ESLint Rules
+- **Use Next.js ESLint config**
+- **Enable TypeScript ESLint rules**
+- **No unused imports or variables**
+
+### Prettier Rules
+- **Use Prettier** for code formatting
+- **Consistent indentation** (2 spaces)
+- **Trailing commas** for multi-line objects/arrays
+
+### Import Sorting
+- **Use import sorting plugin**
+- **Group imports** by type
+- **Sort alphabetically** within groups
+
+```tsx
+// ✅ Do
+import React from "react"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+
+import { Button } from "@/components/ui/button"
+import { CredentialEntity } from "@/entities/credential"
+import { useCredentials } from "@/orpc/hooks/use-credentials"
+
+import type { CredentialFormProps } from "./types"
+```

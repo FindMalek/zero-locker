@@ -1,0 +1,137 @@
+---
+alwaysApply: true
+---
+
+# Zero Locker Architecture Overview
+
+## Purpose
+Zero Locker is a secure password management application that provides encrypted storage, retrieval, and management of account credentials and sensitive information. The system handles user authentication, credential storage with AES-256-GCM encryption, and provides a modern web interface for password management.
+
+## Key Components
+
+### Frontend Layer (`app/`, `components/`)
+- **`app/`** - Next.js 15 App Router with file-based routing
+  - `(auth)/` - Authentication pages (login, register)
+  - `(dashboard)/` - Main application dashboard
+  - `(marketing)/` - Landing page and marketing content
+  - `api/` - API route handlers
+- **`components/`** - React component library
+  - `app/` - Application-specific components
+  - `layout/` - Layout and navigation components
+  - `shared/` - Reusable utility components
+  - `ui/` - Base UI components (shadcn/ui)
+
+### API Layer (`orpc/`)
+- **`orpc/routers/`** - oRPC API route definitions
+  - `credential.ts` - Credential management endpoints
+  - `card.ts` - Payment card management
+  - `secret.ts` - Secret storage endpoints
+  - `user.ts` - User management endpoints
+- **`orpc/hooks/`** - React Query hooks for API calls
+- **`orpc/client/`** - Generated oRPC client
+
+### Business Logic Layer (`entities/`, `lib/`)
+- **`entities/`** - Database entity transformations
+  - Converts Prisma entities to Return Objects (ROs)
+  - Handles client-safe data transformations
+  - Manages encryption/decryption of sensitive data
+- **`lib/`** - Utility libraries and business logic
+  - `auth/` - Authentication utilities
+  - `permissions/` - Permission system
+  - `utils/` - General utilities
+
+### Data Layer (`prisma/`, `schemas/`)
+- **`prisma/`** - Database schema and client
+  - `schema/` - Multi-file Prisma schema
+  - `client/` - Database client configuration
+  - `seed/` - Database seeding scripts
+- **`schemas/`** - Zod validation schemas
+  - Input validation for API endpoints
+  - Form validation schemas
+  - Type-safe data contracts
+
+### Infrastructure (`middleware/`, `config/`, `types/`)
+- **`middleware/`** - Next.js and oRPC middleware
+  - Authentication middleware
+  - Permission-based access control
+- **`config/`** - Application configuration
+- **`types/`** - TypeScript type definitions
+
+## Data Flow
+
+```
+User Request → Next.js Middleware → App Router → Component
+                    ↓
+              oRPC Client → oRPC Router → Entity Layer → Prisma → PostgreSQL
+                    ↓
+              Response ← Entity Transformation ← Database Result ← Query Result
+```
+
+### Authentication Flow
+```
+Login Request → BetterAuth → Session Creation → Cookie Storage → Protected Routes
+```
+
+### Credential Management Flow
+```
+Create Credential → Input Validation → Encryption → Database Storage → Entity Transformation → Client Response
+```
+
+## Dependencies
+
+### Internal Dependencies
+- **`entities/`** depends on `prisma/` for database access
+- **`orpc/routers/`** depend on `entities/` for data transformation
+- **`components/`** depend on `orpc/hooks/` for data fetching
+- **`app/`** depends on `components/` for UI rendering
+
+### External Dependencies
+- **Next.js 15** - React framework with App Router
+- **oRPC** - Type-safe RPC framework (replaces tRPC)
+- **Prisma** - Database ORM with PostgreSQL
+- **BetterAuth** - Authentication library
+- **TanStack Query** - Server state management
+- **Tailwind CSS** - Styling framework
+- **shadcn/ui** - Component library
+- **Zod** - Schema validation
+- **AES-256-GCM** - Encryption for sensitive data
+
+## Entry Points
+
+### Application Entry
+- **`app/layout.tsx`** - Root layout with providers
+- **`app/page.tsx`** - Landing page
+- **`app/(dashboard)/dashboard/page.tsx`** - Main dashboard
+
+### API Entry
+- **`app/api/orpc/[...orpc]/route.ts`** - oRPC API handler
+- **`app/api/auth/[...better-auth]/route.ts`** - BetterAuth endpoints
+
+### Database Entry
+- **`prisma/schema/schema.prisma`** - Main schema configuration
+- **`prisma/client/database-client.ts`** - Database client setup
+
+### Configuration Entry
+- **`env.ts`** - Environment variable validation
+- **`config/site.ts`** - Site configuration
+- **`next.config.ts`** - Next.js configuration
+
+## Security Architecture
+
+### Encryption Flow
+```
+Plain Text → AES-256-GCM Encryption → Encrypted Data → Database Storage
+                ↓
+Encryption Key (derived from user context) + IV (random) → Secure Storage
+```
+
+### Permission System
+```
+User Request → Authentication Check → Permission Validation → Resource Access
+```
+
+### Data Protection
+- All sensitive data encrypted with AES-256-GCM
+- Client-safe entity transformations prevent data leakage
+- Middleware-based access control
+- Input validation with Zod schemas
