@@ -1,0 +1,676 @@
+---
+globs: ["prisma/**/*", "entities/**/*"]
+---
+
+# Database Patterns
+
+## Schema Design
+
+### Model Structure
+- **Use consistent field naming** (camelCase for Prisma, snake_case for database)
+- **Include audit fields** (createdAt, updatedAt) on all models
+- **Use appropriate data types** for each field
+- **Add descriptive comments** for complex fields
+
+```prisma
+// ✅ Do
+model Credential {
+  id String @id @default(cuid())
+
+  identifier  String
+  description String?
+
+  status AccountStatus @default(ACTIVE)
+
+  tags     Tag[]
+  history  CredentialHistory[]
+  metadata CredentialMetadata[]
+
+  lastViewed DateTime?
+  updatedAt  DateTime  @updatedAt
+  createdAt  DateTime  @default(now())
+
+  platformId String
+  platform   Platform @relation(fields: [platformId], references: [id])
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  containerId String?
+  container   Container? @relation(fields: [containerId], references: [id])
+
+  passwordEncryptionId String
+  passwordEncryption   EncryptedData @relation("CredentialPassword", fields: [passwordEncryptionId], references: [id])
+
+  @@unique([identifier, platformId, userId])
+  @@index([userId])
+  @@index([containerId])
+  @@index([platformId])
+  @@index([passwordEncryptionId])
+  @@map("credential")
+}
+
+// ❌ Avoid
+model Credential {
+  id String @id @default(cuid())
+  username String // Inconsistent naming
+  // Missing audit fields
+  // No indexes
+  // No relationships
+}
+```
+
+### Relationship Patterns
+- **Use appropriate relationship types** (1:1, 1:N, M:N)
+- **Set up proper foreign key constraints**
+- **Use cascade deletes** where appropriate
+- **Name relationships clearly**
+
+```prisma
+// ✅ Do
+model User {
+  id String @id @default(cuid())
+
+  // One-to-many relationships
+  credentials Credential[]
+  cards       Card[]
+  secrets     Secret[]
+  containers  Container[]
+
+  // Many-to-many relationships
+  tags Tag[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("user")
+}
+
+model Credential {
+  id String @id @default(cuid())
+
+  // Foreign key relationships
+  userId String
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  platformId String
+  platform   Platform @relation(fields: [platformId], references: [id])
+
+  // Optional relationships
+  containerId String?
+  container   Container? @relation(fields: [containerId], references: [id])
+
+  // One-to-one relationship
+  passwordEncryptionId String
+  passwordEncryption   EncryptedData @relation("CredentialPassword", fields: [passwordEncryptionId], references: [id])
+
+  // One-to-many relationships
+  history  CredentialHistory[]
+  metadata CredentialMetadata[]
+
+  // Many-to-many relationships
+  tags Tag[]
+
+  @@map("credential")
+}
+
+// ❌ Avoid
+model User {
+  id String @id @default(cuid())
+  // No relationships defined
+}
+
+model Credential {
+  id String @id @default(cuid())
+  user_id String // Inconsistent naming
+  // No proper relationships
+}
+```
+
+### Indexing Strategy
+- **Index foreign keys** for join performance
+- **Add composite indexes** for unique constraints
+- **Index frequently queried fields**
+- **Use partial indexes** for filtered queries
+
+```prisma
+// ✅ Do
+model Credential {
+  id String @id @default(cuid())
+
+  identifier  String
+  description String?
+  status      AccountStatus @default(ACTIVE)
+
+  userId      String
+  platformId  String
+  containerId String?
+
+  // Single field indexes
+  @@index([userId])
+  @@index([platformId])
+  @@index([containerId])
+  @@index([status])
+
+  // Composite indexes for unique constraints
+  @@unique([identifier, platformId, userId])
+
+  // Composite indexes for common queries
+  @@index([userId, status])
+  @@index([userId, containerId])
+
+  @@map("credential")
+}
+
+// ❌ Avoid
+model Credential {
+  id String @id @default(cuid())
+  userId String
+  platformId String
+  // No indexes, will cause performance issues
+}
+```
+
+### Encryption Pattern
+- **Separate encryption storage** from main entities
+- **Use consistent encryption structure**
+- **Include algorithm and metadata**
+
+```prisma
+// ✅ Do
+model EncryptedData {
+  id String @id @default(cuid())
+
+  encryptedValue String
+  iv            String
+  algorithm     EncryptionAlgorithm @default(AES_256_GCM)
+  encryptionKey String
+
+  createdAt DateTime @default(now())
+
+  // Relations to entities that use this encryption
+  credentialPasswords Credential[] @relation("CredentialPassword")
+  credentialHistories CredentialHistory[] @relation("CredentialHistoryPassword")
+  cardNumbers         Card[] @relation("CardNumber")
+  secretValues        Secret[] @relation("SecretValue")
+
+  @@index([algorithm])
+  @@map("encrypted_data")
+}
+
+model Credential {
+  id String @id @default(cuid())
+
+  // ... other fields
+
+  passwordEncryptionId String
+  passwordEncryption   EncryptedData @relation("CredentialPassword", fields: [passwordEncryptionId], references: [id])
+
+  @@map("credential")
+}
+
+// ❌ Avoid
+model Credential {
+  id String @id @default(cuid())
+  password String // Stored in plain text
+  // No encryption
+}
+```
+
+## Query Best Practices
+
+### Include Patterns
+- **Use appropriate include levels** to avoid N+1 queries
+- **Select only needed fields** for performance
+- **Use client-safe includes** for client-facing endpoints
+
+```tsx
+// ✅ Do
+// entities/credential/query.ts
+export class CredentialQuery {
+  static getSimpleInclude() {
+    return {} satisfies Prisma.CredentialInclude
+  }
+
+  static getClientSafeInclude() {
+    return {
+      platform: {
+        select: { id: true, name: true, url: true },
+      },
+      container: {
+        select: { id: true, name: true },
+      },
+      tags: {
+        select: { id: true, name: true },
+      },
+    } satisfies Prisma.CredentialInclude
+  }
+
+  static getInclude() {
+    return {
+      ...this.getClientSafeInclude(),
+      history: {
+        include: {
+          passwordEncryption: true,
+        },
+      },
+      metadata: {
+        include: {
+          keyValuePairs: {
+            include: {
+              valueEncryption: true,
+            },
+          },
+        },
+      },
+    } satisfies Prisma.CredentialInclude
+  }
+}
+
+// Usage
+const credentials = await database.credential.findMany({
+  where: { userId },
+  include: CredentialQuery.getClientSafeInclude(),
+})
+
+// ❌ Avoid
+const credentials = await database.credential.findMany({
+  where: { userId },
+  // No include, will cause N+1 queries
+})
+
+const credentialsWithPlatforms = await Promise.all(
+  credentials.map(async (credential) => {
+    const platform = await database.platform.findUnique({
+      where: { id: credential.platformId },
+    })
+    return { ...credential, platform }
+  })
+)
+```
+
+### Pagination Patterns
+- **Use offset-based pagination** for small datasets
+- **Include total count** when needed
+- **Use consistent pagination structure**
+
+```tsx
+// ✅ Do
+export const listCredentials = async (input: ListCredentialsInput) => {
+  const { page, limit, search, containerId } = input
+  
+  const where = {
+    userId: context.user.id,
+    ...(search && {
+      OR: [
+        { identifier: { contains: search } },
+        { description: { contains: search } },
+      ],
+    }),
+    ...(containerId && { containerId }),
+  }
+
+  const [credentials, total] = await Promise.all([
+    database.credential.findMany({
+      where,
+      include: CredentialQuery.getClientSafeInclude(),
+      skip: (page - 1) * limit,
+      take: limit,
+      orderBy: { createdAt: 'desc' },
+    }),
+    database.credential.count({ where }),
+  ])
+
+  return {
+    credentials: credentials.map(credential => CredentialEntity.getRo(credential)),
+    total,
+    hasMore: page * limit < total,
+    page,
+    limit,
+  }
+}
+
+// ❌ Avoid
+export const listCredentials = async (input: ListCredentialsInput) => {
+  const credentials = await database.credential.findMany({
+    where: { userId: context.user.id },
+    // No pagination
+    // No total count
+  })
+
+  return credentials
+}
+```
+
+### Transaction Patterns
+- **Use transactions** for multi-step operations
+- **Handle rollback** on errors
+- **Keep transactions short** to avoid deadlocks
+
+```tsx
+// ✅ Do
+export const createCredentialWithMetadata = async (input: CreateCredentialInput) => {
+  return await database.$transaction(async (tx) => {
+    // Create encrypted password
+    const encryptedPassword = await encryptData(input.password, key, iv)
+    
+    const encryptedData = await tx.encryptedData.create({
+      data: {
+        encryptedValue: encryptedPassword.encryptedData,
+        iv: encryptedPassword.iv,
+        algorithm: "AES_256_GCM",
+        encryptionKey: key,
+      },
+    })
+
+    // Create credential
+    const credential = await tx.credential.create({
+      data: {
+        ...input,
+        passwordEncryptionId: encryptedData.id,
+      },
+    })
+
+    // Create metadata if provided
+    if (input.metadata) {
+      await tx.credentialMetadata.create({
+        data: {
+          credentialId: credential.id,
+          ...input.metadata,
+        },
+      })
+    }
+
+    return credential
+  })
+}
+
+// ❌ Avoid
+export const createCredentialWithMetadata = async (input: CreateCredentialInput) => {
+  // No transaction, partial failures possible
+  const encryptedData = await database.encryptedData.create({...})
+  const credential = await database.credential.create({...})
+  const metadata = await database.credentialMetadata.create({...})
+  
+  return credential
+}
+```
+
+### Error Handling Patterns
+- **Handle Prisma errors** appropriately
+- **Provide meaningful error messages**
+- **Log errors** for debugging
+
+```tsx
+// ✅ Do
+export const createCredential = async (input: CreateCredentialInput) => {
+  try {
+    const credential = await database.credential.create({
+      data: {
+        ...input,
+        userId: context.user.id,
+      },
+    })
+
+    return CredentialEntity.getSimpleRo(credential)
+  } catch (error) {
+    if (error instanceof PrismaClientKnownRequestError) {
+      switch (error.code) {
+        case 'P2002':
+          throw new ORPCError("CONFLICT", "Credential already exists")
+        case 'P2003':
+          throw new ORPCError("BAD_REQUEST", "Invalid platform or container")
+        case 'P2025':
+          throw new ORPCError("NOT_FOUND", "Referenced record not found")
+        default:
+          console.error("Prisma error:", error)
+          throw new ORPCError("INTERNAL_SERVER_ERROR")
+      }
+    }
+    
+    console.error("Unexpected error:", error)
+    throw new ORPCError("INTERNAL_SERVER_ERROR")
+  }
+}
+
+// ❌ Avoid
+export const createCredential = async (input: CreateCredentialInput) => {
+  const credential = await database.credential.create({
+    data: {
+      ...input,
+      userId: context.user.id,
+    },
+  })
+
+  return credential // No error handling
+}
+```
+
+## Entity Transformation Patterns
+
+### Simple RO Pattern
+- **Convert database entities** to client-safe format
+- **Exclude sensitive data** and internal fields
+- **Handle null values** gracefully
+
+```tsx
+// ✅ Do
+export class CredentialEntity {
+  static getSimpleRo(entity: CredentialSimpleDbData): CredentialSimpleRo {
+    return {
+      id: entity.id,
+      identifier: entity.identifier,
+      description: entity.description,
+      status: entity.status,
+      lastViewed: entity.lastViewed,
+      createdAt: entity.createdAt,
+      updatedAt: entity.updatedAt,
+      platformId: entity.platformId,
+      userId: entity.userId,
+      containerId: entity.containerId,
+      // Exclude passwordEncryptionId and other sensitive fields
+    }
+  }
+}
+
+// ❌ Avoid
+export class CredentialEntity {
+  static getSimpleRo(entity: CredentialSimpleDbData): CredentialSimpleRo {
+    return {
+      ...entity, // Exposes all database fields including sensitive ones
+    }
+  }
+}
+```
+
+### Include RO Pattern
+- **Include related entities** when needed
+- **Transform nested entities** consistently
+- **Handle optional relationships**
+
+```tsx
+// ✅ Do
+export class CredentialEntity {
+  static getRo(entity: CredentialIncludeDbData): CredentialIncludeRo {
+    return {
+      ...this.getSimpleRo(entity),
+      platform: entity.platform ? PlatformEntity.getSimpleRo(entity.platform) : null,
+      container: entity.container ? ContainerEntity.getSimpleRo(entity.container) : null,
+      tags: entity.tags.map(tag => TagEntity.getSimpleRo(tag)),
+      metadata: entity.metadata.map(meta => CredentialMetadataEntity.getSimpleRo(meta)),
+    }
+  }
+}
+
+// ❌ Avoid
+export class CredentialEntity {
+  static getRo(entity: CredentialIncludeDbData): CredentialIncludeRo {
+    return {
+      ...entity, // Exposes raw database entities
+    }
+  }
+}
+```
+
+### Encryption Handling Pattern
+- **Decrypt sensitive data** on server only
+- **Handle decryption errors** gracefully
+- **Never expose encryption keys**
+
+```tsx
+// ✅ Do
+export class CredentialEntity {
+  static async getSecuritySettings(entity: CredentialIncludeDbData) {
+    const metadata = entity.metadata?.[0]
+    if (!metadata) return defaultSettings
+
+    try {
+      const encryptedValue = metadata.securitySettingsEncryption
+      if (!encryptedValue) return defaultSettings
+
+      const decrypted = await decryptData(
+        encryptedValue.encryptedValue,
+        encryptedValue.iv,
+        encryptedValue.encryptionKey
+      )
+      
+      return JSON.parse(decrypted)
+    } catch (error) {
+      console.error("Failed to decrypt security settings:", error)
+      return defaultSettings
+    }
+  }
+}
+
+// ❌ Avoid
+export class CredentialEntity {
+  static getSecuritySettings(entity: CredentialIncludeDbData) {
+    return entity.metadata?.[0]?.securitySettings // Exposes encrypted data
+  }
+}
+```
+
+## Migration Patterns
+
+### Schema Changes
+- **Use descriptive migration names**
+- **Test migrations** on development data
+- **Handle data migration** for breaking changes
+
+```bash
+# ✅ Do
+npx prisma migrate dev --name add_credential_status_index
+npx prisma migrate dev --name encrypt_existing_passwords
+npx prisma migrate dev --name add_container_relationships
+
+# ❌ Avoid
+npx prisma migrate dev --name update
+npx prisma migrate dev --name fix
+npx prisma migrate dev --name changes
+```
+
+### Data Migration
+- **Create migration scripts** for complex data changes
+- **Handle large datasets** with batching
+- **Provide rollback procedures**
+
+```tsx
+// ✅ Do
+// prisma/migrations/20240101000000_encrypt_existing_passwords/migrate.ts
+export async function migrate() {
+  const credentials = await database.credential.findMany({
+    where: {
+      passwordEncryption: null,
+    },
+    take: 100, // Process in batches
+  })
+
+  for (const credential of credentials) {
+    await database.$transaction(async (tx) => {
+      // Encrypt existing password
+      const encryptedPassword = await encryptData(credential.plainPassword, key, iv)
+      
+      const encryptedData = await tx.encryptedData.create({
+        data: {
+          encryptedValue: encryptedPassword.encryptedData,
+          iv: encryptedPassword.iv,
+          algorithm: "AES_256_GCM",
+          encryptionKey: key,
+        },
+      })
+
+      await tx.credential.update({
+        where: { id: credential.id },
+        data: {
+          passwordEncryptionId: encryptedData.id,
+          plainPassword: null, // Remove plain text password
+        },
+      })
+    })
+  }
+}
+```
+
+## Performance Optimization
+
+### Query Optimization
+- **Use appropriate indexes** for query patterns
+- **Avoid SELECT *** for large tables
+- **Use database-level filtering** instead of application-level
+
+```tsx
+// ✅ Do
+const credentials = await database.credential.findMany({
+  where: {
+    userId: context.user.id,
+    status: "ACTIVE",
+    createdAt: {
+      gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), // Last 30 days
+    },
+  },
+  select: {
+    id: true,
+    identifier: true,
+    description: true,
+    createdAt: true,
+    platform: {
+      select: { name: true },
+    },
+  },
+  orderBy: { createdAt: 'desc' },
+  take: 50,
+})
+
+// ❌ Avoid
+const credentials = await database.credential.findMany({
+  where: { userId: context.user.id },
+  // No filtering, no selection, no limit
+})
+```
+
+### Connection Management
+- **Use connection pooling** in production
+- **Configure appropriate pool size**
+- **Handle connection errors** gracefully
+
+```tsx
+// ✅ Do
+// prisma/client/database-client.ts
+import { PrismaClient } from "@prisma/client"
+import { env } from "@/env"
+
+const globalForPrisma = globalThis as unknown as {
+  prisma: PrismaClient | undefined
+}
+
+export const database = globalForPrisma.prisma ?? new PrismaClient({
+  log: env.NODE_ENV === "development" ? ["query", "error", "warn"] : ["error"],
+  datasources: {
+    db: {
+      url: env.DATABASE_URL,
+    },
+  },
+})
+
+if (env.NODE_ENV !== "production") globalForPrisma.prisma = database
+```

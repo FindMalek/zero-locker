@@ -1,0 +1,369 @@
+---
+alwaysApply: true
+---
+# Zero Locker Patterns
+
+## Common Patterns
+
+### 1. **Entity Transformation Pattern**
+- **Description**: Convert database entities to client-safe Return Objects (ROs) to prevent data leakage
+- **When to use**: Always when returning data from API endpoints
+- **Example**:
+  ```tsx
+  // ✅ Do
+  export class CredentialEntity {
+    static getSimpleRo(entity: CredentialSimpleDbData): CredentialSimpleRo {
+      return {
+        id: entity.id,
+        identifier: entity.identifier,
+        description: entity.description,
+        // Exclude sensitive data like passwordEncryptionId
+      }
+    }
+  }
+
+  // ❌ Avoid
+  export const getCredential = async (id: string) => {
+    const credential = await database.credential.findUnique({ where: { id } })
+    return credential // Exposes sensitive database fields
+  }
+  ```
+
+### 2. **Three-File Entity Pattern**
+- **Description**: Each entity follows a consistent three-file structure for maintainability
+- **When to use**: For all database entities
+- **Example**:
+  ```
+  entities/credential/
+  ├── entity.ts      # Transformation logic
+  ├── query.ts       # Database query helpers
+  └── index.ts       # Barrel exports
+  ```
+
+### 3. **Schema Validation Pattern**
+- **Description**: Use Zod schemas for all data validation and type safety
+- **When to use**: API inputs, form validation, data transformation
+- **Example**:
+  ```tsx
+  // ✅ Do
+  export const createCredentialInputSchema = z.object({
+    identifier: z.string().min(1, "Username is required"),
+    platformId: z.string().min(1, "Platform is required"),
+  })
+
+  export type CreateCredentialInput = z.infer<typeof createCredentialInputSchema>
+
+  // ❌ Avoid
+  export const createCredential = (data: any) => {
+    // No validation, unsafe
+  }
+  ```
+
+### 4. **Middleware Chain Pattern**
+- **Description**: Chain authentication and permission middleware for secure API endpoints
+- **When to use**: All protected API routes
+- **Example**:
+  ```tsx
+  // ✅ Do
+  const authProcedure = baseProcedure.use(authMiddleware)
+  const permissionProcedure = authProcedure.use(
+    requirePermission(Feature.CREDENTIALS, Action.CREATE)
+  )
+
+  export const createCredential = permissionProcedure
+    .input(createCredentialInputSchema)
+    .output(credentialOutputSchema)
+    .handler(async ({ input, context }) => {
+      // Implementation
+    })
+
+  // ❌ Avoid
+  export const createCredential = baseProcedure.handler(async ({ input }) => {
+    // No authentication or permission checks
+  })
+  ```
+
+### 5. **Component Composition Pattern**
+- **Description**: Build complex UI by composing smaller, reusable components
+- **When to use**: All React components
+- **Example**:
+  ```tsx
+  // ✅ Do
+  export function DashboardCredentialForm({ data, onSubmit }: Props) {
+    return (
+      <Form {...form}>
+        <FormField
+          control={form.control}
+          name="identifier"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Username</FormLabel>
+              <FormControl>
+                <Input {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      </Form>
+    )
+  }
+
+  // ❌ Avoid
+  export function DashboardCredentialForm({ data, onSubmit }: Props) {
+    return (
+      <div>
+        <input type="text" name="identifier" />
+        {/* Inline form logic, not reusable */}
+      </div>
+    )
+  }
+  ```
+
+### 6. **Encryption Pattern**
+- **Description**: Encrypt all sensitive data before database storage
+- **When to use**: Passwords, secrets, sensitive metadata
+- **Example**:
+  ```tsx
+  // ✅ Do
+  export async function createCredential(input: CreateCredentialInput) {
+    const encryptedPassword = await encryptData(
+      input.password,
+      encryptionKey,
+      iv
+    )
+
+    const encryptedData = await database.encryptedData.create({
+      data: {
+        encryptedValue: encryptedPassword.encryptedData,
+        iv: encryptedPassword.iv,
+        algorithm: "AES_256_GCM",
+        encryptionKey: encryptionKey,
+      },
+    })
+
+    return database.credential.create({
+      data: {
+        ...input,
+        passwordEncryptionId: encryptedData.id,
+      },
+    })
+  }
+
+  // ❌ Avoid
+  export async function createCredential(input: CreateCredentialInput) {
+    return database.credential.create({
+      data: {
+        ...input,
+        password: input.password, // Stored in plain text
+      },
+    })
+  }
+  ```
+
+## Error Handling
+
+### API Error Pattern
+- **How errors are thrown**: Use oRPC standard error codes
+- **Where errors are caught**: In middleware and route handlers
+- **Example**:
+  ```tsx
+  // ✅ Do
+  import { ORPCError } from "@orpc/server"
+
+  export const getCredential = authProcedure
+    .input(getCredentialInputSchema)
+    .handler(async ({ input, context }) => {
+      const credential = await database.credential.findFirst({
+        where: { id: input.id, userId: context.user.id },
+      })
+
+      if (!credential) {
+        throw new ORPCError("NOT_FOUND", "Credential not found")
+      }
+
+      return CredentialEntity.getSimpleRo(credential)
+    })
+
+  // ❌ Avoid
+  export const getCredential = authProcedure.handler(async ({ input }) => {
+    const credential = await database.credential.findUnique({
+      where: { id: input.id },
+    })
+    return credential // May return null or unauthorized data
+  })
+  ```
+
+### Form Error Pattern
+- **How errors are handled**: React Hook Form with Zod validation
+- **Example**:
+  ```tsx
+  // ✅ Do
+  export function CredentialForm({ onSubmit }: Props) {
+    const form = useForm<CreateCredentialInput>({
+      resolver: zodResolver(createCredentialInputSchema),
+    })
+
+    return (
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)}>
+          <FormField
+            control={form.control}
+            name="identifier"
+            render={({ field }) => (
+              <FormItem>
+                <FormControl>
+                  <Input {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </form>
+      </Form>
+    )
+  }
+  ```
+
+## Anti-Patterns
+
+### 1. **Direct Database Access in Components**
+- **What to avoid**: Querying database directly from React components
+- **Why**: Breaks separation of concerns, no type safety, no caching
+- **Example**:
+  ```tsx
+  // ❌ Avoid
+  export function CredentialList() {
+    const [credentials, setCredentials] = useState([])
+    
+    useEffect(() => {
+      database.credential.findMany().then(setCredentials)
+    }, [])
+
+    return <div>{/* Render credentials */}</div>
+  }
+
+  // ✅ Do
+  export function CredentialList() {
+    const { data: credentials } = useCredentials()
+    return <div>{/* Render credentials */}</div>
+  }
+  ```
+
+### 2. **Exposing Sensitive Data**
+- **What to avoid**: Returning raw database entities or encryption keys
+- **Why**: Security risk, data leakage
+- **Example**:
+  ```tsx
+  // ❌ Avoid
+  export const getCredential = async (id: string) => {
+    return database.credential.findUnique({ where: { id } })
+    // Exposes passwordEncryptionId, internal fields
+  }
+
+  // ✅ Do
+  export const getCredential = async (id: string) => {
+    const credential = await database.credential.findUnique({ where: { id } })
+    return CredentialEntity.getSimpleRo(credential)
+    // Only exposes safe fields
+  }
+  ```
+
+### 3. **Inline Business Logic**
+- **What to avoid**: Putting business logic directly in API handlers
+- **Why**: Hard to test, reuse, and maintain
+- **Example**:
+  ```tsx
+  // ❌ Avoid
+  export const createCredential = authProcedure.handler(async ({ input, context }) => {
+    // Encryption logic
+    const encrypted = await encryptData(input.password, key, iv)
+    
+    // Database operations
+    const encryptedData = await database.encryptedData.create({...})
+    
+    // Validation logic
+    if (input.identifier.length < 1) {
+      throw new Error("Invalid identifier")
+    }
+    
+    // More business logic...
+  })
+
+  // ✅ Do
+  export const createCredential = authProcedure
+    .input(createCredentialInputSchema)
+    .handler(async ({ input, context }) => {
+      return CredentialService.create(input, context.user.id)
+    })
+  ```
+
+### 4. **Missing Input Validation**
+- **What to avoid**: Accepting unvalidated input
+- **Why**: Security vulnerabilities, runtime errors
+- **Example**:
+  ```tsx
+  // ❌ Avoid
+  export const updateCredential = authProcedure.handler(async ({ input }) => {
+    return database.credential.update({
+      where: { id: input.id },
+      data: input, // No validation
+    })
+  })
+
+  // ✅ Do
+  export const updateCredential = authProcedure
+    .input(updateCredentialInputSchema)
+    .handler(async ({ input }) => {
+      return database.credential.update({
+        where: { id: input.id },
+        data: input,
+      })
+    })
+  ```
+
+## Testing Strategies
+
+### Unit Testing
+- **Entity transformations**: Test data conversion logic
+- **Schema validation**: Test Zod schemas with valid/invalid data
+- **Utility functions**: Test encryption, date formatting, etc.
+
+### Integration Testing
+- **API endpoints**: Test full request/response cycle
+- **Database operations**: Test with real database
+- **Authentication flow**: Test login/logout scenarios
+
+### Component Testing
+- **Form components**: Test validation and submission
+- **UI components**: Test rendering and interactions
+- **Hook testing**: Test custom React hooks
+
+### Example Test Structure
+```tsx
+// ✅ Do
+describe("CredentialEntity", () => {
+  it("should transform database entity to simple RO", () => {
+    const dbEntity = mockCredentialDbData()
+    const ro = CredentialEntity.getSimpleRo(dbEntity)
+    
+    expect(ro).toEqual({
+      id: dbEntity.id,
+      identifier: dbEntity.identifier,
+      // Should not include sensitive fields
+    })
+    expect(ro).not.toHaveProperty("passwordEncryptionId")
+  })
+})
+
+describe("createCredential API", () => {
+  it("should create credential with encrypted password", async () => {
+    const input = { identifier: "test", password: "secret" }
+    const result = await createCredential(input)
+    
+    expect(result.id).toBeDefined()
+    expect(result.identifier).toBe("test")
+    // Password should be encrypted, not plain text
+  })
+})
+```

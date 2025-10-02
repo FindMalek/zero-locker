@@ -1,0 +1,642 @@
+---
+globs: ["orpc/**/*", "app/api/**/*"]
+---
+
+# oRPC Patterns
+
+## Router Structure
+
+### Router Organization
+- **Group routes by feature** (e.g., `credentialRouter`, `cardRouter`)
+- **Use descriptive procedure names** that indicate the action
+- **Export routers individually** and aggregate in `index.ts`
+
+```tsx
+// ✅ Do
+// orpc/routers/credential.ts
+export const credentialRouter = os.router({
+  create: createCredential,
+  getById: getCredential,
+  list: listCredentials,
+  update: updateCredential,
+  delete: deleteCredential,
+})
+
+// orpc/routers/index.ts
+export const appRouter = os.router({
+  credential: credentialRouter,
+  card: cardRouter,
+  secret: secretRouter,
+  user: userRouter,
+})
+
+// ❌ Avoid
+export const router = os.router({
+  createCredential: procedure.query(...), // Too generic
+  getCredential: procedure.query(...),    // Inconsistent naming
+  getAllCredentials: procedure.query(...), // Verbose
+})
+```
+
+### Procedure Naming
+- **Use action-based names**: `create`, `getById`, `list`, `update`, `delete`
+- **Be consistent** across all routers
+- **Use camelCase** for procedure names
+
+```tsx
+// ✅ Do
+export const credentialRouter = os.router({
+  create: createCredential,        // Create new credential
+  getById: getCredential,          // Get single credential
+  list: listCredentials,           // List multiple credentials
+  update: updateCredential,        // Update existing credential
+  delete: deleteCredential,        // Delete credential
+})
+
+// ❌ Avoid
+export const credentialRouter = os.router({
+  createCredential: createCredential,     // Redundant
+  getCredentialById: getCredential,       // Inconsistent
+  getAllCredentials: listCredentials,     // Verbose
+  modifyCredential: updateCredential,     // Unclear
+  removeCredential: deleteCredential,     // Inconsistent
+})
+```
+
+## Input Validation
+
+### Schema Definition
+- **Use Zod schemas** for all procedure inputs
+- **Define schemas in `/schemas`** folder
+- **Export both schema and type**
+
+```tsx
+// ✅ Do
+// schemas/credential/dto.ts
+export const createCredentialInputSchema = z.object({
+  identifier: z.string().min(1, "Username is required"),
+  description: z.string().optional(),
+  platformId: z.string().min(1, "Platform is required"),
+  containerId: z.string().optional(),
+})
+
+export type CreateCredentialInput = z.infer<typeof createCredentialInputSchema>
+
+// orpc/routers/credential.ts
+export const createCredential = authProcedure
+  .input(createCredentialInputSchema)
+  .output(credentialOutputSchema)
+  .handler(async ({ input, context }) => {
+    // Input is validated by schema
+  })
+
+// ❌ Avoid
+export const createCredential = authProcedure.handler(async ({ input }) => {
+  // No validation, unsafe
+  const { identifier, platformId } = input as any
+})
+```
+
+### Validation Messages
+- **Provide clear error messages** for validation failures
+- **Use field-specific messages** when possible
+- **Include context** in error messages
+
+```tsx
+// ✅ Do
+export const createCredentialInputSchema = z.object({
+  identifier: z.string()
+    .min(1, "Username is required")
+    .max(50, "Username must be less than 50 characters"),
+  password: z.string()
+    .min(8, "Password must be at least 8 characters")
+    .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
+    .regex(/[a-z]/, "Password must contain at least one lowercase letter")
+    .regex(/\d/, "Password must contain at least one number"),
+  platformId: z.string().min(1, "Platform is required"),
+})
+
+// ❌ Avoid
+export const createCredentialInputSchema = z.object({
+  identifier: z.string(),
+  password: z.string(),
+  platformId: z.string(),
+})
+```
+
+### List Input Patterns
+- **Include pagination** for list endpoints
+- **Add search and filtering** options
+- **Use consistent pagination schema**
+
+```tsx
+// ✅ Do
+export const listCredentialsInputSchema = z.object({
+  page: z.number().int().min(1).default(1),
+  limit: z.number().int().min(1).max(100).default(10),
+  search: z.string().optional(),
+  containerId: z.string().optional(),
+  platformId: z.string().optional(),
+  status: z.enum(["ACTIVE", "SUSPENDED", "DELETED"]).optional(),
+})
+
+export const listCredentialsOutputSchema = z.object({
+  credentials: z.array(credentialIncludeOutputSchema),
+  total: z.number().int(),
+  hasMore: z.boolean(),
+  page: z.number().int(),
+  limit: z.number().int(),
+})
+
+// ❌ Avoid
+export const listCredentialsInputSchema = z.object({
+  page: z.number(),
+  limit: z.number(),
+  // No search or filtering options
+})
+```
+
+## Error Handling
+
+### Standard Error Codes
+- **Use oRPC standard error codes** for consistency
+- **Provide meaningful error messages**
+- **Include context** in error messages
+
+```tsx
+// ✅ Do
+import { ORPCError } from "@orpc/server"
+
+export const getCredential = authProcedure
+  .input(getCredentialInputSchema)
+  .handler(async ({ input, context }) => {
+    const credential = await database.credential.findFirst({
+      where: { id: input.id, userId: context.user.id },
+    })
+
+    if (!credential) {
+      throw new ORPCError("NOT_FOUND", "Credential not found")
+    }
+
+    return CredentialEntity.getSimpleRo(credential)
+  })
+
+// ❌ Avoid
+export const getCredential = authProcedure.handler(async ({ input, context }) => {
+  const credential = await database.credential.findFirst({
+    where: { id: input.id, userId: context.user.id },
+  })
+
+  if (!credential) {
+    throw new Error("Not found") // Generic error, no context
+  }
+
+  return credential
+})
+```
+
+### Custom Error Handling
+- **Handle specific error types** (Prisma, validation, etc.)
+- **Log errors** for debugging
+- **Return appropriate error codes**
+
+```tsx
+// ✅ Do
+export const createCredential = authProcedure
+  .input(createCredentialInputSchema)
+  .handler(async ({ input, context }) => {
+    try {
+      const credential = await database.credential.create({
+        data: {
+          ...input,
+          userId: context.user.id,
+        },
+      })
+
+      return CredentialEntity.getSimpleRo(credential)
+    } catch (error) {
+      if (error instanceof PrismaClientKnownRequestError) {
+        if (error.code === 'P2002') {
+          throw new ORPCError("CONFLICT", "Credential already exists")
+        }
+        if (error.code === 'P2003') {
+          throw new ORPCError("BAD_REQUEST", "Invalid platform or container")
+        }
+      }
+      
+      console.error("Failed to create credential:", error)
+      throw new ORPCError("INTERNAL_SERVER_ERROR")
+    }
+  })
+
+// ❌ Avoid
+export const createCredential = authProcedure.handler(async ({ input, context }) => {
+  const credential = await database.credential.create({
+    data: {
+      ...input,
+      userId: context.user.id,
+    },
+  })
+
+  return credential // No error handling
+})
+```
+
+### Permission Errors
+- **Use FORBIDDEN** for permission errors
+- **Include feature and action** in error message
+- **Provide upgrade information** when applicable
+
+```tsx
+// ✅ Do
+export const createContainer = authProcedure
+  .use(requirePermission(Feature.CONTAINERS, Action.CREATE))
+  .handler(async ({ input, context }) => {
+    const hasPermission = await checkUserPermission(context.user, Feature.CONTAINERS, Action.CREATE)
+    
+    if (!hasPermission) {
+      throw new ORPCError(
+        "FORBIDDEN", 
+        "Container creation requires Pro plan. Upgrade to create multiple containers."
+      )
+    }
+
+    return ContainerService.create(input, context.user.id)
+  })
+
+// ❌ Avoid
+export const createContainer = authProcedure.handler(async ({ input, context }) => {
+  if (context.user.plan === UserPlan.FREE) {
+    throw new Error("Not allowed") // Generic error, no context
+  }
+})
+```
+
+## Middleware Patterns
+
+### Authentication Middleware
+- **Apply to all protected routes**
+- **Provide user context** to handlers
+- **Handle session validation**
+
+```tsx
+// ✅ Do
+// middleware/auth.ts
+export const authMiddleware = async ({
+  context,
+  next,
+}: {
+  context: PublicContext
+  next: MiddlewareNextFn<unknown>
+}) => {
+  if (!context.session || !context.user) {
+    throw new ORPCError("UNAUTHORIZED")
+  }
+
+  return next({
+    context: {
+      ...context,
+      session: context.session,
+      user: context.user,
+    },
+  })
+}
+
+// orpc/routers/credential.ts
+const authProcedure = baseProcedure.use(({ context, next }) =>
+  authMiddleware({ context, next })
+)
+
+export const createCredential = authProcedure
+  .input(createCredentialInputSchema)
+  .handler(async ({ input, context }) => {
+    // context.user is guaranteed to exist
+    return CredentialService.create(input, context.user.id)
+  })
+```
+
+### Permission Middleware
+- **Chain after authentication**
+- **Check feature and action permissions**
+- **Provide clear error messages**
+
+```tsx
+// ✅ Do
+export const requirePermission = (feature: Feature, action: Action) => {
+  return async ({ context, next }: { context: AuthenticatedContext; next: MiddlewareNextFn<unknown> }) => {
+    const hasPermission = await checkUserPermission(context.user, feature, action)
+    
+    if (!hasPermission) {
+      throw new ORPCError(
+        "FORBIDDEN", 
+        `Insufficient permissions for ${feature}:${action}`
+      )
+    }
+
+    return next({ context })
+  }
+}
+
+// Usage
+const permissionProcedure = authProcedure.use(({ context, next }) =>
+  requirePermission(Feature.CREDENTIALS, Action.CREATE)({ context, next })
+)
+
+export const createCredential = permissionProcedure
+  .input(createCredentialInputSchema)
+  .handler(async ({ input, context }) => {
+    // User has permission to create credentials
+  })
+```
+
+### Resource Access Middleware
+- **Validate resource ownership**
+- **Check container access**
+- **Handle resource not found**
+
+```tsx
+// ✅ Do
+export const requireContainerAccess = (containerId: string) => {
+  return async ({ context, next }: { context: AuthenticatedContext; next: MiddlewareNextFn<unknown> }) => {
+    const container = await database.container.findFirst({
+      where: {
+        id: containerId,
+        userId: context.user.id,
+      },
+    })
+    
+    if (!container) {
+      throw new ORPCError("FORBIDDEN", "Container access denied")
+    }
+
+    return next({ context })
+  }
+}
+
+// Usage
+export const createCredential = authProcedure
+  .input(createCredentialInputSchema)
+  .use(({ input, context, next }) =>
+    requireContainerAccess(input.containerId)({ context, next })
+  )
+  .handler(async ({ input, context }) => {
+    // User has access to the specified container
+  })
+```
+
+## Output Patterns
+
+### Response Structure
+- **Use consistent output schemas**
+- **Include metadata** for list responses
+- **Transform entities** to client-safe format
+
+```tsx
+// ✅ Do
+export const listCredentialsOutputSchema = z.object({
+  credentials: z.array(credentialIncludeOutputSchema),
+  total: z.number().int(),
+  hasMore: z.boolean(),
+  page: z.number().int(),
+  limit: z.number().int(),
+})
+
+export const listCredentials = authProcedure
+  .input(listCredentialsInputSchema)
+  .output(listCredentialsOutputSchema)
+  .handler(async ({ input, context }) => {
+    const { page, limit, search, containerId } = input
+    
+    const credentials = await database.credential.findMany({
+      where: {
+        userId: context.user.id,
+        ...(search && {
+          OR: [
+            { identifier: { contains: search } },
+            { description: { contains: search } },
+          ],
+        }),
+        ...(containerId && { containerId }),
+      },
+      include: CredentialQuery.getClientSafeInclude(),
+      skip: (page - 1) * limit,
+      take: limit,
+      orderBy: { createdAt: 'desc' },
+    })
+
+    const total = await database.credential.count({
+      where: {
+        userId: context.user.id,
+        ...(search && {
+          OR: [
+            { identifier: { contains: search } },
+            { description: { contains: search } },
+          ],
+        }),
+        ...(containerId && { containerId }),
+      },
+    })
+
+    return {
+      credentials: credentials.map(credential => CredentialEntity.getRo(credential)),
+      total,
+      hasMore: page * limit < total,
+      page,
+      limit,
+    }
+  })
+```
+
+### Entity Transformation
+- **Always transform** database entities to ROs
+- **Exclude sensitive data** from responses
+- **Use appropriate include levels**
+
+```tsx
+// ✅ Do
+export const getCredential = authProcedure
+  .input(getCredentialInputSchema)
+  .output(credentialIncludeOutputSchema)
+  .handler(async ({ input, context }) => {
+    const credential = await database.credential.findFirst({
+      where: { id: input.id, userId: context.user.id },
+      include: CredentialQuery.getClientSafeInclude(),
+    })
+
+    if (!credential) {
+      throw new ORPCError("NOT_FOUND", "Credential not found")
+    }
+
+    return CredentialEntity.getRo(credential)
+  })
+
+// ❌ Avoid
+export const getCredential = authProcedure.handler(async ({ input, context }) => {
+  const credential = await database.credential.findUnique({
+    where: { id: input.id },
+    include: { passwordEncryption: true }, // Exposes sensitive data
+  })
+
+  return credential // Raw database entity
+})
+```
+
+## Performance Patterns
+
+### Pagination
+- **Implement pagination** for all list endpoints
+- **Use cursor-based pagination** for large datasets
+- **Include total count** when needed
+
+```tsx
+// ✅ Do
+export const listCredentials = authProcedure
+  .input(listCredentialsInputSchema)
+  .handler(async ({ input, context }) => {
+    const { page, limit } = input
+    
+    const [credentials, total] = await Promise.all([
+      database.credential.findMany({
+        where: { userId: context.user.id },
+        include: CredentialQuery.getClientSafeInclude(),
+        skip: (page - 1) * limit,
+        take: limit,
+        orderBy: { createdAt: 'desc' },
+      }),
+      database.credential.count({
+        where: { userId: context.user.id },
+      }),
+    ])
+
+    return {
+      credentials: credentials.map(credential => CredentialEntity.getRo(credential)),
+      total,
+      hasMore: page * limit < total,
+      page,
+      limit,
+    }
+  })
+```
+
+### Query Optimization
+- **Use appropriate includes** to avoid N+1 queries
+- **Select only needed fields** for large datasets
+- **Use database indexes** for frequently queried fields
+
+```tsx
+// ✅ Do
+export const listCredentials = authProcedure.handler(async ({ input, context }) => {
+  const credentials = await database.credential.findMany({
+    where: { userId: context.user.id },
+    include: {
+      platform: {
+        select: { id: true, name: true, url: true }, // Only needed fields
+      },
+      container: {
+        select: { id: true, name: true },
+      },
+      tags: {
+        select: { id: true, name: true },
+      },
+    },
+    skip: (input.page - 1) * input.limit,
+    take: input.limit,
+  })
+
+  return credentials.map(credential => CredentialEntity.getRo(credential))
+})
+
+// ❌ Avoid
+export const listCredentials = authProcedure.handler(async ({ input, context }) => {
+  const credentials = await database.credential.findMany({
+    where: { userId: context.user.id },
+    // No include, will cause N+1 queries
+  })
+
+  // N+1 query problem
+  const credentialsWithPlatforms = await Promise.all(
+    credentials.map(async (credential) => {
+      const platform = await database.platform.findUnique({
+        where: { id: credential.platformId },
+      })
+      return { ...credential, platform }
+    })
+  )
+})
+```
+
+## Testing Patterns
+
+### Unit Testing
+- **Test procedure logic** in isolation
+- **Mock dependencies** (database, services)
+- **Test error conditions**
+
+```tsx
+// ✅ Do
+describe("createCredential", () => {
+  it("should create credential with valid input", async () => {
+    const mockUser = { id: "user-1", plan: UserPlan.PRO }
+    const mockInput = { identifier: "test", platformId: "platform-1" }
+    
+    const mockCredential = { id: "cred-1", ...mockInput }
+    const mockDatabase = {
+      credential: {
+        create: jest.fn().mockResolvedValue(mockCredential),
+      },
+    }
+
+    const result = await createCredential.handler({
+      input: mockInput,
+      context: { user: mockUser },
+    })
+
+    expect(result).toEqual(CredentialEntity.getSimpleRo(mockCredential))
+    expect(mockDatabase.credential.create).toHaveBeenCalledWith({
+      data: { ...mockInput, userId: mockUser.id },
+    })
+  })
+
+  it("should throw error for invalid input", async () => {
+    const mockUser = { id: "user-1", plan: UserPlan.PRO }
+    const mockInput = { identifier: "", platformId: "platform-1" }
+
+    await expect(
+      createCredential.handler({
+        input: mockInput,
+        context: { user: mockUser },
+      })
+    ).rejects.toThrow(ORPCError)
+  })
+})
+```
+
+### Integration Testing
+- **Test full request/response cycle**
+- **Use test database** for real queries
+- **Test authentication and permissions**
+
+```tsx
+// ✅ Do
+describe("Credential API Integration", () => {
+  beforeEach(async () => {
+    await setupTestDatabase()
+  })
+
+  it("should create and retrieve credential", async () => {
+    const user = await createTestUser()
+    const platform = await createTestPlatform()
+    
+    const createResponse = await orpc.credential.create({
+      identifier: "test-user",
+      platformId: platform.id,
+    })
+
+    expect(createResponse.id).toBeDefined()
+    expect(createResponse.identifier).toBe("test-user")
+
+    const getResponse = await orpc.credential.getById({ id: createResponse.id })
+    expect(getResponse.identifier).toBe("test-user")
+  })
+})
+```
