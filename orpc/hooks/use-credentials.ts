@@ -5,6 +5,7 @@ import type {
   CreateCredentialInput,
   CredentialOutput,
   DeleteCredentialInput,
+  DuplicateCredentialInput,
   ListCredentialsInput,
   ListCredentialsOutput,
   UpdateCredentialInput,
@@ -339,6 +340,29 @@ export function useUpdateCredentialPassword() {
     },
     onError: (error) => {
       console.error("Failed to update credential password:", error)
+    },
+  })
+}
+
+// Duplicate credential mutation
+export function useDuplicateCredential() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (input: DuplicateCredentialInput) =>
+      orpc.credentials.duplicate.call(input),
+    onSuccess: (duplicatedCredential: CredentialOutput) => {
+      // Invalidate and refetch credential lists
+      queryClient.invalidateQueries({ queryKey: credentialKeys.lists() })
+
+      // Add the duplicated credential to the cache
+      queryClient.setQueryData(
+        credentialKeys.detail(duplicatedCredential.id),
+        duplicatedCredential
+      )
+    },
+    onError: (error) => {
+      console.error("Failed to duplicate credential:", error)
     },
   })
 }

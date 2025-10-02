@@ -12,6 +12,10 @@ import {
   getPlaceholderImage,
 } from "@/lib/utils"
 import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard"
+import { useDuplicateCredential, useUpdateCredential, useDeleteCredential } from "@/orpc/hooks/use-credentials"
+import { useToast } from "@/hooks/use-toast"
+import { useState } from "react"
+import { MoveCredentialDialog } from "@/components/shared/move-credential-dialog"
 
 import { Icons } from "@/components/shared/icons"
 import { ItemActionsContextMenu } from "@/components/shared/item-actions-dropdown"
@@ -23,6 +27,17 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
 interface CredentialListViewProps {
   credentials: CredentialIncludeOutput[]
@@ -37,6 +52,18 @@ export function DashboardCredentialCardsView({
   const { copy, isCopied } = useCopyToClipboard({
     successDuration: 1000,
   })
+  const { toast } = useToast()
+  const updateCredentialMutation = useUpdateCredential()
+  const duplicateCredentialMutation = useDuplicateCredential()
+  const deleteCredentialMutation = useDeleteCredential()
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [credentialToDelete, setCredentialToDelete] = useState<string | null>(null)
+  const [moveDialogOpen, setMoveDialogOpen] = useState(false)
+  const [credentialToMove, setCredentialToMove] = useState<{
+    id: string
+    name: string
+    containerId?: string | null
+  } | null>(null)
 
   const getPlatform = (platformId: string) => {
     return (
@@ -60,6 +87,93 @@ export function DashboardCredentialCardsView({
     router.push(`/dashboard/accounts/${credentialId}`)
   }
 
+  const handleDuplicate = async (credentialId: string) => {
+    try {
+      const duplicatedCredential = await duplicateCredentialMutation.mutateAsync({
+        id: credentialId,
+      })
+      
+      toast(
+        "Credential duplicated",
+        "success"
+      )
+
+      // Navigate to the duplicated credential's edit page
+      router.push(`/dashboard/accounts/${duplicatedCredential.id}`)
+    } catch (error) {
+      toast({
+        title: "Failed to duplicate credential",
+        description: "Please try again later.",
+        variant: "destructive",
+      })
+    }
+  }
+
+  const handleArchive = async (credentialId: string) => {
+    try {
+      await updateCredentialMutation.mutateAsync({
+        id: credentialId,
+        status: "SUSPENDED",
+      })
+      
+      toast(
+        "Credential archived",
+      )
+    } catch (error) {
+      toast({
+        title: "Failed to archive credential",
+        description: "Please try again later.",
+        variant: "destructive",
+      })
+    }
+  }
+
+  const handleShare = () => {
+    toast({
+      title: "Share Feature",
+      description: "Credential sharing is a PRO feature. Upgrade to share credentials with team members.",
+      variant: "default",
+    })
+  }
+
+  const handleMove = (credentialId: string, credentialName: string, containerId?: string | null) => {
+    setCredentialToMove({
+      id: credentialId,
+      name: credentialName,
+      containerId,
+    })
+    setMoveDialogOpen(true)
+  }
+
+  const handleDelete = (credentialId: string) => {
+    setCredentialToDelete(credentialId)
+    setDeleteDialogOpen(true)
+  }
+
+  const confirmDelete = async () => {
+    if (!credentialToDelete) return
+
+    try {
+      await deleteCredentialMutation.mutateAsync({
+        id: credentialToDelete,
+      })
+      
+      toast({
+        title: "Credential deleted",
+        description: "The credential has been deleted successfully.",
+      })
+      
+      setDeleteDialogOpen(false)
+      setCredentialToDelete(null)
+    } catch (error) {
+      toast({
+        title: "Failed to delete credential",
+        description: "Please try again later.",
+        variant: "destructive",
+      })
+    }
+  }
+
   return (
     <div className="space-y-3">
       {credentials.map((credential) => {
@@ -70,22 +184,20 @@ export function DashboardCredentialCardsView({
           <ItemActionsContextMenu
             key={credential.id}
             onEdit={() => {
-              // TODO: Implement edit
+              router.push(`/dashboard/accounts/${credential.id}`)
             }}
-            onShare={() => {
-              // TODO: Implement share
-            }}
+            onShare={handleShare}
             onDuplicate={() => {
-              // TODO: Implement duplicate
+              handleDuplicate(credential.id)
             }}
             onMove={() => {
-              // TODO: Implement move
+              handleMove(credential.id, credential.identifier, credential.containerId)
             }}
             onArchive={() => {
-              // TODO: Implement archive
+              handleArchive(credential.id)
             }}
             onDelete={() => {
-              // TODO: Implement delete
+              handleDelete(credential.id)
             }}
           >
             <div
@@ -168,6 +280,36 @@ export function DashboardCredentialCardsView({
           </ItemActionsContextMenu>
         )
       })}
+      
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Credential</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this credential? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {credentialToMove && (
+        <MoveCredentialDialog
+          open={moveDialogOpen}
+          onOpenChange={setMoveDialogOpen}
+          credentialId={credentialToMove.id}
+          credentialName={credentialToMove.name}
+          currentContainerId={credentialToMove.containerId}
+        />
+      )}
     </div>
   )
 }
