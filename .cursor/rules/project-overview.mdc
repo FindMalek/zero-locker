@@ -1,0 +1,71 @@
+---
+alwaysApply: true
+---
+
+# Zero Locker - Project Overview
+
+Zero Locker is a secure password management application built with Next.js 15, TypeScript, and modern web technologies. This is a comprehensive guide to the project structure, patterns, and conventions.
+
+## Architecture Overview
+
+- **Frontend**: Next.js 15 with App Router, React 19, TypeScript
+- **Backend**: oRPC (OpenAPI-compatible RPC) with Prisma ORM
+- **Database**: PostgreSQL with Neon provider
+- **Authentication**: BetterAuth with email/password
+- **Styling**: Tailwind CSS with shadcn/ui components
+- **State Management**: TanStack Query (React Query) for server state
+- **Encryption**: AES-256-GCM for sensitive data
+- **Deployment**: Vercel
+
+## Key Technologies
+
+- **oRPC**: Type-safe RPC framework replacing tRPC
+- **Prisma**: Database ORM with multi-file schema
+- **BetterAuth**: Modern authentication library
+- **React Hook Form**: Form management with Zod validation
+- **Lucide React**: Icon library
+- **Sonner**: Toast notifications
+- **Motion**: Animation library
+
+## Project Structure
+
+```
+/app/                    # Next.js App Router pages
+/components/             # React components organized by feature
+/entities/              # Database entity transformations
+/lib/                   # Utility libraries and configurations
+/middleware/            # Next.js middleware for auth and permissions
+/orpc/                  # oRPC API routes and client
+/prisma/                # Database schema and client
+/schemas/               # Zod validation schemas
+/hooks/                 # Custom React hooks
+/config/                # Application configuration
+/types/                 # TypeScript type definitions
+```
+
+## Core Concepts
+
+1. **Type Safety**: Full TypeScript coverage with strict mode
+2. **Security First**: All sensitive data encrypted with AES-256-GCM
+3. **Permission System**: Role-based access control with feature flags
+4. **Entity Pattern**: Database entities transformed to Return Objects (ROs)
+5. **Schema Validation**: Zod schemas for all data validation
+6. **Component Composition**: Reusable UI components with variants
+
+## File Naming Conventions
+
+- **Components**: `kebab-case.tsx` (e.g., `dashboard-credential-form.tsx`)
+- **Pages**: `page.tsx` or `route.ts` for API routes
+- **Schemas**: `kebab-case.ts` (e.g., `credential-form-dto.ts`)
+- **Entities**: `entity.ts`, `query.ts`, `index.ts`
+- **Hooks**: `use-kebab-case.ts` (e.g., `use-copy-to-clipboard.ts`)
+- **Types**: `kebab-case.d.ts` (e.g., `dashboard.d.ts`)
+
+## Key Patterns
+
+1. **Barrel Exports**: Each folder has an `index.ts` for clean imports
+2. **DTO/RO Pattern**: Data Transfer Objects for input, Return Objects for output
+3. **Entity Transformation**: Database entities converted to client-safe ROs
+4. **Middleware Chain**: Authentication and permission middleware
+5. **Error Handling**: Consistent error responses with oRPC
+6. **Form Management**: React Hook Form with Zod validation
