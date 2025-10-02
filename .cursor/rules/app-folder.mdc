@@ -1,0 +1,111 @@
+---
+globs: app/**/*
+---
+
+# App Folder - Next.js App Router Structure
+
+The `/app` folder contains Next.js 15 App Router pages and API routes. This follows the new App Router conventions with file-based routing.
+
+## Structure Overview
+
+```
+app/
+├── (auth)/              # Route group for authentication pages
+│   ├── layout.tsx       # Auth layout wrapper
+│   ├── login/           # Login page
+│   └── register/        # Registration page
+├── (dashboard)/         # Route group for dashboard pages
+│   └── dashboard/       # Main dashboard pages
+├── (marketing)/         # Route group for marketing pages
+│   └── page.tsx         # Landing page
+├── api/                 # API routes
+│   ├── auth/            # BetterAuth API routes
+│   ├── cron/            # Cron job endpoints
+│   └── orpc/            # oRPC API handler
+├── layout.tsx           # Root layout
+└── not-found.tsx        # 404 page
+```
+
+## File Conventions
+
+### Pages
+- **Layout files**: `layout.tsx` - Define shared UI and metadata
+- **Page files**: `page.tsx` - Define page components and metadata
+- **Loading files**: `loading.tsx` - Define loading UI
+- **Error files**: `error.tsx` - Define error UI
+- **Not found**: `not-found.tsx` - Define 404 UI
+
+### API Routes
+- **Route handlers**: `route.ts` - Define HTTP method handlers
+- **Dynamic routes**: `[param]/route.ts` - Handle dynamic parameters
+- **Catch-all routes**: `[...param]/route.ts` - Handle multiple segments
+
+## Key Patterns
+
+### Layout Composition
+```tsx
+// Root layout with providers and global styles
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html>
+      <body>
+        <LayoutWrapper>
+          {children}
+          <Analytics />
+          <Toaster />
+        </LayoutWrapper>
+      </body>
+    </html>
+  )
+}
+```
+
+### Route Groups
+- Use parentheses `(group)` for organization without affecting URL structure
+- Each group can have its own `layout.tsx`
+- Groups are useful for different layouts (auth, dashboard, marketing)
+
+### API Routes
+```tsx
+// oRPC handler pattern
+export const GET = handleRequest
+export const POST = handleRequest
+export const PUT = handleRequest
+export const PATCH = handleRequest
+export const DELETE = handleRequest
+```
+
+### Metadata
+```tsx
+export const metadata: Metadata = {
+  title: {
+    default: siteConfig.name,
+    template: `%s | ${siteConfig.name}`,
+  },
+  description: siteConfig.description,
+  // ... other metadata
+}
+```
+
+## Security Considerations
+
+1. **Authentication**: All dashboard routes protected by middleware
+2. **API Security**: oRPC routes use authentication middleware
+3. **CORS**: Configured for production domains
+4. **Rate Limiting**: Implemented for sensitive endpoints
+
+## Best Practices
+
+1. **Server Components**: Use server components by default
+2. **Client Components**: Mark with `"use client"` only when needed
+3. **Data Fetching**: Use server-side data fetching in layouts and pages
+4. **Error Boundaries**: Implement error boundaries for better UX
+5. **Loading States**: Provide loading UI for better perceived performance
+6. **Metadata**: Always include proper metadata for SEO
+
+## Environment Variables
+
+- `NEXT_PUBLIC_APP_URL`: Public app URL
+- `BETTER_AUTH_SECRET`: Authentication secret
+- `DATABASE_URL`: Database connection string
+- `NODE_ENV`: Environment (development/production)

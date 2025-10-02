@@ -1,0 +1,193 @@
+---
+globs: components/**/*
+---
+
+# Components Folder - React Component Architecture
+
+The `/components` folder contains all React components organized by feature and type. This follows a clear separation of concerns with reusable UI components.
+
+## Structure Overview
+
+```
+components/
+├── app/                 # Application-specific components
+│   ├── auth-*.tsx      # Authentication components
+│   ├── dashboard-*.tsx # Dashboard components
+│   └── marketing-*.tsx # Marketing components
+├── layout/             # Layout components
+│   ├── analytics.tsx   # Analytics wrapper
+│   ├── dashboard-*.tsx # Dashboard layout components
+│   └── theme-provider.tsx
+├── shared/             # Shared utility components
+└── ui/                 # Base UI components (shadcn/ui)
+```
+
+## Component Categories
+
+### App Components (`/app`)
+Application-specific components that implement business logic:
+
+- **Authentication**: `auth-login-form.tsx`, `auth-register-form.tsx`
+- **Dashboard**: `dashboard-*.tsx` - All dashboard-related components
+- **Marketing**: `marketing-*.tsx` - Landing page components
+
+**Naming Pattern**: `{feature}-{purpose}-{type}.tsx`
+- `dashboard-credential-form.tsx` - Form for credential management
+- `dashboard-add-card-dialog.tsx` - Dialog for adding cards
+- `dashboard-overview-stats.tsx` - Statistics overview component
+
+### Layout Components (`/layout`)
+Components that provide layout structure and navigation:
+
+- **Navigation**: `dashboard-sidebar.tsx`, `dashboard-site-header.tsx`
+- **Breadcrumbs**: `dashboard-dynamic-breadcrumb.tsx`
+- **Search**: `dashboard-search-combobox.tsx`
+- **User Menu**: `dashboard-nav-user.tsx`
+
+### Shared Components (`/shared`)
+Reusable components used across the application:
+
+- **Icons**: `icons.tsx` - Icon component library
+- **Utilities**: Various utility components
+
+### UI Components (`/ui`)
+Base UI components from shadcn/ui with consistent styling:
+
+- **Form Controls**: `button.tsx`, `input.tsx`, `textarea.tsx`
+- **Layout**: `card.tsx`, `separator.tsx`, `sheet.tsx`
+- **Feedback**: `toast.tsx`, `alert.tsx`, `dialog.tsx`
+- **Navigation**: `tabs.tsx`, `dropdown-menu.tsx`
+- **Data Display**: `table.tsx`, `badge.tsx`, `avatar.tsx`
+
+## Component Patterns
+
+### Form Components
+```tsx
+interface ComponentFormProps {
+  data?: DataType
+  form: UseFormReturn<FormDto>
+  onSubmit?: (data: FormDto) => void
+  onCancel?: () => void
+}
+
+export function ComponentForm({ data, form, onSubmit, onCancel }: ComponentFormProps) {
+  // Form implementation
+}
+```
+
+### Dialog Components
+```tsx
+interface ComponentDialogProps {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  data?: DataType
+}
+
+export function ComponentDialog({ open, onOpenChange, data }: ComponentDialogProps) {
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        {/* Dialog content */}
+      </DialogContent>
+    </Dialog>
+  )
+}
+```
+
+### Client Components
+```tsx
+"use client"
+
+import { useEffect, useState } from "react"
+import { useQuery } from "@tanstack/react-query"
+
+export function ClientComponent() {
+  // Client-side logic
+}
+```
+
+## Styling Conventions
+
+### Tailwind CSS Classes
+- Use `cn()` utility for conditional classes
+- Follow consistent spacing: `space-y-4`, `gap-4`
+- Use semantic color classes: `text-foreground`, `bg-background`
+- Responsive design: `md:`, `lg:`, `xl:` prefixes
+
+### Component Variants
+```tsx
+const componentVariants = cva(
+  "base-classes",
+  {
+    variants: {
+      variant: {
+        default: "default-classes",
+        secondary: "secondary-classes",
+      },
+      size: {
+        default: "default-size",
+        sm: "small-size",
+        lg: "large-size",
+      },
+    },
+    defaultVariants: {
+      variant: "default",
+      size: "default",
+    },
+  }
+)
+```
+
+## State Management
+
+### Local State
+- Use `useState` for component-local state
+- Use `useReducer` for complex state logic
+
+### Server State
+- Use TanStack Query hooks from `/orpc/hooks`
+- Prefer server-side data fetching when possible
+
+### Form State
+- Use React Hook Form with Zod validation
+- Form schemas in `/schemas` folder
+
+## Accessibility
+
+### ARIA Attributes
+- Use proper ARIA labels and descriptions
+- Implement keyboard navigation
+- Ensure screen reader compatibility
+
+### Focus Management
+- Manage focus in dialogs and modals
+- Use focus-visible for keyboard users
+
+## Performance
+
+### Optimization
+- Use `React.memo` for expensive components
+- Implement `useMemo` and `useCallback` when needed
+- Lazy load heavy components
+
+### Bundle Size
+- Import only needed icons from Lucide React
+- Use dynamic imports for large components
+
+## Testing
+
+### Component Testing
+- Test component behavior, not implementation
+- Mock external dependencies
+- Test accessibility features
+
+## Best Practices
+
+1. **Single Responsibility**: Each component should have one clear purpose
+2. **Composition**: Prefer composition over inheritance
+3. **Props Interface**: Always define TypeScript interfaces for props
+4. **Error Boundaries**: Wrap components that might fail
+5. **Loading States**: Provide loading and error states
+6. **Documentation**: Add JSDoc comments for complex components
+7. **Consistent Naming**: Follow the established naming patterns
+8. **Type Safety**: Use strict TypeScript types

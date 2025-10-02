@@ -1,0 +1,354 @@
+---
+globs: orpc/**/*
+---
+
+# oRPC Folder - API Routes and Client
+
+The `/orpc` folder contains the oRPC (OpenAPI-compatible RPC) API implementation. oRPC provides type-safe API routes with automatic client generation.
+
+## Structure Overview
+
+```
+orpc/
+├── client/             # Generated client code
+│   ├── index.ts       # Client exports
+│   ├── query.ts       # Query utilities
+│   ├── rpc.ts         # RPC client
+│   ├── server.ts      # Server utilities
+│   └── utils.ts       # Client utilities
+├── hooks/             # React Query hooks
+│   ├── use-cards.ts   # Card-related hooks
+│   ├── use-credentials.ts # Credential hooks
+│   ├── use-secrets.ts # Secret hooks
+│   └── ...           # Other entity hooks
+├── routers/           # API route definitions
+│   ├── card.ts        # Card routes
+│   ├── credential.ts  # Credential routes
+│   ├── secret.ts      # Secret routes
+│   └── index.ts       # Router aggregation
+├── context.ts         # Request context
+└── types.ts           # Type definitions
+```
+
+## Router Pattern
+
+### Base Router Structure
+```tsx
+import { os } from "@orpc/server"
+import { authMiddleware } from "@/middleware/auth"
+import { requirePermission } from "@/middleware/permissions"
+
+// Create base procedure with context
+const baseProcedure = os.$context<ORPCContext>()
+
+// Create authenticated procedure
+const authProcedure = baseProcedure.use(({ context, next }) =>
+  authMiddleware({ context, next })
+)
+
+// Create procedure with specific permissions
+const permissionProcedure = authProcedure.use(({ context, next }) =>
+  requirePermission(Feature.CREDENTIALS, Action.CREATE)({ context, next })
+)
+```
+
+### Route Definition
+```tsx
+// Define route with input/output schemas
+export const createEntity = authProcedure
+  .input(createEntityInputSchema)
+  .output(entityOutputSchema)
+  .handler(async ({ input, context }): Promise<EntityOutput> => {
+    // Implementation
+    const entity = await database.entity.create({
+      data: {
+        ...input,
+        userId: context.user.id,
+      },
+    })
+
+    return EntityEntity.getSimpleRo(entity)
+  })
+
+// List route with pagination
+export const listEntities = authProcedure
+  .input(listEntitiesInputSchema)
+  .output(listEntitiesOutputSchema)
+  .handler(async ({ input, context }): Promise<ListEntitiesOutput> => {
+    const { page, limit, search } = input
+    
+    const entities = await database.entity.findMany({
+      where: {
+        userId: context.user.id,
+        ...(search && {
+          OR: [
+            { identifier: { contains: search } },
+            { description: { contains: search } },
+          ],
+        }),
+      },
+      include: EntityQuery.getClientSafeInclude(),
+      skip: (page - 1) * limit,
+      take: limit,
+      orderBy: { createdAt: 'desc' },
+    })
+
+    const total = await database.entity.count({
+      where: {
+        userId: context.user.id,
+        ...(search && {
+          OR: [
+            { identifier: { contains: search } },
+            { description: { contains: search } },
+          ],
+        }),
+      },
+    })
+
+    return {
+      entities: entities.map(entity => EntityEntity.getRo(entity)),
+      total,
+      hasMore: page * limit < total,
+      page,
+      limit,
+    }
+  })
+```
+
+## Context and Middleware
+
+### Request Context
+```tsx
+// context.ts
+export async function createContext(): Promise<ORPCContext> {
+  try {
+    const authResult = await auth.api.getSession({
+      headers: await headers(),
+    })
+
+    return {
+      session: authResult?.session || null,
+      user: authResult?.user || null,
+    }
+  } catch (error) {
+    console.error("Failed to get session:", error)
+    return {
+      session: null,
+      user: null,
+    }
+  }
+}
+```
+
+### Middleware Chain
+```tsx
+// Authentication middleware
+export const authMiddleware = async ({
+  context,
+  next,
+}: {
+  context: PublicContext
+  next: MiddlewareNextFn<unknown>
+}) => {
+  if (!context.session || !context.user) {
+    throw new ORPCError("UNAUTHORIZED")
+  }
+
+  return next({
+    context: {
+      ...context,
+      session: context.session,
+      user: context.user,
+    },
+  })
+}
+
+// Permission middleware
+export const requirePermission = (feature: Feature, action: Action) => {
+  return async ({ context, next }: { context: AuthenticatedContext; next: MiddlewareNextFn<unknown> }) => {
+    // Check user permissions
+    const hasPermission = await checkUserPermission(context.user, feature, action)
+    
+    if (!hasPermission) {
+      throw new ORPCError("FORBIDDEN")
+    }
+
+    return next({ context })
+  }
+}
+```
+
+## React Query Hooks
+
+### Hook Pattern
+```tsx
+// use-entities.ts
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import { orpc } from "@/orpc/client"
+
+// Query hooks
+export const useEntities = (input: ListEntitiesInput) => {
+  return useQuery({
+    queryKey: entityKeys.list(input),
+    queryFn: () => orpc.entities.list(input),
+  })
+}
+
+export const useEntity = (id: string) => {
+  return useQuery({
+    queryKey: entityKeys.detail(id),
+    queryFn: () => orpc.entities.get({ id }),
+    enabled: !!id,
+  })
+}
+
+// Mutation hooks
+export const useCreateEntity = () => {
+  const queryClient = useQueryClient()
+  
+  return useMutation({
+    mutationFn: (input: CreateEntityInput) => orpc.entities.create(input),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: entityKeys.all })
+    },
+  })
+}
+
+export const useUpdateEntity = () => {
+  const queryClient = useQueryClient()
+  
+  return useMutation({
+    mutationFn: (input: UpdateEntityInput) => orpc.entities.update(input),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: entityKeys.all })
+      queryClient.setQueryData(entityKeys.detail(data.id), data)
+    },
+  })
+}
+
+// Query key factory
+export const entityKeys = {
+  all: ['entities'] as const,
+  lists: () => [...entityKeys.all, 'list'] as const,
+  list: (input: ListEntitiesInput) => [...entityKeys.lists(), input] as const,
+  details: () => [...entityKeys.all, 'detail'] as const,
+  detail: (id: string) => [...entityKeys.details(), id] as const,
+}
+```
+
+## Error Handling
+
+### oRPC Errors
+```tsx
+import { ORPCError } from "@orpc/server"
+
+// Standard error responses
+throw new ORPCError("NOT_FOUND")
+throw new ORPCError("UNAUTHORIZED")
+throw new ORPCError("FORBIDDEN")
+throw new ORPCError("BAD_REQUEST", "Custom error message")
+```
+
+### Custom Error Handling
+```tsx
+// In route handler
+try {
+  const result = await someOperation()
+  return result
+} catch (error) {
+  if (error instanceof PrismaClientKnownRequestError) {
+    if (error.code === 'P2002') {
+      throw new ORPCError("CONFLICT", "Entity already exists")
+    }
+  }
+  throw new ORPCError("INTERNAL_SERVER_ERROR")
+}
+```
+
+## Type Safety
+
+### Input/Output Schemas
+```tsx
+// Use Zod schemas for validation
+export const createEntityInputSchema = z.object({
+  identifier: z.string().min(1),
+  description: z.string().optional(),
+  platformId: z.string().min(1),
+})
+
+export const entityOutputSchema = z.object({
+  id: z.string(),
+  identifier: z.string(),
+  description: z.string().nullable(),
+  createdAt: z.date(),
+  updatedAt: z.date(),
+})
+
+// Export types
+export type CreateEntityInput = z.infer<typeof createEntityInputSchema>
+export type EntityOutput = z.infer<typeof entityOutputSchema>
+```
+
+### Context Types
+```tsx
+// types.ts
+export interface ORPCContext {
+  session: Session | null
+  user: User | null
+}
+
+export interface AuthenticatedContext extends ORPCContext {
+  session: Session
+  user: User
+}
+
+export interface PublicContext {
+  session: Session | null
+  user: User | null
+}
+```
+
+## Best Practices
+
+### 1. Route Organization
+- Group related routes in the same router file
+- Use consistent naming conventions
+- Implement proper error handling
+
+### 2. Middleware Usage
+- Apply authentication middleware to protected routes
+- Use permission middleware for feature-specific access
+- Chain middleware appropriately
+
+### 3. Data Validation
+- Always validate input with Zod schemas
+- Use appropriate output schemas
+- Handle validation errors gracefully
+
+### 4. Performance
+- Implement pagination for list endpoints
+- Use appropriate database includes
+- Consider caching for frequently accessed data
+
+### 5. Security
+- Never expose sensitive data in responses
+- Validate user permissions
+- Use client-safe entity transformations
+
+### 6. Error Handling
+- Use standard oRPC error codes
+- Provide meaningful error messages
+- Log errors for debugging
+
+## Testing
+
+### Route Testing
+- Test successful operations
+- Test error conditions
+- Test authentication and authorization
+- Test input validation
+
+### Hook Testing
+- Test query hooks with mock data
+- Test mutation hooks and cache updates
+- Test error handling in hooks

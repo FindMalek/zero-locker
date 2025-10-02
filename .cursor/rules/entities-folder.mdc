@@ -1,0 +1,244 @@
+---
+globs: entities/**/*
+---
+
+# Entities Folder - Database Entity Transformations
+
+The `/entities` folder contains database entity transformation logic. This pattern separates database concerns from business logic and provides type-safe data transformations.
+
+## Structure Overview
+
+```
+entities/
+├── card/                # Card entity transformations
+│   ├── card/           # Main card entity
+│   └── card-metadata/  # Card metadata entity
+├── credential/         # Credential entity transformations
+│   ├── credential/     # Main credential entity
+│   ├── credential-history/    # Credential history
+│   ├── credential-key-value/  # Key-value pairs
+│   └── credential-metadata/   # Credential metadata
+├── encryption/         # Encryption entity
+├── secrets/           # Secret entity transformations
+│   ├── secret/        # Main secret entity
+│   └── secret-metadata/ # Secret metadata
+├── utils/             # Utility entities
+│   ├── container/     # Container entity
+│   ├── platform/      # Platform entity
+│   └── tag/           # Tag entity
+└── index.ts           # Barrel exports
+```
+
+## Entity Pattern
+
+Each entity follows a consistent three-file pattern:
+
+### 1. `entity.ts` - Transformation Logic
+```tsx
+export class EntityName {
+  // Convert database entity to simple Return Object (RO)
+  static getSimpleRo(entity: EntitySimpleDbData): EntitySimpleRo {
+    return {
+      id: entity.id,
+      // Map database fields to RO fields
+      // Exclude sensitive data and relations
+    }
+  }
+
+  // Convert database entity to full Return Object with relations
+  static getRo(entity: EntityIncludeDbData): EntityIncludeRo {
+    return {
+      ...this.getSimpleRo(entity),
+      // Include related entities
+      relatedEntities: entity.relatedEntities.map(rel => RelatedEntity.getSimpleRo(rel))
+    }
+  }
+
+  // Helper methods for data transformation
+  static convertStatus(status: DatabaseStatus): ClientStatus {
+    // Convert between database and client representations
+  }
+}
+```
+
+### 2. `query.ts` - Database Query Helpers
+```tsx
+export class EntityQuery {
+  // Simple include for basic queries
+  static getSimpleInclude() {
+    return {} satisfies Prisma.EntityInclude
+  }
+
+  // Full include with all relations (server-side only)
+  static getInclude() {
+    return {
+      ...this.getSimpleInclude(),
+      relations: true,
+      // WARNING: May expose sensitive data
+    } satisfies Prisma.EntityInclude
+  }
+
+  // Client-safe include (excludes sensitive data)
+  static getClientSafeInclude() {
+    return {
+      ...this.getSimpleInclude(),
+      relations: {
+        // Only include safe relations
+      }
+    } satisfies Prisma.EntityInclude
+  }
+}
+```
+
+### 3. `index.ts` - Exports
+```tsx
+export * from "./entity"
+export * from "./query"
+```
+
+## Type Definitions
+
+### Database Types
+```tsx
+// Simple database data (no relations)
+export type EntitySimpleDbData = Prisma.EntityGetPayload<{
+  include: ReturnType<typeof EntityQuery.getSimpleInclude>
+}>
+
+// Full database data (with relations)
+export type EntityIncludeDbData = Prisma.EntityGetPayload<{
+  include: ReturnType<typeof EntityQuery.getInclude>
+}>
+
+// Client-safe database data
+export type EntityClientSafeDbData = Prisma.EntityGetPayload<{
+  include: ReturnType<typeof EntityQuery.getClientSafeInclude>
+}>
+```
+
+## Security Considerations
+
+### Data Exposure
+- **Simple RO**: Excludes sensitive data and relations
+- **Include RO**: May include sensitive data - use server-side only
+- **Client Safe**: Excludes encryption keys and sensitive metadata
+
+### Encryption Handling
+```tsx
+// Decrypt sensitive data on server
+static async getSecuritySettings(entity: EntityIncludeDbData) {
+  const metadata = entity.metadata?.[0]
+  if (!metadata) return defaultSettings
+
+  try {
+    // Decrypt and return settings
+    const decrypted = await decryptData(/* ... */)
+    return JSON.parse(decrypted)
+  } catch (error) {
+    // Fall back to defaults - never expose raw encrypted data
+    return defaultSettings
+  }
+}
+```
+
+## Common Patterns
+
+### Status Conversion
+```tsx
+// Convert between database and client status enums
+static convertStatusToClient(dbStatus: DatabaseStatus): ClientStatus {
+  switch (dbStatus) {
+    case DatabaseStatus.ACTIVE:
+      return ClientStatus.ACTIVE
+    case DatabaseStatus.SUSPENDED:
+      return ClientStatus.SUSPENDED
+    default:
+      return ClientStatus.UNKNOWN
+  }
+}
+```
+
+### Date Handling
+```tsx
+// Ensure consistent date handling
+static getSimpleRo(entity: EntitySimpleDbData): EntitySimpleRo {
+  return {
+    id: entity.id,
+    createdAt: entity.createdAt,
+    updatedAt: entity.updatedAt,
+    lastViewed: entity.lastViewed, // Can be null
+  }
+}
+```
+
+### Relation Mapping
+```tsx
+// Map related entities safely
+static getRo(entity: EntityIncludeDbData): EntityIncludeRo {
+  return {
+    ...this.getSimpleRo(entity),
+    tags: entity.tags.map(tag => TagEntity.getSimpleRo(tag)),
+    metadata: entity.metadata.map(meta => MetadataEntity.getSimpleRo(meta)),
+  }
+}
+```
+
+## Best Practices
+
+### 1. Data Transformation
+- Always use entity classes for database-to-client transformations
+- Never expose raw database entities to the client
+- Handle null values gracefully
+
+### 2. Type Safety
+- Use Prisma's `GetPayload` for type-safe database queries
+- Define clear interfaces for Return Objects
+- Use TypeScript strict mode
+
+### 3. Performance
+- Use appropriate include levels (simple, include, client-safe)
+- Avoid over-fetching data
+- Consider pagination for large datasets
+
+### 4. Security
+- Never expose encryption keys to the client
+- Use client-safe includes for client-facing endpoints
+- Implement proper error handling for decryption failures
+
+### 5. Consistency
+- Follow the three-file pattern for all entities
+- Use consistent naming conventions
+- Implement barrel exports
+
+## Error Handling
+
+### Decryption Errors
+```tsx
+try {
+  const decrypted = await decryptData(/* ... */)
+  return JSON.parse(decrypted)
+} catch (error) {
+  console.error("Decryption failed:", error)
+  // Return safe defaults, never expose raw data
+  return defaultValues
+}
+```
+
+### Missing Relations
+```tsx
+// Handle optional relations gracefully
+tags: entity.tags?.map(tag => TagEntity.getSimpleRo(tag)) ?? [],
+metadata: entity.metadata?.[0] ? [MetadataEntity.getSimpleRo(entity.metadata[0])] : [],
+```
+
+## Testing
+
+### Entity Testing
+- Test transformation logic with mock data
+- Test error handling for malformed data
+- Test security boundaries (no sensitive data exposure)
+
+### Query Testing
+- Test include levels return expected data
+- Test client-safe includes exclude sensitive data
+- Test performance with large datasets

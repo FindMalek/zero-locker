@@ -1,0 +1,316 @@
+---
+globs: schemas/**/*
+---
+
+# Schemas Folder - Zod Validation Schemas
+
+The `/schemas` folder contains Zod validation schemas for data validation, type safety, and API contracts. This ensures consistent data validation across the application.
+
+## Structure Overview
+
+```
+schemas/
+├── card/              # Card-related schemas
+│   ├── card.ts        # Card entity schemas
+│   ├── card-metadata.ts # Card metadata schemas
+│   └── dto.ts         # Card DTOs
+├── credential/        # Credential-related schemas
+│   ├── credential.ts  # Credential entity schemas
+│   ├── credential-metadata.ts # Credential metadata
+│   ├── credential-key-value.ts # Key-value pairs
+│   ├── credential-with-metadata.ts # Combined schemas
+│   └── dto.ts         # Credential DTOs
+├── encryption/        # Encryption schemas
+│   └── encryption.ts  # Encrypted data schemas
+├── secrets/           # Secret-related schemas
+├── user/              # User-related schemas
+├── utils/             # Utility schemas
+│   ├── base-key-value-pair.ts # Base key-value schema
+│   ├── container.ts   # Container schemas
+│   ├── platform.ts    # Platform schemas
+│   ├── tag.ts         # Tag schemas
+│   └── utils.ts       # Utility types
+└── index.ts           # Barrel exports
+```
+
+## Schema Categories
+
+### 1. Entity Schemas
+Define the structure of database entities:
+
+```tsx
+// credential.ts
+export const credentialSimpleRoSchema = z.object({
+  id: z.string(),
+  identifier: z.string(),
+  description: z.string().nullable(),
+  status: z.nativeEnum(AccountStatus),
+  lastViewed: z.date().nullable(),
+  createdAt: z.date(),
+  updatedAt: z.date(),
+  platformId: z.string(),
+  userId: z.string(),
+  containerId: z.string().nullable(),
+  passwordEncryptionId: z.string(),
+})
+
+export type CredentialSimpleRo = z.infer<typeof credentialSimpleRoSchema>
+```
+
+### 2. DTO Schemas
+Data Transfer Objects for API input/output:
+
+```tsx
+// dto.ts
+export const createCredentialInputSchema = credentialDtoSchema
+export const getCredentialInputSchema = getCredentialByIdDtoSchema
+export const updateCredentialInputSchema = updateCredentialDtoSchema
+export const deleteCredentialInputSchema = deleteCredentialDtoSchema
+
+// List with pagination
+export const listCredentialsInputSchema = z.object({
+  page: z.number().int().min(1).default(1),
+  limit: z.number().int().min(1).max(100).default(10),
+  search: z.string().optional(),
+  containerId: z.string().optional(),
+  platformId: z.string().optional(),
+})
+
+export const listCredentialsOutputSchema = z.object({
+  credentials: z.array(credentialIncludeOutputSchema),
+  total: z.number().int(),
+  hasMore: z.boolean(),
+  page: z.number().int(),
+  limit: z.number().int(),
+})
+```
+
+### 3. Form Schemas
+Schemas for form validation (excluding sensitive data):
+
+```tsx
+// credential.ts
+export const credentialFormDtoSchema = z.object({
+  identifier: z.string().min(1, "Username/identifier is required"),
+  description: z.string().optional(),
+  status: z.nativeEnum(AccountStatus),
+  platformId: z.string().min(1, "Platform is required"),
+  containerId: z.string().optional(),
+  // Security settings (metadata)
+  passwordProtection: z.boolean(),
+  twoFactorAuth: z.boolean(),
+  accessLogging: z.boolean(),
+})
+
+export type CredentialFormDto = z.infer<typeof credentialFormDtoSchema>
+```
+
+### 4. Encryption Schemas
+Schemas for encrypted data:
+
+```tsx
+// encryption.ts
+export const encryptedDataDtoSchema = z.object({
+  encryptedValue: z.string().min(1, "Encrypted value is required"),
+  iv: z.string().min(1, "IV is required"),
+  encryptionKey: z.string().min(1, "Encryption key is required"),
+})
+
+export type EncryptedDataDto = z.infer<typeof encryptedDataDtoSchema>
+```
+
+## Schema Patterns
+
+### Enum Schemas
+```tsx
+// Define enum schemas for type safety
+export const accountStatusSchema = z.enum([
+  AccountStatus.ACTIVE,
+  AccountStatus.SUSPENDED,
+  AccountStatus.DELETED,
+])
+
+export const accountStatusEnum = accountStatusSchema.enum
+export const LIST_ACCOUNT_STATUSES = Object.values(accountStatusEnum)
+export type AccountStatusInfer = z.infer<typeof accountStatusSchema>
+```
+
+### Optional and Nullable Fields
+```tsx
+// Use .optional() for truly optional fields
+description: z.string().optional(),
+
+// Use .nullable() for fields that can be null in database
+lastViewed: z.date().nullable(),
+
+// Use .nullish() for fields that can be null or undefined
+metadata: z.string().nullish(),
+```
+
+### Validation Messages
+```tsx
+// Provide clear validation messages
+identifier: z.string().min(1, "Username/identifier is required"),
+email: z.string().email("Please enter a valid email address"),
+password: z.string().min(8, "Password must be at least 8 characters"),
+```
+
+### Array Validation
+```tsx
+// Validate arrays with specific item schemas
+tags: z.array(tagDtoSchema),
+metadata: z.array(credentialMetadataDtoSchema),
+
+// Optional arrays
+keyValuePairs: z.array(keyValuePairSchema).optional(),
+```
+
+### Nested Object Validation
+```tsx
+// Nested objects with validation
+passwordEncryption: encryptedDataDtoSchema,
+platform: z.object({
+  id: z.string(),
+  name: z.string(),
+  url: z.string().url().optional(),
+}),
+```
+
+## Schema Composition
+
+### Extending Schemas
+```tsx
+// Extend base schemas
+export const credentialIncludeRoSchema = credentialSimpleRoSchema.extend({
+  tags: z.array(tagSimpleRoSchema),
+})
+
+// Partial schemas for updates
+export const updateCredentialDtoSchema = credentialDtoSchema.partial().extend({
+  id: z.string().min(1, "Credential ID is required"),
+})
+```
+
+### Schema Reuse
+```tsx
+// Reuse common patterns
+export const baseKeyValuePairSchema = z.object({
+  key: z.string().min(1, "Key is required"),
+  value: z.string().min(1, "Value is required"),
+})
+
+export const credentialKeyValuePairSchema = baseKeyValuePairSchema.extend({
+  credentialId: z.string().min(1, "Credential ID is required"),
+})
+```
+
+## Type Generation
+
+### Infer Types
+```tsx
+// Generate TypeScript types from schemas
+export type CredentialDto = z.infer<typeof credentialDtoSchema>
+export type CredentialSimpleRo = z.infer<typeof credentialSimpleRoSchema>
+export type CreateCredentialInput = z.infer<typeof createCredentialInputSchema>
+```
+
+### Export Types
+```tsx
+// Export both schemas and types
+export {
+  credentialDtoSchema,
+  credentialSimpleRoSchema,
+  credentialIncludeRoSchema,
+}
+
+export type {
+  CredentialDto,
+  CredentialSimpleRo,
+  CredentialIncludeRo,
+}
+```
+
+## Validation Patterns
+
+### Custom Validation
+```tsx
+// Custom validation functions
+const validatePassword = (password: string) => {
+  const hasUpperCase = /[A-Z]/.test(password)
+  const hasLowerCase = /[a-z]/.test(password)
+  const hasNumbers = /\d/.test(password)
+  const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password)
+  
+  return hasUpperCase && hasLowerCase && hasNumbers && hasSpecialChar
+}
+
+export const passwordSchema = z.string()
+  .min(8, "Password must be at least 8 characters")
+  .refine(validatePassword, "Password must contain uppercase, lowercase, number, and special character")
+```
+
+### Conditional Validation
+```tsx
+// Conditional validation based on other fields
+export const credentialSchema = z.object({
+  has2FA: z.boolean(),
+  twoFactorCode: z.string().optional(),
+}).refine(
+  (data) => {
+    if (data.has2FA && !data.twoFactorCode) {
+      return false
+    }
+    return true
+  },
+  {
+    message: "Two-factor code is required when 2FA is enabled",
+    path: ["twoFactorCode"],
+  }
+)
+```
+
+## Best Practices
+
+### 1. Naming Conventions
+- **DTOs**: `{entity}DtoSchema` for input validation
+- **ROs**: `{entity}SimpleRoSchema` for simple output, `{entity}IncludeRoSchema` for complex output
+- **Forms**: `{entity}FormDtoSchema` for form validation
+- **Types**: `{Entity}Dto`, `{Entity}SimpleRo`, etc.
+
+### 2. Validation Messages
+- Provide clear, user-friendly error messages
+- Use consistent message formatting
+- Include field names in messages
+
+### 3. Schema Organization
+- Group related schemas in the same file
+- Use barrel exports for clean imports
+- Separate DTOs from entity schemas
+
+### 4. Type Safety
+- Always export TypeScript types
+- Use strict TypeScript configuration
+- Validate all external data
+
+### 5. Performance
+- Use appropriate validation levels
+- Avoid complex validation in hot paths
+- Cache compiled schemas when possible
+
+### 6. Security
+- Validate all input data
+- Sanitize user input
+- Use appropriate string length limits
+
+## Testing
+
+### Schema Testing
+- Test valid data passes validation
+- Test invalid data fails validation
+- Test edge cases and boundary conditions
+- Test custom validation functions
+
+### Integration Testing
+- Test schemas with real API endpoints
+- Test form validation with user input
+- Test error handling and messages

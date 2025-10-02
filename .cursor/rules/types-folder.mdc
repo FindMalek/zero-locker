@@ -1,0 +1,565 @@
+---
+globs: types/**/*
+---
+
+# Types Folder - TypeScript Type Definitions
+
+The `/types` folder contains TypeScript type definitions, interfaces, and type utilities. This provides centralized type management for the entire application.
+
+## Structure Overview
+
+```
+types/
+├── dashboard.d.ts      # Dashboard-specific types
+└── index.d.ts          # Main type definitions
+```
+
+## Main Type Definitions (`index.d.ts`)
+
+### Core Application Types
+```tsx
+// Site configuration interface
+export interface SiteConfig {
+  name: string
+  description: string
+  url: string
+  images: {
+    default: string
+    notFound: string
+    logo: string
+  }
+  links: {
+    twitter: string
+    github: string
+  }
+  author: {
+    name: string
+    url: string
+    email: string
+    github: string
+  }
+  keywords: string[]
+}
+
+// User interface
+export interface User {
+  id: string
+  email: string
+  name: string
+  plan: UserPlan
+  createdAt: Date
+  updatedAt: Date
+}
+
+// Session interface
+export interface Session {
+  id: string
+  userId: string
+  expiresAt: Date
+  createdAt: Date
+}
+
+// Authentication context
+export interface AuthContext {
+  user: User | null
+  session: Session | null
+  isLoading: boolean
+}
+
+// API response types
+export interface ApiResponse<T = any> {
+  data: T
+  success: boolean
+  message?: string
+  errors?: string[]
+}
+
+export interface PaginatedResponse<T = any> extends ApiResponse<T[]> {
+  pagination: {
+    page: number
+    limit: number
+    total: number
+    hasMore: boolean
+  }
+}
+
+// Error types
+export interface ApiError {
+  code: string
+  message: string
+  details?: Record<string, any>
+}
+
+// Form types
+export interface FormState<T = any> {
+  data: T
+  errors: Record<string, string>
+  isSubmitting: boolean
+  isDirty: boolean
+  isValid: boolean
+}
+
+// Component props types
+export interface BaseComponentProps {
+  className?: string
+  children?: React.ReactNode
+}
+
+export interface ButtonProps extends BaseComponentProps {
+  variant?: "default" | "destructive" | "outline" | "secondary" | "ghost" | "link"
+  size?: "default" | "sm" | "lg" | "icon"
+  disabled?: boolean
+  loading?: boolean
+  onClick?: () => void
+}
+
+export interface InputProps extends BaseComponentProps {
+  type?: "text" | "email" | "password" | "number" | "tel" | "url"
+  placeholder?: string
+  value?: string
+  defaultValue?: string
+  disabled?: boolean
+  required?: boolean
+  error?: string
+  onChange?: (value: string) => void
+}
+
+// Modal and dialog types
+export interface ModalProps extends BaseComponentProps {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  title?: string
+  description?: string
+}
+
+export interface DialogProps extends ModalProps {
+  size?: "sm" | "md" | "lg" | "xl" | "full"
+  closable?: boolean
+}
+
+// Table types
+export interface TableColumn<T = any> {
+  key: keyof T
+  title: string
+  sortable?: boolean
+  render?: (value: any, record: T) => React.ReactNode
+  width?: string | number
+  align?: "left" | "center" | "right"
+}
+
+export interface TableProps<T = any> {
+  columns: TableColumn<T>[]
+  data: T[]
+  loading?: boolean
+  pagination?: {
+    page: number
+    limit: number
+    total: number
+    onChange: (page: number, limit: number) => void
+  }
+  selection?: {
+    selectedRowKeys: string[]
+    onChange: (selectedRowKeys: string[]) => void
+  }
+}
+
+// Filter and search types
+export interface FilterOption {
+  label: string
+  value: string
+  count?: number
+}
+
+export interface FilterState {
+  search: string
+  status: string | null
+  containerId: string | null
+  platformId: string | null
+  tags: string[]
+  dateRange: {
+    start: Date | null
+    end: Date | null
+  }
+}
+
+export interface SortState {
+  field: string | null
+  direction: "asc" | "desc"
+}
+
+// Navigation types
+export interface NavigationItem {
+  label: string
+  href: string
+  icon?: React.ComponentType
+  children?: NavigationItem[]
+  badge?: string | number
+  disabled?: boolean
+}
+
+export interface BreadcrumbItem {
+  label: string
+  href?: string
+  current?: boolean
+}
+
+// Theme types
+export interface ThemeConfig {
+  name: string
+  colors: {
+    primary: string
+    secondary: string
+    accent: string
+    background: string
+    foreground: string
+    muted: string
+    border: string
+    input: string
+    ring: string
+  }
+  fonts: {
+    sans: string
+    mono: string
+  }
+  spacing: {
+    xs: string
+    sm: string
+    md: string
+    lg: string
+    xl: string
+  }
+  borderRadius: {
+    sm: string
+    md: string
+    lg: string
+  }
+}
+
+// Utility types
+export type Optional<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>
+export type Required<T, K extends keyof T> = T & Required<Pick<T, K>>
+export type DeepPartial<T> = {
+  [P in keyof T]?: T[P] extends object ? DeepPartial<T[P]> : T[P]
+}
+export type NonNullable<T> = T extends null | undefined ? never : T
+
+// Event types
+export interface CustomEvent<T = any> {
+  type: string
+  payload: T
+  timestamp: Date
+}
+
+// Hook types
+export interface UseApiReturn<T> {
+  data: T | null
+  loading: boolean
+  error: string | null
+  refetch: () => Promise<void>
+}
+
+export interface UseFormReturn<T> {
+  data: T
+  errors: Record<string, string>
+  isSubmitting: boolean
+  isDirty: boolean
+  isValid: boolean
+  setValue: (key: keyof T, value: any) => void
+  setError: (key: keyof T, error: string) => void
+  clearErrors: () => void
+  reset: () => void
+  submit: () => Promise<void>
+}
+
+// Permission types
+export interface Permission {
+  resource: string
+  action: string
+  conditions?: Record<string, any>
+}
+
+export interface UserPermissions {
+  permissions: Permission[]
+  roles: string[]
+  plan: UserPlan
+}
+
+// Notification types
+export interface Notification {
+  id: string
+  type: "success" | "error" | "warning" | "info"
+  title: string
+  message?: string
+  duration?: number
+  actions?: NotificationAction[]
+}
+
+export interface NotificationAction {
+  label: string
+  action: () => void
+  variant?: "default" | "destructive"
+}
+
+// Search types
+export interface SearchResult<T = any> {
+  items: T[]
+  total: number
+  query: string
+  filters: FilterState
+  sort: SortState
+}
+
+export interface SearchSuggestion {
+  text: string
+  type: "query" | "filter" | "recent"
+  count?: number
+}
+
+// Export types
+export interface ExportOptions {
+  format: "csv" | "json" | "pdf"
+  includePasswords: boolean
+  includeMetadata: boolean
+  dateRange?: {
+    start: Date
+    end: Date
+  }
+}
+
+export interface ExportResult {
+  url: string
+  filename: string
+  size: number
+  expiresAt: Date
+}
+```
+
+## Dashboard Types (`dashboard.d.ts`)
+
+### Dashboard-Specific Types
+```tsx
+// Dashboard layout types
+export interface DashboardLayout {
+  sidebar: {
+    collapsed: boolean
+    width: number
+  }
+  header: {
+    height: number
+    sticky: boolean
+  }
+  content: {
+    padding: number
+    maxWidth: number
+  }
+}
+
+// Dashboard state types
+export interface DashboardState {
+  layout: DashboardLayout
+  filters: FilterState
+  sort: SortState
+  selection: {
+    selectedItems: string[]
+    selectedType: "credential" | "card" | "secret" | null
+  }
+  view: {
+    type: "grid" | "list" | "table"
+    density: "compact" | "normal" | "comfortable"
+  }
+}
+
+// Dashboard component props
+export interface DashboardProps {
+  initialData?: {
+    credentials: ListCredentialsOutput
+    cards: ListCardsOutput
+    secrets: ListSecretsOutput
+  }
+  user: User
+  permissions: UserPermissions
+}
+
+// Dashboard action types
+export interface DashboardAction {
+  type: "SET_FILTER" | "SET_SORT" | "SET_SELECTION" | "SET_VIEW" | "RESET_STATE"
+  payload: any
+}
+
+// Dashboard context types
+export interface DashboardContextType {
+  state: DashboardState
+  dispatch: React.Dispatch<DashboardAction>
+  actions: {
+    setFilter: (filter: Partial<FilterState>) => void
+    setSort: (sort: SortState) => void
+    setSelection: (selection: string[]) => void
+    setView: (view: Partial<DashboardState["view"]>) => void
+    resetState: () => void
+  }
+}
+
+// Dashboard widget types
+export interface DashboardWidget {
+  id: string
+  type: "stats" | "chart" | "list" | "recent" | "quick-actions"
+  title: string
+  size: "sm" | "md" | "lg" | "xl"
+  position: {
+    x: number
+    y: number
+    w: number
+    h: number
+  }
+  config: Record<string, any>
+  visible: boolean
+}
+
+// Dashboard analytics types
+export interface DashboardAnalytics {
+  totalCredentials: number
+  totalCards: number
+  totalSecrets: number
+  recentActivity: RecentActivity[]
+  securityScore: number
+  lastBackup: Date | null
+  storageUsed: number
+  storageLimit: number
+}
+
+export interface RecentActivity {
+  id: string
+  type: "credential" | "card" | "secret"
+  action: "created" | "updated" | "deleted" | "viewed"
+  entity: {
+    id: string
+    name: string
+    type: string
+  }
+  timestamp: Date
+  user: {
+    id: string
+    name: string
+  }
+}
+
+// Dashboard quick actions
+export interface QuickAction {
+  id: string
+  label: string
+  description: string
+  icon: React.ComponentType
+  action: () => void
+  shortcut?: string
+  disabled?: boolean
+}
+
+// Dashboard search types
+export interface DashboardSearch {
+  query: string
+  results: SearchResult[]
+  suggestions: SearchSuggestion[]
+  recent: string[]
+  favorites: string[]
+}
+
+// Dashboard notification types
+export interface DashboardNotification {
+  id: string
+  type: "security" | "backup" | "update" | "limit"
+  title: string
+  message: string
+  action?: {
+    label: string
+    onClick: () => void
+  }
+  dismissible: boolean
+  priority: "low" | "medium" | "high" | "critical"
+  createdAt: Date
+  readAt: Date | null
+}
+```
+
+## Type Utilities
+
+### Generic Types
+```tsx
+// Utility types for common patterns
+export type ID = string
+export type Timestamp = Date
+export type Status = "active" | "inactive" | "pending" | "suspended"
+export type Plan = "free" | "pro" | "enterprise"
+
+// API types
+export type ApiMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE"
+export type ApiStatus = "idle" | "loading" | "success" | "error"
+
+// Form types
+export type FormField = "text" | "email" | "password" | "number" | "select" | "textarea" | "checkbox" | "radio"
+export type FormValidation = "required" | "email" | "min" | "max" | "pattern" | "custom"
+
+// UI types
+export type Size = "xs" | "sm" | "md" | "lg" | "xl"
+export type Variant = "default" | "primary" | "secondary" | "success" | "warning" | "error" | "info"
+export type Alignment = "left" | "center" | "right" | "justify"
+```
+
+### Type Guards
+```tsx
+// Type guard functions
+export function isString(value: unknown): value is string {
+  return typeof value === "string"
+}
+
+export function isNumber(value: unknown): value is number {
+  return typeof value === "number" && !isNaN(value)
+}
+
+export function isDate(value: unknown): value is Date {
+  return value instanceof Date
+}
+
+export function isArray<T>(value: unknown): value is T[] {
+  return Array.isArray(value)
+}
+
+export function isObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value)
+}
+
+export function isNonNull<T>(value: T | null | undefined): value is T {
+  return value !== null && value !== undefined
+}
+```
+
+## Best Practices
+
+### 1. Type Organization
+- Group related types in the same file
+- Use descriptive names for types and interfaces
+- Export types as named exports
+
+### 2. Type Safety
+- Use strict TypeScript configuration
+- Define interfaces for all complex objects
+- Use type guards for runtime type checking
+
+### 3. Reusability
+- Create generic types for common patterns
+- Use utility types for transformations
+- Extend base interfaces for specific use cases
+
+### 4. Documentation
+- Add JSDoc comments for complex types
+- Document type parameters and constraints
+- Provide examples for complex types
+
+### 5. Performance
+- Use type-only imports when possible
+- Avoid circular type dependencies
+- Use conditional types sparingly
+
+### 6. Maintenance
+- Keep types in sync with runtime code
+- Use consistent naming conventions
+- Refactor types when patterns change

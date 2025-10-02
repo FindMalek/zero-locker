@@ -1,0 +1,426 @@
+---
+globs: lib/**/*
+---
+
+# Lib Folder - Utility Libraries and Configurations
+
+The `/lib` folder contains utility libraries, configurations, and shared business logic. This follows a clear separation of concerns with reusable utilities.
+
+## Structure Overview
+
+```
+lib/
+├── auth/               # Authentication utilities
+│   ├── client.ts       # Client-side auth
+│   ├── password.ts     # Password hashing/verification
+│   ├── server.ts       # Server-side auth configuration
+│   └── verify.ts       # Token verification
+├── permissions/        # Permission system
+│   ├── hooks/          # Permission hooks
+│   ├── index.ts        # Permission exports
+│   ├── types.ts        # Permission types
+│   └── utils.ts        # Permission utilities
+└── utils/              # General utilities
+    ├── cn.ts           # Class name utility
+    ├── date-utils.ts   # Date utilities
+    ├── encryption-helpers.ts # Encryption utilities
+    └── tag-helpers.ts  # Tag utilities
+```
+
+## Authentication (`/auth`)
+
+### Server Configuration (`server.ts`)
+```tsx
+import { database as prisma } from "@/database/client"
+import { betterAuth } from "better-auth"
+import { prismaAdapter } from "better-auth/adapters/prisma"
+
+export const auth = betterAuth({
+  secret: env.BETTER_AUTH_SECRET,
+  database: prismaAdapter(prisma, {
+    provider: "postgresql",
+  }),
+  emailAndPassword: {
+    enabled: true,
+    password: {
+      hash: saltAndHashPassword,
+      verify: verifyPassword,
+    },
+  },
+})
+```
+
+### Password Utilities (`password.ts`)
+```tsx
+import bcrypt from "bcryptjs"
+
+export async function saltAndHashPassword(password: string): Promise<string> {
+  const saltRounds = 12
+  return await bcrypt.hash(password, saltRounds)
+}
+
+export async function verifyPassword(
+  password: string,
+  hashedPassword: string
+): Promise<boolean> {
+  return await bcrypt.compare(password, hashedPassword)
+}
+```
+
+### Client Auth (`client.ts`)
+```tsx
+import { createAuthClient } from "better-auth/react"
+
+export const authClient = createAuthClient({
+  baseURL: process.env.NEXT_PUBLIC_APP_URL,
+})
+
+export const {
+  signIn,
+  signUp,
+  signOut,
+  useSession,
+} = authClient
+```
+
+## Permissions (`/permissions`)
+
+### Permission Types (`types.ts`)
+```tsx
+export interface UserPermissionFlags {
+  // User type checks
+  isNormalUser: boolean
+  isProUser: boolean
+
+  // Feature permissions
+  canCreateContainers: boolean
+  canSelectContainers: boolean
+  canDeleteContainers: boolean
+  canUpdateContainers: boolean
+
+  // Container limits
+  hasUnlimitedContainers: boolean
+  maxContainers: number
+
+  // UI behavior
+  shouldShowUpgradePrompts: boolean
+  shouldPreSelectDefaultContainer: boolean
+}
+
+export enum PermissionLevel {
+  NONE = "none",
+  READ = "read",
+  WRITE = "write",
+  ADMIN = "admin",
+}
+
+export enum Feature {
+  CONTAINERS = "containers",
+  EXPORTS = "exports",
+  CREDENTIALS = "credentials",
+}
+
+export enum Action {
+  CREATE = "create",
+  READ = "read",
+  UPDATE = "update",
+  DELETE = "delete",
+}
+```
+
+### Permission Utilities (`utils.ts`)
+```tsx
+import { UserPlan } from "@prisma/client"
+import { PermissionConfig, UserPermissionFlags } from "./types"
+
+export function getUserPermissions(userPlan: UserPlan): UserPermissionFlags {
+  const config = getPermissionConfig(userPlan)
+  
+  return {
+    isNormalUser: userPlan === UserPlan.FREE,
+    isProUser: userPlan === UserPlan.PRO,
+    
+    canCreateContainers: config.features.containers.create,
+    canSelectContainers: config.features.containers.create,
+    canDeleteContainers: config.features.containers.delete,
+    canUpdateContainers: config.features.containers.update,
+    
+    hasUnlimitedContainers: config.features.containers.unlimited,
+    maxContainers: config.features.containers.maxCount,
+    
+    shouldShowUpgradePrompts: userPlan === UserPlan.FREE,
+    shouldPreSelectDefaultContainer: !config.features.containers.create,
+  }
+}
+
+function getPermissionConfig(plan: UserPlan): PermissionConfig {
+  switch (plan) {
+    case UserPlan.FREE:
+      return {
+        plan: UserPlan.FREE,
+        features: {
+          containers: {
+            create: false,
+            update: false,
+            delete: false,
+            unlimited: false,
+            maxCount: 1,
+          },
+        },
+      }
+    case UserPlan.PRO:
+      return {
+        plan: UserPlan.PRO,
+        features: {
+          containers: {
+            create: true,
+            update: true,
+            delete: true,
+            unlimited: true,
+            maxCount: -1,
+          },
+        },
+      }
+    default:
+      return getPermissionConfig(UserPlan.FREE)
+  }
+}
+```
+
+### Permission Hooks (`hooks/use-user-permissions.ts`)
+```tsx
+import { useSession } from "@/lib/auth/client"
+import { getUserPermissions, type UserPermissionFlags } from "../utils"
+
+export function useUserPermissions(): UserPermissionFlags {
+  const { data: session } = useSession()
+  
+  if (!session?.user) {
+    // Return default permissions for unauthenticated users
+    return getUserPermissions(UserPlan.FREE)
+  }
+  
+  return getUserPermissions(session.user.plan)
+}
+```
+
+## Utilities (`/utils`)
+
+### Class Name Utility (`cn.ts`)
+```tsx
+import { type ClassValue, clsx } from "clsx"
+import { twMerge } from "tailwind-merge"
+
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs))
+}
+```
+
+### Date Utilities (`date-utils.ts`)
+```tsx
+import { format, formatDistanceToNow, isToday, isYesterday } from "date-fns"
+
+export function formatDate(date: Date): string {
+  return format(date, "MMM d, yyyy")
+}
+
+export function formatDateTime(date: Date): string {
+  return format(date, "MMM d, yyyy 'at' h:mm a")
+}
+
+export function formatRelativeTime(date: Date): string {
+  if (isToday(date)) {
+    return "Today"
+  }
+  
+  if (isYesterday(date)) {
+    return "Yesterday"
+  }
+  
+  return formatDistanceToNow(date, { addSuffix: true })
+}
+
+export function formatTimeAgo(date: Date): string {
+  return formatDistanceToNow(date, { addSuffix: true })
+}
+```
+
+### Encryption Helpers (`encryption-helpers.ts`)
+```tsx
+import { generateEncryptionKey, encryptData } from "@/lib/encryption"
+
+export async function createEncryptedData(value: string) {
+  const key = await generateEncryptionKey()
+  const encrypted = await encryptData(value, key)
+  
+  return {
+    encryptedValue: encrypted.encryptedData,
+    iv: encrypted.iv,
+    encryptionKey: typeof key === "string" ? key : await exportKey(key),
+  }
+}
+
+export function getOrReturnEmptyObject<T>(value: T | null | undefined): T {
+  if (value === null || value === undefined) {
+    return {} as T
+  }
+  return value
+}
+```
+
+### Tag Helpers (`tag-helpers.ts`)
+```tsx
+import { database } from "@/database/client"
+import { TagEntity } from "@/entities/utils"
+
+export async function createTagsAndGetConnections(
+  tagNames: string[],
+  userId: string
+) {
+  if (tagNames.length === 0) return []
+
+  // Find existing tags
+  const existingTags = await database.tag.findMany({
+    where: {
+      name: { in: tagNames },
+      userId,
+    },
+  })
+
+  // Create missing tags
+  const existingTagNames = existingTags.map(tag => tag.name)
+  const newTagNames = tagNames.filter(name => !existingTagNames.includes(name))
+
+  const newTags = await Promise.all(
+    newTagNames.map(name =>
+      database.tag.create({
+        data: { name, userId },
+      })
+    )
+  )
+
+  // Return all tags with connections
+  const allTags = [...existingTags, ...newTags]
+  return allTags.map(tag => ({
+    id: tag.id,
+  }))
+}
+```
+
+## Encryption (`encryption.ts`)
+
+### Main Encryption Library
+```tsx
+// Check if we're in Node.js or browser environment
+const isNode = typeof window === "undefined"
+
+// Generate a random encryption key
+export async function generateEncryptionKey(): Promise<CryptoKey | string> {
+  if (isNode) {
+    const crypto = await import("crypto")
+    return crypto.randomBytes(32).toString("base64")
+  }
+
+  return await window.crypto.subtle.generateKey(
+    {
+      name: "AES-GCM",
+      length: 256,
+    },
+    true,
+    ["encrypt", "decrypt"]
+  )
+}
+
+// Encrypt data - works in both Node.js and browser
+export async function encryptData(
+  data: string,
+  key: CryptoKey | string,
+  iv?: string
+): Promise<{
+  encryptedData: string
+  iv: string
+}> {
+  // Implementation for both Node.js and browser
+}
+
+// Decrypt data - works in both Node.js and browser
+export async function decryptData(
+  encryptedData: string,
+  iv: string,
+  key: CryptoKey | string
+): Promise<string> {
+  // Implementation for both Node.js and browser
+}
+```
+
+## Best Practices
+
+### 1. Utility Organization
+- Group related utilities in the same file
+- Use descriptive function names
+- Export utilities from index files
+
+### 2. Type Safety
+- Use strict TypeScript types
+- Define interfaces for complex objects
+- Use generics for reusable utilities
+
+### 3. Error Handling
+- Handle errors gracefully
+- Provide meaningful error messages
+- Use appropriate error types
+
+### 4. Performance
+- Optimize for common use cases
+- Use appropriate data structures
+- Consider caching for expensive operations
+
+### 5. Security
+- Never expose sensitive data
+- Use secure encryption methods
+- Validate all inputs
+
+### 6. Testing
+- Test utility functions thoroughly
+- Test edge cases and error conditions
+- Mock external dependencies
+
+## Common Patterns
+
+### Environment Detection
+```tsx
+const isNode = typeof window === "undefined"
+const isBrowser = typeof window !== "undefined"
+```
+
+### Safe Defaults
+```tsx
+export function getOrReturnEmptyObject<T>(value: T | null | undefined): T {
+  if (value === null || value === undefined) {
+    return {} as T
+  }
+  return value
+}
+```
+
+### Conditional Execution
+```tsx
+export function executeIf<T>(
+  condition: boolean,
+  fn: () => T,
+  fallback?: T
+): T | undefined {
+  return condition ? fn() : fallback
+}
+```
+
+### Type Guards
+```tsx
+export function isString(value: unknown): value is string {
+  return typeof value === "string"
+}
+
+export function isNonNull<T>(value: T | null | undefined): value is T {
+  return value !== null && value !== undefined
+}
+```

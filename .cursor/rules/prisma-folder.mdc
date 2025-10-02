@@ -1,0 +1,420 @@
+---
+globs: prisma/**/*
+---
+
+# Prisma Folder - Database Schema and Client
+
+The `/prisma` folder contains the database schema, client configuration, and seed data. This follows Prisma's multi-file schema approach for better organization.
+
+## Structure Overview
+
+```
+prisma/
+├── client/             # Database client configuration
+│   ├── database-client.ts # Custom database client
+│   └── index.ts        # Client exports
+├── schema/             # Multi-file Prisma schema
+│   ├── schema.prisma   # Main schema configuration
+│   ├── user.prisma     # User model
+│   ├── credential.prisma # Credential models
+│   ├── card.prisma     # Card models
+│   ├── secret.prisma   # Secret models
+│   ├── encryption.prisma # Encryption models
+│   ├── utils.prisma    # Utility models (tags, platforms, containers)
+│   └── enums.prisma    # Database enums
+└── seed/               # Database seeding
+    ├── index.ts        # Main seed file
+    ├── users.ts        # User seed data
+    ├── platforms.ts    # Platform seed data
+    └── credentials.ts  # Credential seed data
+```
+
+## Schema Organization
+
+### Main Schema (`schema.prisma`)
+```prisma
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+```
+
+### Model Files
+Each entity has its own `.prisma` file for better organization:
+
+```prisma
+// credential.prisma
+/**
+ * Represents a credential stored in the system.
+ * @property id - Unique identifier for the credential. Type: String. Generated using cuid().
+ * @property identifier - Username/identifier for the credential. Type: String. Must be unique per platform.
+ * @property description - Description of the credential. Type: String. Optional.
+ * @property status - Status of the credential. Type: AccountStatus. Defaults to ACTIVE.
+ * @property tags - Tags associated with the credential. Type: Tag[]. Relation to Tag model.
+ * @property history - History of changes to the credential. Type: CredentialHistory[]. Relation to CredentialHistory model.
+ * @property metadata - Metadata associated with the credential. Type: CredentialMetadata[]. Relation to CredentialMetadata model.
+ * @property lastViewed - Timestamp when the credential was last viewed. Type: DateTime. Optional.
+ * @property updatedAt - Timestamp when the credential was last updated. Type: DateTime. Updated automatically.
+ * @property createdAt - Timestamp when the credential was created. Type: DateTime. Defaults to current time.
+ * @property platformId - ID of the platform associated with the credential. Type: String.
+ * @property platform - Platform associated with the credential. Type: Platform. Relation to Platform model.
+ * @property userId - ID of the user who owns the credential. Type: String.
+ * @property user - User who owns the credential. Type: User. Relation to User model.
+ * @property containerId - ID of the container where the credential is stored. Type: String. Optional.
+ * @property container - Container where the credential is stored. Type: Container. Optional. Relation to Container model.
+ * @property passwordEncryptionId - ID of the encrypted password data. Type: String.
+ * @property passwordEncryption - Encrypted password data. Type: EncryptedData. Relation to EncryptedData model.
+ * @constraint unique(identifier, platformId, userId) - Ensures each identifier is unique within a platform and user.
+ */
+model Credential {
+  id String @id @default(cuid())
+
+  identifier  String
+  description String?
+
+  status AccountStatus @default(ACTIVE)
+
+  tags     Tag[]
+  history  CredentialHistory[]
+  metadata CredentialMetadata[]
+
+  lastViewed DateTime?
+  updatedAt  DateTime  @updatedAt
+  createdAt  DateTime  @default(now())
+
+  platformId String
+  platform   Platform @relation(fields: [platformId], references: [id])
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  containerId String?
+  container   Container? @relation(fields: [containerId], references: [id])
+
+  passwordEncryptionId String
+  passwordEncryption   EncryptedData @relation("CredentialPassword", fields: [passwordEncryptionId], references: [id])
+
+  @@unique([identifier, platformId, userId])
+  @@index([userId])
+  @@index([containerId])
+  @@index([platformId])
+  @@index([passwordEncryptionId])
+  @@map("credential")
+}
+```
+
+### Enums (`enums.prisma`)
+```prisma
+enum AccountStatus {
+  ACTIVE
+  SUSPENDED
+  DELETED
+}
+
+enum UserPlan {
+  FREE
+  PRO
+  ENTERPRISE
+}
+
+enum EncryptionAlgorithm {
+  AES_256_GCM
+  AES_256_CBC
+}
+```
+
+## Database Client
+
+### Custom Client (`database-client.ts`)
+```tsx
+import { PrismaClient } from "@prisma/client"
+import { env } from "@/env"
+
+const globalForPrisma = globalThis as unknown as {
+  prisma: PrismaClient | undefined
+}
+
+export const database = globalForPrisma.prisma ?? new PrismaClient({
+  log: env.NODE_ENV === "development" ? ["query", "error", "warn"] : ["error"],
+})
+
+if (env.NODE_ENV !== "production") globalForPrisma.prisma = database
+```
+
+### Client Exports (`index.ts`)
+```tsx
+export { database } from "./database-client"
+export * from "@prisma/client"
+```
+
+## Model Patterns
+
+### Base Model Structure
+```prisma
+model EntityName {
+  // Primary key
+  id String @id @default(cuid())
+
+  // Required fields
+  name String
+  description String?
+
+  // Status fields
+  status EntityStatus @default(ACTIVE)
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // User ownership
+  userId String
+  user   User @relation(fields: [userId], references: [id])
+
+  // Relations
+  relatedEntities RelatedEntity[]
+
+  // Indexes
+  @@index([userId])
+  @@index([status])
+  @@map("entity_name")
+}
+```
+
+### Encryption Pattern
+```prisma
+model EncryptedData {
+  id String @id @default(cuid())
+
+  encryptedValue String
+  iv            String
+  algorithm     EncryptionAlgorithm @default(AES_256_GCM)
+  encryptionKey String
+
+  createdAt DateTime @default(now())
+
+  // Relations to entities that use this encryption
+  credentialPasswords Credential[] @relation("CredentialPassword")
+  credentialHistories CredentialHistory[] @relation("CredentialHistoryPassword")
+
+  @@index([algorithm])
+  @@map("encrypted_data")
+}
+```
+
+### Metadata Pattern
+```prisma
+model EntityMetadata {
+  id String @id @default(cuid())
+
+  // Metadata fields
+  recoveryEmail String?
+  phoneNumber   String?
+  has2FA        Boolean @default(false)
+
+  // Parent entity
+  entityId String
+  entity   Entity @relation(fields: [entityId], references: [id], onDelete: Cascade)
+
+  // Key-value pairs for additional data
+  keyValuePairs EntityKeyValuePair[]
+
+  @@index([entityId])
+  @@map("entity_metadata")
+}
+
+model EntityKeyValuePair {
+  id String @id @default(cuid())
+
+  key String
+
+  // Encrypted value
+  valueEncryptionId String
+  valueEncryption   EncryptedData @relation("EntityKeyValueEncryption", fields: [valueEncryptionId], references: [id])
+
+  // Parent metadata
+  entityMetadataId String
+  entityMetadata   EntityMetadata @relation(fields: [entityMetadataId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([entityMetadataId, key])
+  @@index([entityMetadataId])
+  @@index([valueEncryptionId])
+  @@map("entity_key_value_pair")
+}
+```
+
+## Seeding
+
+### Seed Structure
+```tsx
+// seed/index.ts
+import { PrismaClient } from "@prisma/client"
+import { seedUsers } from "./users"
+import { seedPlatforms } from "./platforms"
+import { seedCredentials } from "./credentials"
+
+const prisma = new PrismaClient()
+
+async function main() {
+  console.log("Starting database seeding...")
+
+  // Seed in order of dependencies
+  await seedUsers(prisma)
+  await seedPlatforms(prisma)
+  await seedCredentials(prisma)
+
+  console.log("Database seeding completed!")
+}
+
+main()
+  .catch((e) => {
+    console.error("Seeding failed:", e)
+    process.exit(1)
+  })
+  .finally(async () => {
+    await prisma.$disconnect()
+  })
+```
+
+### Seed Data Example
+```tsx
+// seed/credentials.ts
+import { PrismaClient } from "@prisma/client"
+import { encryptDataSync, SEED_ENCRYPTION_CONFIG } from "@/lib/encryption"
+
+export async function seedCredentials(prisma: PrismaClient) {
+  const users = await prisma.user.findMany()
+  const platforms = await prisma.platform.findMany()
+
+  if (users.length === 0 || platforms.length === 0) {
+    console.log("Skipping credential seeding - no users or platforms found")
+    return
+  }
+
+  const credentialData = [
+    {
+      identifier: "admin",
+      description: "Administrator account",
+      platformName: "GitHub",
+      password: "securePassword123!",
+    },
+    // ... more credentials
+  ]
+
+  for (const cred of credentialData) {
+    const user = users[0] // Use first user
+    const platform = platforms.find(p => p.name === cred.platformName)
+
+    if (!platform) continue
+
+    // Encrypt password
+    const encryptedPassword = await encryptDataSync(
+      cred.password,
+      SEED_ENCRYPTION_CONFIG.MASTER_KEY,
+      SEED_ENCRYPTION_CONFIG.CREDENTIAL_PASSWORD_IV
+    )
+
+    // Create encrypted data record
+    const encryptedData = await prisma.encryptedData.create({
+      data: {
+        encryptedValue: encryptedPassword,
+        iv: SEED_ENCRYPTION_CONFIG.CREDENTIAL_PASSWORD_IV,
+        algorithm: "AES_256_CBC",
+        encryptionKey: SEED_ENCRYPTION_CONFIG.MASTER_KEY,
+      },
+    })
+
+    // Create credential
+    await prisma.credential.create({
+      data: {
+        identifier: cred.identifier,
+        description: cred.description,
+        userId: user.id,
+        platformId: platform.id,
+        passwordEncryptionId: encryptedData.id,
+      },
+    })
+  }
+
+  console.log(`Seeded ${credentialData.length} credentials`)
+}
+```
+
+## Best Practices
+
+### 1. Schema Organization
+- Use multi-file schema for better organization
+- Group related models in the same file
+- Use descriptive model names and comments
+
+### 2. Indexing
+- Add indexes for frequently queried fields
+- Index foreign keys
+- Consider composite indexes for unique constraints
+
+### 3. Relationships
+- Use appropriate relationship types (one-to-one, one-to-many, many-to-many)
+- Set up proper foreign key constraints
+- Use cascade deletes where appropriate
+
+### 4. Data Types
+- Use appropriate data types for each field
+- Consider nullable vs optional fields
+- Use enums for status fields
+
+### 5. Security
+- Never store plain text sensitive data
+- Use encryption for passwords and sensitive information
+- Implement proper access controls
+
+### 6. Performance
+- Use appropriate indexes
+- Consider query patterns when designing schema
+- Use connection pooling in production
+
+## Migration Management
+
+### Creating Migrations
+```bash
+# Create a new migration
+pnpm db:migrate
+
+# Apply migrations
+pnpm db:deploy
+
+# Reset database
+pnpm db:reset
+```
+
+### Migration Best Practices
+- Always review generated migrations
+- Test migrations on development data
+- Use descriptive migration names
+- Consider data migration scripts for complex changes
+
+## Environment Configuration
+
+### Development
+```env
+DATABASE_URL="postgresql://postgres:password@localhost:5432/zero-locker"
+```
+
+### Production
+```env
+DATABASE_URL="postgresql://user:password@host:5432/database?sslmode=require"
+```
+
+## Testing
+
+### Database Testing
+- Use separate test database
+- Reset database between tests
+- Seed test data as needed
+- Test migrations and rollbacks

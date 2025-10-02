@@ -1,0 +1,441 @@
+---
+globs: config/**/*
+---
+
+# Config Folder - Application Configuration
+
+The `/config` folder contains application configuration files, constants, and utility configurations. This centralizes all configuration settings for easy management and maintenance.
+
+## Structure Overview
+
+```
+config/
+├── consts.ts          # Application constants
+├── converter.tsx      # Data conversion utilities
+├── fonts.ts           # Font configuration
+├── schema.ts          # Configuration schemas
+└── site.ts            # Site configuration
+```
+
+## Site Configuration (`site.ts`)
+
+### Site Metadata
+```tsx
+import { SiteConfig } from "@/types"
+
+export const siteConfig: SiteConfig = {
+  name: "Zero Locker",
+  description: "Secure password management made simple.",
+  url: "https://www.0locker.com",
+  images: {
+    default: "https://www.0locker.com/og.png",
+    notFound: "https://www.0locker.com/not-found.png",
+    logo: "https://emojicdn.elk.sh/🔒?style=twitter",
+  },
+  links: {
+    twitter: "https://twitter.com/foundmalek",
+    github: "https://github.com/findmalek/zero-locker",
+  },
+  author: {
+    name: "Malek Gara-Hellal",
+    url: "https://findmalek.com",
+    email: "hi@findmalek.com",
+    github: "https://github.com/findmalek",
+  },
+  keywords: [
+    "Password Management",
+    "Secure Storage",
+    "Password Generation",
+    "Account Details Management",
+    "Password History",
+    "Authentication",
+    "User Interface",
+    "Migration",
+    "Next.js",
+    "React",
+    "TypeScript",
+    "Prisma",
+    "TailwindCSS",
+    "BetterAuth",
+    "Encryption",
+    "AES-256",
+    "Vercel",
+  ],
+}
+```
+
+### Metadata Generation
+```tsx
+export const notFoundMetadata = () => {
+  return {
+    title: "Page not found",
+    description: "Page not found",
+    openGraph: {
+      title: `${siteConfig.name} | Page not found`,
+      description: "Page not found",
+      images: [
+        {
+          url: siteConfig.images.notFound,
+          alt: siteConfig.name,
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${siteConfig.name} | Page not found`,
+      description: "Page not found",
+      images: [siteConfig.images.notFound],
+      creator: "@findmalek",
+    },
+  }
+}
+```
+
+## Constants (`consts.ts`)
+
+### Application Constants
+```tsx
+// Pagination
+export const DEFAULT_PAGE_SIZE = 10
+export const MAX_PAGE_SIZE = 100
+export const MIN_PAGE_SIZE = 1
+
+// Recent items
+export const MAX_RECENT_ITEMS = 10
+
+// Form validation
+export const MIN_PASSWORD_LENGTH = 8
+export const MAX_PASSWORD_LENGTH = 128
+export const MIN_USERNAME_LENGTH = 1
+export const MAX_USERNAME_LENGTH = 50
+
+// File uploads
+export const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
+export const ALLOWED_FILE_TYPES = ["image/jpeg", "image/png", "image/webp"]
+
+// API limits
+export const RATE_LIMIT_REQUESTS = 100
+export const RATE_LIMIT_WINDOW = 15 * 60 * 1000 // 15 minutes
+
+// Encryption
+export const ENCRYPTION_KEY_LENGTH = 32
+export const IV_LENGTH = 12
+export const SALT_ROUNDS = 12
+
+// UI constants
+export const TOAST_DURATION = 3000
+export const DEBOUNCE_DELAY = 300
+export const ANIMATION_DURATION = 200
+
+// Feature flags
+export const FEATURES = {
+  PASSWORD_GENERATOR: true,
+  BULK_OPERATIONS: true,
+  EXPORT_FUNCTIONALITY: true,
+  TWO_FACTOR_AUTH: true,
+  PASSWORD_HISTORY: true,
+} as const
+
+// Plan limits
+export const PLAN_LIMITS = {
+  FREE: {
+    MAX_CONTAINERS: 1,
+    MAX_CREDENTIALS: 50,
+    MAX_SECRETS: 10,
+    MAX_CARDS: 5,
+  },
+  PRO: {
+    MAX_CONTAINERS: -1, // Unlimited
+    MAX_CREDENTIALS: -1, // Unlimited
+    MAX_SECRETS: -1, // Unlimited
+    MAX_CARDS: -1, // Unlimited
+  },
+} as const
+```
+
+## Font Configuration (`fonts.ts`)
+
+### Font Loading
+```tsx
+import { GeistSans, GeistMono } from "geist/font"
+
+export const fonts = {
+  sans: GeistSans.style.fontFamily,
+  mono: GeistMono.style.fontFamily,
+}
+
+// Font configuration for Next.js
+export const fontConfig = {
+  display: "swap",
+  preload: true,
+  fallback: [
+    "system-ui",
+    "-apple-system",
+    "BlinkMacSystemFont",
+    "Segoe UI",
+    "Roboto",
+    "Helvetica Neue",
+    "Arial",
+    "sans-serif",
+  ],
+}
+
+// Font sizes and weights
+export const typography = {
+  fontSizes: {
+    xs: "0.75rem",
+    sm: "0.875rem",
+    base: "1rem",
+    lg: "1.125rem",
+    xl: "1.25rem",
+    "2xl": "1.5rem",
+    "3xl": "1.875rem",
+    "4xl": "2.25rem",
+  },
+  fontWeights: {
+    normal: "400",
+    medium: "500",
+    semibold: "600",
+    bold: "700",
+  },
+  lineHeights: {
+    tight: "1.25",
+    normal: "1.5",
+    relaxed: "1.75",
+  },
+} as const
+```
+
+## Schema Configuration (`schema.ts`)
+
+### Validation Schemas
+```tsx
+import { z } from "zod"
+
+// Environment validation
+export const envSchema = z.object({
+  DATABASE_URL: z.string().url(),
+  NODE_ENV: z.enum(["development", "production", "test"]),
+  BETTER_AUTH_SECRET: z.string().min(10),
+  NEXT_PUBLIC_APP_URL: z.string().url(),
+})
+
+// API configuration
+export const apiConfigSchema = z.object({
+  baseUrl: z.string().url(),
+  timeout: z.number().min(1000).max(30000),
+  retries: z.number().min(0).max(5),
+  rateLimit: z.object({
+    requests: z.number().min(1),
+    window: z.number().min(1000),
+  }),
+})
+
+// Feature flags
+export const featureFlagsSchema = z.object({
+  passwordGenerator: z.boolean(),
+  bulkOperations: z.boolean(),
+  exportFunctionality: z.boolean(),
+  twoFactorAuth: z.boolean(),
+  passwordHistory: z.boolean(),
+})
+
+// User preferences
+export const userPreferencesSchema = z.object({
+  theme: z.enum(["light", "dark", "system"]),
+  language: z.string().length(2),
+  timezone: z.string(),
+  notifications: z.object({
+    email: z.boolean(),
+    push: z.boolean(),
+    security: z.boolean(),
+  }),
+})
+```
+
+## Data Converter (`converter.tsx`)
+
+### Data Transformation Utilities
+```tsx
+import { format, parseISO } from "date-fns"
+
+// Date conversion utilities
+export const dateConverter = {
+  toISO: (date: Date | string): string => {
+    if (typeof date === "string") {
+      return parseISO(date).toISOString()
+    }
+    return date.toISOString()
+  },
+  
+  toLocal: (date: Date | string): string => {
+    if (typeof date === "string") {
+      return format(parseISO(date), "yyyy-MM-dd HH:mm:ss")
+    }
+    return format(date, "yyyy-MM-dd HH:mm:ss")
+  },
+  
+  toDisplay: (date: Date | string): string => {
+    if (typeof date === "string") {
+      return format(parseISO(date), "MMM d, yyyy")
+    }
+    return format(date, "MMM d, yyyy")
+  },
+}
+
+// Status conversion utilities
+export const statusConverter = {
+  toDisplay: (status: string): string => {
+    const statusMap: Record<string, string> = {
+      ACTIVE: "Active",
+      SUSPENDED: "Suspended",
+      DELETED: "Deleted",
+      PENDING: "Pending",
+      COMPLETED: "Completed",
+    }
+    return statusMap[status] || status
+  },
+  
+  toColor: (status: string): string => {
+    const colorMap: Record<string, string> = {
+      ACTIVE: "green",
+      SUSPENDED: "yellow",
+      DELETED: "red",
+      PENDING: "blue",
+      COMPLETED: "green",
+    }
+    return colorMap[status] || "gray"
+  },
+}
+
+// Plan conversion utilities
+export const planConverter = {
+  toDisplay: (plan: string): string => {
+    const planMap: Record<string, string> = {
+      FREE: "Free",
+      PRO: "Pro",
+      ENTERPRISE: "Enterprise",
+    }
+    return planMap[plan] || plan
+  },
+  
+  toFeatures: (plan: string): string[] => {
+    const featureMap: Record<string, string[]> = {
+      FREE: ["Basic password storage", "1 container"],
+      PRO: ["Unlimited storage", "Unlimited containers", "Export functionality"],
+      ENTERPRISE: ["All Pro features", "Team collaboration", "Advanced security"],
+    }
+    return featureMap[plan] || []
+  },
+}
+```
+
+## Environment Configuration
+
+### Environment Variables
+```tsx
+// env.ts
+import { createEnv } from "@t3-oss/env-nextjs"
+import { z } from "zod"
+
+export const env = createEnv({
+  server: {
+    DATABASE_URL: z.string().min(1).url(),
+    NODE_ENV: z.enum(["development", "production"]),
+    BETTER_AUTH_SECRET: z.string().min(10),
+    LOGO_DEV_TOKEN: z.string().min(10),
+  },
+  client: {
+    NEXT_PUBLIC_APP_URL: z.string().url(),
+    NEXT_PUBLIC_LOGO_DEV_TOKEN: z.string().min(10),
+  },
+  runtimeEnv: {
+    DATABASE_URL: process.env.DATABASE_URL,
+    NODE_ENV: process.env.NODE_ENV,
+    NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
+    BETTER_AUTH_SECRET: process.env.BETTER_AUTH_SECRET,
+    LOGO_DEV_TOKEN: process.env.LOGO_DEV_TOKEN,
+    NEXT_PUBLIC_LOGO_DEV_TOKEN: process.env.NEXT_PUBLIC_LOGO_DEV_TOKEN,
+  },
+})
+```
+
+## Best Practices
+
+### 1. Configuration Organization
+- Group related configurations in the same file
+- Use descriptive names for configuration objects
+- Export configurations as named exports
+
+### 2. Type Safety
+- Use TypeScript for all configuration
+- Define interfaces for complex configurations
+- Use Zod for runtime validation
+
+### 3. Environment Management
+- Separate server and client environment variables
+- Use validation schemas for environment variables
+- Provide default values where appropriate
+
+### 4. Constants Management
+- Use const assertions for immutable configurations
+- Group related constants together
+- Use descriptive names
+
+### 5. Validation
+- Validate all configuration at startup
+- Use Zod schemas for runtime validation
+- Provide clear error messages
+
+### 6. Documentation
+- Document all configuration options
+- Provide examples for complex configurations
+- Include type information
+
+## Common Patterns
+
+### Configuration Factory
+```tsx
+export function createConfig(env: string) {
+  const baseConfig = {
+    api: {
+      baseUrl: env === "production" ? "https://api.example.com" : "http://localhost:3000",
+      timeout: 10000,
+    },
+    features: {
+      debug: env !== "production",
+      analytics: env === "production",
+    },
+  }
+  
+  return baseConfig
+}
+```
+
+### Feature Flags
+```tsx
+export const featureFlags = {
+  isEnabled: (feature: string): boolean => {
+    return FEATURES[feature as keyof typeof FEATURES] ?? false
+  },
+  
+  getEnabledFeatures: (): string[] => {
+    return Object.entries(FEATURES)
+      .filter(([, enabled]) => enabled)
+      .map(([feature]) => feature)
+  },
+}
+```
+
+### Plan Limits
+```tsx
+export const planLimits = {
+  getLimit: (plan: string, resource: string): number => {
+    return PLAN_LIMITS[plan as keyof typeof PLAN_LIMITS]?.[resource as keyof typeof PLAN_LIMITS.FREE] ?? 0
+  },
+  
+  isUnlimited: (plan: string, resource: string): boolean => {
+    return planLimits.getLimit(plan, resource) === -1
+  },
+}
+```

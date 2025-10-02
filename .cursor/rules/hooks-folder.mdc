@@ -1,0 +1,513 @@
+---
+globs: hooks/**/*
+---
+
+# Hooks Folder - Custom React Hooks
+
+The `/hooks` folder contains custom React hooks for common functionality, form management, and utility operations. These hooks provide reusable logic across components.
+
+## Structure Overview
+
+```
+hooks/
+├── use-aggressive-form-blocker.ts # Form navigation blocking
+├── use-copy-to-clipboard.ts       # Clipboard operations
+├── use-entity-filters.ts          # Entity filtering logic
+├── use-entity-sorting.ts          # Entity sorting logic
+├── use-media-query.ts             # Media query detection
+├── use-mobile.ts                  # Mobile device detection
+├── use-prevent-auto-save.ts       # Auto-save prevention
+└── use-toast.ts                   # Toast notifications
+```
+
+## Form Management Hooks
+
+### Form Navigation Blocker (`use-aggressive-form-blocker.ts`)
+```tsx
+import { useEffect, useRef } from "react"
+
+interface UseAggressiveFormBlockerProps {
+  isDirty: boolean
+  message?: string
+}
+
+export function useAggressiveFormBlocker({
+  isDirty,
+  message = "You have unsaved changes. Are you sure you want to leave?",
+}: UseAggressiveFormBlockerProps) {
+  const isBlockedRef = useRef(false)
+
+  useEffect(() => {
+    if (!isDirty) {
+      isBlockedRef.current = false
+      return
+    }
+
+    isBlockedRef.current = true
+
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault()
+      event.returnValue = message
+      return message
+    }
+
+    const handlePopState = (event: PopStateEvent) => {
+      if (isBlockedRef.current) {
+        const confirmed = window.confirm(message)
+        if (!confirmed) {
+          event.preventDefault()
+          window.history.pushState(null, "", window.location.href)
+        }
+      }
+    }
+
+    window.addEventListener("beforeunload", handleBeforeUnload)
+    window.addEventListener("popstate", handlePopState)
+
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload)
+      window.removeEventListener("popstate", handlePopState)
+    }
+  }, [isDirty, message])
+
+  return {
+    isBlocked: isBlockedRef.current,
+  }
+}
+```
+
+### Auto-Save Prevention (`use-prevent-auto-save.ts`)
+```tsx
+import { useEffect } from "react"
+
+export function usePreventAutoSave() {
+  useEffect(() => {
+    // Prevent browser auto-save for sensitive forms
+    const forms = document.querySelectorAll("form")
+    
+    forms.forEach(form => {
+      form.setAttribute("autocomplete", "off")
+      form.setAttribute("data-form-type", "other")
+    })
+
+    // Prevent password managers from interfering
+    const passwordInputs = document.querySelectorAll('input[type="password"]')
+    passwordInputs.forEach(input => {
+      input.setAttribute("autocomplete", "new-password")
+    })
+  }, [])
+}
+```
+
+## Utility Hooks
+
+### Copy to Clipboard (`use-copy-to-clipboard.ts`)
+```tsx
+import { useState, useCallback } from "react"
+
+interface UseCopyToClipboardProps {
+  successDuration?: number
+}
+
+export function useCopyToClipboard({
+  successDuration = 2000,
+}: UseCopyToClipboardProps = {}) {
+  const [isCopied, setIsCopied] = useState(false)
+
+  const copy = useCallback(async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text)
+      setIsCopied(true)
+      
+      if (successDuration > 0) {
+        setTimeout(() => setIsCopied(false), successDuration)
+      }
+    } catch (error) {
+      console.error("Failed to copy text:", error)
+      // Fallback for older browsers
+      const textArea = document.createElement("textarea")
+      textArea.value = text
+      document.body.appendChild(textArea)
+      textArea.select()
+      document.execCommand("copy")
+      document.body.removeChild(textArea)
+      
+      setIsCopied(true)
+      if (successDuration > 0) {
+        setTimeout(() => setIsCopied(false), successDuration)
+      }
+    }
+  }, [successDuration])
+
+  return {
+    copy,
+    isCopied,
+  }
+}
+```
+
+### Toast Notifications (`use-toast.ts`)
+```tsx
+import { toast } from "sonner"
+
+export function useToast() {
+  const showToast = useCallback((
+    message: string,
+    type: "success" | "error" | "warning" | "info" = "info"
+  ) => {
+    switch (type) {
+      case "success":
+        toast.success(message)
+        break
+      case "error":
+        toast.error(message)
+        break
+      case "warning":
+        toast.warning(message)
+        break
+      case "info":
+      default:
+        toast.info(message)
+        break
+    }
+  }, [])
+
+  return {
+    showToast,
+    toast: {
+      success: (message: string) => showToast(message, "success"),
+      error: (message: string) => showToast(message, "error"),
+      warning: (message: string) => showToast(message, "warning"),
+      info: (message: string) => showToast(message, "info"),
+    },
+  }
+}
+```
+
+## Device Detection Hooks
+
+### Media Query (`use-media-query.ts`)
+```tsx
+import { useState, useEffect } from "react"
+
+export function useMediaQuery(query: string): boolean {
+  const [matches, setMatches] = useState(false)
+
+  useEffect(() => {
+    const media = window.matchMedia(query)
+    
+    if (media.matches !== matches) {
+      setMatches(media.matches)
+    }
+
+    const listener = () => setMatches(media.matches)
+    
+    media.addEventListener("change", listener)
+    return () => media.removeEventListener("change", listener)
+  }, [matches, query])
+
+  return matches
+}
+
+// Common media query hooks
+export const useIsMobile = () => useMediaQuery("(max-width: 768px)")
+export const useIsTablet = () => useMediaQuery("(min-width: 769px) and (max-width: 1024px)")
+export const useIsDesktop = () => useMediaQuery("(min-width: 1025px)")
+export const useIsLargeScreen = () => useMediaQuery("(min-width: 1440px)")
+```
+
+### Mobile Detection (`use-mobile.ts`)
+```tsx
+import { useState, useEffect } from "react"
+
+export function useMobile() {
+  const [isMobile, setIsMobile] = useState(false)
+
+  useEffect(() => {
+    const checkIsMobile = () => {
+      const userAgent = navigator.userAgent
+      const mobileRegex = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i
+      const isMobileDevice = mobileRegex.test(userAgent)
+      const isSmallScreen = window.innerWidth <= 768
+      
+      setIsMobile(isMobileDevice || isSmallScreen)
+    }
+
+    checkIsMobile()
+    window.addEventListener("resize", checkIsMobile)
+    
+    return () => window.removeEventListener("resize", checkIsMobile)
+  }, [])
+
+  return isMobile
+}
+```
+
+## Data Management Hooks
+
+### Entity Filtering (`use-entity-filters.ts`)
+```tsx
+import { useState, useMemo } from "react"
+
+interface FilterState {
+  search: string
+  status: string | null
+  containerId: string | null
+  platformId: string | null
+  tags: string[]
+}
+
+interface UseEntityFiltersProps<T> {
+  entities: T[]
+  searchFields: (keyof T)[]
+  filterFields: {
+    status?: keyof T
+    containerId?: keyof T
+    platformId?: keyof T
+    tags?: keyof T
+  }
+}
+
+export function useEntityFilters<T>({
+  entities,
+  searchFields,
+  filterFields,
+}: UseEntityFiltersProps<T>) {
+  const [filters, setFilters] = useState<FilterState>({
+    search: "",
+    status: null,
+    containerId: null,
+    platformId: null,
+    tags: [],
+  })
+
+  const filteredEntities = useMemo(() => {
+    return entities.filter(entity => {
+      // Search filter
+      if (filters.search) {
+        const searchLower = filters.search.toLowerCase()
+        const matchesSearch = searchFields.some(field => {
+          const value = entity[field]
+          return value && String(value).toLowerCase().includes(searchLower)
+        })
+        if (!matchesSearch) return false
+      }
+
+      // Status filter
+      if (filters.status && filterFields.status) {
+        if (entity[filterFields.status] !== filters.status) return false
+      }
+
+      // Container filter
+      if (filters.containerId && filterFields.containerId) {
+        if (entity[filterFields.containerId] !== filters.containerId) return false
+      }
+
+      // Platform filter
+      if (filters.platformId && filterFields.platformId) {
+        if (entity[filterFields.platformId] !== filters.platformId) return false
+      }
+
+      // Tags filter
+      if (filters.tags.length > 0 && filterFields.tags) {
+        const entityTags = entity[filterFields.tags] as string[]
+        const hasMatchingTag = filters.tags.some(tag => 
+          entityTags?.includes(tag)
+        )
+        if (!hasMatchingTag) return false
+      }
+
+      return true
+    })
+  }, [entities, filters, searchFields, filterFields])
+
+  const updateFilter = (key: keyof FilterState, value: any) => {
+    setFilters(prev => ({ ...prev, [key]: value }))
+  }
+
+  const clearFilters = () => {
+    setFilters({
+      search: "",
+      status: null,
+      containerId: null,
+      platformId: null,
+      tags: [],
+    })
+  }
+
+  return {
+    filters,
+    filteredEntities,
+    updateFilter,
+    clearFilters,
+  }
+}
+```
+
+### Entity Sorting (`use-entity-sorting.ts`)
+```tsx
+import { useState, useMemo } from "react"
+
+type SortDirection = "asc" | "desc"
+type SortField<T> = keyof T
+
+interface SortState<T> {
+  field: SortField<T> | null
+  direction: SortDirection
+}
+
+interface UseEntitySortingProps<T> {
+  entities: T[]
+  defaultSort?: {
+    field: SortField<T>
+    direction: SortDirection
+  }
+}
+
+export function useEntitySorting<T>({
+  entities,
+  defaultSort,
+}: UseEntitySortingProps<T>) {
+  const [sort, setSort] = useState<SortState<T>>({
+    field: defaultSort?.field || null,
+    direction: defaultSort?.direction || "asc",
+  })
+
+  const sortedEntities = useMemo(() => {
+    if (!sort.field) return entities
+
+    return [...entities].sort((a, b) => {
+      const aValue = a[sort.field!]
+      const bValue = b[sort.field!]
+
+      // Handle null/undefined values
+      if (aValue === null || aValue === undefined) return 1
+      if (bValue === null || bValue === undefined) return -1
+
+      // Handle different data types
+      if (typeof aValue === "string" && typeof bValue === "string") {
+        const comparison = aValue.localeCompare(bValue)
+        return sort.direction === "asc" ? comparison : -comparison
+      }
+
+      if (typeof aValue === "number" && typeof bValue === "number") {
+        const comparison = aValue - bValue
+        return sort.direction === "asc" ? comparison : -comparison
+      }
+
+      if (aValue instanceof Date && bValue instanceof Date) {
+        const comparison = aValue.getTime() - bValue.getTime()
+        return sort.direction === "asc" ? comparison : -comparison
+      }
+
+      // Fallback to string comparison
+      const comparison = String(aValue).localeCompare(String(bValue))
+      return sort.direction === "asc" ? comparison : -comparison
+    })
+  }, [entities, sort])
+
+  const handleSort = (field: SortField<T>) => {
+    setSort(prev => ({
+      field,
+      direction: prev.field === field && prev.direction === "asc" ? "desc" : "asc",
+    }))
+  }
+
+  const clearSort = () => {
+    setSort({
+      field: null,
+      direction: "asc",
+    })
+  }
+
+  return {
+    sort,
+    sortedEntities,
+    handleSort,
+    clearSort,
+  }
+}
+```
+
+## Best Practices
+
+### 1. Hook Naming
+- Use `use` prefix for all hooks
+- Use descriptive names that indicate purpose
+- Follow camelCase convention
+
+### 2. Dependencies
+- Include all dependencies in useEffect
+- Use useCallback for stable function references
+- Use useMemo for expensive calculations
+
+### 3. State Management
+- Use useState for local state
+- Use useReducer for complex state logic
+- Avoid unnecessary re-renders
+
+### 4. Performance
+- Memoize expensive calculations
+- Use proper dependency arrays
+- Avoid creating objects in render
+
+### 5. Error Handling
+- Handle errors gracefully
+- Provide fallbacks for failed operations
+- Log errors for debugging
+
+### 6. Type Safety
+- Use TypeScript for all hooks
+- Define proper interfaces
+- Use generics for reusable hooks
+
+## Common Patterns
+
+### Custom Hook with API
+```tsx
+export function useApi<T>(url: string) {
+  const [data, setData] = useState<T | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    fetch(url)
+      .then(response => response.json())
+      .then(setData)
+      .catch(err => setError(err.message))
+      .finally(() => setLoading(false))
+  }, [url])
+
+  return { data, loading, error }
+}
+```
+
+### Hook with Cleanup
+```tsx
+export function useEventListener(
+  eventName: string,
+  handler: (event: Event) => void,
+  element: Element | Window = window
+) {
+  useEffect(() => {
+    element.addEventListener(eventName, handler)
+    
+    return () => {
+      element.removeEventListener(eventName, handler)
+    }
+  }, [eventName, handler, element])
+}
+```
+
+### Hook with Ref
+```tsx
+export function usePrevious<T>(value: T): T | undefined {
+  const ref = useRef<T>()
+  
+  useEffect(() => {
+    ref.current = value
+  })
+  
+  return ref.current
+}
+```
