@@ -1183,16 +1183,47 @@ export const duplicateCredential = authProcedure
     }
 
     // Get the original password
-    const originalPassword = await getCredentialPassword({
-      input: { id: input.id },
-      context,
+    const passwordData = await database.credential.findFirst({
+      where: {
+        id: input.id,
+        userId: context.user.id,
+      },
+      include: {
+        passwordEncryption: true,
+      },
     })
 
+    if (!passwordData?.passwordEncryption) {
+      throw new ORPCError("NOT_FOUND")
+    }
+
+    // Decrypt the password
+    const originalPassword = await decryptData(
+      passwordData.passwordEncryption.encryptedValue,
+      passwordData.passwordEncryption.encryptionKey,
+      passwordData.passwordEncryption.iv
+    )
+
     // Get the original key-value pairs
-    const originalKeyValuePairs = await getCredentialKeyValuePairsWithValues({
-      input: { id: input.id },
-      context,
+    const keyValueData = await database.credential.findFirst({
+      where: {
+        id: input.id,
+        userId: context.user.id,
+      },
+      include: {
+        metadata: {
+          include: {
+            keyValuePairs: {
+              include: {
+                valueEncryption: true,
+              },
+            },
+          },
+        },
+      },
     })
+
+    const originalKeyValuePairs = keyValueData?.metadata?.[0]?.keyValuePairs || []
 
     // Create the duplicate with a modified identifier
     const duplicateIdentifier = `${originalCredential.identifier} (Copy)`
@@ -1203,9 +1234,9 @@ export const duplicateCredential = authProcedure
         // Create encrypted data for password (re-encrypt with same key)
         const passwordEncryptionResult = await createEncryptedData(
           {
-            encryptedValue: originalPassword.password,
-            encryptionKey: originalCredential.passwordEncryptionId || "",
-            iv: "", // We'll need to get this from the encrypted data
+            encryptedValue: originalPassword,
+            encryptionKey: passwordData.passwordEncryption.encryptionKey,
+            iv: passwordData.passwordEncryption.iv,
           },
           tx
         )
@@ -1241,10 +1272,32 @@ export const duplicateCredential = authProcedure
             data: {
               credentialId: newCredential.id,
               keyValuePairs: {
-                create: originalKeyValuePairs.map((kvPair: any) => ({
-                  key: kvPair.key,
-                  value: kvPair.value,
-                })),
+                create: await Promise.all(
+                  originalKeyValuePairs.map(async (kvPair: any) => {
+                    const decryptedValue = await decryptData(
+                      kvPair.valueEncryption.encryptedValue,
+                      kvPair.valueEncryption.encryptionKey,
+                      kvPair.valueEncryption.iv
+                    )
+                    
+                    // Create new encrypted data for the value
+                    const valueEncryptionResult = await createEncryptedData(
+                      {
+                        encryptedValue: decryptedValue,
+                        encryptionKey: kvPair.valueEncryption.encryptionKey,
+                        iv: kvPair.valueEncryption.iv,
+                      },
+                      tx
+                    )
+                    
+                    return {
+                      key: kvPair.key,
+                      valueEncryption: {
+                        connect: { id: valueEncryptionResult.encryptedData!.id },
+                      },
+                    }
+                  })
+                ),
               },
             },
           })

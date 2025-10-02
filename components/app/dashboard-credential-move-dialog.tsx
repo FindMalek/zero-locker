@@ -25,7 +25,7 @@ interface MoveCredentialDialogProps {
   currentContainerId?: string | null
 }
 
-export function MoveCredentialDialog({
+export function DashboardMoveCredentialDialog({
   open,
   onOpenChange,
   credentialId,
@@ -54,18 +54,17 @@ export function MoveCredentialDialog({
         containerId: selectedContainerId || undefined,
       })
 
-      toast({
-        title: "Credential moved",
-        description: `"${credentialName}" has been moved successfully.`,
-      })
+      toast(
+        `"${credentialName}" has been moved successfully.`,
+        "success"
+      )
 
       onOpenChange(false)
     } catch (error) {
-      toast({
-        title: "Failed to move credential",
-        description: "Please try again later.",
-        variant: "destructive",
-      })
+      toast(
+        "Failed to move credential. Please try again later.",
+        "error"
+      )
     } finally {
       setIsMoving(false)
     }
