@@ -70,7 +70,7 @@ export function BreadcrumbResourceSelect({
     { enabled: shouldFetchSecrets }
   )
 
-  const { data: platforms } = usePlatforms(
+  const { data: platforms, isLoading: isLoadingPlatforms } = usePlatforms(
     {
       page: 1,
       limit: 100,
@@ -138,7 +138,17 @@ export function BreadcrumbResourceSelect({
   const { items, isLoading, currentItem } = useMemo(() => {
     const getPlatform = (platformId: string) => {
       if (!platforms?.platforms) {
-        throw new Error("Platforms not loaded")
+        // Return a fallback platform object that matches PlatformSimpleRo type
+        return {
+          id: platformId,
+          name: "Unknown Platform",
+          status: "PENDING" as const,
+          logo: "",
+          loginUrl: "",
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          userId: null,
+        }
       }
 
       return PlatformEntity.findById(platforms.platforms, platformId)
@@ -150,8 +160,8 @@ export function BreadcrumbResourceSelect({
 
     switch (resourceType) {
       case "accounts":
-        loading = isLoadingCredentials
-        if (credentials?.credentials) {
+        loading = isLoadingCredentials || isLoadingPlatforms
+        if (credentials?.credentials && platforms?.platforms) {
           baseItems = credentials.credentials.map((cred) => {
             const platform = getPlatform(cred.platformId)
             return {
@@ -166,7 +176,7 @@ export function BreadcrumbResourceSelect({
 
         current = baseItems.find((item) => getItemId(item) === currentId)
 
-        if (!current && individualCredential) {
+        if (!current && individualCredential && platforms?.platforms) {
           const platform = getPlatform(individualCredential.platformId)
           current = {
             type: "credential",
@@ -242,6 +252,7 @@ export function BreadcrumbResourceSelect({
     isLoadingCredentials,
     isLoadingCards,
     isLoadingSecrets,
+    isLoadingPlatforms,
     individualCredential,
     individualCard,
     individualSecret,
