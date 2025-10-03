@@ -90,6 +90,51 @@ export function BreadcrumbResourceSelect({
     shouldFetchSecrets && !!currentId ? currentId : ""
   )
 
+  // Helper functions to extract display properties from typed items
+  const getItemId = (item: BreadcrumbItem): string => {
+    switch (item.type) {
+      case "credential":
+        return item.data.credential.id
+      case "card":
+        return item.data.card.id
+      case "secret":
+        return item.data.secret.id
+    }
+  }
+
+  const getItemDisplayName = (item: BreadcrumbItem): string => {
+    switch (item.type) {
+      case "credential":
+        return item.data.credential.identifier
+      case "card":
+        return item.data.card.name
+      case "secret":
+        return item.data.secret.name
+    }
+  }
+
+  const getItemLogo = (item: BreadcrumbItem): string | undefined => {
+    switch (item.type) {
+      case "credential":
+        return item.data.platform.logo
+      case "card":
+        return undefined // Cards don't have logos
+      case "secret":
+        return undefined // Secrets don't have logos
+    }
+  }
+
+  const getItemPlatformName = (item: BreadcrumbItem): string | undefined => {
+    switch (item.type) {
+      case "credential":
+        return item.data.platform.name
+      case "card":
+        return undefined
+      case "secret":
+        return undefined
+    }
+  }
+
   const { items, isLoading, currentItem } = useMemo(() => {
     const getPlatform = (platformId: string) => {
       if (!platforms?.platforms) {
@@ -208,51 +253,6 @@ export function BreadcrumbResourceSelect({
       router.push(`${basePath}/${newId}`)
     }
     setOpen(false)
-  }
-
-  // Helper functions to extract display properties from typed items
-  const getItemId = (item: BreadcrumbItem): string => {
-    switch (item.type) {
-      case "credential":
-        return item.data.credential.id
-      case "card":
-        return item.data.card.id
-      case "secret":
-        return item.data.secret.id
-    }
-  }
-
-  const getItemDisplayName = (item: BreadcrumbItem): string => {
-    switch (item.type) {
-      case "credential":
-        return item.data.credential.identifier
-      case "card":
-        return item.data.card.name
-      case "secret":
-        return item.data.secret.name
-    }
-  }
-
-  const getItemLogo = (item: BreadcrumbItem): string | undefined => {
-    switch (item.type) {
-      case "credential":
-        return item.data.platform.logo
-      case "card":
-        return undefined // Cards don't have logos
-      case "secret":
-        return undefined // Secrets don't have logos
-    }
-  }
-
-  const getItemPlatformName = (item: BreadcrumbItem): string | undefined => {
-    switch (item.type) {
-      case "credential":
-        return item.data.platform.name
-      case "card":
-        return undefined
-      case "secret":
-        return undefined
-    }
   }
 
   if (isLoading) {

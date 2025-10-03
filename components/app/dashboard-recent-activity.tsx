@@ -67,21 +67,21 @@ export function DashboardRecentActivity({
                   <Badge variant="outline" className="text-xs ">
                     {convertRecentItemTypeToString(item.type)}
                   </Badge>
-                  <Button variant="ghost" size="icon">
-                    <Tooltip>
-                      <TooltipTrigger>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button variant="ghost" size="icon">
                         <Icons.info className="text-muted-foreground size-4" />
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <span className="cursor-default">
-                          {convertActivityTypeToString(item.activityType)} on{" "}
-                          {DateFormatter.formatFullDateTime(
-                            item.lastActivityAt
-                          )}{" "}
-                        </span>
-                      </TooltipContent>
-                    </Tooltip>
-                  </Button>
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <span className="cursor-default">
+                        {convertActivityTypeToString(item.activityType)} on{" "}
+                        {DateFormatter.formatFullDateTime(
+                          item.lastActivityAt
+                        )}{" "}
+                      </span>
+                    </TooltipContent>
+                  </Tooltip>
                 </div>
               </div>
             ))}
