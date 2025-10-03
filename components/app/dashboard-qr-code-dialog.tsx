@@ -1,8 +1,8 @@
 "use client"
 
 import { useState } from "react"
-import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm } from "react-hook-form"
 import { z } from "zod"
 
 import { Icons } from "@/components/shared/icons"
@@ -91,7 +91,7 @@ export function DashboardQrCodeDialog({
                 PRO
               </Badge>
             </DialogTitle>
-            <Icons.search className="size-4 text-muted-foreground" />
+            <Icons.search className="text-muted-foreground size-4" />
           </div>
         </DialogHeader>
 
@@ -101,7 +101,7 @@ export function DashboardQrCodeDialog({
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Label className="text-sm font-medium">QR Code Preview</Label>
-                <Icons.helpCircle className="size-3 text-muted-foreground" />
+                <Icons.helpCircle className="text-muted-foreground size-3" />
               </div>
               <div className="flex items-center gap-2">
                 <Button
@@ -138,7 +138,7 @@ export function DashboardQrCodeDialog({
                     />
                   ))}
                 </div>
-                
+
                 {/* Center Logo */}
                 {showLogo && (
                   <div className="absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-black p-1">
@@ -168,12 +168,9 @@ export function DashboardQrCodeDialog({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Label className="text-sm font-medium">Logo</Label>
-              <Icons.helpCircle className="size-3 text-muted-foreground" />
+              <Icons.helpCircle className="text-muted-foreground size-3" />
             </div>
-            <Switch
-              checked={showLogo}
-              onCheckedChange={setShowLogo}
-            />
+            <Switch checked={showLogo} onCheckedChange={setShowLogo} />
           </div>
 
           {/* QR Code Color */}
@@ -193,7 +190,7 @@ export function DashboardQrCodeDialog({
                     onClick={() => setQrCodeColor(color)}
                     className={`size-6 rounded-full border-2 transition-all ${
                       qrCodeColor === color
-                        ? "border-primary ring-2 ring-primary/20"
+                        ? "border-primary ring-primary/20 ring-2"
                         : "border-border hover:border-primary/50"
                     }`}
                     style={{ backgroundColor: color }}
@@ -224,7 +221,7 @@ export function DashboardQrCodeDialog({
                 }}
               />
             </div>
-            
+
             {requirePassword && (
               <div className="space-y-2">
                 <Label htmlFor="password" className="text-sm font-medium">
@@ -244,10 +241,7 @@ export function DashboardQrCodeDialog({
 
         {/* Action Buttons */}
         <div className="flex justify-end gap-3 pt-4">
-          <Button
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-          >
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
           <Button

@@ -1,5 +1,5 @@
-import { useRouter } from "next/navigation"
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import {
   useDuplicateCredential,
   useUpdateCredential,
@@ -8,6 +8,7 @@ import {
 import { useMultiDialogState } from "@/hooks/use-dialog-state"
 import { useToast } from "@/hooks/use-toast"
 
+import { DashboardQrCodeDialog } from "@/components/app/dashboard-qr-code-dialog"
 import { Icons } from "@/components/shared/icons"
 import { MenuShortcut } from "@/components/shared/menu-shortcut"
 import { Button } from "@/components/ui/button"
@@ -25,8 +26,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-
-import { DashboardQrCodeDialog } from "@/components/app/dashboard-qr-code-dialog"
 
 interface ItemActionsProps {
   onEdit?: () => void
@@ -274,7 +273,7 @@ export function CredentialActionsDropdown({
             {menuItems}
           </DropdownMenuContent>
         </DropdownMenu>
-        
+
         <DashboardQrCodeDialog
           open={qrCodeDialogOpen}
           onOpenChange={setQrCodeDialogOpen}
@@ -380,7 +379,7 @@ export function CredentialActionsContextMenu({
           {contextMenuItems}
         </ContextMenuContent>
       </ContextMenu>
-      
+
       <DashboardQrCodeDialog
         open={qrCodeDialogOpen}
         onOpenChange={setQrCodeDialogOpen}

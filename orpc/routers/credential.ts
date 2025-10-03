@@ -1198,11 +1198,18 @@ export const duplicateCredential = authProcedure
     }
 
     // Decrypt the password
-    const originalPassword = await decryptData(
-      passwordData.passwordEncryption.encryptedValue,
-      passwordData.passwordEncryption.encryptionKey,
-      passwordData.passwordEncryption.iv
-    )
+    let originalPassword: string
+    try {
+      originalPassword = await decryptData(
+        passwordData.passwordEncryption.encryptedValue,
+        passwordData.passwordEncryption.encryptionKey,
+        passwordData.passwordEncryption.iv
+      )
+    } catch (decryptError) {
+      throw new ORPCError("INTERNAL_SERVER_ERROR", {
+        message: "Failed to decrypt password data",
+      })
+    }
 
     // Get the original key-value pairs
     const keyValueData = await database.credential.findFirst({
@@ -1232,12 +1239,18 @@ export const duplicateCredential = authProcedure
     try {
       // Use transaction for atomicity
       const duplicatedCredential = await database.$transaction(async (tx) => {
-        // Create encrypted data for password (re-encrypt with same key)
+        // Re-encrypt the password with a new IV
+        const passwordEncryption = await encryptData(
+          originalPassword,
+          passwordData.passwordEncryption.encryptionKey
+        )
+
+        // Create encrypted data for password
         const passwordEncryptionResult = await createEncryptedData(
           {
-            encryptedValue: originalPassword,
+            encryptedValue: passwordEncryption.encryptedData,
             encryptionKey: passwordData.passwordEncryption.encryptionKey,
-            iv: passwordData.passwordEncryption.iv,
+            iv: passwordEncryption.iv,
           },
           tx
         )
@@ -1246,7 +1259,11 @@ export const duplicateCredential = authProcedure
           !passwordEncryptionResult.success ||
           !passwordEncryptionResult.encryptedData
         ) {
-          throw new ORPCError("INTERNAL_SERVER_ERROR")
+          throw new ORPCError("INTERNAL_SERVER_ERROR", {
+            message:
+              passwordEncryptionResult.error ||
+              "Failed to create encrypted data",
+          })
         }
 
         // Create the duplicate credential
@@ -1284,12 +1301,18 @@ export const duplicateCredential = authProcedure
                       kvPair.valueEncryption.iv
                     )
 
+                    // Re-encrypt the value with a new IV
+                    const valueEncryption = await encryptData(
+                      decryptedValue,
+                      kvPair.valueEncryption.encryptionKey
+                    )
+
                     // Create new encrypted data for the value
                     const valueEncryptionResult = await createEncryptedData(
                       {
-                        encryptedValue: decryptedValue,
+                        encryptedValue: valueEncryption.encryptedData,
                         encryptionKey: kvPair.valueEncryption.encryptionKey,
-                        iv: kvPair.valueEncryption.iv,
+                        iv: valueEncryption.iv,
                       },
                       tx
                     )
