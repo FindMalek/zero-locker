@@ -1,4 +1,5 @@
 import { useRouter } from "next/navigation"
+import { useState } from "react"
 import {
   useDuplicateCredential,
   useUpdateCredential,
@@ -24,6 +25,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+
+import { DashboardQrCodeDialog } from "@/components/app/dashboard-qr-code-dialog"
 
 interface ItemActionsProps {
   onEdit?: () => void
@@ -182,20 +185,17 @@ export function CredentialActionsDropdown({
 }: CredentialActionsProps) {
   const router = useRouter()
   const { toast } = useToast()
-
   const updateCredentialMutation = useUpdateCredential()
   const duplicateCredentialMutation = useDuplicateCredential()
   const dialogs = useMultiDialogState()
+  const [qrCodeDialogOpen, setQrCodeDialogOpen] = useState(false)
 
   const handleEdit = () => {
     router.push(`/dashboard/accounts/${credentialId}`)
   }
 
   const handleShare = () => {
-    toast(
-      "Credential sharing is a PRO feature. Upgrade to share credentials with team members.",
-      "info"
-    )
+    setQrCodeDialogOpen(true)
   }
 
   const handleDuplicate = async () => {
@@ -263,16 +263,25 @@ export function CredentialActionsDropdown({
 
   if (variant === "dropdown") {
     return (
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="outline" size="sm" className="size-8 p-0">
-            <Icons.more className="size-3" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-48">
-          {menuItems}
-        </DropdownMenuContent>
-      </DropdownMenu>
+      <>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" size="sm" className="size-8 p-0">
+              <Icons.more className="size-3" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-48">
+            {menuItems}
+          </DropdownMenuContent>
+        </DropdownMenu>
+        
+        <DashboardQrCodeDialog
+          open={qrCodeDialogOpen}
+          onOpenChange={setQrCodeDialogOpen}
+          credentialId={credentialId}
+          credentialIdentifier={credentialIdentifier}
+        />
+      </>
     )
   }
 
@@ -290,16 +299,14 @@ export function CredentialActionsContextMenu({
   const updateCredentialMutation = useUpdateCredential()
   const duplicateCredentialMutation = useDuplicateCredential()
   const dialogs = useMultiDialogState()
+  const [qrCodeDialogOpen, setQrCodeDialogOpen] = useState(false)
 
   const handleEdit = () => {
     router.push(`/dashboard/accounts/${credentialId}`)
   }
 
   const handleShare = () => {
-    toast(
-      "Credential sharing is a PRO feature. Upgrade to share credentials with team members.",
-      "info"
-    )
+    setQrCodeDialogOpen(true)
   }
 
   const handleDuplicate = async () => {
@@ -366,11 +373,20 @@ export function CredentialActionsContextMenu({
   })
 
   return (
-    <ContextMenu>
-      <ContextMenuTrigger asChild>{children}</ContextMenuTrigger>
-      <ContextMenuContent className="w-48">
-        {contextMenuItems}
-      </ContextMenuContent>
-    </ContextMenu>
+    <>
+      <ContextMenu>
+        <ContextMenuTrigger asChild>{children}</ContextMenuTrigger>
+        <ContextMenuContent className="w-48">
+          {contextMenuItems}
+        </ContextMenuContent>
+      </ContextMenu>
+      
+      <DashboardQrCodeDialog
+        open={qrCodeDialogOpen}
+        onOpenChange={setQrCodeDialogOpen}
+        credentialId={credentialId}
+        credentialIdentifier={credentialIdentifier}
+      />
+    </>
   )
 }
