@@ -29,9 +29,9 @@ export function CredentialKeyValuePairs({
   onFormChange,
   onDataChange,
 }: CredentialKeyValuePairsProps) {
+  const { toast } = useToast()
   const [hasChanges, setHasChanges] = useState(false)
   const [editingData, setEditingData] = useState<KeyValuePair[]>([])
-  const { toast } = useToast()
 
   const {
     data: keyValuePairs = [],
@@ -60,7 +60,7 @@ export function CredentialKeyValuePairs({
         value: "",
       },
     ]
-  }, [keyValuePairs, editingData, credentialId])
+  }, [keyValuePairs, editingData])
 
   useEffect(() => {
     if (keyValuePairs.length > 0 && editingData.length === 0 && !hasChanges) {
@@ -147,7 +147,6 @@ export function CredentialKeyValuePairs({
     }
   }, [
     editingData,
-    keyValuePairs,
     credentialId,
     updateKeyValuePairsMutation,
     toast,

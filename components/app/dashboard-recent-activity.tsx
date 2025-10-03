@@ -8,7 +8,7 @@ import {
   convertRecentItemTypeToString,
 } from "@/config/converter"
 import { siteConfig } from "@/config/site"
-import { formatDate, formatFullDate } from "@/lib/utils"
+import { DateFormatter } from "@/lib/date-utils"
 
 import { AddItemDropdown } from "@/components/shared/add-item-dropdown"
 import { getEntityIcon, Icons } from "@/components/shared/icons"
@@ -59,7 +59,7 @@ export function DashboardRecentActivity({
                     </p>
                     <p className="text-muted-foreground text-xs">
                       {convertActivityTypeToString(item.activityType)} on{" "}
-                      {formatDate(item.lastActivityAt)}
+                      {DateFormatter.formatLongDate(item.lastActivityAt)}
                     </p>
                   </div>
                 </div>
@@ -67,19 +67,19 @@ export function DashboardRecentActivity({
                   <Badge variant="outline" className="text-xs ">
                     {convertRecentItemTypeToString(item.type)}
                   </Badge>
-                  <Button variant="ghost" size="icon">
-                    <Tooltip>
-                      <TooltipTrigger>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button variant="ghost" size="icon">
                         <Icons.info className="text-muted-foreground size-4" />
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <span className="cursor-default">
-                          {convertActivityTypeToString(item.activityType)} on{" "}
-                          {formatFullDate(item.lastActivityAt)}{" "}
-                        </span>
-                      </TooltipContent>
-                    </Tooltip>
-                  </Button>
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <span className="cursor-default">
+                        {convertActivityTypeToString(item.activityType)} on{" "}
+                        {DateFormatter.formatFullDateTime(item.lastActivityAt)}
+                      </span>
+                    </TooltipContent>
+                  </Tooltip>
                 </div>
               </div>
             ))}

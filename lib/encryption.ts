@@ -124,6 +124,7 @@ export async function decryptData(
     // Detect encryption algorithm based on IV length
     const isGCM = ivBuffer.length === 12 // AES-GCM uses 12-byte IV
     const isCBC = ivBuffer.length === 16 // AES-CBC uses 16-byte IV
+    const isLegacy = ivBuffer.length === 32 // Legacy encryption method
 
     if (isGCM) {
       // Handle AES-GCM decryption (data from browser)
@@ -160,6 +161,19 @@ export async function decryptData(
       decrypted += decipher.final("utf8")
 
       return decrypted
+    } else if (isLegacy) {
+      // Handle legacy 32-byte IV with multiple fallback methods
+      const keyToUse = getLegacyKey(keyBuffer)
+      const truncatedIv = ivBuffer.subarray(0, 16)
+
+      // Try multiple decryption methods in order of likelihood
+      return tryLegacyDecryption(
+        encryptedData,
+        keyToUse,
+        keyBuffer,
+        ivBuffer,
+        truncatedIv
+      )
     } else {
       throw new Error(
         `Unsupported IV length: ${ivBuffer.length} bytes. Expected 12 bytes (AES-GCM) or 16 bytes (AES-CBC).`
@@ -280,5 +294,87 @@ export async function encryptDataSync(
     throw new Error(
       `Unsupported IV length: ${ivBuffer.length} bytes. Expected 12 bytes (AES-GCM) or 16 bytes (AES-CBC).`
     )
+  }
+}
+
+// Helper function to get appropriate key for legacy decryption
+function getLegacyKey(keyBuffer: Buffer): Buffer {
+  if (keyBuffer.length === 32) {
+    return keyBuffer
+  } else if (keyBuffer.length === 16) {
+    return Buffer.concat([keyBuffer, keyBuffer])
+  } else {
+    // Derive a 32-byte key using SHA-256
+    const crypto = require("crypto")
+    const hash = crypto.createHash("sha256")
+    hash.update(keyBuffer)
+    return Buffer.from(hash.digest())
+  }
+}
+
+// Helper function to try multiple decryption methods for legacy data
+async function tryLegacyDecryption(
+  encryptedData: string,
+  keyToUse: Buffer,
+  originalKeyBuffer: Buffer,
+  ivBuffer: Buffer,
+  truncatedIv: Buffer
+): Promise<string> {
+  const crypto = await import("crypto")
+
+  // Try AES-GCM with full IV
+  try {
+    const encryptedBuffer = Buffer.from(encryptedData, "base64")
+    const decipher = crypto.createDecipheriv("aes-256-gcm", keyToUse, ivBuffer)
+
+    const authTagLength = 16
+    const ciphertext = encryptedBuffer.subarray(0, -authTagLength)
+    const authTag = encryptedBuffer.subarray(-authTagLength)
+
+    decipher.setAuthTag(authTag)
+
+    const decryptedUpdate = decipher.update(ciphertext)
+    const decryptedFinal = decipher.final()
+    const decryptedBuffer = Buffer.concat([decryptedUpdate, decryptedFinal])
+
+    return decryptedBuffer.toString("utf8")
+  } catch {
+    // Try AES-256-CBC with truncated IV
+    try {
+      const decipher = crypto.createDecipheriv(
+        "aes-256-cbc",
+        keyToUse,
+        truncatedIv
+      )
+      let decrypted = decipher.update(encryptedData, "base64", "utf8")
+      decrypted += decipher.final("utf8")
+      return decrypted
+    } catch {
+      // Try AES-128-CBC with 16-byte key
+      try {
+        const key128 =
+          originalKeyBuffer.length >= 16
+            ? originalKeyBuffer.subarray(0, 16)
+            : originalKeyBuffer
+        const decipher128 = crypto.createDecipheriv(
+          "aes-128-cbc",
+          key128,
+          truncatedIv
+        )
+
+        let decrypted128 = decipher128.update(encryptedData, "base64", "utf8")
+        decrypted128 += decipher128.final("utf8")
+        return decrypted128
+      } catch {
+        // Last resort: try base64 decode as plain text
+        try {
+          return Buffer.from(encryptedData, "base64").toString("utf8")
+        } catch {
+          throw new Error(
+            "Unable to decrypt legacy data with any supported method"
+          )
+        }
+      }
+    }
   }
 }

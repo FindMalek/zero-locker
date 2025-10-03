@@ -21,7 +21,7 @@ import { KeyValuePair, User as UserType } from "@/types"
 
 import { PRIORITY_ACTIVITY_TYPE } from "@/config/consts"
 
-import { getRelativeTime } from "../date-utils"
+import { DateFormatter, getRelativeTime } from "../date-utils"
 
 export * from "./card-expiry-helpers"
 export * from "./color-helpers"
@@ -29,18 +29,6 @@ export * from "./password-helpers"
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
-}
-
-export function formatDate(date: Date | string) {
-  if (typeof date === "string") {
-    date = new Date(date)
-  }
-
-  return date.toLocaleDateString("en-US", {
-    month: "long",
-    day: "numeric",
-    year: "numeric",
-  })
 }
 
 export function getAvatarOrFallback(user: UserType) {
@@ -116,17 +104,6 @@ export function checkIsActive(
   linkHref: string
 ): boolean {
   return currentPathname === linkHref
-}
-
-export function formatFullDate(date: Date | string | number): string {
-  return new Intl.DateTimeFormat(undefined, {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-    hour: "numeric",
-    minute: "numeric",
-    second: "numeric",
-  }).format(new Date(date))
 }
 
 /**
@@ -363,10 +340,11 @@ export function getCreatedOrLastViewedText(
   date: Date | null,
   lastViewed: boolean
 ) {
-  if (!date) return `Created recently at ${formatDate(new Date())}`
+  if (!date)
+    return `Created recently at ${DateFormatter.formatLongDate(new Date())}`
 
   if (!lastViewed)
-    return `Created ${getRelativeTime(date).toLowerCase()} at ${formatDate(date)}`
+    return `Created ${getRelativeTime(date).toLowerCase()} at ${DateFormatter.formatLongDate(date)}`
 
-  return `Last seen ${getRelativeTime(date).toLowerCase()} on ${formatDate(date)}`
+  return `Last seen ${getRelativeTime(date).toLowerCase()} on ${DateFormatter.formatLongDate(date)}`
 }

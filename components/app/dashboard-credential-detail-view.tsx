@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
+import { PlatformEntity } from "@/entities/utils/platform"
 import {
   useCredential,
   useCredentialSecuritySettings,
@@ -167,10 +168,6 @@ export function CredentialDetailView({
     setHasPasswordChanges(false)
   }
 
-  const handleDelete = () => {
-    setShowDeleteDialog(true)
-  }
-
   const handleConfirmDelete = async () => {
     if (!credential) return
 
@@ -241,34 +238,17 @@ export function CredentialDetailView({
     )
   }
 
-  const platform = initialData.platforms.platforms.find(
-    (p) => p.id === credential.platformId
+  const platform = PlatformEntity.findById(
+    initialData.platforms.platforms,
+    credential.platformId
   )
-
-  if (!platform) {
-    return (
-      <div className="flex min-h-[400px] items-center justify-center">
-        <EmptyState
-          icon={() => <Icons.warning className="size-12" />}
-          title="Platform unavailable"
-          description="We couldn't load platform info for this credential."
-          actionLabel="Go back"
-          onAction={() => router.back()}
-        />
-      </div>
-    )
-  }
 
   return (
     <div className="bg-background min-h-screen">
       <div className="mx-auto max-w-6xl p-4">
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-4">
           <div className="space-y-6 lg:col-span-3">
-            <CredentialHeader
-              credential={credential}
-              platform={platform}
-              onDelete={handleDelete}
-            />
+            <CredentialHeader credential={credential} platform={platform} />
             <Separator />
             <CredentialForm
               credential={credential}
