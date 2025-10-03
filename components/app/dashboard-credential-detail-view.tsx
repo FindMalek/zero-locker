@@ -168,10 +168,6 @@ export function CredentialDetailView({
     setHasPasswordChanges(false)
   }
 
-  const handleDelete = () => {
-    setShowDeleteDialog(true)
-  }
-
   const handleConfirmDelete = async () => {
     if (!credential) return
 

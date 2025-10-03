@@ -1,5 +1,6 @@
 "use client"
 
+import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { PlatformEntity } from "@/entities/utils/platform"
 import type { CredentialOutput } from "@/schemas/credential/dto"
@@ -54,9 +55,11 @@ export function DashboardCredentialGridView({
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="bg-secondary flex size-10 items-center justify-center rounded-full">
-                    <img
+                    <Image
                       src={platform.logo || ""}
                       alt={`${platform.name} logo`}
+                      width={24}
+                      height={24}
                       className="size-6 object-contain"
                     />
                   </div>

@@ -182,6 +182,7 @@ export function CredentialActionsDropdown({
 }: CredentialActionsProps) {
   const router = useRouter()
   const { toast } = useToast()
+
   const updateCredentialMutation = useUpdateCredential()
   const duplicateCredentialMutation = useDuplicateCredential()
   const dialogs = useMultiDialogState()

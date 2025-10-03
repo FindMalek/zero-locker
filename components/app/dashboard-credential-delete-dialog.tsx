@@ -40,7 +40,7 @@ interface DeleteCredentialDialogProps {
   credentialId: string
   credentialIdentifier: string
 }
-
+// #TODO: Refactor the UI please
 export function DashboardDeleteCredentialDialog({
   open,
   onOpenChange,
