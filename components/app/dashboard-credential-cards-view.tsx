@@ -2,10 +2,7 @@
 
 import Image from "next/image"
 import { useRouter } from "next/navigation"
-import {
-  useDuplicateCredential,
-  useUpdateCredential,
-} from "@/orpc/hooks/use-credentials"
+import { PlatformEntity } from "@/entities/utils/platform"
 import type { CredentialIncludeOutput } from "@/schemas/credential/dto"
 import type { PlatformSimpleRo } from "@/schemas/utils/platform"
 
@@ -15,15 +12,13 @@ import {
   getLogoDevUrlWithToken,
   getPlaceholderImage,
 } from "@/lib/utils"
-import { PlatformEntity } from "@/entities/utils/platform"
 import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard"
 import { useMultiDialogState } from "@/hooks/use-dialog-state"
-import { useToast } from "@/hooks/use-toast"
 
 import { DashboardDeleteCredentialDialog } from "@/components/app/dashboard-credential-delete-dialog"
 import { DashboardMoveCredentialDialog } from "@/components/app/dashboard-credential-move-dialog"
 import { Icons } from "@/components/shared/icons"
-import { ItemActionsContextMenu } from "@/components/shared/item-actions-dropdown"
+import { CredentialActionsContextMenu } from "@/components/shared/item-actions-dropdown"
 import { StatusBadge } from "@/components/shared/status-badge"
 import { TagDisplay } from "@/components/shared/tag-display"
 import { Button } from "@/components/ui/button"
@@ -43,12 +38,8 @@ export function DashboardCredentialCardsView({
   platforms,
 }: CredentialListViewProps) {
   const router = useRouter()
-  const { toast } = useToast()
   const dialogs = useMultiDialogState()
 
-  const updateCredentialMutation = useUpdateCredential()
-  const duplicateCredentialMutation = useDuplicateCredential()
-  
   const { copy, isCopied } = useCopyToClipboard({
     successDuration: 1000,
   })
@@ -57,94 +48,21 @@ export function DashboardCredentialCardsView({
     router.push(`/dashboard/accounts/${credentialId}`)
   }
 
-  const handleDuplicate = async (credentialId: string) => {
-    try {
-      const duplicatedCredential =
-        await duplicateCredentialMutation.mutateAsync({
-          id: credentialId,
-        })
-
-      toast(
-        `"${duplicatedCredential.identifier}" has been created successfully.`,
-        "success"
-      )
-
-      router.push(`/dashboard/accounts/${duplicatedCredential.id}`)
-    } catch (error) {
-      console.log(error)
-      toast("Failed to duplicate credential. Please try again later.", "error")
-    }
-  }
-
-  const handleArchive = async (credentialId: string) => {
-    try {
-      await updateCredentialMutation.mutateAsync({
-        id: credentialId,
-        status: "SUSPENDED",
-      })
-
-      toast("The credential has been archived successfully.", "success")
-    } catch (error) {
-      console.log(error)
-      toast("Failed to archive credential. Please try again later.", "error")
-    }
-  }
-
-  const handleShare = () => {
-    toast(
-      "Credential sharing is a PRO feature. Upgrade to share credentials with team members.",
-      "info"
-    )
-  }
-
-  const handleMove = (
-    credentialId: string,
-    credentialIdentifier: string,
-    containerId?: string | null
-  ) => {
-    dialogs.moveDialog.open({
-      id: credentialId,
-      identifier: credentialIdentifier,
-      containerId,
-    })
-  }
-
-  const handleDelete = (credentialId: string, credentialIdentifier: string) => {
-    dialogs.deleteDialog.open({
-      id: credentialId,
-      identifier: credentialIdentifier,
-    })
-  }
-
   return (
     <div className="space-y-3">
-        {credentials.map((credential) => {
-          const platform = PlatformEntity.findById(platforms, credential.platformId)
-          const primaryDate = credential.lastViewed || credential.createdAt
+      {credentials.map((credential) => {
+        const platform = PlatformEntity.findById(
+          platforms,
+          credential.platformId
+        )
+        const primaryDate = credential.lastViewed || credential.createdAt
 
         return (
-          <ItemActionsContextMenu
+          <CredentialActionsContextMenu
             key={credential.id}
-            onEdit={() => {
-              router.push(`/dashboard/accounts/${credential.id}`)
-            }}
-            onShare={handleShare}
-            onDuplicate={() => {
-              handleDuplicate(credential.id)
-            }}
-            onMove={() => {
-              handleMove(
-                credential.id,
-                credential.identifier,
-                credential.containerId
-              )
-            }}
-            onArchive={() => {
-              handleArchive(credential.id)
-            }}
-            onDelete={() => {
-              handleDelete(credential.id, credential.identifier)
-            }}
+            credentialId={credential.id}
+            credentialIdentifier={credential.identifier}
+            containerId={credential.containerId}
           >
             <div
               className="dark:hover:bg-secondary/50 hover:border-secondary-foreground/20 border-secondary group flex cursor-pointer items-center gap-4 rounded-lg border-2 p-4 transition-colors duration-200 hover:shadow-sm"
@@ -179,9 +97,7 @@ export function DashboardCredentialCardsView({
                       variant="ghost"
                       size="sm"
                       className="hover:text-primary  opacity-0 transition-all group-hover/identifier:opacity-100"
-                      onClick={async () =>
-                       await copy(credential.identifier)
-                      }
+                      onClick={async () => await copy(credential.identifier)}
                     >
                       {isCopied ? (
                         <Icons.check className="size-4" />
@@ -223,7 +139,7 @@ export function DashboardCredentialCardsView({
 
               <StatusBadge status={credential.status} compact />
             </div>
-          </ItemActionsContextMenu>
+          </CredentialActionsContextMenu>
         )
       })}
 

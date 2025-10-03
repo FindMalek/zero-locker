@@ -1,24 +1,18 @@
 "use client"
 
-import { useState } from "react"
 import { useRouter } from "next/navigation"
-import {
-  useDuplicateCredential,
-  useUpdateCredential,
-} from "@/orpc/hooks/use-credentials"
+import { PlatformEntity } from "@/entities/utils/platform"
 import type { CredentialOutput } from "@/schemas/credential/dto"
 import type { PlatformSimpleRo } from "@/schemas/utils/platform"
-import { DateFormatter } from "@/lib/date-utils"
 
+import { DateFormatter } from "@/lib/date-utils"
 import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard"
-import { useToast } from "@/hooks/use-toast"
-import { PlatformEntity } from "@/entities/utils/platform"
-import { accountStatusEnum } from "@/schemas/credential"
+import { useMultiDialogState } from "@/hooks/use-dialog-state"
 
 import { DashboardDeleteCredentialDialog } from "@/components/app/dashboard-credential-delete-dialog"
 import { DashboardMoveCredentialDialog } from "@/components/app/dashboard-credential-move-dialog"
 import { Icons } from "@/components/shared/icons"
-import { ItemActionsDropdown } from "@/components/shared/item-actions-dropdown"
+import { CredentialActionsDropdown } from "@/components/shared/item-actions-dropdown"
 import { StatusBadge } from "@/components/shared/status-badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
@@ -33,186 +27,113 @@ export function DashboardCredentialGridView({
   platforms,
 }: CredentialGridViewProps) {
   const router = useRouter()
-  const { toast } = useToast()
-  const updateCredentialMutation = useUpdateCredential()
-  const duplicateCredentialMutation = useDuplicateCredential()
-  const { copy, isCopied } = useCopyToClipboard({ successDuration: 1000 })
+  const dialogs = useMultiDialogState()
+  const { copy, isCopied } = useCopyToClipboard({
+    successDuration: 1000,
+  })
 
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-  const [credentialToDelete, setCredentialToDelete] = useState<{
-    id: string
-    identifier: string
-  } | null>(null)
-  const [moveDialogOpen, setMoveDialogOpen] = useState(false)
-  const [credentialToMove, setCredentialToMove] = useState<{
-    id: string
-    identifier: string
-    containerId?: string | null
-  } | null>(null)
-
-  const handleDuplicate = async (credentialId: string) => {
-    try {
-      const duplicatedCredential =
-        await duplicateCredentialMutation.mutateAsync({
-          id: credentialId,
-        })
-
-      toast(
-        `"${duplicatedCredential.identifier}" has been created successfully.`,
-        "success"
-      )
-
-      // Navigate to the duplicated credential's edit page
-      router.push(`/dashboard/accounts/${duplicatedCredential.id}`)
-    } catch (error) {
-      console.error("Failed to duplicate credential:", error)
-      toast("Failed to duplicate credential. Please try again later.", "error")
-    }
-  }
-
-  const handleArchive = async (credentialId: string) => {
-    try {
-      await updateCredentialMutation.mutateAsync({
-        id: credentialId,
-        status: accountStatusEnum.ARCHIVED,
-      })
-
-      toast("The credential has been archived successfully.", "success")
-    } catch (error) {
-      console.error("Failed to archive credential:", error)
-      toast("Failed to archive credential. Please try again later.", "error")
-    }
-  }
-
-  const handleShare = () => {
-    toast(
-      "Credential sharing is a PRO feature. Upgrade to share credentials with team members.",
-      "info"
-    )
-  }
-
-  const handleMove = (
-    credentialId: string,
-    credentialIdentifier: string,
-    containerId?: string | null
-  ) => {
-    setCredentialToMove({
-      id: credentialId,
-      identifier: credentialIdentifier,
-      containerId,
-    })
-    setMoveDialogOpen(true)
-  }
-
-  const handleDelete = (credentialId: string, credentialIdentifier: string) => {
-    setCredentialToDelete({
-      id: credentialId,
-      identifier: credentialIdentifier,
-    })
-    setDeleteDialogOpen(true)
+  const handleCardClick = (credentialId: string) => {
+    router.push(`/dashboard/accounts/${credentialId}`)
   }
 
   return (
-    <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-      {credentials.map((credential) => (
-        <Card key={credential.id} className="transition-shadow hover:shadow-lg">
-          <CardHeader className="pb-3">
-            <div className="flex items-start justify-between">
-              <div className="flex items-center gap-2">
-                <div className="rounded-lg bg-gray-100 p-2">
-                  <Icons.user className="size-4 text-gray-600" />
+    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+      {credentials.map((credential) => {
+        const platform = PlatformEntity.findById(
+          platforms,
+          credential.platformId
+        )
+
+        return (
+          <Card
+            key={credential.id}
+            className="cursor-pointer transition-shadow hover:shadow-md"
+            onClick={() => handleCardClick(credential.id)}
+          >
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="bg-secondary flex size-10 items-center justify-center rounded-full">
+                    <img
+                      src={platform.logo || ""}
+                      alt={`${platform.name} logo`}
+                      className="size-6 object-contain"
+                    />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-semibold">
+                      {credential.identifier}
+                    </h3>
+                    <p className="text-muted-foreground text-xs">
+                      {platform.name}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="max-w-[150px] truncate text-sm font-semibold">
-                    {credential.identifier}
-                  </h3>
-                  <p className="text-xs text-gray-500">
-                    {PlatformEntity.findById(platforms, credential.platformId).name}
-                  </p>
+                <div className="flex items-center gap-1">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="size-8 p-0"
+                    onClick={async (e) => {
+                      e.stopPropagation()
+                      await copy(credential.identifier)
+                    }}
+                  >
+                    {isCopied ? (
+                      <Icons.check className="size-4" />
+                    ) : (
+                      <Icons.copy className="size-4" />
+                    )}
+                  </Button>
+
+                  <CredentialActionsDropdown
+                    credentialId={credential.id}
+                    credentialIdentifier={credential.identifier}
+                    containerId={credential.containerId}
+                  />
                 </div>
               </div>
-              <StatusBadge status={credential.status} compact />
-            </div>
-          </CardHeader>
-
-          <CardContent className="pt-0">
-            {credential.description && (
-              <p className="mb-3 line-clamp-2 text-sm text-gray-600">
-                {credential.description}
-              </p>
-            )}
-
-            <div className="mb-4 space-y-2 text-xs text-gray-500">
-              <div className="flex justify-between">
-                <span>Created:</span>
-                <span>
-                  {DateFormatter.formatShortDate(credential.createdAt)}
-                </span>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <div className="space-y-2">
+                <div className="text-muted-foreground flex items-center justify-between text-xs">
+                  <span>
+                    {credential.lastViewed
+                      ? `Last viewed ${DateFormatter.formatShortDate(credential.lastViewed)}`
+                      : `Created ${DateFormatter.formatShortDate(credential.createdAt)}`}
+                  </span>
+                  <StatusBadge status={credential.status} compact />
+                </div>
               </div>
-              <div className="flex justify-between">
-                <span>Last Viewed:</span>
-                <span>
-                  {DateFormatter.formatShortDate(credential.lastViewed)}
-                </span>
-              </div>
-            </div>
+            </CardContent>
+          </Card>
+        )
+      })}
 
-            <div className="flex items-center justify-between">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => copy(credential.identifier)}
-              >
-                {isCopied ? (
-                  <Icons.check className="size-4" />
-                ) : (
-                  <Icons.copy className="size-4" />
-                )}
-              </Button>
-
-              <ItemActionsDropdown
-                onEdit={() => {
-                  router.push(`/dashboard/accounts/${credential.id}`)
-                }}
-                onShare={handleShare}
-                onDuplicate={() => {
-                  handleDuplicate(credential.id)
-                }}
-                onMove={() => {
-                  handleMove(
-                    credential.id,
-                    credential.identifier,
-                    credential.containerId
-                  )
-                }}
-                onArchive={() => {
-                  handleArchive(credential.id)
-                }}
-                onDelete={() => {
-                  handleDelete(credential.id, credential.identifier)
-                }}
-              />
-            </div>
-          </CardContent>
-        </Card>
-      ))}
-
-      {credentialToDelete && (
+      {dialogs.deleteDialog.data && (
         <DashboardDeleteCredentialDialog
-          open={deleteDialogOpen}
-          onOpenChange={setDeleteDialogOpen}
-          credentialId={credentialToDelete.id}
-          credentialIdentifier={credentialToDelete.identifier}
+          open={dialogs.deleteDialog.isOpen}
+          onOpenChange={(open) => {
+            if (!open) {
+              dialogs.deleteDialog.close()
+            }
+          }}
+          credentialId={dialogs.deleteDialog.data.id}
+          credentialIdentifier={dialogs.deleteDialog.data.identifier}
         />
       )}
 
-      {credentialToMove && (
+      {dialogs.moveDialog.data && (
         <DashboardMoveCredentialDialog
-          open={moveDialogOpen}
-          onOpenChange={setMoveDialogOpen}
-          credentialId={credentialToMove.id}
-          credentialIdentifier={credentialToMove.identifier}
-          currentContainerId={credentialToMove.containerId}
+          open={dialogs.moveDialog.isOpen}
+          onOpenChange={(open) => {
+            if (!open) {
+              dialogs.moveDialog.close()
+            }
+          }}
+          credentialId={dialogs.moveDialog.data.id}
+          credentialIdentifier={dialogs.moveDialog.data.identifier}
+          currentContainerId={dialogs.moveDialog.data.containerId}
         />
       )}
     </div>

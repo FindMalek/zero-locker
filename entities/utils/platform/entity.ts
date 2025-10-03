@@ -23,18 +23,21 @@ export class PlatformEntity {
   /**
    * Finds a platform by ID from a list of platforms.
    * Throws an error if the platform is not found.
-   * 
+   *
    * @param platforms - Array of platforms to search in
    * @param platformId - ID of the platform to find
    * @returns The found platform
    * @throws Error if platform is not found
    */
-  static findById(platforms: PlatformEntitySimpleDbData[], platformId: string): PlatformSimpleRo {
+  static findById(
+    platforms: PlatformEntitySimpleDbData[],
+    platformId: string
+  ): PlatformSimpleRo {
     const platform = platforms.find((p) => p.id === platformId)
     if (!platform) {
       throw new Error(`Platform with id ${platformId} not found`)
     }
-    
+
     return PlatformEntity.getSimpleRo(platform)
   }
 }

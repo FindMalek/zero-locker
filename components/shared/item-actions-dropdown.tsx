@@ -1,3 +1,12 @@
+import { useRouter } from "next/navigation"
+import {
+  useDuplicateCredential,
+  useUpdateCredential,
+} from "@/orpc/hooks/use-credentials"
+
+import { useMultiDialogState } from "@/hooks/use-dialog-state"
+import { useToast } from "@/hooks/use-toast"
+
 import { Icons } from "@/components/shared/icons"
 import { MenuShortcut } from "@/components/shared/menu-shortcut"
 import { Button } from "@/components/ui/button"
@@ -23,6 +32,14 @@ interface ItemActionsProps {
   onMove?: () => void
   onArchive?: () => void
   onDelete?: () => void
+  variant?: "dropdown" | "context"
+  children?: React.ReactNode
+}
+
+interface CredentialActionsProps {
+  credentialId: string
+  credentialIdentifier: string
+  containerId?: string | null
   variant?: "dropdown" | "context"
   children?: React.ReactNode
 }
@@ -157,27 +174,193 @@ export function ItemActionsDropdown({
   return null
 }
 
-export function ItemActionsContextMenu({
-  onEdit,
-  onShare,
-  onDuplicate,
-  onMove,
-  onArchive,
-  onDelete,
+export function CredentialActionsDropdown({
+  credentialId,
+  credentialIdentifier,
+  containerId,
+  variant = "dropdown",
+}: CredentialActionsProps) {
+  const router = useRouter()
+  const { toast } = useToast()
+  const updateCredentialMutation = useUpdateCredential()
+  const duplicateCredentialMutation = useDuplicateCredential()
+  const dialogs = useMultiDialogState()
+
+  const handleEdit = () => {
+    router.push(`/dashboard/accounts/${credentialId}`)
+  }
+
+  const handleShare = () => {
+    toast(
+      "Credential sharing is a PRO feature. Upgrade to share credentials with team members.",
+      "info"
+    )
+  }
+
+  const handleDuplicate = async () => {
+    try {
+      const duplicatedCredential =
+        await duplicateCredentialMutation.mutateAsync({
+          id: credentialId,
+        })
+
+      toast(
+        `"${duplicatedCredential.identifier}" has been created successfully.`,
+        "success"
+      )
+
+      router.push(`/dashboard/accounts/${duplicatedCredential.id}`)
+    } catch (error) {
+      console.log(error)
+      toast("Failed to duplicate credential. Please try again later.", "error")
+    }
+  }
+
+  const handleMove = () => {
+    dialogs.moveDialog.open({
+      id: credentialId,
+      identifier: credentialIdentifier,
+      containerId,
+    })
+  }
+
+  const handleArchive = async () => {
+    try {
+      await updateCredentialMutation.mutateAsync({
+        id: credentialId,
+        status: "SUSPENDED",
+      })
+
+      toast("The credential has been archived successfully.", "success")
+    } catch (error) {
+      console.log(error)
+      toast("Failed to archive credential. Please try again later.", "error")
+    }
+  }
+
+  const handleDelete = () => {
+    dialogs.deleteDialog.open({
+      id: credentialId,
+      identifier: credentialIdentifier,
+    })
+  }
+
+  const menuItems = renderMenuItems({
+    MenuItem: DropdownMenuItem,
+    MenuSeparator: DropdownMenuSeparator,
+    iconSize: "size-3",
+    stopPropagation: false,
+    actions: {
+      onEdit: handleEdit,
+      onShare: handleShare,
+      onDuplicate: handleDuplicate,
+      onMove: handleMove,
+      onArchive: handleArchive,
+      onDelete: handleDelete,
+    },
+  })
+
+  if (variant === "dropdown") {
+    return (
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="outline" size="sm" className="size-8 p-0">
+            <Icons.more className="size-3" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-48">
+          {menuItems}
+        </DropdownMenuContent>
+      </DropdownMenu>
+    )
+  }
+
+  return null
+}
+
+export function CredentialActionsContextMenu({
+  credentialId,
+  credentialIdentifier,
+  containerId,
   children,
-}: ItemActionsProps) {
+}: CredentialActionsProps) {
+  const router = useRouter()
+  const { toast } = useToast()
+  const updateCredentialMutation = useUpdateCredential()
+  const duplicateCredentialMutation = useDuplicateCredential()
+  const dialogs = useMultiDialogState()
+
+  const handleEdit = () => {
+    router.push(`/dashboard/accounts/${credentialId}`)
+  }
+
+  const handleShare = () => {
+    toast(
+      "Credential sharing is a PRO feature. Upgrade to share credentials with team members.",
+      "info"
+    )
+  }
+
+  const handleDuplicate = async () => {
+    try {
+      const duplicatedCredential =
+        await duplicateCredentialMutation.mutateAsync({
+          id: credentialId,
+        })
+
+      toast(
+        `"${duplicatedCredential.identifier}" has been created successfully.`,
+        "success"
+      )
+
+      router.push(`/dashboard/accounts/${duplicatedCredential.id}`)
+    } catch (error) {
+      console.log(error)
+      toast("Failed to duplicate credential. Please try again later.", "error")
+    }
+  }
+
+  const handleMove = () => {
+    dialogs.moveDialog.open({
+      id: credentialId,
+      identifier: credentialIdentifier,
+      containerId,
+    })
+  }
+
+  const handleArchive = async () => {
+    try {
+      await updateCredentialMutation.mutateAsync({
+        id: credentialId,
+        status: "SUSPENDED",
+      })
+
+      toast("The credential has been archived successfully.", "success")
+    } catch (error) {
+      console.log(error)
+      toast("Failed to archive credential. Please try again later.", "error")
+    }
+  }
+
+  const handleDelete = () => {
+    dialogs.deleteDialog.open({
+      id: credentialId,
+      identifier: credentialIdentifier,
+    })
+  }
+
   const contextMenuItems = renderMenuItems({
     MenuItem: ContextMenuItem,
     MenuSeparator: ContextMenuSeparator,
     iconSize: "size-4",
     stopPropagation: true,
     actions: {
-      onEdit,
-      onShare,
-      onDuplicate,
-      onMove,
-      onArchive,
-      onDelete,
+      onEdit: handleEdit,
+      onShare: handleShare,
+      onDuplicate: handleDuplicate,
+      onMove: handleMove,
+      onArchive: handleArchive,
+      onDelete: handleDelete,
     },
   })
 

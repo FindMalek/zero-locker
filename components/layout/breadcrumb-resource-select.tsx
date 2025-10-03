@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
+import { PlatformEntity } from "@/entities/utils/platform"
 import { useCard, useCards } from "@/orpc/hooks/use-cards"
 import { useCredential, useCredentials } from "@/orpc/hooks/use-credentials"
 import { usePlatforms } from "@/orpc/hooks/use-platforms"
@@ -10,7 +11,6 @@ import { useSecret, useSecrets } from "@/orpc/hooks/use-secrets"
 import type { BreadcrumbItem } from "@/schemas/utils/breadcrumb"
 
 import { getLogoDevUrlWithToken, getPlaceholderImage } from "@/lib/utils"
-import { PlatformEntity } from "@/entities/utils/platform"
 import type { ResourceType } from "@/lib/utils/breadcrumb-helpers"
 
 import { Icons } from "@/components/shared/icons"
@@ -114,7 +114,7 @@ export function BreadcrumbResourceSelect({
               data: {
                 credential: cred,
                 platform: platform,
-              }
+              },
             }
           })
         }
@@ -128,7 +128,7 @@ export function BreadcrumbResourceSelect({
             data: {
               credential: individualCredential,
               platform: platform,
-            }
+            },
           }
           baseItems = [current, ...baseItems]
         }
@@ -141,7 +141,7 @@ export function BreadcrumbResourceSelect({
             type: "card",
             data: {
               card: card,
-            }
+            },
           }))
         }
 
@@ -152,7 +152,7 @@ export function BreadcrumbResourceSelect({
             type: "card",
             data: {
               card: individualCard,
-            }
+            },
           }
           baseItems = [current, ...baseItems]
         }
@@ -165,7 +165,7 @@ export function BreadcrumbResourceSelect({
             type: "secret",
             data: {
               secret: secret,
-            }
+            },
           }))
         }
 
@@ -176,7 +176,7 @@ export function BreadcrumbResourceSelect({
             type: "secret",
             data: {
               secret: individualSecret,
-            }
+            },
           }
           baseItems = [current, ...baseItems]
         }
@@ -342,7 +342,9 @@ export function BreadcrumbResourceSelect({
                         className="bg-secondary size-4 shrink-0 rounded-full object-contain p-0.5"
                       />
                     )}
-                    <span className="flex-1 truncate">{getItemDisplayName(item)}</span>
+                    <span className="flex-1 truncate">
+                      {getItemDisplayName(item)}
+                    </span>
                     {getItemId(item) === currentId && (
                       <Icons.check className="text-primary size-4 shrink-0" />
                     )}

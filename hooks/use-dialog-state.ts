@@ -7,20 +7,20 @@ type DialogState<T = Record<string, unknown>> = {
 }
 
 type DialogAction<T = Record<string, unknown>> =
-  | { type: 'OPEN'; payload: T }
-  | { type: 'CLOSE' }
+  | { type: "OPEN"; payload: T }
+  | { type: "CLOSE" }
 
 function dialogReducer<T = Record<string, unknown>>(
   state: DialogState<T>,
   action: DialogAction<T>
 ): DialogState<T> {
   switch (action.type) {
-    case 'OPEN':
+    case "OPEN":
       return {
         open: true,
         data: action.payload,
       }
-    case 'CLOSE':
+    case "CLOSE":
       return {
         open: false,
         data: null,
@@ -38,11 +38,11 @@ export function useDialogState<T = Record<string, unknown>>(initialState?: T) {
   })
 
   const openDialog = (data: T) => {
-    dispatch({ type: 'OPEN', payload: data })
+    dispatch({ type: "OPEN", payload: data })
   }
 
   const closeDialog = () => {
-    dispatch({ type: 'CLOSE' })
+    dispatch({ type: "CLOSE" })
   }
 
   return {
@@ -67,10 +67,13 @@ type MultiDialogState = {
 }
 
 type MultiDialogAction =
-  | { type: 'OPEN_MOVE_DIALOG'; payload: { id: string; identifier: string; containerId?: string | null } }
-  | { type: 'CLOSE_MOVE_DIALOG' }
-  | { type: 'OPEN_DELETE_DIALOG'; payload: { id: string; identifier: string } }
-  | { type: 'CLOSE_DELETE_DIALOG' }
+  | {
+      type: "OPEN_MOVE_DIALOG"
+      payload: { id: string; identifier: string; containerId?: string | null }
+    }
+  | { type: "CLOSE_MOVE_DIALOG" }
+  | { type: "OPEN_DELETE_DIALOG"; payload: { id: string; identifier: string } }
+  | { type: "CLOSE_DELETE_DIALOG" }
 
 const initialMultiDialogState: MultiDialogState = {
   moveDialog: {
@@ -83,9 +86,12 @@ const initialMultiDialogState: MultiDialogState = {
   },
 }
 
-function multiDialogReducer(state: MultiDialogState, action: MultiDialogAction): MultiDialogState {
+function multiDialogReducer(
+  state: MultiDialogState,
+  action: MultiDialogAction
+): MultiDialogState {
   switch (action.type) {
-    case 'OPEN_MOVE_DIALOG':
+    case "OPEN_MOVE_DIALOG":
       return {
         ...state,
         moveDialog: {
@@ -93,7 +99,7 @@ function multiDialogReducer(state: MultiDialogState, action: MultiDialogAction):
           data: action.payload,
         },
       }
-    case 'CLOSE_MOVE_DIALOG':
+    case "CLOSE_MOVE_DIALOG":
       return {
         ...state,
         moveDialog: {
@@ -101,7 +107,7 @@ function multiDialogReducer(state: MultiDialogState, action: MultiDialogAction):
           data: null,
         },
       }
-    case 'OPEN_DELETE_DIALOG':
+    case "OPEN_DELETE_DIALOG":
       return {
         ...state,
         deleteDialog: {
@@ -109,7 +115,7 @@ function multiDialogReducer(state: MultiDialogState, action: MultiDialogAction):
           data: action.payload,
         },
       }
-    case 'CLOSE_DELETE_DIALOG':
+    case "CLOSE_DELETE_DIALOG":
       return {
         ...state,
         deleteDialog: {
@@ -124,22 +130,29 @@ function multiDialogReducer(state: MultiDialogState, action: MultiDialogAction):
 
 // Custom hook for managing multiple dialogs
 export function useMultiDialogState() {
-  const [state, dispatch] = useReducer(multiDialogReducer, initialMultiDialogState)
+  const [state, dispatch] = useReducer(
+    multiDialogReducer,
+    initialMultiDialogState
+  )
 
-  const openMoveDialog = (payload: { id: string; identifier: string; containerId?: string | null }) => {
-    dispatch({ type: 'OPEN_MOVE_DIALOG', payload })
+  const openMoveDialog = (payload: {
+    id: string
+    identifier: string
+    containerId?: string | null
+  }) => {
+    dispatch({ type: "OPEN_MOVE_DIALOG", payload })
   }
 
   const closeMoveDialog = () => {
-    dispatch({ type: 'CLOSE_MOVE_DIALOG' })
+    dispatch({ type: "CLOSE_MOVE_DIALOG" })
   }
 
   const openDeleteDialog = (payload: { id: string; identifier: string }) => {
-    dispatch({ type: 'OPEN_DELETE_DIALOG', payload })
+    dispatch({ type: "OPEN_DELETE_DIALOG", payload })
   }
 
   const closeDeleteDialog = () => {
-    dispatch({ type: 'CLOSE_DELETE_DIALOG' })
+    dispatch({ type: "CLOSE_DELETE_DIALOG" })
   }
 
   return {

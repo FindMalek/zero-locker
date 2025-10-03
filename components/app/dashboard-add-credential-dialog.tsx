@@ -3,6 +3,7 @@
 import { useState } from "react"
 import Image from "next/image"
 import { CredentialKeyValuePairEntity } from "@/entities/credential/credential-key-value"
+import { PlatformEntity } from "@/entities/utils/platform"
 import {
   useCreateCredentialWithMetadata,
   usePlatforms,
@@ -29,7 +30,6 @@ import {
   getPlaceholderImage,
   handleErrors,
 } from "@/lib/utils"
-import { PlatformEntity } from "@/entities/utils/platform"
 import { checkPasswordStrength } from "@/lib/utils/password-helpers"
 import { useAggressiveFormBlocker } from "@/hooks/use-aggressive-form-blocker"
 import { usePreventAutoSave } from "@/hooks/use-prevent-auto-save"
@@ -134,14 +134,14 @@ export function DashboardAddCredentialDialog({
     },
   })
 
-  const selectedPlatform = credentialForm.watch("platformId") 
+  const selectedPlatform = credentialForm.watch("platformId")
     ? PlatformEntity.findById(platforms, credentialForm.watch("platformId"))
     : null
 
   const getSelectedPlatformItem = () => {
     const platformId = credentialForm.watch("platformId")
     if (!platformId) return null
-    
+
     const platform = PlatformEntity.findById(platforms, platformId)
     return {
       value: platformId,

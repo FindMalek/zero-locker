@@ -21,7 +21,7 @@ import { KeyValuePair, User as UserType } from "@/types"
 
 import { PRIORITY_ACTIVITY_TYPE } from "@/config/consts"
 
-import { getRelativeTime, DateFormatter } from "../date-utils"
+import { DateFormatter, getRelativeTime } from "../date-utils"
 
 export * from "./card-expiry-helpers"
 export * from "./color-helpers"
@@ -340,7 +340,8 @@ export function getCreatedOrLastViewedText(
   date: Date | null,
   lastViewed: boolean
 ) {
-  if (!date) return `Created recently at ${DateFormatter.formatLongDate(new Date())}`
+  if (!date)
+    return `Created recently at ${DateFormatter.formatLongDate(new Date())}`
 
   if (!lastViewed)
     return `Created ${getRelativeTime(date).toLowerCase()} at ${DateFormatter.formatLongDate(date)}`

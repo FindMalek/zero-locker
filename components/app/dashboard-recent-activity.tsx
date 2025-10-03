@@ -75,7 +75,9 @@ export function DashboardRecentActivity({
                       <TooltipContent>
                         <span className="cursor-default">
                           {convertActivityTypeToString(item.activityType)} on{" "}
-                          {DateFormatter.formatFullDateTime(item.lastActivityAt)}{" "}
+                          {DateFormatter.formatFullDateTime(
+                            item.lastActivityAt
+                          )}{" "}
                         </span>
                       </TooltipContent>
                     </Tooltip>

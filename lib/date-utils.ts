@@ -15,7 +15,7 @@ export class DateFormatter {
    */
   static formatShortDate(date: Date | string | null): string {
     if (!date) return "Never"
-    
+
     const dateObj = typeof date === "string" ? new Date(date) : date
     return new Intl.DateTimeFormat("en-US", {
       month: "short",
@@ -30,7 +30,7 @@ export class DateFormatter {
    */
   static formatLongDate(date: Date | string | null): string {
     if (!date) return "Never"
-    
+
     const dateObj = typeof date === "string" ? new Date(date) : date
     return new Intl.DateTimeFormat("en-US", {
       month: "long",
@@ -45,7 +45,7 @@ export class DateFormatter {
    */
   static formatDateTime(date: Date | string | null): string {
     if (!date) return "Never"
-    
+
     const dateObj = typeof date === "string" ? new Date(date) : date
     return new Intl.DateTimeFormat("en-US", {
       month: "long",
@@ -63,7 +63,7 @@ export class DateFormatter {
    */
   static formatFullDateTime(date: Date | string | null): string {
     if (!date) return "Never"
-    
+
     const dateObj = typeof date === "string" ? new Date(date) : date
     return new Intl.DateTimeFormat("en-US", {
       month: "long",
@@ -82,7 +82,7 @@ export class DateFormatter {
    */
   static formatCompactDate(date: Date | string | null): string {
     if (!date) return "Never"
-    
+
     const dateObj = typeof date === "string" ? new Date(date) : date
     return new Intl.DateTimeFormat("en-US", {
       month: "2-digit",
@@ -97,13 +97,15 @@ export class DateFormatter {
    */
   static formatISODate(date: Date | string | null): string {
     if (!date) return "Never"
-    
+
     const dateObj = typeof date === "string" ? new Date(date) : date
     return new Intl.DateTimeFormat("en-US", {
       year: "numeric",
       month: "2-digit",
       day: "2-digit",
-    }).format(dateObj).replace(/\//g, "-")
+    })
+      .format(dateObj)
+      .replace(/\//g, "-")
   }
 }
 

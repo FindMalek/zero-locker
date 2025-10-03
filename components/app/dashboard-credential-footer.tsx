@@ -14,7 +14,10 @@ export function CredentialFooter({ credential }: CredentialFooterProps) {
   return (
     <div className="text-muted-foreground border-border flex items-center gap-2 border-t pt-6 text-xs">
       <Icons.user className="size-4" />
-      <span>Created by System Admin • {DateFormatter.formatLongDate(credential.createdAt)}</span>
+      <span>
+        Created by System Admin •{" "}
+        {DateFormatter.formatLongDate(credential.createdAt)}
+      </span>
     </div>
   )
 }

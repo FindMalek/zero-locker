@@ -1,8 +1,8 @@
-import { z } from "zod"
-import type { CredentialOutput } from "@/schemas/credential/dto"
 import type { CardOutput } from "@/schemas/card/dto"
+import type { CredentialOutput } from "@/schemas/credential/dto"
 import type { SecretOutput } from "@/schemas/secrets/dto"
 import type { PlatformSimpleRo } from "@/schemas/utils/platform"
+import { z } from "zod"
 
 // Breadcrumb item schemas for navigation components
 export const BreadcrumbCredentialItemSchema = z.object({
@@ -34,7 +34,9 @@ export const BreadcrumbItemSchema = z.discriminatedUnion("type", [
 ])
 
 // Export types
-export type BreadcrumbCredentialItem = z.infer<typeof BreadcrumbCredentialItemSchema>
+export type BreadcrumbCredentialItem = z.infer<
+  typeof BreadcrumbCredentialItemSchema
+>
 export type BreadcrumbCardItem = z.infer<typeof BreadcrumbCardItemSchema>
 export type BreadcrumbSecretItem = z.infer<typeof BreadcrumbSecretItemSchema>
 export type BreadcrumbItem = z.infer<typeof BreadcrumbItemSchema>

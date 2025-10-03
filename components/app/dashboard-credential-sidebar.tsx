@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { PlatformEntity } from "@/entities/utils/platform"
 import { usePlatforms } from "@/orpc/hooks/use-platforms"
 import { AccountStatusInfer } from "@/schemas/credential/credential"
 import type { CredentialOutput } from "@/schemas/credential/dto"
@@ -8,7 +9,6 @@ import { EntityTypeEnum } from "@/schemas/utils"
 
 import { statusConfig } from "@/config/converter"
 import { getFullFormattedDateAndTime, getRelativeTime } from "@/lib/date-utils"
-import { PlatformEntity } from "@/entities/utils/platform"
 
 import { ContainerSelector } from "@/components/shared/container-selector"
 import { Icons } from "@/components/shared/icons"
@@ -43,7 +43,7 @@ export function CredentialSidebar({
 
   const { data: platformsData } = usePlatforms({ page: 1, limit: 100 })
 
-  const platform = platformsData?.platforms 
+  const platform = platformsData?.platforms
     ? PlatformEntity.findById(platformsData.platforms, credential.platformId)
     : null
 

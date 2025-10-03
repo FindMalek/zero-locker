@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
+import { PlatformEntity } from "@/entities/utils/platform"
 import {
   useCredential,
   useCredentialSecuritySettings,
@@ -23,7 +24,6 @@ import { AccountStatus } from "@prisma/client"
 import { useForm } from "react-hook-form"
 
 import { handleErrors } from "@/lib/utils"
-import { PlatformEntity } from "@/entities/utils/platform"
 import { useToast } from "@/hooks/use-toast"
 
 import { DashboardCredentialDetailSkeleton } from "@/components/app/dashboard-credential-detail-skeleton"
@@ -242,18 +242,17 @@ export function CredentialDetailView({
     )
   }
 
-  const platform = PlatformEntity.findById(initialData.platforms.platforms, credential.platformId)
+  const platform = PlatformEntity.findById(
+    initialData.platforms.platforms,
+    credential.platformId
+  )
 
   return (
     <div className="bg-background min-h-screen">
       <div className="mx-auto max-w-6xl p-4">
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-4">
           <div className="space-y-6 lg:col-span-3">
-            <CredentialHeader
-              credential={credential}
-              platform={platform}
-              onDelete={handleDelete}
-            />
+            <CredentialHeader credential={credential} platform={platform} />
             <Separator />
             <CredentialForm
               credential={credential}
