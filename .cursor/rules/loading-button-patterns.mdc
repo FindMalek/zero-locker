@@ -1,0 +1,146 @@
+---
+alwaysApply: true
+---
+
+# Loading Button Patterns
+
+## Form Management Rules
+
+### Always Use React Hook Form + Zod + shadcn Forms
+- **Never use useState for form state** - always use React Hook Form
+- **Always use Zod schemas** for validation with zodResolver
+- **Always use shadcn Form components** (Form, FormField, FormItem, FormLabel, FormControl, FormMessage)
+- **Example pattern**:
+```tsx
+const schema = z.object({
+  fieldName: z.string().min(1, "Field is required"),
+})
+type FormData = z.infer<typeof schema>
+
+const form = useForm<FormData>({
+  resolver: zodResolver(schema),
+  defaultValues: { fieldName: "" },
+})
+
+return (
+  <Form {...form}>
+    <form onSubmit={form.handleSubmit(handleSubmit)}>
+      <FormField
+        control={form.control}
+        name="fieldName"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Label</FormLabel>
+            <FormControl>
+              <Input {...field} />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+    </form>
+  </Form>
+)
+```
+
+## Loading State Rules
+
+### Always Use Icons.spinner for Loading States
+- **Never use text like "Deleting..." or "Loading..."**
+- **Always use Icons.spinner with animate-spin class**
+- **Use size-4 instead of h-4 w-4** (TailwindCSS convention)
+- **Example pattern**:
+```tsx
+{isLoading && (
+  <Icons.spinner className="mr-2 size-4 animate-spin" />
+)}
+Action Text
+```
+
+### Button Loading States
+- **Disable buttons during loading**: `disabled={isLoading}`
+- **Show spinner + text**: `<Icons.spinner className="mr-2 size-4 animate-spin" />`
+- **Use proper button variants**: `variant="destructive"` for delete actions
+- **Add disabled opacity**: `className="disabled:opacity-50"`
+- **Example pattern**:
+```tsx
+<Button
+  onClick={handleAction}
+  disabled={isLoading}
+  variant="destructive"
+  className="disabled:opacity-50"
+>
+  {isLoading && (
+    <Icons.spinner className="mr-2 size-4 animate-spin" />
+  )}
+  Delete
+</Button>
+```
+
+### Complete Loading Button Example
+```tsx
+// ✅ Do - Complete pattern
+const form = useForm<FormData>({
+  resolver: zodResolver(schema),
+  defaultValues: { confirmationText: "" },
+})
+
+const isLoading = mutation.isPending
+
+return (
+  <Form {...form}>
+    <form onSubmit={form.handleSubmit(handleSubmit)}>
+      <FormField
+        control={form.control}
+        name="confirmationText"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Confirmation</FormLabel>
+            <FormControl>
+              <Input {...field} />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+    </form>
+  </Form>
+  
+  <Button
+    onClick={form.handleSubmit(handleSubmit)}
+    disabled={isLoading}
+    variant="destructive"
+    className="disabled:opacity-50"
+  >
+    {isLoading && (
+      <Icons.spinner className="mr-2 size-4 animate-spin" />
+    )}
+    Delete
+  </Button>
+)
+```
+
+### Anti-Patterns to Avoid
+```tsx
+// ❌ Avoid - Text-based loading states
+{isLoading ? "Deleting..." : "Delete"}
+
+// ❌ Avoid - useState for form state
+const [formData, setFormData] = useState({})
+
+// ❌ Avoid - Manual form validation
+if (!isValid) {
+  setError("Invalid input")
+  return
+}
+
+// ❌ Avoid - h-4 w-4 instead of size-4
+<Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
+```
+
+## Key Principles
+1. **Consistency**: Always use the same loading pattern across all buttons
+2. **Accessibility**: Disabled states prevent accidental double-clicks
+3. **Visual Feedback**: Spinner provides clear loading indication
+4. **Form Validation**: Proper validation prevents invalid submissions
+5. **Type Safety**: Full TypeScript coverage with Zod schemas

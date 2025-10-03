@@ -1223,7 +1223,8 @@ export const duplicateCredential = authProcedure
       },
     })
 
-    const originalKeyValuePairs = keyValueData?.metadata?.[0]?.keyValuePairs || []
+    const originalKeyValuePairs =
+      keyValueData?.metadata?.[0]?.keyValuePairs || []
 
     // Create the duplicate with a modified identifier
     const duplicateIdentifier = `${originalCredential.identifier} (Copy)`
@@ -1265,9 +1266,12 @@ export const duplicateCredential = authProcedure
         })
 
         // Create metadata for the duplicated credential
-        if (originalCredential.metadata && originalCredential.metadata.length > 0) {
+        if (
+          originalCredential.metadata &&
+          originalCredential.metadata.length > 0
+        ) {
           const originalMetadata = originalCredential.metadata[0]
-          
+
           const newMetadata = await tx.credentialMetadata.create({
             data: {
               credentialId: newCredential.id,
@@ -1279,7 +1283,7 @@ export const duplicateCredential = authProcedure
                       kvPair.valueEncryption.encryptionKey,
                       kvPair.valueEncryption.iv
                     )
-                    
+
                     // Create new encrypted data for the value
                     const valueEncryptionResult = await createEncryptedData(
                       {
@@ -1289,11 +1293,13 @@ export const duplicateCredential = authProcedure
                       },
                       tx
                     )
-                    
+
                     return {
                       key: kvPair.key,
                       valueEncryption: {
-                        connect: { id: valueEncryptionResult.encryptedData!.id },
+                        connect: {
+                          id: valueEncryptionResult.encryptedData!.id,
+                        },
                       },
                     }
                   })

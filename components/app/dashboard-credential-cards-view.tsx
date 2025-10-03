@@ -1,7 +1,12 @@
 "use client"
 
+import { useState } from "react"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
+import {
+  useDuplicateCredential,
+  useUpdateCredential,
+} from "@/orpc/hooks/use-credentials"
 import type { CredentialIncludeOutput } from "@/schemas/credential/dto"
 import type { PlatformSimpleRo } from "@/schemas/utils/platform"
 
@@ -12,12 +17,10 @@ import {
   getPlaceholderImage,
 } from "@/lib/utils"
 import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard"
-import { useDuplicateCredential, useUpdateCredential } from "@/orpc/hooks/use-credentials"
 import { useToast } from "@/hooks/use-toast"
-import { useState } from "react"
-import { DashboardMoveCredentialDialog } from "@/components/app/dashboard-credential-move-dialog"
-import { DashboardDeleteCredentialDialog } from "@/components/app/dashboard-credential-delete-dialog"
 
+import { DashboardDeleteCredentialDialog } from "@/components/app/dashboard-credential-delete-dialog"
+import { DashboardMoveCredentialDialog } from "@/components/app/dashboard-credential-move-dialog"
 import { Icons } from "@/components/shared/icons"
 import { ItemActionsContextMenu } from "@/components/shared/item-actions-dropdown"
 import { StatusBadge } from "@/components/shared/status-badge"
@@ -48,12 +51,12 @@ export function DashboardCredentialCardsView({
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [credentialToDelete, setCredentialToDelete] = useState<{
     id: string
-    name: string
+    identifier: string
   } | null>(null)
   const [moveDialogOpen, setMoveDialogOpen] = useState(false)
   const [credentialToMove, setCredentialToMove] = useState<{
     id: string
-    name: string
+    identifier: string
     containerId?: string | null
   } | null>(null)
 
@@ -81,22 +84,20 @@ export function DashboardCredentialCardsView({
 
   const handleDuplicate = async (credentialId: string) => {
     try {
-      const duplicatedCredential = await duplicateCredentialMutation.mutateAsync({
-        id: credentialId,
-      })
-      
+      const duplicatedCredential =
+        await duplicateCredentialMutation.mutateAsync({
+          id: credentialId,
+        })
+
       toast(
         `"${duplicatedCredential.identifier}" has been created successfully.`,
         "success"
       )
 
-      // Navigate to the duplicated credential's edit page
       router.push(`/dashboard/accounts/${duplicatedCredential.id}`)
     } catch (error) {
-      toast(
-        "Failed to duplicate credential. Please try again later.",
-        "error"
-      )
+      console.log(error)
+      toast("Failed to duplicate credential. Please try again later.", "error")
     }
   }
 
@@ -106,16 +107,11 @@ export function DashboardCredentialCardsView({
         id: credentialId,
         status: "SUSPENDED",
       })
-      
-      toast(
-        "The credential has been archived successfully.",
-        "success"
-      )
+
+      toast("The credential has been archived successfully.", "success")
     } catch (error) {
-      toast(
-        "Failed to archive credential. Please try again later.",
-        "error"
-      )
+      console.log(error)
+      toast("Failed to archive credential. Please try again later.", "error")
     }
   }
 
@@ -126,19 +122,23 @@ export function DashboardCredentialCardsView({
     )
   }
 
-  const handleMove = (credentialId: string, credentialName: string, containerId?: string | null) => {
+  const handleMove = (
+    credentialId: string,
+    credentialIdentifier: string,
+    containerId?: string | null
+  ) => {
     setCredentialToMove({
       id: credentialId,
-      name: credentialName,
+      identifier: credentialIdentifier,
       containerId,
     })
     setMoveDialogOpen(true)
   }
 
-  const handleDelete = (credentialId: string, credentialName: string) => {
+  const handleDelete = (credentialId: string, credentialIdentifier: string) => {
     setCredentialToDelete({
       id: credentialId,
-      name: credentialName,
+      identifier: credentialIdentifier,
     })
     setDeleteDialogOpen(true)
   }
@@ -160,7 +160,11 @@ export function DashboardCredentialCardsView({
               handleDuplicate(credential.id)
             }}
             onMove={() => {
-              handleMove(credential.id, credential.identifier, credential.containerId)
+              handleMove(
+                credential.id,
+                credential.identifier,
+                credential.containerId
+              )
             }}
             onArchive={() => {
               handleArchive(credential.id)
@@ -249,13 +253,13 @@ export function DashboardCredentialCardsView({
           </ItemActionsContextMenu>
         )
       })}
-      
+
       {credentialToDelete && (
         <DashboardDeleteCredentialDialog
           open={deleteDialogOpen}
           onOpenChange={setDeleteDialogOpen}
           credentialId={credentialToDelete.id}
-          credentialName={credentialToDelete.name}
+          credentialIdentifier={credentialToDelete.identifier}
         />
       )}
 
@@ -264,7 +268,7 @@ export function DashboardCredentialCardsView({
           open={moveDialogOpen}
           onOpenChange={setMoveDialogOpen}
           credentialId={credentialToMove.id}
-          credentialName={credentialToMove.name}
+          credentialIdentifier={credentialToMove.identifier}
           currentContainerId={credentialToMove.containerId}
         />
       )}

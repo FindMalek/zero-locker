@@ -157,7 +157,7 @@ export function EncryptedKeyValueDisplay<T extends BaseKeyValuePair>({
         toast("Failed to decrypt value. Please try again.", "error")
       }
     },
-    [value, credentialId, queryClient]
+    [value, credentialId, queryClient, toast]
   )
 
   const getDisplayValueForPair = useCallback(

@@ -89,17 +89,16 @@ export function BreadcrumbResourceSelect({
     shouldFetchSecrets && !!currentId ? currentId : ""
   )
 
-  const getPlatform = (platformId: string) => {
-    return (
-      platforms?.platforms.find((p) => p.id === platformId) || {
-        id: platformId,
-        name: "unknown",
-        logo: "",
-      }
-    )
-  }
-
   const { items, isLoading, currentItem } = useMemo(() => {
+    const getPlatform = (platformId: string) => {
+      return (
+        platforms?.platforms.find((p) => p.id === platformId) || {
+          id: platformId,
+          name: "unknown",
+          logo: "",
+        }
+      )
+    }
     let baseItems: Array<{
       id: string
       name: string
@@ -200,7 +199,7 @@ export function BreadcrumbResourceSelect({
     individualCredential,
     individualCard,
     individualSecret,
-    getPlatform,
+    platforms,
   ])
 
   const handleSelect = (newId: string) => {

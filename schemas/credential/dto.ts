@@ -55,7 +55,9 @@ export type UpdateCredentialPasswordInput = z.infer<
   typeof updateCredentialPasswordInputSchema
 >
 export type DeleteCredentialInput = z.infer<typeof deleteCredentialInputSchema>
-export type DuplicateCredentialInput = z.infer<typeof duplicateCredentialInputSchema>
+export type DuplicateCredentialInput = z.infer<
+  typeof duplicateCredentialInputSchema
+>
 export type ListCredentialsInput = z.infer<typeof listCredentialsInputSchema>
 
 export type CredentialOutput = z.infer<typeof credentialOutputSchema>
