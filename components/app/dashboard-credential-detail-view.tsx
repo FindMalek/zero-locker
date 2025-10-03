@@ -23,6 +23,7 @@ import { AccountStatus } from "@prisma/client"
 import { useForm } from "react-hook-form"
 
 import { handleErrors } from "@/lib/utils"
+import { PlatformEntity } from "@/entities/utils/platform"
 import { useToast } from "@/hooks/use-toast"
 
 import { DashboardCredentialDetailSkeleton } from "@/components/app/dashboard-credential-detail-skeleton"
@@ -241,23 +242,7 @@ export function CredentialDetailView({
     )
   }
 
-  const platform = initialData.platforms.platforms.find(
-    (p) => p.id === credential.platformId
-  )
-
-  if (!platform) {
-    return (
-      <div className="flex min-h-[400px] items-center justify-center">
-        <EmptyState
-          icon={() => <Icons.warning className="size-12" />}
-          title="Platform unavailable"
-          description="We couldn't load platform info for this credential."
-          actionLabel="Go back"
-          onAction={() => router.back()}
-        />
-      </div>
-    )
-  }
+  const platform = PlatformEntity.findById(initialData.platforms.platforms, credential.platformId)
 
   return (
     <div className="bg-background min-h-screen">

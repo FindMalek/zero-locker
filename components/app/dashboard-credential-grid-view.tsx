@@ -8,10 +8,12 @@ import {
 } from "@/orpc/hooks/use-credentials"
 import type { CredentialOutput } from "@/schemas/credential/dto"
 import type { PlatformSimpleRo } from "@/schemas/utils/platform"
-import { format } from "date-fns"
+import { DateFormatter } from "@/lib/date-utils"
 
 import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard"
 import { useToast } from "@/hooks/use-toast"
+import { PlatformEntity } from "@/entities/utils/platform"
+import { accountStatusEnum } from "@/schemas/credential"
 
 import { DashboardDeleteCredentialDialog } from "@/components/app/dashboard-credential-delete-dialog"
 import { DashboardMoveCredentialDialog } from "@/components/app/dashboard-credential-move-dialog"
@@ -31,10 +33,11 @@ export function DashboardCredentialGridView({
   platforms,
 }: CredentialGridViewProps) {
   const router = useRouter()
-  const { copy, isCopied } = useCopyToClipboard({ successDuration: 1000 })
   const { toast } = useToast()
-  const duplicateCredentialMutation = useDuplicateCredential()
   const updateCredentialMutation = useUpdateCredential()
+  const duplicateCredentialMutation = useDuplicateCredential()
+  const { copy, isCopied } = useCopyToClipboard({ successDuration: 1000 })
+
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [credentialToDelete, setCredentialToDelete] = useState<{
     id: string
@@ -46,15 +49,6 @@ export function DashboardCredentialGridView({
     identifier: string
     containerId?: string | null
   } | null>(null)
-
-  const getPlatformName = (platformId: string) => {
-    const platform = platforms.find((p) => p.id === platformId)
-    return platform?.name || "Unknown Platform"
-  }
-
-  const handleCopy = async (text: string) => {
-    await copy(text)
-  }
 
   const handleDuplicate = async (credentialId: string) => {
     try {
@@ -80,7 +74,7 @@ export function DashboardCredentialGridView({
     try {
       await updateCredentialMutation.mutateAsync({
         id: credentialId,
-        status: "SUSPENDED",
+        status: accountStatusEnum.ARCHIVED,
       })
 
       toast("The credential has been archived successfully.", "success")
@@ -133,7 +127,7 @@ export function DashboardCredentialGridView({
                     {credential.identifier}
                   </h3>
                   <p className="text-xs text-gray-500">
-                    {getPlatformName(credential.platformId)}
+                    {PlatformEntity.findById(platforms, credential.platformId).name}
                   </p>
                 </div>
               </div>
@@ -152,15 +146,13 @@ export function DashboardCredentialGridView({
               <div className="flex justify-between">
                 <span>Created:</span>
                 <span>
-                  {format(new Date(credential.createdAt), "MMM dd, yyyy")}
+                  {DateFormatter.formatShortDate(credential.createdAt)}
                 </span>
               </div>
               <div className="flex justify-between">
                 <span>Last Viewed:</span>
                 <span>
-                  {credential.lastViewed
-                    ? format(new Date(credential.lastViewed), "MMM dd, yyyy")
-                    : "Never"}
+                  {DateFormatter.formatShortDate(credential.lastViewed)}
                 </span>
               </div>
             </div>
@@ -169,7 +161,7 @@ export function DashboardCredentialGridView({
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => handleCopy(credential.identifier)}
+                onClick={() => copy(credential.identifier)}
               >
                 {isCopied ? (
                   <Icons.check className="size-4" />

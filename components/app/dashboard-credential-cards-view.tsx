@@ -1,6 +1,5 @@
 "use client"
 
-import { useState } from "react"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
 import {
@@ -16,7 +15,9 @@ import {
   getLogoDevUrlWithToken,
   getPlaceholderImage,
 } from "@/lib/utils"
+import { PlatformEntity } from "@/entities/utils/platform"
 import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard"
+import { useMultiDialogState } from "@/hooks/use-dialog-state"
 import { useToast } from "@/hooks/use-toast"
 
 import { DashboardDeleteCredentialDialog } from "@/components/app/dashboard-credential-delete-dialog"
@@ -42,41 +43,15 @@ export function DashboardCredentialCardsView({
   platforms,
 }: CredentialListViewProps) {
   const router = useRouter()
+  const { toast } = useToast()
+  const dialogs = useMultiDialogState()
+
+  const updateCredentialMutation = useUpdateCredential()
+  const duplicateCredentialMutation = useDuplicateCredential()
+  
   const { copy, isCopied } = useCopyToClipboard({
     successDuration: 1000,
   })
-  const { toast } = useToast()
-  const updateCredentialMutation = useUpdateCredential()
-  const duplicateCredentialMutation = useDuplicateCredential()
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-  const [credentialToDelete, setCredentialToDelete] = useState<{
-    id: string
-    identifier: string
-  } | null>(null)
-  const [moveDialogOpen, setMoveDialogOpen] = useState(false)
-  const [credentialToMove, setCredentialToMove] = useState<{
-    id: string
-    identifier: string
-    containerId?: string | null
-  } | null>(null)
-
-  const getPlatform = (platformId: string) => {
-    return (
-      platforms.find((p) => p.id === platformId) || {
-        id: platformId,
-        name: "unknown",
-        logo: "",
-      }
-    )
-  }
-
-  const handleCopyIdentifier = async (
-    identifier: string,
-    e?: React.MouseEvent
-  ) => {
-    e?.stopPropagation()
-    await copy(identifier)
-  }
 
   const handleCardClick = (credentialId: string) => {
     router.push(`/dashboard/accounts/${credentialId}`)
@@ -127,27 +102,25 @@ export function DashboardCredentialCardsView({
     credentialIdentifier: string,
     containerId?: string | null
   ) => {
-    setCredentialToMove({
+    dialogs.moveDialog.open({
       id: credentialId,
       identifier: credentialIdentifier,
       containerId,
     })
-    setMoveDialogOpen(true)
   }
 
   const handleDelete = (credentialId: string, credentialIdentifier: string) => {
-    setCredentialToDelete({
+    dialogs.deleteDialog.open({
       id: credentialId,
       identifier: credentialIdentifier,
     })
-    setDeleteDialogOpen(true)
   }
 
   return (
     <div className="space-y-3">
-      {credentials.map((credential) => {
-        const platform = getPlatform(credential.platformId)
-        const primaryDate = credential.lastViewed || credential.createdAt
+        {credentials.map((credential) => {
+          const platform = PlatformEntity.findById(platforms, credential.platformId)
+          const primaryDate = credential.lastViewed || credential.createdAt
 
         return (
           <ItemActionsContextMenu
@@ -206,8 +179,8 @@ export function DashboardCredentialCardsView({
                       variant="ghost"
                       size="sm"
                       className="hover:text-primary  opacity-0 transition-all group-hover/identifier:opacity-100"
-                      onClick={(e) =>
-                        handleCopyIdentifier(credential.identifier, e)
+                      onClick={async () =>
+                       await copy(credential.identifier)
                       }
                     >
                       {isCopied ? (
@@ -254,22 +227,30 @@ export function DashboardCredentialCardsView({
         )
       })}
 
-      {credentialToDelete && (
+      {dialogs.deleteDialog.data && (
         <DashboardDeleteCredentialDialog
-          open={deleteDialogOpen}
-          onOpenChange={setDeleteDialogOpen}
-          credentialId={credentialToDelete.id}
-          credentialIdentifier={credentialToDelete.identifier}
+          open={dialogs.deleteDialog.isOpen}
+          onOpenChange={(open) => {
+            if (!open) {
+              dialogs.deleteDialog.close()
+            }
+          }}
+          credentialId={dialogs.deleteDialog.data.id}
+          credentialIdentifier={dialogs.deleteDialog.data.identifier}
         />
       )}
 
-      {credentialToMove && (
+      {dialogs.moveDialog.data && (
         <DashboardMoveCredentialDialog
-          open={moveDialogOpen}
-          onOpenChange={setMoveDialogOpen}
-          credentialId={credentialToMove.id}
-          credentialIdentifier={credentialToMove.identifier}
-          currentContainerId={credentialToMove.containerId}
+          open={dialogs.moveDialog.isOpen}
+          onOpenChange={(open) => {
+            if (!open) {
+              dialogs.moveDialog.close()
+            }
+          }}
+          credentialId={dialogs.moveDialog.data.id}
+          credentialIdentifier={dialogs.moveDialog.data.identifier}
+          currentContainerId={dialogs.moveDialog.data.containerId}
         />
       )}
     </div>

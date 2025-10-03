@@ -7,8 +7,10 @@ import { useCard, useCards } from "@/orpc/hooks/use-cards"
 import { useCredential, useCredentials } from "@/orpc/hooks/use-credentials"
 import { usePlatforms } from "@/orpc/hooks/use-platforms"
 import { useSecret, useSecrets } from "@/orpc/hooks/use-secrets"
+import type { BreadcrumbItem } from "@/schemas/utils/breadcrumb"
 
 import { getLogoDevUrlWithToken, getPlaceholderImage } from "@/lib/utils"
+import { PlatformEntity } from "@/entities/utils/platform"
 import type { ResourceType } from "@/lib/utils/breadcrumb-helpers"
 
 import { Icons } from "@/components/shared/icons"
@@ -76,7 +78,6 @@ export function BreadcrumbResourceSelect({
     { enabled: shouldFetchCredentials }
   )
 
-  // Fetch individual resources when they're not found in the list
   const { data: individualCredential } = useCredential(currentId, {
     enabled: shouldFetchCredentials && !!currentId,
   })
@@ -91,24 +92,16 @@ export function BreadcrumbResourceSelect({
 
   const { items, isLoading, currentItem } = useMemo(() => {
     const getPlatform = (platformId: string) => {
-      return (
-        platforms?.platforms.find((p) => p.id === platformId) || {
-          id: platformId,
-          name: "unknown",
-          logo: "",
-        }
-      )
+      if (!platforms?.platforms) {
+        throw new Error("Platforms not loaded")
+      }
+
+      return PlatformEntity.findById(platforms.platforms, platformId)
     }
-    let baseItems: Array<{
-      id: string
-      name: string
-      logo?: string
-      platformName?: string
-    }> = []
+
+    let baseItems: BreadcrumbItem[] = []
     let loading = false
-    let current:
-      | { id: string; name: string; logo?: string; platformName?: string }
-      | undefined
+    let current: BreadcrumbItem | undefined
 
     switch (resourceType) {
       case "accounts":
@@ -117,25 +110,25 @@ export function BreadcrumbResourceSelect({
           baseItems = credentials.credentials.map((cred) => {
             const platform = getPlatform(cred.platformId)
             return {
-              id: cred.id,
-              name: cred.identifier,
-              logo: platform.logo,
-              platformName: platform.name,
+              type: "credential",
+              data: {
+                credential: cred,
+                platform: platform,
+              }
             }
           })
         }
 
-        // Check if current item is in the list
-        current = baseItems.find((item) => item.id === currentId)
+        current = baseItems.find((item) => getItemId(item) === currentId)
 
-        // If not found and we have individual data, add it to the list
         if (!current && individualCredential) {
           const platform = getPlatform(individualCredential.platformId)
           current = {
-            id: individualCredential.id,
-            name: individualCredential.identifier,
-            logo: platform.logo,
-            platformName: platform.name,
+            type: "credential",
+            data: {
+              credential: individualCredential,
+              platform: platform,
+            }
           }
           baseItems = [current, ...baseItems]
         }
@@ -145,17 +138,21 @@ export function BreadcrumbResourceSelect({
         loading = isLoadingCards
         if (cards?.cards) {
           baseItems = cards.cards.map((card) => ({
-            id: card.id,
-            name: card.name,
+            type: "card",
+            data: {
+              card: card,
+            }
           }))
         }
 
-        current = baseItems.find((item) => item.id === currentId)
+        current = baseItems.find((item) => getItemId(item) === currentId)
 
         if (!current && individualCard) {
           current = {
-            id: individualCard.id,
-            name: individualCard.name,
+            type: "card",
+            data: {
+              card: individualCard,
+            }
           }
           baseItems = [current, ...baseItems]
         }
@@ -165,17 +162,21 @@ export function BreadcrumbResourceSelect({
         loading = isLoadingSecrets
         if (secrets?.secrets) {
           baseItems = secrets.secrets.map((secret) => ({
-            id: secret.id,
-            name: secret.name,
+            type: "secret",
+            data: {
+              secret: secret,
+            }
           }))
         }
 
-        current = baseItems.find((item) => item.id === currentId)
+        current = baseItems.find((item) => getItemId(item) === currentId)
 
         if (!current && individualSecret) {
           current = {
-            id: individualSecret.id,
-            name: individualSecret.name,
+            type: "secret",
+            data: {
+              secret: individualSecret,
+            }
           }
           baseItems = [current, ...baseItems]
         }
@@ -207,6 +208,51 @@ export function BreadcrumbResourceSelect({
       router.push(`${basePath}/${newId}`)
     }
     setOpen(false)
+  }
+
+  // Helper functions to extract display properties from typed items
+  const getItemId = (item: BreadcrumbItem): string => {
+    switch (item.type) {
+      case "credential":
+        return item.data.credential.id
+      case "card":
+        return item.data.card.id
+      case "secret":
+        return item.data.secret.id
+    }
+  }
+
+  const getItemDisplayName = (item: BreadcrumbItem): string => {
+    switch (item.type) {
+      case "credential":
+        return item.data.credential.identifier
+      case "card":
+        return item.data.card.name
+      case "secret":
+        return item.data.secret.name
+    }
+  }
+
+  const getItemLogo = (item: BreadcrumbItem): string | undefined => {
+    switch (item.type) {
+      case "credential":
+        return item.data.platform.logo
+      case "card":
+        return undefined // Cards don't have logos
+      case "secret":
+        return undefined // Secrets don't have logos
+    }
+  }
+
+  const getItemPlatformName = (item: BreadcrumbItem): string | undefined => {
+    switch (item.type) {
+      case "credential":
+        return item.data.platform.name
+      case "card":
+        return undefined
+      case "secret":
+        return undefined
+    }
   }
 
   if (isLoading) {
@@ -253,19 +299,19 @@ export function BreadcrumbResourceSelect({
           className="hover:bg-accent hover:text-accent-foreground h-auto justify-between border-0 bg-transparent p-0 font-medium focus:ring-0 focus:ring-offset-0"
         >
           <div className="flex max-w-[200px] items-center gap-2 truncate">
-            {currentItem.logo && (
+            {getItemLogo(currentItem) && (
               <Image
                 src={getPlaceholderImage(
-                  currentItem.platformName || "unknown",
-                  getLogoDevUrlWithToken(currentItem.logo)
+                  getItemPlatformName(currentItem) || "unknown",
+                  getLogoDevUrlWithToken(getItemLogo(currentItem)!)
                 )}
-                alt={`${currentItem.platformName || "unknown"} logo`}
+                alt={`${getItemPlatformName(currentItem) || "unknown"} logo`}
                 width={16}
                 height={16}
                 className="bg-secondary size-4 shrink-0 rounded-full object-contain p-0.5"
               />
             )}
-            <span className="truncate">{currentItem.name}</span>
+            <span className="truncate">{getItemDisplayName(currentItem)}</span>
           </div>
           <Icons.chevronDown className="ml-2 size-4 shrink-0 opacity-50" />
         </Button>
@@ -278,26 +324,26 @@ export function BreadcrumbResourceSelect({
             <CommandGroup>
               {items.map((item) => (
                 <CommandItem
-                  key={item.id}
-                  value={item.name}
-                  onSelect={() => handleSelect(item.id)}
+                  key={getItemId(item)}
+                  value={getItemDisplayName(item)}
+                  onSelect={() => handleSelect(getItemId(item))}
                   className="cursor-pointer"
                 >
                   <div className="flex w-full items-center gap-2">
-                    {item.logo && (
+                    {getItemLogo(item) && (
                       <Image
                         src={getPlaceholderImage(
-                          item.platformName || "unknown",
-                          getLogoDevUrlWithToken(item.logo)
+                          getItemPlatformName(item) || "unknown",
+                          getLogoDevUrlWithToken(getItemLogo(item)!)
                         )}
-                        alt={`${item.platformName || "unknown"} logo`}
+                        alt={`${getItemPlatformName(item) || "unknown"} logo`}
                         width={16}
                         height={16}
                         className="bg-secondary size-4 shrink-0 rounded-full object-contain p-0.5"
                       />
                     )}
-                    <span className="flex-1 truncate">{item.name}</span>
-                    {item.id === currentId && (
+                    <span className="flex-1 truncate">{getItemDisplayName(item)}</span>
+                    {getItemId(item) === currentId && (
                       <Icons.check className="text-primary size-4 shrink-0" />
                     )}
                   </div>
