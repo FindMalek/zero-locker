@@ -8,7 +8,6 @@ import type { PlatformSimpleRo } from "@/schemas/utils/platform"
 
 import { DateFormatter } from "@/lib/date-utils"
 import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard"
-import { useMultiDialogState } from "@/hooks/use-dialog-state"
 
 import { DashboardDeleteCredentialDialog } from "@/components/app/dashboard-credential-delete-dialog"
 import { DashboardMoveCredentialDialog } from "@/components/app/dashboard-credential-move-dialog"
@@ -28,7 +27,6 @@ export function DashboardCredentialGridView({
   platforms,
 }: CredentialGridViewProps) {
   const router = useRouter()
-  const dialogs = useMultiDialogState()
   const { copy, isCopied } = useCopyToClipboard({
     successDuration: 1000,
   })
@@ -112,33 +110,6 @@ export function DashboardCredentialGridView({
           </Card>
         )
       })}
-
-      {dialogs.deleteDialog.data && (
-        <DashboardDeleteCredentialDialog
-          open={dialogs.deleteDialog.isOpen}
-          onOpenChange={(open) => {
-            if (!open) {
-              dialogs.deleteDialog.close()
-            }
-          }}
-          credentialId={dialogs.deleteDialog.data.id}
-          credentialIdentifier={dialogs.deleteDialog.data.identifier}
-        />
-      )}
-
-      {dialogs.moveDialog.data && (
-        <DashboardMoveCredentialDialog
-          open={dialogs.moveDialog.isOpen}
-          onOpenChange={(open) => {
-            if (!open) {
-              dialogs.moveDialog.close()
-            }
-          }}
-          credentialId={dialogs.moveDialog.data.id}
-          credentialIdentifier={dialogs.moveDialog.data.identifier}
-          currentContainerId={dialogs.moveDialog.data.containerId}
-        />
-      )}
     </div>
   )
 }

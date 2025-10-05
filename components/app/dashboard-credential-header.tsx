@@ -60,6 +60,7 @@ export function CredentialHeader({
           credentialId={credential.id}
           credentialIdentifier={credential.identifier}
           containerId={credential.containerId}
+          shouldRedirect={true}
         />
       </div>
     </div>

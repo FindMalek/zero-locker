@@ -5,9 +5,9 @@ import {
   useUpdateCredential,
 } from "@/orpc/hooks/use-credentials"
 
-import { useMultiDialogState } from "@/hooks/use-dialog-state"
 import { useToast } from "@/hooks/use-toast"
 
+import { DashboardDeleteCredentialDialog } from "@/components/app/dashboard-credential-delete-dialog"
 import { DashboardQrCodeDialog } from "@/components/app/dashboard-qr-code-dialog"
 import { Icons } from "@/components/shared/icons"
 import { MenuShortcut } from "@/components/shared/menu-shortcut"
@@ -44,6 +44,7 @@ interface CredentialActionsProps {
   containerId?: string | null
   variant?: "dropdown" | "context"
   children?: React.ReactNode
+  shouldRedirect?: boolean
 }
 
 interface MenuItemsConfig {
@@ -181,13 +182,14 @@ export function CredentialActionsDropdown({
   credentialIdentifier,
   containerId,
   variant = "dropdown",
+  shouldRedirect = false,
 }: CredentialActionsProps) {
   const router = useRouter()
   const { toast } = useToast()
   const updateCredentialMutation = useUpdateCredential()
   const duplicateCredentialMutation = useDuplicateCredential()
-  const dialogs = useMultiDialogState()
   const [qrCodeDialogOpen, setQrCodeDialogOpen] = useState(false)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
 
   const handleEdit = () => {
     router.push(`/dashboard/accounts/${credentialId}`)
@@ -217,11 +219,8 @@ export function CredentialActionsDropdown({
   }
 
   const handleMove = () => {
-    dialogs.moveDialog.open({
-      id: credentialId,
-      identifier: credentialIdentifier,
-      containerId,
-    })
+    // TODO: Implement move dialog - we need containerId
+    toast("Move functionality not implemented yet", "info")
   }
 
   const handleArchive = async () => {
@@ -239,10 +238,7 @@ export function CredentialActionsDropdown({
   }
 
   const handleDelete = () => {
-    dialogs.deleteDialog.open({
-      id: credentialId,
-      identifier: credentialIdentifier,
-    })
+    setDeleteDialogOpen(true)
   }
 
   const menuItems = renderMenuItems({
@@ -279,6 +275,14 @@ export function CredentialActionsDropdown({
           onOpenChange={setQrCodeDialogOpen}
           credentialId={credentialId}
         />
+
+        <DashboardDeleteCredentialDialog
+          open={deleteDialogOpen}
+          onOpenChange={setDeleteDialogOpen}
+          credentialId={credentialId}
+          credentialIdentifier={credentialIdentifier}
+          shouldRedirect={shouldRedirect}
+        />
       </>
     )
   }
@@ -291,13 +295,14 @@ export function CredentialActionsContextMenu({
   credentialIdentifier,
   containerId,
   children,
+  shouldRedirect = false,
 }: CredentialActionsProps) {
   const router = useRouter()
   const { toast } = useToast()
   const updateCredentialMutation = useUpdateCredential()
   const duplicateCredentialMutation = useDuplicateCredential()
-  const dialogs = useMultiDialogState()
   const [qrCodeDialogOpen, setQrCodeDialogOpen] = useState(false)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
 
   const handleEdit = () => {
     router.push(`/dashboard/accounts/${credentialId}`)
@@ -327,11 +332,8 @@ export function CredentialActionsContextMenu({
   }
 
   const handleMove = () => {
-    dialogs.moveDialog.open({
-      id: credentialId,
-      identifier: credentialIdentifier,
-      containerId,
-    })
+    // TODO: Implement move dialog - we need containerId here
+    toast("Move functionality not implemented yet", "info")
   }
 
   const handleArchive = async () => {
@@ -349,10 +351,7 @@ export function CredentialActionsContextMenu({
   }
 
   const handleDelete = () => {
-    dialogs.deleteDialog.open({
-      id: credentialId,
-      identifier: credentialIdentifier,
-    })
+    setDeleteDialogOpen(true)
   }
 
   const contextMenuItems = renderMenuItems({
@@ -383,6 +382,14 @@ export function CredentialActionsContextMenu({
         open={qrCodeDialogOpen}
         onOpenChange={setQrCodeDialogOpen}
         credentialId={credentialId}
+      />
+
+      <DashboardDeleteCredentialDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        credentialId={credentialId}
+        credentialIdentifier={credentialIdentifier}
+        shouldRedirect={shouldRedirect}
       />
     </>
   )
