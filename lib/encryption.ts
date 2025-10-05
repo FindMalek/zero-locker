@@ -163,7 +163,7 @@ export async function decryptData(
       return decrypted
     } else if (isLegacy) {
       // Handle legacy 32-byte IV with multiple fallback methods
-      const keyToUse = getLegacyKey(keyBuffer)
+      const keyToUse = await getLegacyKey(keyBuffer)
       const truncatedIv = ivBuffer.subarray(0, 16)
 
       // Try multiple decryption methods in order of likelihood
@@ -298,14 +298,14 @@ export async function encryptDataSync(
 }
 
 // Helper function to get appropriate key for legacy decryption
-function getLegacyKey(keyBuffer: Buffer): Buffer {
+async function getLegacyKey(keyBuffer: Buffer): Promise<Buffer> {
   if (keyBuffer.length === 32) {
     return keyBuffer
   } else if (keyBuffer.length === 16) {
     return Buffer.concat([keyBuffer, keyBuffer])
   } else {
     // Derive a 32-byte key using SHA-256
-    const crypto = require("crypto")
+    const crypto = await import("crypto")
     const hash = crypto.createHash("sha256")
     hash.update(keyBuffer)
     return Buffer.from(hash.digest())

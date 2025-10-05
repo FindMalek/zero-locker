@@ -30,14 +30,12 @@ interface QrCodeDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   credentialId: string
-  credentialIdentifier: string
 }
 
 export function DashboardQrCodeDialog({
   open,
   onOpenChange,
   credentialId,
-  credentialIdentifier,
 }: QrCodeDialogProps) {
   const [qrCodeColor, setQrCodeColor] = useState("#DF6547")
   const [showLogo, setShowLogo] = useState(true)
