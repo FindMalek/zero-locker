@@ -1248,7 +1248,28 @@ export const duplicateCredential = authProcedure
       keyValueData?.metadata?.[0]?.keyValuePairs || []
 
     // Create the duplicate with a modified identifier
-    const duplicateIdentifier = `${originalCredential.identifier} (Copy)`
+    // Generate unique identifier for duplicate
+    const baseIdentifier = originalCredential.identifier
+    let duplicateIdentifier = `${baseIdentifier} (Copy)`
+    let counter = 1
+
+    // Check if identifier already exists and increment counter
+    while (true) {
+      const existingCredential = await database.credential.findFirst({
+        where: {
+          identifier: duplicateIdentifier,
+          userId: context.user.id,
+        },
+      })
+
+      if (!existingCredential) {
+        break // Identifier is unique
+      }
+
+      // Increment counter and try again
+      counter++
+      duplicateIdentifier = `${baseIdentifier} (Copy ${counter})`
+    }
 
     try {
       // Use transaction for atomicity
