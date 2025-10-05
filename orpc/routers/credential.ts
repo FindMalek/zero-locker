@@ -1239,10 +1239,11 @@ export const duplicateCredential = authProcedure
     try {
       // Use transaction for atomicity
       const duplicatedCredential = await database.$transaction(async (tx) => {
-        // Re-encrypt the password with a new IV
+        // Re-encrypt the password with the original IV to preserve exact encryption
         const passwordEncryption = await encryptData(
           originalPassword,
-          passwordData.passwordEncryption.encryptionKey
+          passwordData.passwordEncryption.encryptionKey,
+          passwordData.passwordEncryption.iv
         )
 
         // Create encrypted data for password
@@ -1301,10 +1302,11 @@ export const duplicateCredential = authProcedure
                       kvPair.valueEncryption.iv
                     )
 
-                    // Re-encrypt the value with a new IV
+                    // Re-encrypt the value with the original IV to preserve exact encryption
                     const valueEncryption = await encryptData(
                       decryptedValue,
-                      kvPair.valueEncryption.encryptionKey
+                      kvPair.valueEncryption.encryptionKey,
+                      kvPair.valueEncryption.iv
                     )
 
                     // Create new encrypted data for the value
