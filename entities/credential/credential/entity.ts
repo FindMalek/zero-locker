@@ -133,8 +133,8 @@ export class CredentialEntity {
         return "Suspended"
       case accountStatusEnum.DELETED:
         return "Deleted"
-      default:
-        return "Unknown"
+      case accountStatusEnum.ARCHIVED:
+        return "Archived"
     }
   }
 }
