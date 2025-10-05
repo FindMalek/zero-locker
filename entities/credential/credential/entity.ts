@@ -105,6 +105,8 @@ export class CredentialEntity {
         return accountStatusEnum.SUSPENDED
       case AccountStatus.DELETED:
         return accountStatusEnum.DELETED
+      case AccountStatus.ARCHIVED:
+        return accountStatusEnum.ARCHIVED
     }
   }
 
@@ -118,6 +120,8 @@ export class CredentialEntity {
         return AccountStatus.SUSPENDED
       case accountStatusEnum.DELETED:
         return AccountStatus.DELETED
+      case accountStatusEnum.ARCHIVED:
+        return AccountStatus.ARCHIVED
     }
   }
 
@@ -129,8 +133,8 @@ export class CredentialEntity {
         return "Suspended"
       case accountStatusEnum.DELETED:
         return "Deleted"
-      default:
-        return "Unknown"
+      case accountStatusEnum.ARCHIVED:
+        return "Archived"
     }
   }
 }

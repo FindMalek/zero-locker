@@ -278,7 +278,6 @@ export function CredentialActionsDropdown({
           open={qrCodeDialogOpen}
           onOpenChange={setQrCodeDialogOpen}
           credentialId={credentialId}
-          credentialIdentifier={credentialIdentifier}
         />
       </>
     )
@@ -384,7 +383,6 @@ export function CredentialActionsContextMenu({
         open={qrCodeDialogOpen}
         onOpenChange={setQrCodeDialogOpen}
         credentialId={credentialId}
-        credentialIdentifier={credentialIdentifier}
       />
     </>
   )
