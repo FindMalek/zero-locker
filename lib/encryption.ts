@@ -76,30 +76,42 @@ export async function encryptData(
   // Browser encryption
   const cryptoKey = key as CryptoKey
 
-  // Generate a random initialization vector
-  const ivArray = window.crypto.getRandomValues(new Uint8Array(12))
+  // Use provided IV or generate a random initialization vector
+  let ivArray: Uint8Array
+  if (iv) {
+    // Convert provided IV from base64 to Uint8Array
+    const decoded = atob(iv)
+    ivArray = new Uint8Array(decoded.length)
+    for (let i = 0; i < decoded.length; i++) {
+      ivArray[i] = decoded.charCodeAt(i)
+    }
+  } else {
+    // Generate a random initialization vector
+    ivArray = new Uint8Array(12)
+    window.crypto.getRandomValues(ivArray)
+    // Create a new Uint8Array to ensure proper ArrayBuffer backing
+    ivArray = new Uint8Array(ivArray)
+  }
 
   // Convert data to ArrayBuffer
   const encoder = new TextEncoder()
-  const dataArray = encoder.encode(data)
-  const dataBuffer = new ArrayBuffer(dataArray.length)
-  new Uint8Array(dataBuffer).set(dataArray)
+  const dataBuffer = encoder.encode(data).buffer as ArrayBuffer
 
   // Encrypt the data
   const encryptedBuffer = await window.crypto.subtle.encrypt(
     {
       name: "AES-GCM",
-      iv: ivArray,
+      iv: ivArray as BufferSource,
     },
     cryptoKey,
-    dataBuffer
+    dataBuffer as BufferSource
   )
 
   // Convert encrypted data and IV to base64 strings
   const encryptedData = btoa(
-    String.fromCharCode(...new Uint8Array(encryptedBuffer))
+    String.fromCharCode(...Array.from(new Uint8Array(encryptedBuffer)))
   )
-  const ivString = btoa(String.fromCharCode(...ivArray))
+  const ivString = btoa(String.fromCharCode(...Array.from(ivArray)))
 
   return {
     encryptedData,
@@ -151,16 +163,50 @@ export async function decryptData(
       return decryptedBuffer.toString("utf8")
     } else if (isCBC) {
       // Handle AES-CBC decryption (legacy seeded data)
-      const decipher = crypto.createDecipheriv(
-        "aes-256-cbc",
-        keyBuffer,
-        ivBuffer
-      )
+      // First try AES-CBC, but if it fails, try AES-GCM as fallback
+      try {
+        const decipher = crypto.createDecipheriv(
+          "aes-256-cbc",
+          keyBuffer,
+          ivBuffer
+        )
 
-      let decrypted = decipher.update(encryptedData, "base64", "utf8")
-      decrypted += decipher.final("utf8")
+        let decrypted = decipher.update(encryptedData, "base64", "utf8")
+        decrypted += decipher.final("utf8")
 
-      return decrypted
+        return decrypted
+      } catch (cbcError) {
+        // If AES-CBC fails, try AES-GCM as fallback
+        // This handles cases where data was encrypted with AES-GCM but IV is 16 bytes
+        try {
+          const encryptedBuffer = Buffer.from(encryptedData, "base64")
+
+          // For AES-GCM, extract auth tag from the end
+          const authTagLength = 16
+          const ciphertext = encryptedBuffer.subarray(0, -authTagLength)
+          const authTag = encryptedBuffer.subarray(-authTagLength)
+
+          const decipher = crypto.createDecipheriv(
+            "aes-256-gcm",
+            keyBuffer,
+            ivBuffer.subarray(0, 12) // Use first 12 bytes for GCM
+          )
+          decipher.setAuthTag(authTag)
+
+          const decryptedUpdate = decipher.update(ciphertext)
+          const decryptedFinal = decipher.final()
+          const decryptedBuffer = Buffer.concat([
+            decryptedUpdate,
+            decryptedFinal,
+          ])
+
+          return decryptedBuffer.toString("utf8")
+        } catch (gcmError) {
+          // If both fail, throw the original CBC error with more context
+          console.error("AES-GCM fallback also failed:", gcmError)
+          throw cbcError
+        }
+      }
     } else if (isLegacy) {
       // Handle legacy 32-byte IV with multiple fallback methods
       const keyToUse = await getLegacyKey(keyBuffer)
@@ -211,7 +257,7 @@ export async function exportKey(key: CryptoKey): Promise<string> {
   }
 
   const exported = await window.crypto.subtle.exportKey("raw", key)
-  return btoa(String.fromCharCode(...new Uint8Array(exported)))
+  return btoa(String.fromCharCode(...Array.from(new Uint8Array(exported))))
 }
 
 // Import key from string (browser only)
