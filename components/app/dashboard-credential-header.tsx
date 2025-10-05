@@ -59,7 +59,7 @@ export function CredentialHeader({
         <CredentialActionsDropdown
           credentialId={credential.id}
           credentialIdentifier={credential.identifier}
-          containerId={credential.containerId}
+          // containerId={credential.containerId}
           shouldRedirect={true}
         />
       </div>

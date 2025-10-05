@@ -41,7 +41,7 @@ interface ItemActionsProps {
 interface CredentialActionsProps {
   credentialId: string
   credentialIdentifier: string
-  containerId?: string | null
+  // containerId?: string | null
   variant?: "dropdown" | "context"
   children?: React.ReactNode
   shouldRedirect?: boolean
@@ -180,7 +180,7 @@ export function ItemActionsDropdown({
 export function CredentialActionsDropdown({
   credentialId,
   credentialIdentifier,
-  containerId,
+  // containerId,
   variant = "dropdown",
   shouldRedirect = false,
 }: CredentialActionsProps) {
@@ -293,7 +293,7 @@ export function CredentialActionsDropdown({
 export function CredentialActionsContextMenu({
   credentialId,
   credentialIdentifier,
-  containerId,
+  // containerId,
   children,
   shouldRedirect = false,
 }: CredentialActionsProps) {

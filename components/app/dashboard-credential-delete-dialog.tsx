@@ -164,7 +164,8 @@ export function DashboardDeleteCredentialDialog({
                   </FormControl>
                   {field.value && !isConfirmationValid && (
                     <p className="text-destructive text-sm">
-                      The text doesn't match. Please type it exactly as shown.
+                      The text doesn&apos;t match. Please type it exactly as
+                      shown.
                     </p>
                   )}
                   {field.value && isConfirmationValid && (

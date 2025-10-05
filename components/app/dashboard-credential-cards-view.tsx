@@ -14,8 +14,6 @@ import {
 } from "@/lib/utils"
 import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard"
 
-import { DashboardDeleteCredentialDialog } from "@/components/app/dashboard-credential-delete-dialog"
-import { DashboardMoveCredentialDialog } from "@/components/app/dashboard-credential-move-dialog"
 import { Icons } from "@/components/shared/icons"
 import { CredentialActionsContextMenu } from "@/components/shared/item-actions-dropdown"
 import { StatusBadge } from "@/components/shared/status-badge"
@@ -60,7 +58,7 @@ export function DashboardCredentialCardsView({
             key={credential.id}
             credentialId={credential.id}
             credentialIdentifier={credential.identifier}
-            containerId={credential.containerId}
+            // containerId={credential.containerId}
           >
             <div
               className="dark:hover:bg-secondary/50 hover:border-secondary-foreground/20 border-secondary group flex cursor-pointer items-center gap-4 rounded-lg border-2 p-4 transition-colors duration-200 hover:shadow-sm"

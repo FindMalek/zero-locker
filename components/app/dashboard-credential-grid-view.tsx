@@ -9,8 +9,6 @@ import type { PlatformSimpleRo } from "@/schemas/utils/platform"
 import { DateFormatter } from "@/lib/date-utils"
 import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard"
 
-import { DashboardDeleteCredentialDialog } from "@/components/app/dashboard-credential-delete-dialog"
-import { DashboardMoveCredentialDialog } from "@/components/app/dashboard-credential-move-dialog"
 import { Icons } from "@/components/shared/icons"
 import { CredentialActionsDropdown } from "@/components/shared/item-actions-dropdown"
 import { StatusBadge } from "@/components/shared/status-badge"
@@ -90,7 +88,7 @@ export function DashboardCredentialGridView({
                   <CredentialActionsDropdown
                     credentialId={credential.id}
                     credentialIdentifier={credential.identifier}
-                    containerId={credential.containerId}
+                    // containerId={credential.containerId}
                   />
                 </div>
               </div>
