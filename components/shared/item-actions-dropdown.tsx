@@ -35,6 +35,7 @@ interface ItemActionsProps {
   onDuplicate?: () => void
   onMove?: () => void
   onArchive?: () => void
+  onUnarchive?: () => void
   onDelete?: () => void
   variant?: "dropdown" | "context"
   children?: React.ReactNode
@@ -59,6 +60,7 @@ interface MenuItemsConfig {
     onDuplicate?: () => void
     onMove?: () => void
     onArchive?: () => void
+    onUnarchive?: () => void
     onDelete?: () => void
   }
 }
@@ -124,6 +126,13 @@ function renderMenuItems({
           <MenuShortcut>A</MenuShortcut>
         </MenuItem>
       )}
+      {actions.onUnarchive && (
+        <MenuItem onClick={handleClick(actions.onUnarchive)}>
+          <Icons.archive className={`mr-2 ${iconSize}`} />
+          Unarchive
+          <MenuShortcut>U</MenuShortcut>
+        </MenuItem>
+      )}
       {hasMainActions && actions.onDelete && <MenuSeparator />}
       {actions.onDelete && (
         <MenuItem variant="destructive" onClick={handleClick(actions.onDelete)}>
@@ -142,6 +151,7 @@ export function ItemActionsDropdown({
   onDuplicate,
   onMove,
   onArchive,
+  onUnarchive,
   onDelete,
   variant = "dropdown",
 }: ItemActionsProps) {
@@ -156,6 +166,7 @@ export function ItemActionsDropdown({
       onDuplicate,
       onMove,
       onArchive,
+      onUnarchive,
       onDelete,
     },
   })
@@ -227,13 +238,27 @@ export function CredentialActionsDropdown({
     try {
       await updateCredentialMutation.mutateAsync({
         id: credential.id,
-        status: "SUSPENDED",
+        status: "ARCHIVED",
       })
 
       toast("The credential has been archived successfully.", "success")
     } catch (error) {
       console.log(error)
       toast("Failed to archive credential. Please try again later.", "error")
+    }
+  }
+
+  const handleUnarchive = async () => {
+    try {
+      await updateCredentialMutation.mutateAsync({
+        id: credential.id,
+        status: "ACTIVE",
+      })
+
+      toast("The credential has been unarchived successfully.", "success")
+    } catch (error) {
+      console.log(error)
+      toast("Failed to unarchive credential. Please try again later.", "error")
     }
   }
 
@@ -251,7 +276,9 @@ export function CredentialActionsDropdown({
       onShare: handleShare,
       onDuplicate: handleDuplicate,
       onMove: handleMove,
-      onArchive: handleArchive,
+      onArchive: credential.status === "ACTIVE" ? handleArchive : undefined,
+      onUnarchive:
+        credential.status === "ARCHIVED" ? handleUnarchive : undefined,
       onDelete: handleDelete,
     },
   })
@@ -339,13 +366,27 @@ export function CredentialActionsContextMenu({
     try {
       await updateCredentialMutation.mutateAsync({
         id: credential.id,
-        status: "SUSPENDED",
+        status: "ARCHIVED",
       })
 
       toast("The credential has been archived successfully.", "success")
     } catch (error) {
       console.log(error)
       toast("Failed to archive credential. Please try again later.", "error")
+    }
+  }
+
+  const handleUnarchive = async () => {
+    try {
+      await updateCredentialMutation.mutateAsync({
+        id: credential.id,
+        status: "ACTIVE",
+      })
+
+      toast("The credential has been unarchived successfully.", "success")
+    } catch (error) {
+      console.log(error)
+      toast("Failed to unarchive credential. Please try again later.", "error")
     }
   }
 
@@ -363,7 +404,9 @@ export function CredentialActionsContextMenu({
       onShare: handleShare,
       onDuplicate: handleDuplicate,
       onMove: handleMove,
-      onArchive: handleArchive,
+      onArchive: credential.status === "ACTIVE" ? handleArchive : undefined,
+      onUnarchive:
+        credential.status === "ARCHIVED" ? handleUnarchive : undefined,
       onDelete: handleDelete,
     },
   })
