@@ -56,8 +56,8 @@ export function DashboardCredentialCardsView({
         return (
           <CredentialActionsContextMenu
             key={credential.id}
-            credentialId={credential.id}
-            credentialIdentifier={credential.identifier}
+            credential={credential}
+            platforms={platforms}
             // containerId={credential.containerId}
           >
             <div

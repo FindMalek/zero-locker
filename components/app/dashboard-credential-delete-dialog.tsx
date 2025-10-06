@@ -1,11 +1,16 @@
 "use client"
 
+import Image from "next/image"
 import { useRouter } from "next/navigation"
+import { PlatformEntity } from "@/entities/utils/platform"
 import { useDeleteCredential } from "@/orpc/hooks/use-credentials"
+import type { CredentialOutput } from "@/schemas/credential/dto"
+import type { PlatformSimpleRo } from "@/schemas/utils/platform"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 
+import { getLogoDevUrlWithToken, getPlaceholderImage } from "@/lib/utils"
 import { useToast } from "@/hooks/use-toast"
 
 import { Icons } from "@/components/shared/icons"
@@ -38,8 +43,8 @@ type DeleteCredentialFormData = z.infer<typeof deleteCredentialSchema>
 interface DeleteCredentialDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  credentialId: string
-  credentialIdentifier: string
+  credential: CredentialOutput
+  platforms: PlatformSimpleRo[]
   shouldRedirect?: boolean
 }
 
@@ -47,8 +52,8 @@ interface DeleteCredentialDialogProps {
 export function DashboardDeleteCredentialDialog({
   open,
   onOpenChange,
-  credentialId,
-  credentialIdentifier,
+  credential,
+  platforms,
   shouldRedirect = false,
 }: DeleteCredentialDialogProps) {
   const router = useRouter()
@@ -64,15 +69,18 @@ export function DashboardDeleteCredentialDialog({
 
   const isDeleting = deleteCredentialMutation.isPending
   const confirmationText = form.watch("confirmationText")
-  const isConfirmationValid = confirmationText === credentialIdentifier
+  const isConfirmationValid = confirmationText === credential.identifier
+
+  // Get platform data
+  const platform = PlatformEntity.findById(platforms, credential.platformId)
 
   // Don't render if we don't have valid credential data
-  if (!credentialId || !credentialIdentifier) {
+  if (!credential?.id || !credential?.identifier) {
     return null
   }
 
   const handleDelete = async (data: DeleteCredentialFormData) => {
-    if (data.confirmationText !== credentialIdentifier) {
+    if (data.confirmationText !== credential.identifier) {
       form.setError("confirmationText", {
         message:
           "The identifier doesn't match. Please type it exactly as shown.",
@@ -82,7 +90,7 @@ export function DashboardDeleteCredentialDialog({
 
     try {
       await deleteCredentialMutation.mutateAsync({
-        id: credentialId,
+        id: credential.id,
       })
 
       toast("The credential has been deleted successfully.", "success")
@@ -113,28 +121,44 @@ export function DashboardDeleteCredentialDialog({
             <Icons.trash className="text-destructive size-5" />
             Delete Credential
           </AlertDialogTitle>
-          <AlertDialogDescription className="space-y-2">
-            <p>
+          <AlertDialogDescription className="space-y-3">
+            <p className="text-foreground">
               Are you sure you want to delete the following credential? This
               action cannot be undone.
             </p>
-            <div className="bg-muted/50 rounded-lg border p-3">
-              <div className="flex items-center gap-2">
-                <Icons.user className="text-muted-foreground size-4" />
-                <span className="font-medium">{credentialIdentifier}</span>
+            <div className="bg-muted/30 rounded-lg border p-4">
+              <div className="flex items-start gap-3">
+                <div className="bg-secondary flex size-10 flex-shrink-0 items-center justify-center rounded-full">
+                  <Image
+                    src={getPlaceholderImage(
+                      platform.name,
+                      getLogoDevUrlWithToken(platform.logo)
+                    )}
+                    alt={`${platform.name} logo`}
+                    width={24}
+                    height={24}
+                    className="bg-secondary size-6 rounded-full object-contain"
+                  />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="text-foreground text-sm font-semibold">
+                    {credential.identifier}
+                  </div>
+                  {credential.description && (
+                    <div className="text-muted-foreground mt-1 line-clamp-2 text-xs">
+                      {credential.description}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
-            <p className="text-muted-foreground text-sm">
-              Deleting this credential will remove all associated data including
-              passwords, metadata, and access logs.
-            </p>
           </AlertDialogDescription>
         </AlertDialogHeader>
 
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(handleDelete)}
-            className="space-y-4"
+            className="space-y-4 pt-3"
           >
             <FormField
               control={form.control}
@@ -143,37 +167,18 @@ export function DashboardDeleteCredentialDialog({
                 <FormItem>
                   <FormLabel className="text-sm font-medium">
                     To verify, type{" "}
-                    <span className="text-foreground font-mono">
-                      {credentialIdentifier}
-                    </span>{" "}
+                    <span className="text-foreground font-semibold">
+                      {credential.identifier}
+                    </span>
                     below:
                   </FormLabel>
                   <FormControl>
                     <Input
                       {...field}
-                      placeholder={`Type "${credentialIdentifier}" here`}
-                      className={`transition-colors ${
-                        field.value && !isConfirmationValid
-                          ? "border-destructive focus-visible:ring-destructive"
-                          : field.value && isConfirmationValid
-                            ? "border-green-500 focus-visible:ring-green-500"
-                            : ""
-                      }`}
+                      placeholder={`Type "${credential.identifier}" here`}
                       autoComplete="off"
                     />
                   </FormControl>
-                  {field.value && !isConfirmationValid && (
-                    <p className="text-destructive text-sm">
-                      The text doesn&apos;t match. Please type it exactly as
-                      shown.
-                    </p>
-                  )}
-                  {field.value && isConfirmationValid && (
-                    <p className="flex items-center gap-1 text-sm text-green-600">
-                      <Icons.check className="size-3" />
-                      Confirmation text matches
-                    </p>
-                  )}
                   <FormMessage />
                 </FormItem>
               )}
@@ -181,7 +186,7 @@ export function DashboardDeleteCredentialDialog({
           </form>
         </Form>
 
-        <AlertDialogFooter className="gap-2 sm:gap-0">
+        <AlertDialogFooter className="gap-2">
           <AlertDialogCancel
             disabled={isDeleting}
             className="order-2 sm:order-1"

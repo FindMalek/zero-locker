@@ -4,6 +4,8 @@ import {
   useDuplicateCredential,
   useUpdateCredential,
 } from "@/orpc/hooks/use-credentials"
+import type { CredentialOutput } from "@/schemas/credential/dto"
+import type { PlatformSimpleRo } from "@/schemas/utils/platform"
 
 import { useToast } from "@/hooks/use-toast"
 
@@ -39,9 +41,8 @@ interface ItemActionsProps {
 }
 
 interface CredentialActionsProps {
-  credentialId: string
-  credentialIdentifier: string
-  // containerId?: string | null
+  credential: CredentialOutput
+  platforms: PlatformSimpleRo[]
   variant?: "dropdown" | "context"
   children?: React.ReactNode
   shouldRedirect?: boolean
@@ -178,9 +179,8 @@ export function ItemActionsDropdown({
 }
 
 export function CredentialActionsDropdown({
-  credentialId,
-  credentialIdentifier,
-  // containerId,
+  credential,
+  platforms,
   variant = "dropdown",
   shouldRedirect = false,
 }: CredentialActionsProps) {
@@ -192,7 +192,7 @@ export function CredentialActionsDropdown({
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
 
   const handleEdit = () => {
-    router.push(`/dashboard/accounts/${credentialId}`)
+    router.push(`/dashboard/accounts/${credential.id}`)
   }
 
   const handleShare = () => {
@@ -203,7 +203,7 @@ export function CredentialActionsDropdown({
     try {
       const duplicatedCredential =
         await duplicateCredentialMutation.mutateAsync({
-          id: credentialId,
+          id: credential.id,
         })
 
       toast(
@@ -226,7 +226,7 @@ export function CredentialActionsDropdown({
   const handleArchive = async () => {
     try {
       await updateCredentialMutation.mutateAsync({
-        id: credentialId,
+        id: credential.id,
         status: "SUSPENDED",
       })
 
@@ -273,14 +273,14 @@ export function CredentialActionsDropdown({
         <DashboardQrCodeDialog
           open={qrCodeDialogOpen}
           onOpenChange={setQrCodeDialogOpen}
-          credentialId={credentialId}
+          credentialId={credential.id}
         />
 
         <DashboardDeleteCredentialDialog
           open={deleteDialogOpen}
           onOpenChange={setDeleteDialogOpen}
-          credentialId={credentialId}
-          credentialIdentifier={credentialIdentifier}
+          credential={credential}
+          platforms={platforms}
           shouldRedirect={shouldRedirect}
         />
       </>
@@ -291,9 +291,8 @@ export function CredentialActionsDropdown({
 }
 
 export function CredentialActionsContextMenu({
-  credentialId,
-  credentialIdentifier,
-  // containerId,
+  credential,
+  platforms,
   children,
   shouldRedirect = false,
 }: CredentialActionsProps) {
@@ -305,7 +304,7 @@ export function CredentialActionsContextMenu({
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
 
   const handleEdit = () => {
-    router.push(`/dashboard/accounts/${credentialId}`)
+    router.push(`/dashboard/accounts/${credential.id}`)
   }
 
   const handleShare = () => {
@@ -316,7 +315,7 @@ export function CredentialActionsContextMenu({
     try {
       const duplicatedCredential =
         await duplicateCredentialMutation.mutateAsync({
-          id: credentialId,
+          id: credential.id,
         })
 
       toast(
@@ -339,7 +338,7 @@ export function CredentialActionsContextMenu({
   const handleArchive = async () => {
     try {
       await updateCredentialMutation.mutateAsync({
-        id: credentialId,
+        id: credential.id,
         status: "SUSPENDED",
       })
 
@@ -381,14 +380,14 @@ export function CredentialActionsContextMenu({
       <DashboardQrCodeDialog
         open={qrCodeDialogOpen}
         onOpenChange={setQrCodeDialogOpen}
-        credentialId={credentialId}
+        credentialId={credential.id}
       />
 
       <DashboardDeleteCredentialDialog
         open={deleteDialogOpen}
         onOpenChange={setDeleteDialogOpen}
-        credentialId={credentialId}
-        credentialIdentifier={credentialIdentifier}
+        credential={credential}
+        platforms={platforms}
         shouldRedirect={shouldRedirect}
       />
     </>
