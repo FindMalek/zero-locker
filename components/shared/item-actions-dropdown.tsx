@@ -7,9 +7,11 @@ import {
 import type { CredentialOutput } from "@/schemas/credential/dto"
 import type { PlatformSimpleRo } from "@/schemas/utils/platform"
 
+import { useUserPermissions } from "@/lib/permissions"
 import { useToast } from "@/hooks/use-toast"
 
 import { DashboardDeleteCredentialDialog } from "@/components/app/dashboard-credential-delete-dialog"
+import { DashboardMoveCredentialDialog } from "@/components/app/dashboard-credential-move-dialog"
 import { DashboardQrCodeDialog } from "@/components/app/dashboard-qr-code-dialog"
 import { Icons } from "@/components/shared/icons"
 import { MenuShortcut } from "@/components/shared/menu-shortcut"
@@ -199,8 +201,10 @@ export function CredentialActionsDropdown({
   const { toast } = useToast()
   const updateCredentialMutation = useUpdateCredential()
   const duplicateCredentialMutation = useDuplicateCredential()
+  const permissions = useUserPermissions()
   const [qrCodeDialogOpen, setQrCodeDialogOpen] = useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [moveDialogOpen, setMoveDialogOpen] = useState(false)
 
   const handleEdit = () => {
     router.push(`/dashboard/accounts/${credential.id}`)
@@ -230,8 +234,11 @@ export function CredentialActionsDropdown({
   }
 
   const handleMove = () => {
-    // TODO: Implement move dialog - we need containerId
-    toast("Move functionality not implemented yet", "info")
+    if (!permissions.canSelectContainers) {
+      toast("Moving credentials is only available for PRO plan users.", "error")
+      return
+    }
+    setMoveDialogOpen(true)
   }
 
   const handleArchive = async () => {
@@ -275,7 +282,7 @@ export function CredentialActionsDropdown({
       onEdit: handleEdit,
       onShare: handleShare,
       onDuplicate: handleDuplicate,
-      onMove: handleMove,
+      onMove: permissions.canSelectContainers ? handleMove : undefined,
       onArchive: credential.status === "ACTIVE" ? handleArchive : undefined,
       onUnarchive:
         credential.status === "ARCHIVED" ? handleUnarchive : undefined,
@@ -310,6 +317,13 @@ export function CredentialActionsDropdown({
           platforms={platforms}
           shouldRedirect={shouldRedirect}
         />
+
+      <DashboardMoveCredentialDialog
+        open={moveDialogOpen}
+        onOpenChange={setMoveDialogOpen}
+        credential={credential}
+        platforms={platforms}
+      />
       </>
     )
   }
@@ -327,8 +341,10 @@ export function CredentialActionsContextMenu({
   const { toast } = useToast()
   const updateCredentialMutation = useUpdateCredential()
   const duplicateCredentialMutation = useDuplicateCredential()
+  const permissions = useUserPermissions()
   const [qrCodeDialogOpen, setQrCodeDialogOpen] = useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [moveDialogOpen, setMoveDialogOpen] = useState(false)
 
   const handleEdit = () => {
     router.push(`/dashboard/accounts/${credential.id}`)
@@ -358,8 +374,11 @@ export function CredentialActionsContextMenu({
   }
 
   const handleMove = () => {
-    // TODO: Implement move dialog - we need containerId here
-    toast("Move functionality not implemented yet", "info")
+    if (!permissions.canSelectContainers) {
+      toast("Moving credentials is only available for PRO plan users.", "error")
+      return
+    }
+    setMoveDialogOpen(true)
   }
 
   const handleArchive = async () => {
@@ -403,7 +422,7 @@ export function CredentialActionsContextMenu({
       onEdit: handleEdit,
       onShare: handleShare,
       onDuplicate: handleDuplicate,
-      onMove: handleMove,
+      onMove: permissions.canSelectContainers ? handleMove : undefined,
       onArchive: credential.status === "ACTIVE" ? handleArchive : undefined,
       onUnarchive:
         credential.status === "ARCHIVED" ? handleUnarchive : undefined,
@@ -432,6 +451,13 @@ export function CredentialActionsContextMenu({
         credential={credential}
         platforms={platforms}
         shouldRedirect={shouldRedirect}
+      />
+
+      <DashboardMoveCredentialDialog
+        open={moveDialogOpen}
+        onOpenChange={setMoveDialogOpen}
+        credential={credential}
+        platforms={platforms}
       />
     </>
   )
