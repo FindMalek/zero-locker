@@ -13,10 +13,7 @@ import {
   getPlaceholderImage,
 } from "@/lib/utils"
 import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard"
-import { useMultiDialogState } from "@/hooks/use-dialog-state"
 
-import { DashboardDeleteCredentialDialog } from "@/components/app/dashboard-credential-delete-dialog"
-import { DashboardMoveCredentialDialog } from "@/components/app/dashboard-credential-move-dialog"
 import { Icons } from "@/components/shared/icons"
 import { CredentialActionsContextMenu } from "@/components/shared/item-actions-dropdown"
 import { StatusBadge } from "@/components/shared/status-badge"
@@ -38,7 +35,6 @@ export function DashboardCredentialCardsView({
   platforms,
 }: CredentialListViewProps) {
   const router = useRouter()
-  const dialogs = useMultiDialogState()
 
   const { copy, isCopied } = useCopyToClipboard({
     successDuration: 1000,
@@ -60,9 +56,9 @@ export function DashboardCredentialCardsView({
         return (
           <CredentialActionsContextMenu
             key={credential.id}
-            credentialId={credential.id}
-            credentialIdentifier={credential.identifier}
-            containerId={credential.containerId}
+            credential={credential}
+            platforms={platforms}
+            // containerId={credential.containerId}
           >
             <div
               className="dark:hover:bg-secondary/50 hover:border-secondary-foreground/20 border-secondary group flex cursor-pointer items-center gap-4 rounded-lg border-2 p-4 transition-colors duration-200 hover:shadow-sm"
@@ -142,33 +138,6 @@ export function DashboardCredentialCardsView({
           </CredentialActionsContextMenu>
         )
       })}
-
-      {dialogs.deleteDialog.data && (
-        <DashboardDeleteCredentialDialog
-          open={dialogs.deleteDialog.isOpen}
-          onOpenChange={(open) => {
-            if (!open) {
-              dialogs.deleteDialog.close()
-            }
-          }}
-          credentialId={dialogs.deleteDialog.data.id}
-          credentialIdentifier={dialogs.deleteDialog.data.identifier}
-        />
-      )}
-
-      {dialogs.moveDialog.data && (
-        <DashboardMoveCredentialDialog
-          open={dialogs.moveDialog.isOpen}
-          onOpenChange={(open) => {
-            if (!open) {
-              dialogs.moveDialog.close()
-            }
-          }}
-          credentialId={dialogs.moveDialog.data.id}
-          credentialIdentifier={dialogs.moveDialog.data.identifier}
-          currentContainerId={dialogs.moveDialog.data.containerId}
-        />
-      )}
     </div>
   )
 }

@@ -57,9 +57,10 @@ export function CredentialHeader({
 
       <div className="flex flex-shrink-0 items-center gap-2">
         <CredentialActionsDropdown
-          credentialId={credential.id}
-          credentialIdentifier={credential.identifier}
-          containerId={credential.containerId}
+          credential={credential}
+          platforms={[platform]}
+          // containerId={credential.containerId}
+          shouldRedirect={true}
         />
       </div>
     </div>
