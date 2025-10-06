@@ -7,9 +7,11 @@ import {
 import type { CredentialOutput } from "@/schemas/credential/dto"
 import type { PlatformSimpleRo } from "@/schemas/utils/platform"
 
+import { useUserPermissions } from "@/lib/permissions"
 import { useToast } from "@/hooks/use-toast"
 
 import { DashboardDeleteCredentialDialog } from "@/components/app/dashboard-credential-delete-dialog"
+import { DashboardMoveCredentialDialog } from "@/components/app/dashboard-credential-move-dialog"
 import { DashboardQrCodeDialog } from "@/components/app/dashboard-qr-code-dialog"
 import { Icons } from "@/components/shared/icons"
 import { MenuShortcut } from "@/components/shared/menu-shortcut"
@@ -35,6 +37,7 @@ interface ItemActionsProps {
   onDuplicate?: () => void
   onMove?: () => void
   onArchive?: () => void
+  onUnarchive?: () => void
   onDelete?: () => void
   variant?: "dropdown" | "context"
   children?: React.ReactNode
@@ -59,6 +62,7 @@ interface MenuItemsConfig {
     onDuplicate?: () => void
     onMove?: () => void
     onArchive?: () => void
+    onUnarchive?: () => void
     onDelete?: () => void
   }
 }
@@ -124,6 +128,13 @@ function renderMenuItems({
           <MenuShortcut>A</MenuShortcut>
         </MenuItem>
       )}
+      {actions.onUnarchive && (
+        <MenuItem onClick={handleClick(actions.onUnarchive)}>
+          <Icons.archive className={`mr-2 ${iconSize}`} />
+          Unarchive
+          <MenuShortcut>U</MenuShortcut>
+        </MenuItem>
+      )}
       {hasMainActions && actions.onDelete && <MenuSeparator />}
       {actions.onDelete && (
         <MenuItem variant="destructive" onClick={handleClick(actions.onDelete)}>
@@ -142,6 +153,7 @@ export function ItemActionsDropdown({
   onDuplicate,
   onMove,
   onArchive,
+  onUnarchive,
   onDelete,
   variant = "dropdown",
 }: ItemActionsProps) {
@@ -156,6 +168,7 @@ export function ItemActionsDropdown({
       onDuplicate,
       onMove,
       onArchive,
+      onUnarchive,
       onDelete,
     },
   })
@@ -188,8 +201,10 @@ export function CredentialActionsDropdown({
   const { toast } = useToast()
   const updateCredentialMutation = useUpdateCredential()
   const duplicateCredentialMutation = useDuplicateCredential()
+  const permissions = useUserPermissions()
   const [qrCodeDialogOpen, setQrCodeDialogOpen] = useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [moveDialogOpen, setMoveDialogOpen] = useState(false)
 
   const handleEdit = () => {
     router.push(`/dashboard/accounts/${credential.id}`)
@@ -219,21 +234,38 @@ export function CredentialActionsDropdown({
   }
 
   const handleMove = () => {
-    // TODO: Implement move dialog - we need containerId
-    toast("Move functionality not implemented yet", "info")
+    if (!permissions.canSelectContainers) {
+      toast("Moving credentials is only available for PRO plan users.", "error")
+      return
+    }
+    setMoveDialogOpen(true)
   }
 
   const handleArchive = async () => {
     try {
       await updateCredentialMutation.mutateAsync({
         id: credential.id,
-        status: "SUSPENDED",
+        status: "ARCHIVED",
       })
 
       toast("The credential has been archived successfully.", "success")
     } catch (error) {
       console.log(error)
       toast("Failed to archive credential. Please try again later.", "error")
+    }
+  }
+
+  const handleUnarchive = async () => {
+    try {
+      await updateCredentialMutation.mutateAsync({
+        id: credential.id,
+        status: "ACTIVE",
+      })
+
+      toast("The credential has been unarchived successfully.", "success")
+    } catch (error) {
+      console.log(error)
+      toast("Failed to unarchive credential. Please try again later.", "error")
     }
   }
 
@@ -250,8 +282,10 @@ export function CredentialActionsDropdown({
       onEdit: handleEdit,
       onShare: handleShare,
       onDuplicate: handleDuplicate,
-      onMove: handleMove,
-      onArchive: handleArchive,
+      onMove: permissions.canSelectContainers ? handleMove : undefined,
+      onArchive: credential.status === "ACTIVE" ? handleArchive : undefined,
+      onUnarchive:
+        credential.status === "ARCHIVED" ? handleUnarchive : undefined,
       onDelete: handleDelete,
     },
   })
@@ -283,6 +317,13 @@ export function CredentialActionsDropdown({
           platforms={platforms}
           shouldRedirect={shouldRedirect}
         />
+
+        <DashboardMoveCredentialDialog
+          open={moveDialogOpen}
+          onOpenChange={setMoveDialogOpen}
+          credential={credential}
+          platforms={platforms}
+        />
       </>
     )
   }
@@ -300,8 +341,10 @@ export function CredentialActionsContextMenu({
   const { toast } = useToast()
   const updateCredentialMutation = useUpdateCredential()
   const duplicateCredentialMutation = useDuplicateCredential()
+  const permissions = useUserPermissions()
   const [qrCodeDialogOpen, setQrCodeDialogOpen] = useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [moveDialogOpen, setMoveDialogOpen] = useState(false)
 
   const handleEdit = () => {
     router.push(`/dashboard/accounts/${credential.id}`)
@@ -331,21 +374,38 @@ export function CredentialActionsContextMenu({
   }
 
   const handleMove = () => {
-    // TODO: Implement move dialog - we need containerId here
-    toast("Move functionality not implemented yet", "info")
+    if (!permissions.canSelectContainers) {
+      toast("Moving credentials is only available for PRO plan users.", "error")
+      return
+    }
+    setMoveDialogOpen(true)
   }
 
   const handleArchive = async () => {
     try {
       await updateCredentialMutation.mutateAsync({
         id: credential.id,
-        status: "SUSPENDED",
+        status: "ARCHIVED",
       })
 
       toast("The credential has been archived successfully.", "success")
     } catch (error) {
       console.log(error)
       toast("Failed to archive credential. Please try again later.", "error")
+    }
+  }
+
+  const handleUnarchive = async () => {
+    try {
+      await updateCredentialMutation.mutateAsync({
+        id: credential.id,
+        status: "ACTIVE",
+      })
+
+      toast("The credential has been unarchived successfully.", "success")
+    } catch (error) {
+      console.log(error)
+      toast("Failed to unarchive credential. Please try again later.", "error")
     }
   }
 
@@ -362,8 +422,10 @@ export function CredentialActionsContextMenu({
       onEdit: handleEdit,
       onShare: handleShare,
       onDuplicate: handleDuplicate,
-      onMove: handleMove,
-      onArchive: handleArchive,
+      onMove: permissions.canSelectContainers ? handleMove : undefined,
+      onArchive: credential.status === "ACTIVE" ? handleArchive : undefined,
+      onUnarchive:
+        credential.status === "ARCHIVED" ? handleUnarchive : undefined,
       onDelete: handleDelete,
     },
   })
@@ -389,6 +451,13 @@ export function CredentialActionsContextMenu({
         credential={credential}
         platforms={platforms}
         shouldRedirect={shouldRedirect}
+      />
+
+      <DashboardMoveCredentialDialog
+        open={moveDialogOpen}
+        onOpenChange={setMoveDialogOpen}
+        credential={credential}
+        platforms={platforms}
       />
     </>
   )

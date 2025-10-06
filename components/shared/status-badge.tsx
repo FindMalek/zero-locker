@@ -39,6 +39,12 @@ export function StatusBadge({
           className:
             "bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-50",
         }
+      case AccountStatus.ARCHIVED:
+        return {
+          label: "Archived",
+          className:
+            "bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-50",
+        }
       default:
         return {
           label: status,
