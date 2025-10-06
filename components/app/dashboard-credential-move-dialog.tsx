@@ -1,14 +1,13 @@
 "use client"
 
 import Image from "next/image"
+import { PlatformEntity } from "@/entities/utils/platform"
 import { useUpdateCredential } from "@/orpc/hooks/use-credentials"
+import type { CredentialOutput } from "@/schemas/credential/dto"
+import type { PlatformSimpleRo } from "@/schemas/utils/platform"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
-
-import { PlatformEntity } from "@/entities/utils/platform"
-import type { CredentialOutput } from "@/schemas/credential/dto"
-import type { PlatformSimpleRo } from "@/schemas/utils/platform"
 
 import { useUserPermissions } from "@/lib/permissions"
 import { getLogoDevUrlWithToken, getPlaceholderImage } from "@/lib/utils"
@@ -18,14 +17,6 @@ import { ContainerSelector } from "@/components/shared/container-selector"
 import { Icons } from "@/components/shared/icons"
 import { Button } from "@/components/ui/button"
 import {
-  ResponsiveDialog,
-  ResponsiveDialogContent,
-  ResponsiveDialogDescription,
-  ResponsiveDialogFooter,
-  ResponsiveDialogHeader,
-  ResponsiveDialogTitle,
-} from "@/components/ui/responsive-dialog"
-import {
   Form,
   FormControl,
   FormField,
@@ -33,6 +24,14 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form"
+import {
+  ResponsiveDialog,
+  ResponsiveDialogContent,
+  ResponsiveDialogDescription,
+  ResponsiveDialogFooter,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+} from "@/components/ui/responsive-dialog"
 
 const moveCredentialSchema = z.object({
   containerId: z.string().optional(),
@@ -90,7 +89,10 @@ export function DashboardMoveCredentialDialog({
         containerId: data.containerId || undefined,
       })
 
-      toast(`"${credential.identifier}" has been moved successfully.`, "success")
+      toast(
+        `"${credential.identifier}" has been moved successfully.`,
+        "success"
+      )
       onOpenChange(false)
       form.reset()
     } catch (error) {
@@ -107,87 +109,98 @@ export function DashboardMoveCredentialDialog({
   }
 
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader className="space-y-3">
-          <DialogTitle className="flex items-center gap-2">
+    <ResponsiveDialog open={open} onOpenChange={handleOpenChange}>
+      <ResponsiveDialogContent className="sm:max-w-md">
+        <ResponsiveDialogHeader className="border-b pb-2">
+          <ResponsiveDialogTitle className="flex items-center gap-2">
             <Icons.move className="size-5" />
             Move {credential.identifier}
-          </DialogTitle>
-          <DialogDescription>
+          </ResponsiveDialogTitle>
+          <ResponsiveDialogDescription>
             Select a container to move this credential to.
-          </DialogDescription>
-        </DialogHeader>
+          </ResponsiveDialogDescription>
+        </ResponsiveDialogHeader>
 
-        <div className="space-y-4">
-          <div className="bg-muted/30 rounded-lg border p-4">
-            <div className="flex items-start gap-3">
-              <div className="bg-secondary flex size-10 flex-shrink-0 items-center justify-center rounded-full">
-                <Image
-                  src={getPlaceholderImage(
-                    platform.name,
-                    getLogoDevUrlWithToken(platform.logo)
-                  )}
-                  alt={`${platform.name} logo`}
-                  width={24}
-                  height={24}
-                  className="bg-secondary size-6 rounded-full object-contain"
-                />
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="text-foreground text-sm font-semibold">
-                  {credential.identifier}
+        <div className="px-6 pb-4">
+          <div className="space-y-4">
+            <div className="bg-muted/30 rounded-lg border p-4">
+              <div className="flex items-start gap-3">
+                <div className="bg-secondary flex size-10 flex-shrink-0 items-center justify-center rounded-full">
+                  <Image
+                    src={getPlaceholderImage(
+                      platform.name,
+                      getLogoDevUrlWithToken(platform.logo)
+                    )}
+                    alt={`${platform.name} logo`}
+                    width={24}
+                    height={24}
+                    className="bg-secondary size-6 rounded-full object-contain"
+                  />
                 </div>
-                {credential.description && (
-                  <div className="text-muted-foreground mt-1 line-clamp-2 text-xs">
-                    {credential.description}
+                <div className="min-w-0 flex-1">
+                  <div className="text-foreground text-sm font-semibold">
+                    {credential.identifier}
                   </div>
-                )}
+                  {credential.description && (
+                    <div className="text-muted-foreground mt-1 line-clamp-2 text-xs">
+                      {credential.description}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
 
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(handleMove)} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="containerId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormControl>
-                      <ContainerSelector
-                        currentContainerId={field.value}
-                        entityType="CREDENTIAL"
-                        onContainerChange={field.onChange}
-                        disabled={isMoving || !canMoveCredential}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </form>
-          </Form>
+            <Form {...form}>
+              <form
+                onSubmit={form.handleSubmit(handleMove)}
+                className="space-y-4"
+              >
+                <FormField
+                  control={form.control}
+                  name="containerId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Container</FormLabel>
+                      <FormControl>
+                        <ContainerSelector
+                          currentContainerId={field.value}
+                          entityType="CREDENTIAL"
+                          onContainerChange={field.onChange}
+                          disabled={isMoving || !canMoveCredential}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </form>
+            </Form>
+          </div>
         </div>
 
-        <DialogFooter className="gap-2">
+        <ResponsiveDialogFooter className="gap-2">
           <Button
             variant="outline"
             onClick={() => handleOpenChange(false)}
             disabled={isMoving}
+            className="order-2 sm:order-1"
           >
             Cancel
           </Button>
           <Button
             onClick={form.handleSubmit(handleMove)}
-            disabled={isMoving || selectedContainerId === credential.containerId || !canMoveCredential}
-            className="disabled:opacity-50"
+            disabled={
+              isMoving ||
+              selectedContainerId === credential.containerId ||
+              !canMoveCredential
+            }
+            className="order-1 disabled:opacity-50 sm:order-2"
           >
             {isMoving && <Icons.spinner className="mr-2 size-4 animate-spin" />}
             Move credential
           </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </ResponsiveDialogFooter>
+      </ResponsiveDialogContent>
+    </ResponsiveDialog>
   )
 }

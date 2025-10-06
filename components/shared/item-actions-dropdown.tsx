@@ -318,12 +318,12 @@ export function CredentialActionsDropdown({
           shouldRedirect={shouldRedirect}
         />
 
-      <DashboardMoveCredentialDialog
-        open={moveDialogOpen}
-        onOpenChange={setMoveDialogOpen}
-        credential={credential}
-        platforms={platforms}
-      />
+        <DashboardMoveCredentialDialog
+          open={moveDialogOpen}
+          onOpenChange={setMoveDialogOpen}
+          credential={credential}
+          platforms={platforms}
+        />
       </>
     )
   }
