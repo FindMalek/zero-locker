@@ -14,6 +14,7 @@ export const createCredentialInputSchema = credentialDtoSchema
 export const getCredentialInputSchema = getCredentialByIdDtoSchema
 export const updateCredentialInputSchema = updateCredentialDtoSchema
 export const deleteCredentialInputSchema = deleteCredentialDtoSchema
+export const duplicateCredentialInputSchema = getCredentialByIdDtoSchema
 
 // List credentials with pagination
 export const listCredentialsInputSchema = z.object({
@@ -54,6 +55,9 @@ export type UpdateCredentialPasswordInput = z.infer<
   typeof updateCredentialPasswordInputSchema
 >
 export type DeleteCredentialInput = z.infer<typeof deleteCredentialInputSchema>
+export type DuplicateCredentialInput = z.infer<
+  typeof duplicateCredentialInputSchema
+>
 export type ListCredentialsInput = z.infer<typeof listCredentialsInputSchema>
 
 export type CredentialOutput = z.infer<typeof credentialOutputSchema>

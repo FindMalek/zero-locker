@@ -3,6 +3,7 @@
 import { useState } from "react"
 import Image from "next/image"
 import { CredentialKeyValuePairEntity } from "@/entities/credential/credential-key-value"
+import { PlatformEntity } from "@/entities/utils/platform"
 import {
   useCreateCredentialWithMetadata,
   usePlatforms,
@@ -133,9 +134,24 @@ export function DashboardAddCredentialDialog({
     },
   })
 
-  const selectedPlatform = platforms.find(
-    (p) => p.id === credentialForm.watch("platformId")
-  )
+  const selectedPlatform = credentialForm.watch("platformId")
+    ? PlatformEntity.findById(platforms, credentialForm.watch("platformId"))
+    : null
+
+  const getSelectedPlatformItem = () => {
+    const platformId = credentialForm.watch("platformId")
+    if (!platformId) return null
+
+    const platform = PlatformEntity.findById(platforms, platformId)
+    return {
+      value: platformId,
+      label: platform.name,
+      logo: getPlaceholderImage(
+        platform.name,
+        getLogoDevUrlWithToken(platform.logo || null)
+      ),
+    }
+  }
 
   const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const password = e.target.value
@@ -427,33 +443,7 @@ export function DashboardAddCredentialDialog({
                           getLogoDevUrlWithToken(platform.logo || null)
                         ),
                       }))}
-                      selectedItem={
-                        platforms.find(
-                          (p) => p.id === credentialForm.watch("platformId")
-                        )
-                          ? {
-                              value: credentialForm.watch("platformId"),
-                              label:
-                                platforms.find(
-                                  (p) =>
-                                    p.id === credentialForm.watch("platformId")
-                                )?.name || "",
-                              logo: getPlaceholderImage(
-                                platforms.find(
-                                  (p) =>
-                                    p.id === credentialForm.watch("platformId")
-                                )?.name || "",
-                                getLogoDevUrlWithToken(
-                                  platforms.find(
-                                    (p) =>
-                                      p.id ===
-                                      credentialForm.watch("platformId")
-                                  )?.logo || null
-                                )
-                              ),
-                            }
-                          : null
-                      }
+                      selectedItem={getSelectedPlatformItem()}
                       onSelect={(item) =>
                         credentialForm.setValue("platformId", item?.value || "")
                       }

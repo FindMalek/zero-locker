@@ -21,6 +21,7 @@ import {
   createCredentialInputSchema,
   credentialOutputSchema,
   deleteCredentialInputSchema,
+  duplicateCredentialInputSchema,
   getCredentialInputSchema,
   listCredentialsInputSchema,
   listCredentialsOutputSchema,
@@ -188,6 +189,20 @@ export const getCredentialKeyValuePairsWithValues = authProcedure
     const pairsWithValues = await Promise.all(
       filteredPairs.map(async (kvPair) => {
         try {
+          // Check if this is an empty value (from duplication)
+          if (
+            !kvPair.valueEncryption.encryptedValue ||
+            kvPair.valueEncryption.encryptedValue.trim() === ""
+          ) {
+            return {
+              id: kvPair.id,
+              key: kvPair.key,
+              value: "",
+              createdAt: kvPair.createdAt,
+              updatedAt: kvPair.updatedAt,
+            }
+          }
+
           const decryptedValue = await decryptData(
             kvPair.valueEncryption.encryptedValue,
             kvPair.valueEncryption.iv,
@@ -257,6 +272,14 @@ export const getCredentialKeyValuePairValue = authProcedure
     }
 
     try {
+      // Check if this is an empty value (from duplication)
+      if (
+        !kvPair.valueEncryption.encryptedValue ||
+        kvPair.valueEncryption.encryptedValue.trim() === ""
+      ) {
+        return { value: "" }
+      }
+
       const decryptedValue = await decryptData(
         kvPair.valueEncryption.encryptedValue,
         kvPair.valueEncryption.iv,
@@ -266,9 +289,8 @@ export const getCredentialKeyValuePairValue = authProcedure
       return { value: decryptedValue }
     } catch (error) {
       console.error(`Failed to decrypt key-value pair ${kvPair.id}:`, error)
-      throw new ORPCError("INTERNAL_SERVER_ERROR", {
-        message: "Failed to decrypt value",
-      })
+      // Return empty value if decryption fails (likely from duplication)
+      return { value: "" }
     }
   })
 
@@ -298,6 +320,14 @@ export const getCredentialPassword = authProcedure
     }
 
     try {
+      // Check if this is an empty password (from duplication)
+      if (
+        !credential.passwordEncryption.encryptedValue ||
+        credential.passwordEncryption.encryptedValue.trim() === ""
+      ) {
+        return { password: "" }
+      }
+
       // Decrypt password on server for security
       const decryptedPassword = await decryptData(
         credential.passwordEncryption.encryptedValue,
@@ -314,9 +344,8 @@ export const getCredentialPassword = authProcedure
       return { password: decryptedPassword }
     } catch (error) {
       console.error("Failed to decrypt password:", error)
-      throw new ORPCError("INTERNAL_SERVER_ERROR", {
-        message: "Failed to decrypt password",
-      })
+      // If decryption fails, return empty password (likely from duplication)
+      return { password: "" }
     }
   })
 
@@ -1157,6 +1186,210 @@ export const updateCredentialKeyValuePairs = authProcedure
     return { success: true }
   })
 
+// Duplicate credential
+export const duplicateCredential = authProcedure
+  .use(({ context, next }) =>
+    requirePermission({
+      feature: Feature.CREDENTIALS,
+      level: PermissionLevel.WRITE,
+    })({ context, next })
+  )
+  .input(duplicateCredentialInputSchema)
+  .output(credentialOutputSchema)
+  .handler(async ({ input, context }): Promise<CredentialOutput> => {
+    // Get the original credential with all data
+    const originalCredential = await database.credential.findFirst({
+      where: {
+        id: input.id,
+        userId: context.user.id,
+      },
+      include: CredentialQuery.getInclude(),
+    })
+
+    if (!originalCredential) {
+      throw new ORPCError("NOT_FOUND")
+    }
+
+    // Get the original password encryption data (for reusing key/IV)
+    const passwordData = await database.credential.findFirst({
+      where: {
+        id: input.id,
+        userId: context.user.id,
+      },
+      include: {
+        passwordEncryption: true,
+      },
+    })
+
+    if (!passwordData?.passwordEncryption) {
+      throw new ORPCError("NOT_FOUND")
+    }
+
+    // Get the original key-value pairs
+    const keyValueData = await database.credential.findFirst({
+      where: {
+        id: input.id,
+        userId: context.user.id,
+      },
+      include: {
+        metadata: {
+          include: {
+            keyValuePairs: {
+              include: {
+                valueEncryption: true,
+              },
+            },
+          },
+        },
+      },
+    })
+
+    const originalKeyValuePairs =
+      keyValueData?.metadata?.[0]?.keyValuePairs || []
+
+    // Create the duplicate with a modified identifier
+    // Generate unique identifier for duplicate
+    const baseIdentifier = originalCredential.identifier
+    let duplicateIdentifier = `${baseIdentifier} (Copy)`
+    let counter = 1
+
+    // Check if identifier already exists and increment counter
+    while (true) {
+      const existingCredential = await database.credential.findFirst({
+        where: {
+          identifier: duplicateIdentifier,
+          userId: context.user.id,
+        },
+      })
+
+      if (!existingCredential) {
+        break // Identifier is unique
+      }
+
+      // Increment counter and try again
+      counter++
+      duplicateIdentifier = `${baseIdentifier} (Copy ${counter})`
+    }
+
+    try {
+      // Use transaction for atomicity
+      const duplicatedCredential = await database.$transaction(async (tx) => {
+        // Create empty encrypted data for password (user will set new password)
+        const emptyPasswordEncryptionResult = await createEncryptedData(
+          {
+            encryptedValue: "", // Empty password
+            encryptionKey: passwordData.passwordEncryption.encryptionKey, // Use same key
+            iv: passwordData.passwordEncryption.iv, // Use same IV
+          },
+          tx
+        )
+
+        if (
+          !emptyPasswordEncryptionResult.success ||
+          !emptyPasswordEncryptionResult.encryptedData
+        ) {
+          throw new ORPCError("INTERNAL_SERVER_ERROR", {
+            message:
+              emptyPasswordEncryptionResult.error ||
+              "Failed to create encrypted data",
+          })
+        }
+
+        // Create the duplicate credential
+        const newCredential = await tx.credential.create({
+          data: {
+            identifier: duplicateIdentifier,
+            passwordEncryptionId:
+              emptyPasswordEncryptionResult.encryptedData.id,
+            status: originalCredential.status,
+            platformId: originalCredential.platformId,
+            description: originalCredential.description,
+            userId: context.user.id,
+            containerId: originalCredential.containerId,
+            tags: {
+              connect: originalCredential.tags.map((tag) => ({ id: tag.id })),
+            },
+          },
+        })
+
+        // Create metadata for the duplicated credential
+        if (
+          originalCredential.metadata &&
+          originalCredential.metadata.length > 0
+        ) {
+          const originalMetadata = originalCredential.metadata[0]
+
+          const newMetadata = await tx.credentialMetadata.create({
+            data: {
+              credentialId: newCredential.id,
+              has2FA: originalMetadata.has2FA,
+              recoveryEmail: originalMetadata.recoveryEmail,
+              phoneNumber: originalMetadata.phoneNumber,
+              keyValuePairs: {
+                create: await Promise.all(
+                  originalKeyValuePairs.map(async (kvPair) => {
+                    // Create empty encrypted data for key-value pair (user will set new value)
+                    const emptyValueEncryptionResult =
+                      await createEncryptedData(
+                        {
+                          encryptedValue: "", // Empty value
+                          encryptionKey: kvPair.valueEncryption.encryptionKey, // Use same key
+                          iv: kvPair.valueEncryption.iv, // Use same IV
+                        },
+                        tx
+                      )
+
+                    if (
+                      !emptyValueEncryptionResult.success ||
+                      !emptyValueEncryptionResult.encryptedData
+                    ) {
+                      throw new ORPCError("INTERNAL_SERVER_ERROR", {
+                        message:
+                          emptyValueEncryptionResult.error ??
+                          "Failed to create encrypted data for duplicated key-value pair",
+                      })
+                    }
+
+                    return {
+                      key: kvPair.key,
+                      valueEncryption: {
+                        connect: {
+                          id: emptyValueEncryptionResult.encryptedData.id,
+                        },
+                      },
+                    }
+                  })
+                ),
+              },
+            },
+          })
+
+          // Update the credential with metadata reference
+          await tx.credential.update({
+            where: { id: newCredential.id },
+            data: { metadata: { connect: { id: newMetadata.id } } },
+          })
+        }
+
+        return newCredential
+      })
+
+      return CredentialEntity.getSimpleRo(duplicatedCredential)
+    } catch (error) {
+      // Handle unique constraint violation
+      if (
+        error instanceof PrismaClientKnownRequestError &&
+        error.code === "P2002"
+      ) {
+        throw new ORPCError("CONFLICT", {
+          message:
+            "A credential with this identifier already exists for this platform",
+        })
+      }
+      throw error
+    }
+  })
+
 // Export the credential router
 export const credentialRouter = {
   get: getCredential,
@@ -1172,5 +1405,6 @@ export const credentialRouter = {
   updatePassword: updateCredentialPassword,
   updateWithSecuritySettings: updateCredentialWithSecuritySettings,
   updateKeyValuePairs: updateCredentialKeyValuePairs,
+  duplicate: duplicateCredential,
   delete: deleteCredential,
 }

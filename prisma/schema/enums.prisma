@@ -53,11 +53,13 @@ enum CardStatus {
  * @property ACTIVE - Account is active.
  * @property SUSPENDED - Account is suspended.
  * @property DELETED - Account is deleted.
+ * @property ARCHIVED - Account is archived.
  */
 enum AccountStatus {
   ACTIVE
   SUSPENDED
   DELETED
+  ARCHIVED
 }
 
 /**

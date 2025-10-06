@@ -1,0 +1,280 @@
+---
+globs: schemas/utils/breadcrumb.ts,**/breadcrumb.ts
+description: Breadcrumb navigation schemas and type definitions
+---
+
+# Breadcrumb Schema - Navigation Type Definitions
+
+The [breadcrumb.ts](mdc:schemas/utils/breadcrumb.ts) schema provides type-safe breadcrumb navigation components using Zod schemas and discriminated unions.
+
+## Schema Overview
+
+### Breadcrumb Item Schemas
+```tsx
+import { z } from "zod"
+import type { CredentialOutput } from "@/schemas/credential/dto"
+import type { CardOutput } from "@/schemas/card/dto"
+import type { SecretOutput } from "@/schemas/secrets/dto"
+import type { PlatformSimpleRo } from "@/schemas/utils/platform"
+
+// Credential breadcrumb item
+export const BreadcrumbCredentialItemSchema = z.object({
+  type: z.literal("credential"),
+  data: z.object({
+    credential: z.custom<CredentialOutput>(),
+    platform: z.custom<PlatformSimpleRo>(),
+  }),
+})
+
+// Card breadcrumb item
+export const BreadcrumbCardItemSchema = z.object({
+  type: z.literal("card"),
+  data: z.object({
+    card: z.custom<CardOutput>(),
+  }),
+})
+
+// Secret breadcrumb item
+export const BreadcrumbSecretItemSchema = z.object({
+  type: z.literal("secret"),
+  data: z.object({
+    secret: z.custom<SecretOutput>(),
+  }),
+})
+
+// Discriminated union for all breadcrumb types
+export const BreadcrumbItemSchema = z.discriminatedUnion("type", [
+  BreadcrumbCredentialItemSchema,
+  BreadcrumbCardItemSchema,
+  BreadcrumbSecretItemSchema,
+])
+```
+
+## Type Definitions
+
+### Exported Types
+```tsx
+export type BreadcrumbCredentialItem = z.infer<typeof BreadcrumbCredentialItemSchema>
+export type BreadcrumbCardItem = z.infer<typeof BreadcrumbCardItemSchema>
+export type BreadcrumbSecretItem = z.infer<typeof BreadcrumbSecretItemSchema>
+export type BreadcrumbItem = z.infer<typeof BreadcrumbItemSchema>
+```
+
+## Usage Patterns
+
+### Component Integration
+```tsx
+import type { BreadcrumbItem } from "@/schemas/utils/breadcrumb"
+
+function BreadcrumbComponent() {
+  const [items, setItems] = useState<BreadcrumbItem[]>([])
+  
+  // Helper functions for type-safe access
+  const getItemId = (item: BreadcrumbItem): string => {
+    switch (item.type) {
+      case "credential":
+        return item.data.credential.id
+      case "card":
+        return item.data.card.id
+      case "secret":
+        return item.data.secret.id
+    }
+  }
+  
+  const getItemDisplayName = (item: BreadcrumbItem): string => {
+    switch (item.type) {
+      case "credential":
+        return item.data.credential.identifier
+      case "card":
+        return item.data.card.name
+      case "secret":
+        return item.data.secret.name
+    }
+  }
+  
+  return (
+    <div>
+      {items.map((item) => (
+        <div key={getItemId(item)}>
+          {getItemDisplayName(item)}
+        </div>
+      ))}
+    </div>
+  )
+}
+```
+
+### Data Construction
+```tsx
+// Creating breadcrumb items
+const credentialItem: BreadcrumbItem = {
+  type: "credential",
+  data: {
+    credential: credentialData,  // Complete CredentialOutput object
+    platform: platformData,     // Complete PlatformSimpleRo object
+  }
+}
+
+const cardItem: BreadcrumbItem = {
+  type: "card",
+  data: {
+    card: cardData,  // Complete CardOutput object
+  }
+}
+
+const secretItem: BreadcrumbItem = {
+  type: "secret",
+  data: {
+    secret: secretData,  // Complete SecretOutput object
+  }
+}
+```
+
+## Design Principles
+
+### 1. Complete Object Usage
+- **Before**: `Pick<CredentialOutput, "id" | "identifier"> & { platformName: string; logo?: string }`
+- **After**: Complete `CredentialOutput` + `PlatformSimpleRo` objects
+
+### 2. Type Safety
+- Uses Zod schemas for runtime validation
+- Discriminated unions for type narrowing
+- Generic types for extensibility
+
+### 3. No Intersection Types
+- Avoids complex `& { platformName: string; logo?: string }` patterns
+- Uses complete objects instead of picked fields
+- Cleaner, more maintainable type definitions
+
+### 4. Discriminated Unions
+- Type-safe switching based on `item.type`
+- Compiler ensures exhaustive handling
+- Clear API for different breadcrumb types
+
+## Benefits
+
+1. **Complete Data Access**: Full access to all object properties
+2. **Type Safety**: Compile-time type checking with TypeScript
+3. **Extensibility**: Easy to add new breadcrumb types
+4. **Maintainability**: Single source of truth for breadcrumb structure
+5. **Runtime Validation**: Zod schemas provide runtime type checking
+6. **Clean API**: Simple discriminated union pattern
+
+## Anti-Patterns Avoided
+
+### ❌ Intersection Types
+```tsx
+// Don't do this - complex intersection types
+type BreadcrumbItem = 
+  | { type: "credential"; data: Pick<CredentialOutput, "id" | "identifier"> & { platformName: string; logo?: string } }
+  | { type: "card"; data: Pick<CardOutput, "id" | "name"> }
+```
+
+### ❌ Hardcoded Field Selection
+```tsx
+// Don't do this - limited field access
+const breadcrumbData = {
+  id: credential.id,
+  identifier: credential.identifier,
+  platformName: platform.name,
+  logo: platform.logo,
+}
+```
+
+### ✅ Complete Object Usage
+```tsx
+// Do this - complete object access
+const breadcrumbData = {
+  credential: credential,  // Full CredentialOutput
+  platform: platform,     // Full PlatformSimpleRo
+}
+```
+
+## Integration with Components
+
+### Breadcrumb Resource Select
+```tsx
+// Used in breadcrumb-resource-select.tsx
+const baseItems: BreadcrumbItem[] = credentials.map((cred) => {
+  const platform = PlatformEntity.findById(platforms, cred.platformId)
+  return {
+    type: "credential",
+    data: {
+      credential: cred,
+      platform: platform,
+    }
+  }
+})
+```
+
+### Type-Safe Rendering
+```tsx
+// Type-safe rendering with helper functions
+const renderBreadcrumbItem = (item: BreadcrumbItem) => {
+  switch (item.type) {
+    case "credential":
+      return (
+        <div>
+          <img src={item.data.platform.logo} alt={item.data.platform.name} />
+          <span>{item.data.credential.identifier}</span>
+        </div>
+      )
+    case "card":
+      return <span>{item.data.card.name}</span>
+    case "secret":
+      return <span>{item.data.secret.name}</span>
+  }
+}
+```
+
+## Testing
+
+### Schema Validation
+```tsx
+describe('BreadcrumbItemSchema', () => {
+  it('should validate credential breadcrumb item', () => {
+    const validItem = {
+      type: "credential",
+      data: {
+        credential: mockCredential,
+        platform: mockPlatform,
+      }
+    }
+    
+    expect(() => BreadcrumbItemSchema.parse(validItem)).not.toThrow()
+  })
+  
+  it('should reject invalid breadcrumb item', () => {
+    const invalidItem = {
+      type: "credential",
+      data: {
+        credential: null,  // Invalid
+        platform: mockPlatform,
+      }
+    }
+    
+    expect(() => BreadcrumbItemSchema.parse(invalidItem)).toThrow()
+  })
+})
+```
+
+### Type Safety Testing
+```tsx
+describe('BreadcrumbItem types', () => {
+  it('should have correct type narrowing', () => {
+    const item: BreadcrumbItem = {
+      type: "credential",
+      data: {
+        credential: mockCredential,
+        platform: mockPlatform,
+      }
+    }
+    
+    if (item.type === "credential") {
+      // TypeScript knows this is BreadcrumbCredentialItem
+      expect(item.data.credential).toBeDefined()
+      expect(item.data.platform).toBeDefined()
+    }
+  })
+})
+```

@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { PlatformEntity } from "@/entities/utils/platform"
 import { usePlatforms } from "@/orpc/hooks/use-platforms"
 import { AccountStatusInfer } from "@/schemas/credential/credential"
 import type { CredentialOutput } from "@/schemas/credential/dto"
@@ -42,9 +43,9 @@ export function CredentialSidebar({
 
   const { data: platformsData } = usePlatforms({ page: 1, limit: 100 })
 
-  const platform = platformsData?.platforms.find(
-    (p) => p.id === credential.platformId
-  )
+  const platform = platformsData?.platforms
+    ? PlatformEntity.findById(platformsData.platforms, credential.platformId)
+    : null
 
   const handleStatusChange = async (newStatus: AccountStatusInfer) => {
     if (onStatusChange && newStatus !== credential.status) {

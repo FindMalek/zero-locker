@@ -7,13 +7,107 @@ import {
   isYesterday,
 } from "date-fns"
 
+// Centralized date formatting utility
+export class DateFormatter {
+  /**
+   * Format date as "MMM dd, yyyy" (e.g., "Jan 15, 2024")
+   * This is the most commonly used format in the application
+   */
+  static formatShortDate(date: Date | string | null): string {
+    if (!date) return "Never"
+
+    const dateObj = typeof date === "string" ? new Date(date) : date
+    return new Intl.DateTimeFormat("en-US", {
+      month: "short",
+      day: "2-digit",
+      year: "numeric",
+    }).format(dateObj)
+  }
+
+  /**
+   * Format date as "MMMM dd, yyyy" (e.g., "January 15, 2024")
+   * Used for more formal date displays
+   */
+  static formatLongDate(date: Date | string | null): string {
+    if (!date) return "Never"
+
+    const dateObj = typeof date === "string" ? new Date(date) : date
+    return new Intl.DateTimeFormat("en-US", {
+      month: "long",
+      day: "numeric",
+      year: "numeric",
+    }).format(dateObj)
+  }
+
+  /**
+   * Format date and time as "MMMM dd, yyyy 'at' h:mm a" (e.g., "January 15, 2024 at 2:30 PM")
+   * Used for detailed timestamp displays
+   */
+  static formatDateTime(date: Date | string | null): string {
+    if (!date) return "Never"
+
+    const dateObj = typeof date === "string" ? new Date(date) : date
+    return new Intl.DateTimeFormat("en-US", {
+      month: "long",
+      day: "numeric",
+      year: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    }).format(dateObj)
+  }
+
+  /**
+   * Format date and time with seconds as "MMMM dd, yyyy 'at' h:mm:ss a" (e.g., "January 15, 2024 at 2:30:45 PM")
+   * Used for precise timestamp displays
+   */
+  static formatFullDateTime(date: Date | string | null): string {
+    if (!date) return "Never"
+
+    const dateObj = typeof date === "string" ? new Date(date) : date
+    return new Intl.DateTimeFormat("en-US", {
+      month: "long",
+      day: "numeric",
+      year: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: true,
+    }).format(dateObj)
+  }
+
+  /**
+   * Format date as "MM/dd/yyyy" (e.g., "01/15/2024")
+   * Used for compact date displays
+   */
+  static formatCompactDate(date: Date | string | null): string {
+    if (!date) return "Never"
+
+    const dateObj = typeof date === "string" ? new Date(date) : date
+    return new Intl.DateTimeFormat("en-US", {
+      month: "2-digit",
+      day: "2-digit",
+      year: "numeric",
+    }).format(dateObj)
+  }
+
+  /**
+   * Format date as "yyyy-MM-dd" (e.g., "2024-01-15")
+   * Used for ISO-style date displays
+   */
+  static formatISODate(date: Date | string | null): string {
+    if (!date) return "Never"
+    const d = typeof date === "string" ? new Date(date) : date
+    const y = d.getFullYear()
+    const m = String(d.getMonth() + 1).padStart(2, "0")
+    const day = String(d.getDate()).padStart(2, "0")
+    return `${y}-${m}-${day}`
+  }
+}
+
+// Legacy function for backward compatibility - now uses centralized formatter
 export function formatDate(date: Date | null): string {
-  if (!date) return "Never"
-  return new Intl.DateTimeFormat("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  }).format(date)
+  return DateFormatter.formatShortDate(date)
 }
 
 export function getRelativeTime(date: Date | null): string {
@@ -54,13 +148,5 @@ export function getPrimaryDate(lastViewed: Date | null, createdAt: Date) {
 }
 
 export function getFullFormattedDateAndTime(date: Date | null): string {
-  if (!date) return "Never"
-  return new Intl.DateTimeFormat("en-US", {
-    month: "long",
-    day: "numeric",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-  }).format(date)
+  return DateFormatter.formatFullDateTime(date)
 }

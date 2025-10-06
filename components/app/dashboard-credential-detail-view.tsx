@@ -2,10 +2,10 @@
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
+import { PlatformEntity } from "@/entities/utils/platform"
 import {
   useCredential,
   useCredentialSecuritySettings,
-  useDeleteCredential,
   useUpdateCredential,
   useUpdateCredentialWithSecuritySettings,
 } from "@/orpc/hooks/use-credentials"
@@ -34,16 +34,6 @@ import { CredentialSidebar } from "@/components/app/dashboard-credential-sidebar
 import { EmptyState } from "@/components/shared/empty-state"
 import { FloatingSaveToolbar } from "@/components/shared/floating-save-toolbar"
 import { Icons } from "@/components/shared/icons"
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
 import { Separator } from "@/components/ui/separator"
 
 interface CredentialDetailViewProps {
@@ -68,10 +58,9 @@ export function CredentialDetailView({
   } = useCredential(credentialId, {
     initialData: initialData.credential,
   })
+  const updateCredentialBasicMutation = useUpdateCredential()
   const updateCredentialMutation = useUpdateCredentialWithSecuritySettings()
-  const updateCredentialBasicMutation = useUpdateCredential() // For status-only updates
-  const deleteCredentialMutation = useDeleteCredential()
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+
   const [hasKeyValueChanges, setHasKeyValueChanges] = useState(false)
   const [hasPasswordChanges, setHasPasswordChanges] = useState(false)
 
@@ -167,33 +156,6 @@ export function CredentialDetailView({
     setHasPasswordChanges(false)
   }
 
-  const handleDelete = () => {
-    setShowDeleteDialog(true)
-  }
-
-  const handleConfirmDelete = async () => {
-    if (!credential) return
-
-    try {
-      await deleteCredentialMutation.mutateAsync({ id: credential.id })
-      toast("Credential deleted successfully", "success")
-      router.push("/dashboard/accounts")
-    } catch (error) {
-      const { message, details } = handleErrors(
-        error,
-        "Failed to delete credential"
-      )
-      toast(
-        details
-          ? `${message}: ${Array.isArray(details) ? details.join(", ") : details}`
-          : message,
-        "error"
-      )
-    } finally {
-      setShowDeleteDialog(false)
-    }
-  }
-
   const handleContainerChange = (containerId: string) => {
     form.setValue("containerId", containerId, { shouldDirty: true })
   }
@@ -241,34 +203,17 @@ export function CredentialDetailView({
     )
   }
 
-  const platform = initialData.platforms.platforms.find(
-    (p) => p.id === credential.platformId
+  const platform = PlatformEntity.findByIdStrict(
+    initialData.platforms.platforms,
+    credential.platformId
   )
-
-  if (!platform) {
-    return (
-      <div className="flex min-h-[400px] items-center justify-center">
-        <EmptyState
-          icon={() => <Icons.warning className="size-12" />}
-          title="Platform unavailable"
-          description="We couldn't load platform info for this credential."
-          actionLabel="Go back"
-          onAction={() => router.back()}
-        />
-      </div>
-    )
-  }
 
   return (
     <div className="bg-background min-h-screen">
       <div className="mx-auto max-w-6xl p-4">
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-4">
           <div className="space-y-6 lg:col-span-3">
-            <CredentialHeader
-              credential={credential}
-              platform={platform}
-              onDelete={handleDelete}
-            />
+            <CredentialHeader credential={credential} platform={platform} />
             <Separator />
             <CredentialForm
               credential={credential}
@@ -335,29 +280,6 @@ export function CredentialDetailView({
           }
         }}
       />
-
-      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Credential</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete the credential for{" "}
-              <strong>{credential?.identifier}</strong> on{" "}
-              <strong>{platform.name}</strong>? This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleConfirmDelete}
-              disabled={deleteCredentialMutation.isPending}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              {deleteCredentialMutation.isPending ? "Deleting..." : "Delete"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   )
 }

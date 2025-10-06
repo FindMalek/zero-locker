@@ -8,18 +8,16 @@ import { PlatformOutput } from "@/schemas/utils/dto"
 import { getLogoDevUrlWithToken, getPlaceholderImage } from "@/lib/utils"
 
 import { Icons } from "@/components/shared/icons"
-import { ItemActionsDropdown } from "@/components/shared/item-actions-dropdown"
+import { CredentialActionsDropdown } from "@/components/shared/item-actions-dropdown"
 
 interface CredentialHeaderProps {
   credential: CredentialOutput
   platform: PlatformOutput
-  onDelete?: () => void
 }
 
 export function CredentialHeader({
   credential,
   platform,
-  onDelete,
 }: CredentialHeaderProps) {
   return (
     <div className="flex items-start justify-between gap-4">
@@ -58,20 +56,10 @@ export function CredentialHeader({
       </div>
 
       <div className="flex flex-shrink-0 items-center gap-2">
-        <ItemActionsDropdown
-          onShare={() => {
-            // TODO: Implement share
-          }}
-          onDuplicate={() => {
-            // TODO: Implement duplicate
-          }}
-          onMove={() => {
-            // TODO: Implement move
-          }}
-          onArchive={() => {
-            // TODO: Implement archive
-          }}
-          onDelete={onDelete}
+        <CredentialActionsDropdown
+          credential={credential}
+          platforms={[platform]}
+          shouldRedirect={true}
         />
       </div>
     </div>

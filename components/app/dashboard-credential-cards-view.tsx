@@ -2,6 +2,7 @@
 
 import Image from "next/image"
 import { useRouter } from "next/navigation"
+import { PlatformEntity } from "@/entities/utils/platform"
 import type { CredentialIncludeOutput } from "@/schemas/credential/dto"
 import type { PlatformSimpleRo } from "@/schemas/utils/platform"
 
@@ -14,7 +15,7 @@ import {
 import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard"
 
 import { Icons } from "@/components/shared/icons"
-import { ItemActionsContextMenu } from "@/components/shared/item-actions-dropdown"
+import { CredentialActionsContextMenu } from "@/components/shared/item-actions-dropdown"
 import { StatusBadge } from "@/components/shared/status-badge"
 import { TagDisplay } from "@/components/shared/tag-display"
 import { Button } from "@/components/ui/button"
@@ -34,27 +35,10 @@ export function DashboardCredentialCardsView({
   platforms,
 }: CredentialListViewProps) {
   const router = useRouter()
+
   const { copy, isCopied } = useCopyToClipboard({
     successDuration: 1000,
   })
-
-  const getPlatform = (platformId: string) => {
-    return (
-      platforms.find((p) => p.id === platformId) || {
-        id: platformId,
-        name: "unknown",
-        logo: "",
-      }
-    )
-  }
-
-  const handleCopyIdentifier = async (
-    identifier: string,
-    e?: React.MouseEvent
-  ) => {
-    e?.stopPropagation()
-    await copy(identifier)
-  }
 
   const handleCardClick = (credentialId: string) => {
     router.push(`/dashboard/accounts/${credentialId}`)
@@ -63,30 +47,17 @@ export function DashboardCredentialCardsView({
   return (
     <div className="space-y-3">
       {credentials.map((credential) => {
-        const platform = getPlatform(credential.platformId)
+        const platform = PlatformEntity.findById(
+          platforms,
+          credential.platformId
+        )
         const primaryDate = credential.lastViewed || credential.createdAt
 
         return (
-          <ItemActionsContextMenu
+          <CredentialActionsContextMenu
             key={credential.id}
-            onEdit={() => {
-              // TODO: Implement edit
-            }}
-            onShare={() => {
-              // TODO: Implement share
-            }}
-            onDuplicate={() => {
-              // TODO: Implement duplicate
-            }}
-            onMove={() => {
-              // TODO: Implement move
-            }}
-            onArchive={() => {
-              // TODO: Implement archive
-            }}
-            onDelete={() => {
-              // TODO: Implement delete
-            }}
+            credential={credential}
+            platforms={platforms}
           >
             <div
               className="dark:hover:bg-secondary/50 hover:border-secondary-foreground/20 border-secondary group flex cursor-pointer items-center gap-4 rounded-lg border-2 p-4 transition-colors duration-200 hover:shadow-sm"
@@ -121,9 +92,7 @@ export function DashboardCredentialCardsView({
                       variant="ghost"
                       size="sm"
                       className="hover:text-primary  opacity-0 transition-all group-hover/identifier:opacity-100"
-                      onClick={(e) =>
-                        handleCopyIdentifier(credential.identifier, e)
-                      }
+                      onClick={async () => await copy(credential.identifier)}
                     >
                       {isCopied ? (
                         <Icons.check className="size-4" />
@@ -165,7 +134,7 @@ export function DashboardCredentialCardsView({
 
               <StatusBadge status={credential.status} compact />
             </div>
-          </ItemActionsContextMenu>
+          </CredentialActionsContextMenu>
         )
       })}
     </div>

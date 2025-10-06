@@ -98,7 +98,6 @@ export function usePreventAutoSave() {
   }, [])
 }
 ```
-
 ## Utility Hooks
 
 ### Copy to Clipboard (`use-copy-to-clipboard.ts`)

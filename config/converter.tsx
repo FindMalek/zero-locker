@@ -54,4 +54,10 @@ export const statusConfig = {
     ),
     icon: Icons.trash,
   },
+  [accountStatusEnum.ARCHIVED]: {
+    label: CredentialEntity.convertAccountStatusToString(
+      accountStatusEnum.ARCHIVED
+    ),
+    icon: Icons.archive,
+  },
 }
