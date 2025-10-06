@@ -58,7 +58,6 @@ export function DashboardCredentialCardsView({
             key={credential.id}
             credential={credential}
             platforms={platforms}
-            // containerId={credential.containerId}
           >
             <div
               className="dark:hover:bg-secondary/50 hover:border-secondary-foreground/20 border-secondary group flex cursor-pointer items-center gap-4 rounded-lg border-2 p-4 transition-colors duration-200 hover:shadow-sm"

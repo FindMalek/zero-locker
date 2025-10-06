@@ -88,7 +88,6 @@ export function DashboardCredentialGridView({
                   <CredentialActionsDropdown
                     credential={credential}
                     platforms={platforms}
-                    // containerId={credential.containerId}
                   />
                 </div>
               </div>

@@ -12,7 +12,6 @@ The `/hooks` folder contains custom React hooks for common functionality, form m
 hooks/
 ├── use-aggressive-form-blocker.ts # Form navigation blocking
 ├── use-copy-to-clipboard.ts       # Clipboard operations
-├── use-dialog-state.ts            # Dialog state management
 ├── use-entity-filters.ts          # Entity filtering logic
 ├── use-entity-sorting.ts          # Entity sorting logic
 ├── use-media-query.ts             # Media query detection

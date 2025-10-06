@@ -48,7 +48,6 @@ interface DeleteCredentialDialogProps {
   shouldRedirect?: boolean
 }
 
-// Needs a complete redesign of UI
 export function DashboardDeleteCredentialDialog({
   open,
   onOpenChange,
