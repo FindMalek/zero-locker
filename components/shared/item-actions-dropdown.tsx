@@ -282,11 +282,7 @@ export function CredentialActionsDropdown({
       onEdit: handleEdit,
       onShare: handleShare,
       onDuplicate: handleDuplicate,
-<<<<<<< HEAD
       onMove: permissions.canSelectContainers ? handleMove : undefined,
-=======
-      onMove: handleMove,
->>>>>>> d3ca67a (perf: solved 'archive' action)
       onArchive: credential.status === "ACTIVE" ? handleArchive : undefined,
       onUnarchive:
         credential.status === "ARCHIVED" ? handleUnarchive : undefined,
@@ -426,11 +422,7 @@ export function CredentialActionsContextMenu({
       onEdit: handleEdit,
       onShare: handleShare,
       onDuplicate: handleDuplicate,
-<<<<<<< HEAD
       onMove: permissions.canSelectContainers ? handleMove : undefined,
-=======
-      onMove: handleMove,
->>>>>>> d3ca67a (perf: solved 'archive' action)
       onArchive: credential.status === "ACTIVE" ? handleArchive : undefined,
       onUnarchive:
         credential.status === "ARCHIVED" ? handleUnarchive : undefined,
