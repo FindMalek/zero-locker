@@ -99,8 +99,7 @@ export function DashboardDeleteCredentialDialog({
       if (shouldRedirect) {
         router.push("/dashboard/accounts")
       }
-    } catch (error) {
-      console.log(error)
+    } catch {
       toast("Failed to delete credential. Please try again later.", "error")
     }
   }

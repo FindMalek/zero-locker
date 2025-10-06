@@ -7,6 +7,7 @@ import type { CredentialOutput } from "@/schemas/credential/dto"
 import type { PlatformSimpleRo } from "@/schemas/utils/platform"
 
 import { DateFormatter } from "@/lib/date-utils"
+import { getLogoDevUrlWithToken, getPlaceholderImage } from "@/lib/utils"
 import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard"
 
 import { Icons } from "@/components/shared/icons"
@@ -44,15 +45,27 @@ export function DashboardCredentialGridView({
         return (
           <Card
             key={credential.id}
-            className="cursor-pointer transition-shadow hover:shadow-md"
+            className="focus:ring-ring cursor-pointer transition-shadow hover:shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2"
+            role="button"
+            tabIndex={0}
             onClick={() => handleCardClick(credential.id)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault()
+                handleCardClick(credential.id)
+              }
+            }}
+            aria-label={`View credential ${credential.identifier} for ${platform.name}`}
           >
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="bg-secondary flex size-10 items-center justify-center rounded-full">
                     <Image
-                      src={platform.logo || ""}
+                      src={getPlaceholderImage(
+                        platform.name,
+                        getLogoDevUrlWithToken(platform.logo)
+                      )}
                       alt={`${platform.name} logo`}
                       width={24}
                       height={24}

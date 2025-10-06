@@ -1,5 +1,6 @@
 "use client"
 
+import { useEffect } from "react"
 import Image from "next/image"
 import { PlatformEntity } from "@/entities/utils/platform"
 import { useUpdateCredential } from "@/orpc/hooks/use-credentials"
@@ -72,6 +73,15 @@ export function DashboardMoveCredentialDialog({
   // Get platform data
   const platform = PlatformEntity.findById(platforms, credential.platformId)
 
+  // Reset form when credential changes or dialog opens
+  useEffect(() => {
+    if (open) {
+      form.reset({
+        containerId: credential.containerId || undefined,
+      })
+    }
+  }, [credential.id, credential.containerId, open, form])
+
   const handleMove = async (data: MoveCredentialFormData) => {
     if (!canMoveCredential) {
       toast("Moving credentials is only available for PRO plan users.", "error")
@@ -103,7 +113,9 @@ export function DashboardMoveCredentialDialog({
 
   const handleOpenChange = (newOpen: boolean) => {
     if (!newOpen) {
-      form.reset()
+      form.reset({
+        containerId: credential.containerId || undefined,
+      })
     }
     onOpenChange(newOpen)
   }
@@ -163,9 +175,11 @@ export function DashboardMoveCredentialDialog({
                       <FormLabel>Container</FormLabel>
                       <FormControl>
                         <ContainerSelector
-                          currentContainerId={field.value}
+                          currentContainerId={field.value ?? null}
                           entityType="CREDENTIAL"
-                          onContainerChange={field.onChange}
+                          onContainerChange={(v) =>
+                            field.onChange(v ?? undefined)
+                          }
                           disabled={isMoving || !canMoveCredential}
                         />
                       </FormControl>

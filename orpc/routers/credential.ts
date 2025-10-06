@@ -1322,9 +1322,12 @@ export const duplicateCredential = authProcedure
           const newMetadata = await tx.credentialMetadata.create({
             data: {
               credentialId: newCredential.id,
+              has2FA: originalMetadata.has2FA,
+              recoveryEmail: originalMetadata.recoveryEmail,
+              phoneNumber: originalMetadata.phoneNumber,
               keyValuePairs: {
                 create: await Promise.all(
-                  originalKeyValuePairs.map(async (kvPair: any) => {
+                  originalKeyValuePairs.map(async (kvPair) => {
                     // Create empty encrypted data for key-value pair (user will set new value)
                     const emptyValueEncryptionResult =
                       await createEncryptedData(
@@ -1336,11 +1339,22 @@ export const duplicateCredential = authProcedure
                         tx
                       )
 
+                    if (
+                      !emptyValueEncryptionResult.success ||
+                      !emptyValueEncryptionResult.encryptedData
+                    ) {
+                      throw new ORPCError("INTERNAL_SERVER_ERROR", {
+                        message:
+                          emptyValueEncryptionResult.error ??
+                          "Failed to create encrypted data for duplicated key-value pair",
+                      })
+                    }
+
                     return {
                       key: kvPair.key,
                       valueEncryption: {
                         connect: {
-                          id: emptyValueEncryptionResult.encryptedData!.id,
+                          id: emptyValueEncryptionResult.encryptedData.id,
                         },
                       },
                     }

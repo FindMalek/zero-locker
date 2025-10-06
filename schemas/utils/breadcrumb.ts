@@ -1,29 +1,29 @@
-import type { CardOutput } from "@/schemas/card/dto"
-import type { CredentialOutput } from "@/schemas/credential/dto"
-import type { SecretOutput } from "@/schemas/secrets/dto"
-import type { PlatformSimpleRo } from "@/schemas/utils/platform"
+import { cardOutputSchema } from "@/schemas/card/dto"
+import { credentialOutputSchema } from "@/schemas/credential/dto"
+import { secretOutputSchema } from "@/schemas/secrets/dto"
+import { platformSimpleRoSchema } from "@/schemas/utils/platform"
 import { z } from "zod"
 
 // Breadcrumb item schemas for navigation components
 export const BreadcrumbCredentialItemSchema = z.object({
   type: z.literal("credential"),
   data: z.object({
-    credential: z.custom<CredentialOutput>(),
-    platform: z.custom<PlatformSimpleRo>(),
+    credential: credentialOutputSchema,
+    platform: platformSimpleRoSchema,
   }),
 })
 
 export const BreadcrumbCardItemSchema = z.object({
   type: z.literal("card"),
   data: z.object({
-    card: z.custom<CardOutput>(),
+    card: cardOutputSchema,
   }),
 })
 
 export const BreadcrumbSecretItemSchema = z.object({
   type: z.literal("secret"),
   data: z.object({
-    secret: z.custom<SecretOutput>(),
+    secret: secretOutputSchema,
   }),
 })
 

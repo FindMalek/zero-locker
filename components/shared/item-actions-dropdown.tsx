@@ -295,7 +295,12 @@ export function CredentialActionsDropdown({
       <>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="sm" className="size-8 p-0">
+            <Button
+              variant="outline"
+              size="sm"
+              className="size-8 p-0"
+              onClick={(e) => e.stopPropagation()}
+            >
               <Icons.more className="size-3" />
             </Button>
           </DropdownMenuTrigger>
