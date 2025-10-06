@@ -14,15 +14,6 @@ import { getLogoDevUrlWithToken, getPlaceholderImage } from "@/lib/utils"
 import { useToast } from "@/hooks/use-toast"
 
 import { Icons } from "@/components/shared/icons"
-import {
-  AlertDialog,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
 import {
   Form,
@@ -33,6 +24,15 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
+import {
+  ResponsiveAlertDialog,
+  ResponsiveAlertDialogCancel,
+  ResponsiveAlertDialogContent,
+  ResponsiveAlertDialogDescription,
+  ResponsiveAlertDialogFooter,
+  ResponsiveAlertDialogHeader,
+  ResponsiveAlertDialogTitle,
+} from "@/components/ui/responsive-alert-dialog"
 
 const deleteCredentialSchema = z.object({
   confirmationText: z.string().min(1, "Confirmation text is required"),
@@ -114,85 +114,87 @@ export function DashboardDeleteCredentialDialog({
   }
 
   return (
-    <AlertDialog open={open} onOpenChange={handleOpenChange}>
-      <AlertDialogContent className="sm:max-w-md">
-        <AlertDialogHeader>
-          <AlertDialogTitle className="flex items-center gap-2">
+    <ResponsiveAlertDialog open={open} onOpenChange={handleOpenChange}>
+      <ResponsiveAlertDialogContent>
+        <ResponsiveAlertDialogHeader className="border-b pb-2">
+          <ResponsiveAlertDialogTitle className="flex items-center gap-2">
             <Icons.trash className="text-destructive size-5" />
             Delete Credential
-          </AlertDialogTitle>
-          <AlertDialogDescription className="space-y-3">
+          </ResponsiveAlertDialogTitle>
+          <ResponsiveAlertDialogDescription>
             <p className="text-foreground">
               Are you sure you want to delete the following credential? This
               action cannot be undone.
             </p>
-            <div className="bg-muted/30 rounded-lg border p-4">
-              <div className="flex items-start gap-3">
-                <div className="bg-secondary flex size-10 flex-shrink-0 items-center justify-center rounded-full">
-                  <Image
-                    src={getPlaceholderImage(
-                      platform.name,
-                      getLogoDevUrlWithToken(platform.logo)
-                    )}
-                    alt={`${platform.name} logo`}
-                    width={24}
-                    height={24}
-                    className="bg-secondary size-6 rounded-full object-contain"
-                  />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="text-foreground text-sm font-semibold">
-                    {credential.identifier}
-                  </div>
-                  {credential.description && (
-                    <div className="text-muted-foreground mt-1 line-clamp-2 text-xs">
-                      {credential.description}
-                    </div>
-                  )}
-                </div>
-              </div>
+          </ResponsiveAlertDialogDescription>
+        </ResponsiveAlertDialogHeader>
+
+        <div className="bg-muted/30 rounded-lg border p-4">
+          <div className="flex items-start gap-3">
+            <div className="bg-secondary flex size-10 flex-shrink-0 items-center justify-center rounded-full">
+              <Image
+                src={getPlaceholderImage(
+                  platform.name,
+                  getLogoDevUrlWithToken(platform.logo)
+                )}
+                alt={`${platform.name} logo`}
+                width={24}
+                height={24}
+                className="bg-secondary size-6 rounded-full object-contain"
+              />
             </div>
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-
-        <Form {...form}>
-          <form
-            onSubmit={form.handleSubmit(handleDelete)}
-            className="space-y-4 pt-3"
-          >
-            <FormField
-              control={form.control}
-              name="confirmationText"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-sm font-medium">
-                    To verify, type{" "}
-                    <span className="text-foreground font-semibold">
-                      {credential.identifier}
-                    </span>
-                    below:
-                  </FormLabel>
-                  <FormControl>
-                    <Input
-                      {...field}
-                      placeholder={`Type "${credential.identifier}" here`}
-                      autoComplete="off"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
+            <div className="min-w-0 flex-1">
+              <div className="text-foreground text-sm font-semibold">
+                {credential.identifier}
+              </div>
+              {credential.description && (
+                <div className="text-muted-foreground mt-1 line-clamp-2 text-xs">
+                  {credential.description}
+                </div>
               )}
-            />
-          </form>
-        </Form>
+            </div>
+          </div>
+        </div>
+        <div>
+          <Form {...form}>
+            <form
+              onSubmit={form.handleSubmit(handleDelete)}
+              className="space-y-4"
+            >
+              <FormField
+                control={form.control}
+                name="confirmationText"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-sm font-medium">
+                      To verify, type{" "}
+                      <span className="text-foreground font-semibold">
+                        {credential.identifier}
+                      </span>
+                      below:
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        placeholder={`Type "${credential.identifier}" here`}
+                        autoComplete="off"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </form>
+          </Form>
+        </div>
 
-        <AlertDialogFooter className="gap-2">
-          <AlertDialogCancel
+        <ResponsiveAlertDialogFooter className="gap-2">
+          <ResponsiveAlertDialogCancel
             disabled={isDeleting}
             className="order-2 sm:order-1"
           >
             Cancel
-          </AlertDialogCancel>
+          </ResponsiveAlertDialogCancel>
           <Button
             onClick={form.handleSubmit(handleDelete)}
             disabled={!isConfirmationValid || isDeleting}
@@ -204,8 +206,8 @@ export function DashboardDeleteCredentialDialog({
             )}
             Delete Credential
           </Button>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+        </ResponsiveAlertDialogFooter>
+      </ResponsiveAlertDialogContent>
+    </ResponsiveAlertDialog>
   )
 }
