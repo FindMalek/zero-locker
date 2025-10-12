@@ -26,6 +26,7 @@ import { DateFormatter, getRelativeTime } from "../date-utils"
 export * from "./card-expiry-helpers"
 export * from "./color-helpers"
 export * from "./password-helpers"
+export * from "./sensitive-data-helpers"
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))

@@ -31,12 +31,13 @@ export function DashboardCredentialPasswordField({
 }: PasswordFieldProps) {
   const [currentPassword, setCurrentPassword] = useState("")
   const [isPasswordModified, setIsPasswordModified] = useState(false)
+  const [shouldFetchPassword, setShouldFetchPassword] = useState(false)
 
   const { toast } = useToast()
   const updatePasswordMutation = useUpdateCredentialPassword()
 
   const { data: passwordData, isLoading: isLoadingPassword } =
-    useCredentialPassword(credential?.id || "", Boolean(credential?.id))
+    useCredentialPassword(credential?.id || "", shouldFetchPassword)
 
   const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value
@@ -51,6 +52,13 @@ export function DashboardCredentialPasswordField({
     const hasChanged = password !== (passwordData?.password || "")
     setIsPasswordModified(hasChanged)
     onPasswordChange?.(hasChanged)
+  }
+
+  const handleEyeClick = () => {
+    // Only fetch password when user explicitly clicks to reveal it
+    if (!shouldFetchPassword) {
+      setShouldFetchPassword(true)
+    }
   }
 
   const savePasswordChanges = useCallback(async () => {
@@ -122,6 +130,26 @@ export function DashboardCredentialPasswordField({
     }
   }, [credential?.id, savePasswordChanges, discardPasswordChanges])
 
+  const getDisplayPassword = () => {
+    // If user is editing, show current password
+    if (currentPassword) {
+      return currentPassword
+    }
+    
+    // If password has been fetched, show it
+    if (passwordData?.password) {
+      return passwordData.password
+    }
+    
+    // If credential exists and password hasn't been fetched yet, show dots
+    if (credential?.id && !shouldFetchPassword) {
+      return "••••••••"
+    }
+    
+    // Default to empty string for new credentials
+    return ""
+  }
+
   return (
     <div className="space-y-1.5">
       <div className="flex items-center gap-2">
@@ -140,9 +168,10 @@ export function DashboardCredentialPasswordField({
       </div>
       <Input
         variant="password-full"
-        value={currentPassword || passwordData?.password || ""}
+        value={getDisplayPassword()}
         onChange={handlePasswordChange}
         onGenerate={handleGenerate}
+        onEyeClick={handleEyeClick}
         showGenerateButton={true}
         placeholder="Enter password"
         autoComplete="current-password"
