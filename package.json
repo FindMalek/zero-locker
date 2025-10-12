@@ -19,11 +19,18 @@
     "db:format": "prisma format",
     "db:reset": "prisma migrate reset",
     "db:update": "pnpm i --save-dev prisma@latest && pnpm i @prisma/client@latest && pnpm i @prisma/adapter-neon@latest",
+    "docker:pull": "docker pull postgres:15-alpine",
     "docker:up": "docker compose up -d postgres",
     "docker:down": "docker compose down",
-    "docker:logs": "docker compose logs postgres",
+    "docker:status": "docker compose ps",
+    "docker:restart": "docker compose restart postgres",
+    "docker:logs": "docker compose logs -f postgres",
+    "docker:logs:tail": "docker compose logs --tail=100 postgres",
     "docker:psql": "docker compose exec postgres psql -U postgres -d zerolocker",
-    "docker:reset": "docker compose down -v && docker compose up -d postgres"
+    "docker:backup": "docker compose exec postgres pg_dump -U postgres zerolocker > backup.sql",
+    "docker:restore": "docker compose exec -T postgres psql -U postgres -d zerolocker < backup.sql",
+    "docker:reset": "docker compose down -v && docker compose up -d postgres",
+    "docker:clean": "docker compose down -v --rmi all"
   },
   "prisma": {
     "schema": "./prisma/schema/",
