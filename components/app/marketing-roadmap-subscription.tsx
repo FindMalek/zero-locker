@@ -57,7 +57,9 @@ export function MarketingRoadmapSubscription() {
 
   return (
     <div className="space-y-4">
-      <h3 className="font-mono text-sm text-gray-400">subscribe for updates</h3>
+      <h3 className="text-muted-foreground font-mono text-sm">
+        subscribe for updates
+      </h3>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(handleSubmit)} className="flex gap-2">
           <FormField
@@ -70,7 +72,7 @@ export function MarketingRoadmapSubscription() {
                     {...field}
                     type="email"
                     placeholder="your@email.com"
-                    className="border-gray-800 bg-[#1a1a1a] font-mono text-sm text-white placeholder:text-gray-600 focus-visible:ring-gray-700"
+                    className="border-border bg-accent text-foreground placeholder:text-muted-foreground focus-visible:ring-ring font-mono text-sm"
                   />
                 </FormControl>
                 <FormMessage />
@@ -80,7 +82,7 @@ export function MarketingRoadmapSubscription() {
           <Button
             type="submit"
             disabled={isLoading}
-            className="bg-white font-mono text-sm text-black hover:bg-gray-200 disabled:opacity-50"
+            className="bg-primary text-primary-foreground hover:bg-primary/90 font-mono text-sm disabled:opacity-50"
           >
             {isLoading && (
               <Icons.spinner className="mr-2 size-4 animate-spin" />
@@ -95,7 +97,9 @@ export function MarketingRoadmapSubscription() {
         </p>
       )}
       {status === "error" && (
-        <p className="font-mono text-xs text-red-500">something went wrong</p>
+        <p className="text-destructive font-mono text-xs">
+          something went wrong
+        </p>
       )}
     </div>
   )

@@ -45,56 +45,54 @@ export default function RoadmapPage() {
   ]
 
   return (
-    <div className="text-foreground min-h-screen bg-[#0a0a0a]">
-      <div className="mx-auto max-w-2xl px-6 py-16 md:py-24">
-        <h1 className="mb-16 font-mono text-3xl font-normal tracking-tight text-white">
-          roadmap
-        </h1>
+    <div className="mx-auto max-w-2xl px-6 py-16 md:py-24">
+      <h1 className="mb-16 font-mono text-3xl font-normal tracking-tight">
+        roadmap
+      </h1>
 
-        <div className="space-y-12">
-          {roadmapItems.map((item) => (
-            <div key={item.title} className="flex gap-4">
-              <div className="flex-shrink-0 pt-1">
-                <div
-                  className={`size-2 rounded-full ${
-                    item.status === "done"
-                      ? "bg-emerald-500"
-                      : item.status === "in-progress"
-                        ? "bg-blue-500"
-                        : "bg-gray-600"
-                  }`}
-                />
-              </div>
-              <div className="flex-1">
-                <h2 className="mb-1 font-mono text-lg font-normal text-white">
-                  {item.title}
-                </h2>
-                <p className="mb-2 font-mono text-sm text-gray-400">
-                  {item.description}
-                </p>
-                <p
-                  className={`font-mono text-xs ${
-                    item.status === "done"
-                      ? "text-emerald-500"
-                      : item.status === "in-progress"
-                        ? "text-blue-500"
-                        : "text-gray-500"
-                  }`}
-                >
-                  {item.status === "done"
-                    ? "done"
+      <div className="space-y-12">
+        {roadmapItems.map((item) => (
+          <div key={item.title} className="flex gap-4">
+            <div className="flex-shrink-0 pt-1">
+              <div
+                className={`size-2 rounded-full ${
+                  item.status === "done"
+                    ? "bg-emerald-500"
                     : item.status === "in-progress"
-                      ? "in progress"
-                      : "not started"}
-                </p>
-              </div>
+                      ? "bg-blue-500"
+                      : "bg-gray-600"
+                }`}
+              />
             </div>
-          ))}
-        </div>
+            <div className="flex-1">
+              <h2 className="mb-1 font-mono text-lg font-normal">
+                {item.title}
+              </h2>
+              <p className="text-muted-foreground mb-2 font-mono text-sm">
+                {item.description}
+              </p>
+              <p
+                className={`font-mono text-xs ${
+                  item.status === "done"
+                    ? "text-emerald-500"
+                    : item.status === "in-progress"
+                      ? "text-blue-500"
+                      : "text-muted-foreground"
+                }`}
+              >
+                {item.status === "done"
+                  ? "done"
+                  : item.status === "in-progress"
+                    ? "in progress"
+                    : "not started"}
+              </p>
+            </div>
+          </div>
+        ))}
+      </div>
 
-        <div className="mt-20 border-t border-gray-800 pt-12">
-          <MarketingRoadmapSubscription />
-        </div>
+      <div className="border-border mt-20 border-t pt-12">
+        <MarketingRoadmapSubscription />
       </div>
     </div>
   )
