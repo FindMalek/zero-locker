@@ -7,22 +7,22 @@ interface GetSensitiveValueDisplayOptions {
    * The current value being edited (if any)
    */
   currentValue?: string
-  
+
   /**
    * The fetched/decrypted value from the server
    */
   fetchedValue?: string
-  
+
   /**
    * Whether the value should be fetched (has the user requested to view it?)
    */
   shouldFetch: boolean
-  
+
   /**
    * Whether this is an existing encrypted value (has an ID)
    */
   hasEncryptedValue: boolean
-  
+
   /**
    * The placeholder dots to show for encrypted values
    * @default "••••••••"
@@ -32,10 +32,10 @@ interface GetSensitiveValueDisplayOptions {
 
 /**
  * Determines what value to display for a sensitive encrypted field
- * 
+ *
  * @param options - Configuration options for displaying the sensitive value
  * @returns The appropriate display value (edited value, fetched value, dots, or empty)
- * 
+ *
  * @example
  * ```tsx
  * const displayValue = getSensitiveValueDisplay({
@@ -75,4 +75,3 @@ export function getSensitiveValueDisplay(
   // Default to empty string for new entries
   return ""
 }
-
