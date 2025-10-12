@@ -128,7 +128,7 @@ export function DashboardViewControls({
                       <Button
                         key={option.field}
                         variant={
-                          sortField === option.field ? "outline" : "secondary"
+                          sortField === option.field ? "default" : "outline"
                         }
                         size="sm"
                         className="h-8 justify-between text-xs"
