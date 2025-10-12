@@ -8,7 +8,7 @@ import {
 import type { CredentialOutput } from "@/schemas/credential/dto"
 
 import { encryptData, exportKey, generateEncryptionKey } from "@/lib/encryption"
-import { handleErrors } from "@/lib/utils"
+import { getSensitiveValueDisplay, handleErrors } from "@/lib/utils"
 import { useToast } from "@/hooks/use-toast"
 
 import { Icons } from "@/components/shared/icons"
@@ -31,12 +31,13 @@ export function DashboardCredentialPasswordField({
 }: PasswordFieldProps) {
   const [currentPassword, setCurrentPassword] = useState("")
   const [isPasswordModified, setIsPasswordModified] = useState(false)
+  const [shouldFetchPassword, setShouldFetchPassword] = useState(false)
 
   const { toast } = useToast()
   const updatePasswordMutation = useUpdateCredentialPassword()
 
   const { data: passwordData, isLoading: isLoadingPassword } =
-    useCredentialPassword(credential?.id || "", Boolean(credential?.id))
+    useCredentialPassword(credential?.id || "", shouldFetchPassword)
 
   const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value
@@ -51,6 +52,13 @@ export function DashboardCredentialPasswordField({
     const hasChanged = password !== (passwordData?.password || "")
     setIsPasswordModified(hasChanged)
     onPasswordChange?.(hasChanged)
+  }
+
+  const handleEyeClick = () => {
+    // Only fetch password when user explicitly clicks to reveal it
+    if (!shouldFetchPassword) {
+      setShouldFetchPassword(true)
+    }
   }
 
   const savePasswordChanges = useCallback(async () => {
@@ -140,9 +148,15 @@ export function DashboardCredentialPasswordField({
       </div>
       <Input
         variant="password-full"
-        value={currentPassword || passwordData?.password || ""}
+        value={getSensitiveValueDisplay({
+          currentValue: currentPassword,
+          fetchedValue: passwordData?.password,
+          shouldFetch: shouldFetchPassword,
+          hasEncryptedValue: Boolean(credential?.id),
+        })}
         onChange={handlePasswordChange}
         onGenerate={handleGenerate}
+        onEyeClick={handleEyeClick}
         showGenerateButton={true}
         placeholder="Enter password"
         autoComplete="current-password"
