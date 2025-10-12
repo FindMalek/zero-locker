@@ -6,11 +6,15 @@ import { usePlatforms } from "@/orpc/hooks/use-platforms"
 import type { ListCredentialsOutput } from "@/schemas/credential/dto"
 import type { SortDirection, SortField, ViewMode } from "@/schemas/utils"
 import type { ListPlatformsOutput } from "@/schemas/utils/dto"
+import { AccountStatus } from "@prisma/client"
 
 import { DashboardCredentialCardsView } from "@/components/app/dashboard-credential-cards-view"
+import { DashboardCredentialCardsViewSkeleton } from "@/components/app/dashboard-credential-cards-view-skeleton"
 import { DashboardCredentialGridView } from "@/components/app/dashboard-credential-grid-view"
+import { DashboardCredentialGridViewSkeleton } from "@/components/app/dashboard-credential-grid-view-skeleton"
 import { DashboardCredentialsHeader } from "@/components/app/dashboard-credentials-header"
 import { EmptyState } from "@/components/shared/empty-state"
+import { Icons } from "@/components/shared/icons"
 
 interface CredentialsClientProps {
   initialData: {
@@ -24,7 +28,7 @@ export function DashboardCredentialsClient({
 }: CredentialsClientProps) {
   const [viewMode, setViewMode] = useState<ViewMode>("cards")
   const [searchTerm, setSearchTerm] = useState("")
-  const [statusFilters, setStatusFilters] = useState<string[]>([])
+  const [statusFilters, setStatusFilters] = useState<AccountStatus[]>([])
   const [platformFilters, setPlatformFilters] = useState<string[]>([])
   const [sortField, setSortField] = useState<SortField | null>(null)
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc")
@@ -32,17 +36,17 @@ export function DashboardCredentialsClient({
 
   const toggleStatusFilter = (status: string) => {
     setStatusFilters((prev) =>
-      prev.includes(status)
+      prev.includes(status as AccountStatus)
         ? prev.filter((s) => s !== status)
-        : [...prev, status]
+        : [...prev, status as AccountStatus]
     )
   }
 
-  const togglePlatformFilter = (platform: string) => {
+  const togglePlatformFilter = (platformId: string) => {
     setPlatformFilters((prev) =>
-      prev.includes(platform)
-        ? prev.filter((p) => p !== platform)
-        : [...prev, platform]
+      prev.includes(platformId)
+        ? prev.filter((p) => p !== platformId)
+        : [...prev, platformId]
     )
   }
 
@@ -61,12 +65,36 @@ export function DashboardCredentialsClient({
     }
   }
 
-  const { data: credentialsData } = useCredentials(
-    { page: 1, limit: 50 },
-    {
-      initialData: initialData.credentials,
-    }
+  const queryInput = useMemo(
+    () => ({
+      page: 1,
+      limit: 50,
+      ...(searchTerm && { search: searchTerm }),
+      filters: {
+        ...(statusFilters.length > 0 && { statuses: statusFilters }),
+        ...(platformFilters.length > 0 && { platformIds: platformFilters }),
+        showArchived,
+      },
+      ...(sortField &&
+        sortDirection && {
+          sort: {
+            field: sortField,
+            direction: sortDirection,
+          },
+        }),
+    }),
+    [
+      searchTerm,
+      statusFilters,
+      platformFilters,
+      showArchived,
+      sortField,
+      sortDirection,
+    ]
   )
+
+  const { data: credentialsData, isFetching } = useCredentials(queryInput)
+
   const { data: platformsData } = usePlatforms(
     { page: 1, limit: 100 },
     {
@@ -94,79 +122,6 @@ export function DashboardCredentialsClient({
     )
   }, [platforms])
 
-  const filteredCredentials = useMemo(() => {
-    let filtered = credentials.filter((credential) => {
-      const matchesSearch =
-        searchTerm === "" ||
-        credential.identifier
-          .toLowerCase()
-          .includes(searchTerm.toLowerCase()) ||
-        (credential.description &&
-          credential.description
-            .toLowerCase()
-            .includes(searchTerm.toLowerCase()))
-
-      const matchesStatus =
-        statusFilters.length === 0 || statusFilters.includes(credential.status)
-
-      const credentialPlatform = platforms.find(
-        (p) => p.id === credential.platformId
-      )
-      const matchesPlatform =
-        platformFilters.length === 0 ||
-        (credentialPlatform &&
-          platformFilters.includes(credentialPlatform.name))
-
-      return matchesSearch && matchesStatus && matchesPlatform
-    })
-
-    if (sortField) {
-      filtered = filtered.sort((a, b) => {
-        let aValue: string | number | Date
-        let bValue: string | number | Date
-
-        switch (sortField) {
-          case "identifier":
-            aValue = a.identifier || ""
-            bValue = b.identifier || ""
-            break
-          case "status":
-            aValue = a.status || ""
-            bValue = b.status || ""
-            break
-          case "lastViewed":
-            aValue = a.lastViewed ? new Date(a.lastViewed) : new Date(0)
-            bValue = b.lastViewed ? new Date(b.lastViewed) : new Date(0)
-            break
-          case "createdAt":
-            aValue = new Date(a.createdAt)
-            bValue = new Date(b.createdAt)
-            break
-          default:
-            return 0
-        }
-
-        if (aValue < bValue) {
-          return sortDirection === "asc" ? -1 : 1
-        }
-        if (aValue > bValue) {
-          return sortDirection === "asc" ? 1 : -1
-        }
-        return 0
-      })
-    }
-
-    return filtered
-  }, [
-    credentials,
-    platforms,
-    searchTerm,
-    statusFilters,
-    platformFilters,
-    sortField,
-    sortDirection,
-  ])
-
   return (
     <div className="min-h-screen">
       <div className="mx-auto max-w-7xl p-6">
@@ -188,14 +143,26 @@ export function DashboardCredentialsClient({
           onShowArchivedChange={setShowArchived}
         />
 
-        <div className="mb-4">
+        <div className="mb-4 flex items-center justify-between">
           <p className="text-sm text-gray-600">
-            {filteredCredentials.length}{" "}
-            {filteredCredentials.length === 1 ? "credential" : "credentials"}
+            {credentialsData?.total || 0}{" "}
+            {credentialsData?.total === 1 ? "credential" : "credentials"}
           </p>
+          {isFetching && (
+            <div className="text-secondary-foreground flex items-center gap-1 text-xs">
+              <Icons.spinner className="size-3 animate-spin" />
+              <span>Loading...</span>
+            </div>
+          )}
         </div>
 
-        {filteredCredentials.length === 0 ? (
+        {isFetching && !credentials.length ? (
+          viewMode === "cards" ? (
+            <DashboardCredentialCardsViewSkeleton />
+          ) : (
+            <DashboardCredentialGridViewSkeleton />
+          )
+        ) : credentials.length === 0 ? (
           <EmptyState
             title="No credentials found"
             description="Try adjusting your search or filter criteria"
@@ -206,12 +173,12 @@ export function DashboardCredentialsClient({
           <>
             {viewMode === "cards" ? (
               <DashboardCredentialCardsView
-                credentials={filteredCredentials}
+                credentials={credentials}
                 platforms={platforms}
               />
             ) : (
               <DashboardCredentialGridView
-                credentials={filteredCredentials}
+                credentials={credentials}
                 platforms={platforms}
               />
             )}

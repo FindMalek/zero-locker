@@ -14,13 +14,6 @@ import {
 import { Separator } from "@/components/ui/separator"
 import { Switch } from "@/components/ui/switch"
 
-export interface DisplayProperty {
-  id: string
-  label: string
-  enabled: boolean
-  onChange: (enabled: boolean) => void
-}
-
 export interface SortOption {
   field: string
   label: string
@@ -49,10 +42,6 @@ export interface DashboardViewControlsProps {
   onShowArchivedChange?: (show: boolean) => void
   archivedLabel?: string
 
-  // Display Properties
-  displayProperties?: DisplayProperty[]
-  onDisplayPropertyChange?: (propertyId: string, enabled: boolean) => void
-
   // Customization
   className?: string
   triggerLabel?: string
@@ -74,29 +63,17 @@ export function DashboardViewControls({
   showArchived = false,
   onShowArchivedChange,
   archivedLabel = "Show archived items",
-  displayProperties = [],
-  onDisplayPropertyChange,
   className,
   triggerLabel = "Display",
 }: DashboardViewControlsProps) {
   const [isDisplayOpen, setIsDisplayOpen] = useState(false)
 
-  const handleDisplayPropertyToggle = (propertyId: string) => {
-    if (onDisplayPropertyChange) {
-      const property = displayProperties.find((p) => p.id === propertyId)
-      if (property) {
-        onDisplayPropertyChange(propertyId, !property.enabled)
-      }
-    }
-  }
-
   const hasViewMode = viewMode !== undefined && onViewModeChange
   const hasSorting = sortOptions.length > 0 && onSortChange
   const hasArchived = onShowArchivedChange !== undefined
-  const hasDisplayProperties = displayProperties.length > 0
 
   // Don't render if no functionality is provided
-  if (!hasViewMode && !hasSorting && !hasArchived && !hasDisplayProperties) {
+  if (!hasViewMode && !hasSorting && !hasArchived) {
     return null
   }
 
@@ -134,9 +111,7 @@ export function DashboardViewControls({
                     ))}
                   </div>
                 </div>
-                {(hasSorting || hasArchived || hasDisplayProperties) && (
-                  <Separator />
-                )}
+                {(hasSorting || hasArchived) && <Separator />}
               </>
             )}
 
@@ -153,7 +128,7 @@ export function DashboardViewControls({
                       <Button
                         key={option.field}
                         variant={
-                          sortField === option.field ? "outline" : "secondary"
+                          sortField === option.field ? "default" : "outline"
                         }
                         size="sm"
                         className="h-8 justify-between text-xs"
@@ -173,7 +148,7 @@ export function DashboardViewControls({
                     ))}
                   </div>
                 </div>
-                {(hasArchived || hasDisplayProperties) && <Separator />}
+                {hasArchived && <Separator />}
               </>
             )}
 
@@ -189,32 +164,7 @@ export function DashboardViewControls({
                     onCheckedChange={onShowArchivedChange}
                   />
                 </div>
-                {hasDisplayProperties && <Separator />}
               </>
-            )}
-
-            {hasDisplayProperties && (
-              <div className="space-y-3">
-                <div className="text-muted-foreground text-xs font-medium uppercase tracking-wide">
-                  Display Properties
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  {displayProperties.map((property) => (
-                    <Button
-                      key={property.id}
-                      variant={property.enabled ? "outline" : "secondary"}
-                      size="sm"
-                      onClick={() => handleDisplayPropertyToggle(property.id)}
-                      className="flex items-center justify-between rounded border p-2 text-xs"
-                    >
-                      <span className="font-medium">{property.label}</span>
-                      {property.enabled && (
-                        <Icons.check className="text-primary size-3" />
-                      )}
-                    </Button>
-                  ))}
-                </div>
-              </div>
             )}
           </div>
         </PopoverContent>

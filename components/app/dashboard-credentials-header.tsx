@@ -4,6 +4,7 @@ import { CredentialEntity } from "@/entities"
 import { accountStatusEnum } from "@/schemas/credential"
 import type { SortDirection, SortField, ViewMode } from "@/schemas/utils"
 import type { PlatformSimpleRo } from "@/schemas/utils/platform"
+import { AccountStatus } from "@prisma/client"
 import { Globe, Tag } from "lucide-react"
 
 import {
@@ -12,7 +13,6 @@ import {
 } from "@/components/shared/dashboard-multi-filters"
 import {
   DashboardViewControls,
-  type DisplayProperty,
   type SortOption,
 } from "@/components/shared/dashboard-view-controls"
 import { Icons } from "@/components/shared/icons"
@@ -21,7 +21,7 @@ import { Input } from "@/components/ui/input"
 interface EntityFiltersProps {
   searchTerm: string
   onSearchChange: (value: string) => void
-  statusFilters: string[]
+  statusFilters: AccountStatus[]
   onToggleStatusFilter: (status: string) => void
   platformFilters: string[]
   onTogglePlatformFilter: (platform: string) => void
@@ -87,7 +87,7 @@ export function DashboardCredentialsHeader({
       "Platform",
       Globe,
       platforms.map((platform) => ({
-        value: platform.name,
+        value: platform.id,
         label: platform.name,
         logo: platform.logo || undefined,
       })),
@@ -102,51 +102,6 @@ export function DashboardCredentialsHeader({
     { field: "status", label: "Status" },
     { field: "lastViewed", label: "Last Viewed" },
     { field: "createdAt", label: "Date Created" },
-  ]
-
-  const displayProperties: DisplayProperty[] = [
-    {
-      id: "identifier",
-      label: "Identifier",
-      enabled: true,
-      onChange: () => {},
-    },
-    {
-      id: "description",
-      label: "Description",
-      enabled: true,
-      onChange: () => {},
-    },
-    {
-      id: "status",
-      label: "Status",
-      enabled: true,
-      onChange: () => {},
-    },
-    {
-      id: "password",
-      label: "Password",
-      enabled: true,
-      onChange: () => {},
-    },
-    {
-      id: "lastViewed",
-      label: "Last Viewed",
-      enabled: true,
-      onChange: () => {},
-    },
-    {
-      id: "createdAt",
-      label: "Created Date",
-      enabled: true,
-      onChange: () => {},
-    },
-    {
-      id: "platform",
-      label: "Platform",
-      enabled: true,
-      onChange: () => {},
-    },
   ]
 
   return (
@@ -173,7 +128,6 @@ export function DashboardCredentialsHeader({
         showArchived={showArchived}
         onShowArchivedChange={onShowArchivedChange}
         archivedLabel="Show archived credentials"
-        displayProperties={displayProperties}
       />
     </div>
   )
