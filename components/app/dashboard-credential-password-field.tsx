@@ -8,7 +8,7 @@ import {
 import type { CredentialOutput } from "@/schemas/credential/dto"
 
 import { encryptData, exportKey, generateEncryptionKey } from "@/lib/encryption"
-import { handleErrors } from "@/lib/utils"
+import { getSensitiveValueDisplay, handleErrors } from "@/lib/utils"
 import { useToast } from "@/hooks/use-toast"
 
 import { Icons } from "@/components/shared/icons"
@@ -130,26 +130,6 @@ export function DashboardCredentialPasswordField({
     }
   }, [credential?.id, savePasswordChanges, discardPasswordChanges])
 
-  const getDisplayPassword = () => {
-    // If user is editing, show current password
-    if (currentPassword) {
-      return currentPassword
-    }
-    
-    // If password has been fetched, show it
-    if (passwordData?.password) {
-      return passwordData.password
-    }
-    
-    // If credential exists and password hasn't been fetched yet, show dots
-    if (credential?.id && !shouldFetchPassword) {
-      return "••••••••"
-    }
-    
-    // Default to empty string for new credentials
-    return ""
-  }
-
   return (
     <div className="space-y-1.5">
       <div className="flex items-center gap-2">
@@ -168,7 +148,12 @@ export function DashboardCredentialPasswordField({
       </div>
       <Input
         variant="password-full"
-        value={getDisplayPassword()}
+        value={getSensitiveValueDisplay({
+          currentValue: currentPassword,
+          fetchedValue: passwordData?.password,
+          shouldFetch: shouldFetchPassword,
+          hasEncryptedValue: Boolean(credential?.id),
+        })}
         onChange={handlePasswordChange}
         onGenerate={handleGenerate}
         onEyeClick={handleEyeClick}
