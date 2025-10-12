@@ -83,10 +83,17 @@ export function DashboardCredentialsClient({
           },
         }),
     }),
-    [searchTerm, statusFilters, platformFilters, showArchived, sortField, sortDirection]
+    [
+      searchTerm,
+      statusFilters,
+      platformFilters,
+      showArchived,
+      sortField,
+      sortDirection,
+    ]
   )
 
-  const { data: credentialsData, isLoading, isFetching } = useCredentials(queryInput)
+  const { data: credentialsData, isFetching } = useCredentials(queryInput)
 
   const { data: platformsData } = usePlatforms(
     { page: 1, limit: 100 },
@@ -142,7 +149,7 @@ export function DashboardCredentialsClient({
             {credentialsData?.total === 1 ? "credential" : "credentials"}
           </p>
           {isFetching && (
-            <div className="flex items-center gap-1 text-xs text-secondary-foreground">
+            <div className="text-secondary-foreground flex items-center gap-1 text-xs">
               <Icons.spinner className="size-3 animate-spin" />
               <span>Loading...</span>
             </div>

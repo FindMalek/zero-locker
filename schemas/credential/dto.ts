@@ -34,7 +34,9 @@ export const listCredentialsInputSchema = z.object({
   // Sorting
   sort: z
     .object({
-      field: z.enum(["identifier", "status", "lastViewed", "createdAt"]).optional(),
+      field: z
+        .enum(["identifier", "status", "lastViewed", "createdAt"])
+        .optional(),
       direction: z.enum(["asc", "desc"]).optional(),
     })
     .optional(),

@@ -359,7 +359,7 @@ export const listCredentials = authProcedure
 
     // Build where clause with filters
     let statusFilter: Prisma.EnumAccountStatusFilter<"Credential"> | undefined
-    
+
     // Handle status filtering
     if (filters?.statuses && filters.statuses.length > 0) {
       // If specific statuses are selected, use those
@@ -368,7 +368,7 @@ export const listCredentials = authProcedure
         filters.showArchived === false
           ? filters.statuses.filter((s) => s !== AccountStatus.ARCHIVED)
           : filters.statuses
-      
+
       if (statusesToFilter.length > 0) {
         statusFilter = { in: statusesToFilter }
       }
