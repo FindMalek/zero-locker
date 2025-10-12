@@ -4,6 +4,7 @@ import { CredentialEntity } from "@/entities"
 import { accountStatusEnum } from "@/schemas/credential"
 import type { SortDirection, SortField, ViewMode } from "@/schemas/utils"
 import type { PlatformSimpleRo } from "@/schemas/utils/platform"
+import { AccountStatus } from "@prisma/client"
 import { Globe, Tag } from "lucide-react"
 
 import {
@@ -21,7 +22,7 @@ import { Input } from "@/components/ui/input"
 interface EntityFiltersProps {
   searchTerm: string
   onSearchChange: (value: string) => void
-  statusFilters: string[]
+  statusFilters: AccountStatus[]
   onToggleStatusFilter: (status: string) => void
   platformFilters: string[]
   onTogglePlatformFilter: (platform: string) => void
@@ -87,7 +88,7 @@ export function DashboardCredentialsHeader({
       "Platform",
       Globe,
       platforms.map((platform) => ({
-        value: platform.name,
+        value: platform.id,
         label: platform.name,
         logo: platform.logo || undefined,
       })),

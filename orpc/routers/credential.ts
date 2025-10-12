@@ -31,7 +31,7 @@ import {
   type ListCredentialsOutput,
 } from "@/schemas/credential/dto"
 import { ORPCError, os } from "@orpc/server"
-import type { Prisma } from "@prisma/client"
+import { AccountStatus, type Prisma } from "@prisma/client"
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library"
 import { z } from "zod"
 
@@ -354,27 +354,61 @@ export const listCredentials = authProcedure
   .input(listCredentialsInputSchema)
   .output(listCredentialsOutputSchema)
   .handler(async ({ input, context }): Promise<ListCredentialsOutput> => {
-    const { page, limit, search, containerId, platformId } = input
+    const { page, limit, search, containerId, filters, sort } = input
     const skip = (page - 1) * limit
 
-    const where = {
+    // Build where clause with filters
+    let statusFilter: Prisma.EnumAccountStatusFilter<"Credential"> | undefined
+    
+    // Handle status filtering
+    if (filters?.statuses && filters.statuses.length > 0) {
+      // If specific statuses are selected, use those
+      // But if showArchived is false, exclude ARCHIVED from the list
+      const statusesToFilter =
+        filters.showArchived === false
+          ? filters.statuses.filter((s) => s !== AccountStatus.ARCHIVED)
+          : filters.statuses
+      
+      if (statusesToFilter.length > 0) {
+        statusFilter = { in: statusesToFilter }
+      }
+    } else if (filters?.showArchived === false) {
+      // If no specific statuses but showArchived is false, exclude archived
+      statusFilter = { not: AccountStatus.ARCHIVED }
+    }
+
+    const where: Prisma.CredentialWhereInput = {
       userId: context.user.id,
       ...(containerId && { containerId }),
-      ...(platformId && { platformId }),
+      // Status filter
+      ...(statusFilter && { status: statusFilter }),
+      // Platform filters
+      ...(filters?.platformIds &&
+        filters.platformIds.length > 0 && {
+          platformId: { in: filters.platformIds },
+        }),
+      // Search filter
       ...(search && {
         OR: [
-          { identifier: { contains: search, mode: "insensitive" as const } },
-          { description: { contains: search, mode: "insensitive" as const } },
+          { identifier: { contains: search, mode: "insensitive" } },
+          { description: { contains: search, mode: "insensitive" } },
         ],
       }),
     }
+
+    // Build orderBy clause with sorting
+    const orderBy: Prisma.CredentialOrderByWithRelationInput = sort?.field
+      ? {
+          [sort.field]: sort.direction || "asc",
+        }
+      : { createdAt: "desc" }
 
     const [credentials, total] = await Promise.all([
       database.credential.findMany({
         where,
         skip,
         take: limit,
-        orderBy: { createdAt: "desc" },
+        orderBy,
         include: { ...CredentialQuery.getInclude() },
       }),
       database.credential.count({ where }),

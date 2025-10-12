@@ -1,3 +1,4 @@
+import { AccountStatus } from "@prisma/client"
 import { z } from "zod"
 
 import {
@@ -16,13 +17,27 @@ export const updateCredentialInputSchema = updateCredentialDtoSchema
 export const deleteCredentialInputSchema = deleteCredentialDtoSchema
 export const duplicateCredentialInputSchema = getCredentialByIdDtoSchema
 
-// List credentials with pagination
+// List credentials with pagination and filters
 export const listCredentialsInputSchema = z.object({
   page: z.number().int().min(1).default(1),
   limit: z.number().int().min(1).max(100).default(10),
   search: z.string().optional(),
   containerId: z.string().optional(),
-  platformId: z.string().optional(),
+  // Filters
+  filters: z
+    .object({
+      statuses: z.array(z.nativeEnum(AccountStatus)).optional(),
+      platformIds: z.array(z.string()).optional(),
+      showArchived: z.boolean().optional(),
+    })
+    .optional(),
+  // Sorting
+  sort: z
+    .object({
+      field: z.enum(["identifier", "status", "lastViewed", "createdAt"]).optional(),
+      direction: z.enum(["asc", "desc"]).optional(),
+    })
+    .optional(),
 })
 
 // Output DTOs for oRPC procedures
