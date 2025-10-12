@@ -13,7 +13,6 @@ import {
 } from "@/components/shared/dashboard-multi-filters"
 import {
   DashboardViewControls,
-  type DisplayProperty,
   type SortOption,
 } from "@/components/shared/dashboard-view-controls"
 import { Icons } from "@/components/shared/icons"
@@ -105,51 +104,6 @@ export function DashboardCredentialsHeader({
     { field: "createdAt", label: "Date Created" },
   ]
 
-  const displayProperties: DisplayProperty[] = [
-    {
-      id: "identifier",
-      label: "Identifier",
-      enabled: true,
-      onChange: () => {},
-    },
-    {
-      id: "description",
-      label: "Description",
-      enabled: true,
-      onChange: () => {},
-    },
-    {
-      id: "status",
-      label: "Status",
-      enabled: true,
-      onChange: () => {},
-    },
-    {
-      id: "password",
-      label: "Password",
-      enabled: true,
-      onChange: () => {},
-    },
-    {
-      id: "lastViewed",
-      label: "Last Viewed",
-      enabled: true,
-      onChange: () => {},
-    },
-    {
-      id: "createdAt",
-      label: "Created Date",
-      enabled: true,
-      onChange: () => {},
-    },
-    {
-      id: "platform",
-      label: "Platform",
-      enabled: true,
-      onChange: () => {},
-    },
-  ]
-
   return (
     <div className="mb-6 flex flex-col gap-4 sm:flex-row">
       <div className="relative flex-1">
@@ -174,7 +128,6 @@ export function DashboardCredentialsHeader({
         showArchived={showArchived}
         onShowArchivedChange={onShowArchivedChange}
         archivedLabel="Show archived credentials"
-        displayProperties={displayProperties}
       />
     </div>
   )
