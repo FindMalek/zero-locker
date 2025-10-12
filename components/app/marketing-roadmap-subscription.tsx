@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useSubscribeToRoadmap } from "@/orpc/hooks"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
@@ -24,6 +25,7 @@ type SubscriptionFormData = z.infer<typeof subscriptionSchema>
 
 export function MarketingRoadmapSubscription() {
   const [status, setStatus] = useState<"idle" | "success" | "error">("idle")
+  const subscribeToRoadmapMutation = useSubscribeToRoadmap()
 
   const form = useForm<SubscriptionFormData>({
     resolver: zodResolver(subscriptionSchema),
@@ -32,21 +34,35 @@ export function MarketingRoadmapSubscription() {
     },
   })
 
-  const isLoading = form.formState.isSubmitting
+  const isLoading = subscribeToRoadmapMutation.isPending
 
   const handleSubmit = async (data: SubscriptionFormData) => {
     try {
       setStatus("idle")
 
-      // Simulate API call - replace with your actual subscription logic
-      await new Promise((resolve) => setTimeout(resolve, 1000))
+      subscribeToRoadmapMutation.mutate(data, {
+        onSuccess: (result) => {
+          if (result.success) {
+            setStatus("success")
+            form.reset()
 
-      setStatus("success")
-      form.reset()
-
-      setTimeout(() => {
-        setStatus("idle")
-      }, 3000)
+            setTimeout(() => {
+              setStatus("idle")
+            }, 3000)
+          } else {
+            setStatus("error")
+            form.setError("root", {
+              message: result.error || "Something went wrong. Please try again.",
+            })
+          }
+        },
+        onError: () => {
+          setStatus("error")
+          form.setError("root", {
+            message: "Something went wrong. Please try again.",
+          })
+        },
+      })
     } catch (error) {
       setStatus("error")
       form.setError("root", {
