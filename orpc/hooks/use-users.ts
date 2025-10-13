@@ -89,3 +89,13 @@ export function useInitializeDefaultContainers() {
     },
   })
 }
+
+// Subscribe to roadmap updates
+export function useSubscribeToRoadmap() {
+  return useMutation({
+    mutationFn: orpc.users.subscribeToRoadmap.call,
+    onError: (error) => {
+      console.error("Failed to subscribe to roadmap:", error)
+    },
+  })
+}
