@@ -1,5 +1,4 @@
 import { authMiddleware } from "@/middleware/auth"
-import { rateLimiters } from "@/middleware/rate-limit"
 import { database } from "@/prisma/client"
 import {
   getEncryptedDataCountOutputSchema,
@@ -39,15 +38,12 @@ const publicProcedure = baseProcedure.use(({ context, next }) => {
   return next({ context })
 })
 
-// Public procedure with strict rate limiting for sensitive endpoints
-const rateLimitedPublicProcedure = baseProcedure.use(rateLimiters.strict)
-
 const authProcedure = baseProcedure.use(({ context, next }) =>
   authMiddleware({ context, next })
 )
 
 // Join waitlist
-export const joinWaitlist = rateLimitedPublicProcedure
+export const joinWaitlist = publicProcedure
   .input(joinWaitlistInputSchema)
   .output(joinWaitlistOutputSchema)
   .handler(async ({ input }): Promise<JoinWaitlistOutput> => {
@@ -204,7 +200,7 @@ export const getCurrentUser = authProcedure
   })
 
 // Subscribe to roadmap updates
-export const subscribeToRoadmap = rateLimitedPublicProcedure
+export const subscribeToRoadmap = publicProcedure
   .input(subscribeToRoadmapInputSchema)
   .output(subscribeToRoadmapOutputSchema)
   .handler(async ({ input }): Promise<SubscribeToRoadmapOutput> => {
