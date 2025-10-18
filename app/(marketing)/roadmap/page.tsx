@@ -20,9 +20,25 @@ export const metadata: Metadata = {
 export default function RoadmapPage() {
   const roadmapItems: RoadmapItem[] = [
     {
+      title: "Project Foundation",
+      description: "core architecture, database setup, and infrastructure",
+      status: "done",
+    },
+    {
       title: "Account Management",
       description: "user authentication and profile management",
-      status: "in-progress",
+      status: "done",
+    },
+    {
+      title: "Self-Hosting Support",
+      description: "docker setup and deployment guides for self-hosting",
+      status: "done",
+    },
+    {
+      title: "Credentials Management",
+      description:
+        "secure storage with AES-256-GCM encryption for passwords and login credentials",
+      status: "done",
     },
     {
       title: "Secret Notes Management",
@@ -31,23 +47,23 @@ export default function RoadmapPage() {
     },
     {
       title: "Cards Management",
-      description: "organize and manage card-based content",
+      description: "organize and manage payment cards and card-based content",
       status: "planned",
     },
     {
-      title: "OpenAPI Docs",
+      title: "OpenAPI Documentation",
       description: "comprehensive API documentation and integration guides",
       status: "planned",
     },
   ]
 
   return (
-    <div className="mx-auto w-full max-w-3xl px-4 py-16 sm:px-6 md:max-w-4xl md:py-24 lg:max-w-5xl">
+    <div className="mx-auto w-full max-w-3xl px-4 py-16 sm:px-6 md:max-w-4xl md:py-14 lg:max-w-5xl">
       <h1 className="mb-8 text-3xl font-bold tracking-tight">The Roadmap</h1>
 
       <MarketingRoadmapList items={roadmapItems} />
 
-      <div className="border-border mt-12 border-t pt-12">
+      <div className="pt-12">
         <MarketingRoadmapSubscription />
       </div>
     </div>
