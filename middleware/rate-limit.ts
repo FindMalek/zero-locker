@@ -31,7 +31,7 @@ export const rateLimitMiddleware = (config: RateLimitConfig) => {
     next,
   }: {
     context: PublicContext
-    next: MiddlewareNextFn<PublicContext>
+    next: MiddlewareNextFn<unknown>
   }) => {
     const ip = context.ip
 

@@ -13,7 +13,12 @@ import {
 } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { Separator } from "@/components/ui/separator"
-import { orpc } from "@/orpc/client"
+import {
+  useEncryptedDataCount,
+  useJoinWaitlist,
+  useUserCount,
+  useWaitlistCount,
+} from "@/orpc/hooks/use-users"
 
 interface RateLimitStats {
   endpoint: string
@@ -25,24 +30,43 @@ interface RateLimitStats {
 
 export default function RateLimitTestPage() {
   const [stats, setStats] = useState<RateLimitStats[]>([])
-  const [isLoading, setIsLoading] = useState<Record<string, boolean>>({})
+
+  // TanStack Query hooks for read operations
+  const userCountQuery = useUserCount()
+  const waitlistCountQuery = useWaitlistCount()
+  const encryptedDataCountQuery = useEncryptedDataCount()
+
+  // TanStack Query mutation for write operations
+  const joinWaitlistMutation = useJoinWaitlist()
 
   const testEndpoint = async (
-    endpoint: "getUserCount" | "getWaitlistCount" | "getEncryptedDataCount",
+    queryType: "userCount" | "waitlistCount" | "encryptedDataCount",
     label: string,
     limit: number
   ) => {
-    setIsLoading((prev) => ({ ...prev, [endpoint]: true }))
+    // Select the appropriate query
+    const query =
+      queryType === "userCount"
+        ? userCountQuery
+        : queryType === "waitlistCount"
+          ? waitlistCountQuery
+          : encryptedDataCountQuery
 
     try {
-      await orpc.users[endpoint]({})
+      // Use refetch to manually trigger the query
+      await query.refetch()
+
+      // Check if refetch was successful
+      if (query.isError) {
+        throw query.error
+      }
 
       // Update stats on success
       setStats((prev) => {
-        const existing = prev.find((s) => s.endpoint === endpoint)
+        const existing = prev.find((s) => s.endpoint === label)
         if (existing) {
           return prev.map((s) =>
-            s.endpoint === endpoint
+            s.endpoint === label
               ? {
                   ...s,
                   remaining: Math.max(0, s.remaining - 1),
@@ -116,19 +140,17 @@ export default function RateLimitTestPage() {
       toast.error(`${label} - Rate limit exceeded`, {
         description: `Retry after ${retryAfter} seconds`,
       })
-    } finally {
-      setIsLoading((prev) => ({ ...prev, [endpoint]: false }))
     }
   }
 
   const testStrictEndpoint = async () => {
-    setIsLoading((prev) => ({ ...prev, strict: true }))
-
     try {
-      await orpc.users.joinWaitlist({
+      // Use mutation for write operations
+      await joinWaitlistMutation.mutateAsync({
         email: `test-${Date.now()}@example.com`,
       })
 
+      // Update stats on success
       setStats((prev) => {
         const existing = prev.find((s) => s.endpoint === "Join Waitlist (Strict)")
         if (existing) {
@@ -174,6 +196,7 @@ export default function RateLimitTestPage() {
         retryAfter = Number(error.data.retryAfter)
       }
 
+      // Update stats on error
       setStats((prev) => {
         const existing = prev.find(
           (s) => s.endpoint === "Join Waitlist (Strict)"
@@ -205,8 +228,6 @@ export default function RateLimitTestPage() {
       toast.error("Strict endpoint - Rate limit exceeded", {
         description: `Retry after ${retryAfter} seconds`,
       })
-    } finally {
-      setIsLoading((prev) => ({ ...prev, strict: false }))
     }
   }
 
@@ -239,41 +260,35 @@ export default function RateLimitTestPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <Button
-                onClick={() =>
-                  testEndpoint("getUserCount", "User Count", 100)
-                }
-                disabled={isLoading.getUserCount}
+                onClick={() => testEndpoint("userCount", "User Count", 100)}
+                disabled={userCountQuery.isFetching}
                 className="w-full"
               >
-                {isLoading.getUserCount ? "Testing..." : "Test User Count"}
+                {userCountQuery.isFetching ? "Testing..." : "Test User Count"}
               </Button>
               <Button
                 onClick={() =>
-                  testEndpoint(
-                    "getWaitlistCount",
-                    "Waitlist Count",
-                    100
-                  )
+                  testEndpoint("waitlistCount", "Waitlist Count", 100)
                 }
-                disabled={isLoading.getWaitlistCount}
+                disabled={waitlistCountQuery.isFetching}
                 className="w-full"
               >
-                {isLoading.getWaitlistCount
+                {waitlistCountQuery.isFetching
                   ? "Testing..."
                   : "Test Waitlist Count"}
               </Button>
               <Button
                 onClick={() =>
                   testEndpoint(
-                    "getEncryptedDataCount",
+                    "encryptedDataCount",
                     "Encrypted Data Count",
                     100
                   )
                 }
-                disabled={isLoading.getEncryptedDataCount}
+                disabled={encryptedDataCountQuery.isFetching}
                 className="w-full"
               >
-                {isLoading.getEncryptedDataCount
+                {encryptedDataCountQuery.isFetching
                   ? "Testing..."
                   : "Test Encrypted Data Count"}
               </Button>
@@ -291,11 +306,13 @@ export default function RateLimitTestPage() {
             <CardContent className="space-y-4">
               <Button
                 onClick={testStrictEndpoint}
-                disabled={isLoading.strict}
+                disabled={joinWaitlistMutation.isPending}
                 variant="destructive"
                 className="w-full"
               >
-                {isLoading.strict ? "Testing..." : "Test Join Waitlist"}
+                {joinWaitlistMutation.isPending
+                  ? "Testing..."
+                  : "Test Join Waitlist"}
               </Button>
               <p className="text-xs text-muted-foreground">
                 Click this button 6 times rapidly to trigger the rate limit
