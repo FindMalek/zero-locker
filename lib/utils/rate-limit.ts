@@ -66,7 +66,7 @@ interface RateLimitEntry {
  */
 class RateLimitCache {
   private cache: Map<string, RateLimitEntry> = new Map()
-  private cleanupInterval: NodeJS.Timeout | null = null
+  private cleanupInterval: ReturnType<typeof setInterval> | null = null
 
   constructor() {
     // Start cleanup interval to remove expired entries every minute
@@ -80,9 +80,15 @@ class RateLimitCache {
     }
 
     // Run cleanup every 60 seconds
-    this.cleanupInterval = setInterval(() => {
+    const interval = setInterval(() => {
       this.cleanup()
     }, 60000)
+
+    this.cleanupInterval = interval
+
+    // Do not keep the event loop alive in Node.js
+    // Use optional chaining with type assertion for cross-runtime compatibility
+    interval?.unref?.()
   }
 
   private cleanup(): void {

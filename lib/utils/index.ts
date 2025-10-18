@@ -223,7 +223,7 @@ export function handleORPCError(
     "retryAfter" in error.data
   ) {
     const parsedRetryAfter = Number(error.data.retryAfter)
-    
+
     // Only use retryAfter if it's a valid finite number
     if (Number.isFinite(parsedRetryAfter) && parsedRetryAfter > 0) {
       retryAfter = parsedRetryAfter
