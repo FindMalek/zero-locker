@@ -61,6 +61,25 @@ interface RateLimitEntry {
 }
 
 /**
+ * Public interface for rate limit store operations
+ * Exposes only safe, non-breaking methods for external use
+ */
+export interface RateLimitStore {
+  clear(): void
+  size(): number
+  destroy(): void
+}
+
+/**
+ * Public interface for rate limit statistics
+ * Safe to expose in declaration files
+ */
+export interface RateLimitStats {
+  count: number
+  resetAt: number
+}
+
+/**
  * In-memory cache for rate limiting
  * In production, replace this with Redis or another distributed cache
  */
@@ -144,7 +163,7 @@ const rateLimitCache = new RateLimitCache()
 /**
  * Get rate limit cache instance (useful for testing or manual cleanup)
  */
-export function getRateLimitCache(): RateLimitCache {
+export function getRateLimitCache(): RateLimitStore {
   return rateLimitCache
 }
 
@@ -252,7 +271,7 @@ export function clearAllRateLimits(): void {
 export function getRateLimitStats(
   ip: string,
   identifier?: string
-): RateLimitEntry | null {
+): RateLimitStats | null {
   const key = generateKey(ip, identifier)
   const entry = rateLimitCache.get(key)
   return entry || null
