@@ -16,7 +16,7 @@ export function EmailFooter({ variant = "detailed" }: EmailFooterProps) {
 
   if (variant === "simple") {
     return (
-      <Section className="mt-[48px] border-t border-gray-200 pt-[24px]">
+      <Section className="mt-[32px] border-t border-gray-200 pt-[20px]">
         <Text className="m-0 text-center text-[12px] text-gray-500">
           © {currentYear} {siteConfig.name}. All rights reserved.
         </Text>
@@ -25,14 +25,14 @@ export function EmailFooter({ variant = "detailed" }: EmailFooterProps) {
   }
 
   return (
-    <Section className="mt-[48px] border-t border-gray-100 pt-[32px]">
-      <Text className="m-0 text-center text-[12px] text-gray-400">
+    <Section className="mt-[32px] border-t border-gray-200 pt-[20px]">
+      <Text className="m-0 text-center text-[12px] text-gray-500">
         © {currentYear} {siteConfig.name} • All rights reserved
       </Text>
-      <Text className="m-0 mt-[8px] text-center text-[12px]">
+      <Text className="m-0 mt-[6px] text-center text-[12px]">
         <Link
           href={siteConfig.author.url}
-          className="text-blue-600 no-underline hover:underline"
+          className="text-orange-600 no-underline hover:underline"
         >
           {siteConfig.author.name}
         </Link>
@@ -40,4 +40,3 @@ export function EmailFooter({ variant = "detailed" }: EmailFooterProps) {
     </Section>
   )
 }
-

@@ -14,6 +14,7 @@ import {
 } from "@react-email/components"
 
 import { siteConfig } from "@/config/site"
+
 import { EmailFooter } from "@/components/shared/email-footer"
 
 interface EmailWaitlistProps {
@@ -29,69 +30,58 @@ export function EmailWaitlist({ email, waitlistPosition }: EmailWaitlistProps) {
         <Preview>
           {`Welcome to ${siteConfig.name} waitlist! You're #${waitlistPosition}`}
         </Preview>
-        <Body className="bg-gray-100 py-[40px] font-sans">
-          <Container className="mx-auto max-w-[600px] rounded-[8px] bg-white p-[32px]">
-            <Section className="mb-[32px] text-center">
+        <Body className="bg-white py-[24px] font-sans">
+          <Container className="mx-auto max-w-[600px] bg-white">
+            {/* Cover Image */}
+            <Section className="mb-0">
               <Img
-                src={siteConfig.images.logo}
-                alt={siteConfig.name}
-                className="mx-auto h-auto w-[120px] object-cover"
+                src={`${siteConfig.url}/og.png`}
+                alt={`${siteConfig.name} Cover`}
+                className="w-full object-cover"
               />
             </Section>
 
-            <Heading className="mb-[24px] text-center text-[24px] font-bold text-gray-900">
-              You&apos;re on the {siteConfig.name} waitlist! 🎉
-            </Heading>
+            <Section className="px-[32px] py-[28px]">
+              <Heading className="mb-[8px] text-center text-[24px] font-semibold leading-tight text-gray-900">
+                You&apos;re on the waitlist
+              </Heading>
 
-            <Text className="mb-[16px] text-[16px] text-gray-700">
-              Hi there!
-            </Text>
-
-            <Text className="mb-[16px] text-[16px] text-gray-700">
-              Thanks for joining the {siteConfig.name} waitlist with{" "}
-              <strong>{email}</strong>. We&apos;re excited to have you on board!
-            </Text>
-
-            <Section className="mb-[24px] rounded-[8px] bg-gray-50 p-[24px] text-center">
-              <Text className="mb-[8px] text-[18px] font-bold text-gray-900">
-                Your waitlist position:
+              <Text className="mb-[24px] text-center text-[14px] text-gray-600">
+                Thanks for joining, {email}
               </Text>
-              <Text className="text-[32px] font-bold text-blue-600">
-                #{waitlistPosition}
+
+              <Section className="mb-[24px] border-b border-t border-gray-200 py-[20px] text-center">
+                <Text className="mb-[8px] text-[13px] text-gray-500">
+                  Your position
+                </Text>
+                <Text className="text-[32px] font-semibold leading-none text-orange-600">
+                  #{waitlistPosition}
+                </Text>
+              </Section>
+
+              <Text className="mb-[24px] text-[14px] leading-relaxed text-gray-700">
+                We&apos;re building a secure password management solution.
+                We&apos;ll notify you as soon as we&apos;re ready to launch.
               </Text>
+
+              <Section className="mb-[24px] border-t border-gray-200 pt-[16px]">
+                <Text className="text-[13px] text-gray-600">
+                  Track our progress on the{" "}
+                  <Link
+                    href={`${siteConfig.url}/roadmap`}
+                    className="text-orange-600 no-underline"
+                  >
+                    roadmap
+                  </Link>
+                </Text>
+              </Section>
+
+              <Text className="mb-0 text-[13px] text-gray-600">
+                — The {siteConfig.name} Team
+              </Text>
+
+              <EmailFooter variant="simple" />
             </Section>
-
-            <Text className="mb-[24px] text-[16px] text-gray-700">
-              {siteConfig.name} is being built to revolutionize how you manage and
-              secure your digital assets. We&apos;re working hard to bring you
-              something amazing, and we can&apos;t wait to share it with you
-              soon.
-            </Text>
-
-            <Text className="mb-[24px] text-[16px] text-gray-700">
-              Want to see what we&apos;re working on? Check out our{" "}
-              <Link
-                href="https://zero-locker.com/roadmap"
-                className="text-blue-600 underline"
-              >
-                roadmap
-              </Link>{" "}
-              to stay updated on our progress.
-            </Text>
-
-            <Text className="mb-[32px] text-[16px] text-gray-700">
-              We&apos;ll keep you posted on our progress and let you know as
-              soon as {siteConfig.name} is ready for you to try.
-            </Text>
-
-            <Text className="mb-[8px] text-[16px] text-gray-700">
-              Best regards,
-            </Text>
-            <Text className="text-[16px] font-semibold text-gray-900">
-              The {siteConfig.name} Team
-            </Text>
-
-            <EmailFooter variant="simple" />
           </Container>
         </Body>
       </Tailwind>
