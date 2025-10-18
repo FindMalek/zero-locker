@@ -14,11 +14,13 @@
 export interface RateLimitConfig {
   /**
    * Maximum number of requests allowed within the window
+   * Must be a finite positive number greater than 0
    */
   maxRequests: number
 
   /**
    * Time window in seconds
+   * Must be a finite positive number greater than 0
    */
   windowSeconds: number
 
@@ -180,12 +182,28 @@ function generateKey(ip: string, identifier?: string): string {
  * @param ip - The IP address to check
  * @param config - Rate limit configuration
  * @returns Rate limit result indicating if the request is allowed
+ * @throws {Error} If maxRequests or windowSeconds are not finite positive numbers
  */
 export async function checkRateLimit(
   ip: string,
   config: RateLimitConfig
 ): Promise<RateLimitResult> {
   const { maxRequests, windowSeconds, identifier } = config
+  
+  // Validate maxRequests
+  if (!Number.isFinite(maxRequests) || maxRequests <= 0) {
+    throw new Error(
+      `Invalid maxRequests: ${maxRequests}. Must be a finite positive number greater than 0.`
+    )
+  }
+  
+  // Validate windowSeconds
+  if (!Number.isFinite(windowSeconds) || windowSeconds <= 0) {
+    throw new Error(
+      `Invalid windowSeconds: ${windowSeconds}. Must be a finite positive number greater than 0.`
+    )
+  }
+  
   const key = generateKey(ip, identifier)
   const now = Math.floor(Date.now() / 1000)
 

@@ -43,6 +43,7 @@ export const rateLimitMiddleware = (config: RateLimitConfig) => {
           retryAfter: result.retryAfter,
           limit: result.limit,
           resetAt: result.resetAt,
+          identifier: config.identifier,
         },
       })
     }
