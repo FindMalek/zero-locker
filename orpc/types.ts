@@ -21,6 +21,11 @@ export interface ORPCContext {
    */
   ip: string
   /**
+   * User agent string from the request
+   * Used for analytics and security logging
+   */
+  userAgent: string
+  /**
    * Rate limit information for the current request
    * Available after rate limiting middleware is applied
    */
