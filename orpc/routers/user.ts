@@ -1,4 +1,9 @@
 import { authMiddleware } from "@/middleware/auth"
+import {
+  lenientRateLimit,
+  moderateRateLimit,
+  strictRateLimit,
+} from "@/middleware/rate-limit"
 import { database } from "@/prisma/client"
 import {
   subscribeToRoadmapInputSchema,
@@ -31,16 +36,28 @@ import { createDefaultContainers } from "@/lib/utils/default-containers"
 import type { ORPCContext } from "../types"
 
 const baseProcedure = os.$context<ORPCContext>()
-const publicProcedure = baseProcedure.use(({ context, next }) => {
-  return next({ context })
-})
+
+// Public procedure with lenient rate limiting for read-only operations
+const publicProcedure = baseProcedure.use(({ context, next }) =>
+  lenientRateLimit()({ context, next })
+)
+
+// Public procedure with strict rate limiting for write operations (emails, etc.)
+const strictPublicProcedure = baseProcedure.use(({ context, next }) =>
+  strictRateLimit()({ context, next })
+)
+
+// Public procedure with moderate rate limiting
+const moderatePublicProcedure = baseProcedure.use(({ context, next }) =>
+  moderateRateLimit()({ context, next })
+)
 
 const authProcedure = baseProcedure.use(({ context, next }) =>
   authMiddleware({ context, next })
 )
 
-// Join waitlist
-export const joinWaitlist = publicProcedure
+// Join waitlist - strict rate limit due to email sending
+export const joinWaitlist = strictPublicProcedure
   .input(joinWaitlistInputSchema)
   .output(joinWaitlistOutputSchema)
   .handler(async ({ input }): Promise<JoinWaitlistOutput> => {
@@ -196,8 +213,8 @@ export const getCurrentUser = authProcedure
     return user
   })
 
-// Subscribe to roadmap updates
-export const subscribeToRoadmap = publicProcedure
+// Subscribe to roadmap updates - strict rate limit due to email sending
+export const subscribeToRoadmap = strictPublicProcedure
   .input(subscribeToRoadmapInputSchema)
   .output(subscribeToRoadmapOutputSchema)
   .handler(async ({ input }): Promise<SubscribeToRoadmapOutput> => {
