@@ -222,8 +222,16 @@ export function handleORPCError(
     typeof error.data === "object" &&
     "retryAfter" in error.data
   ) {
-    retryAfter = Number(error.data.retryAfter)
-    description = `Rate limit exceeded. Please try again in ${retryAfter} seconds.`
+    const parsedRetryAfter = Number(error.data.retryAfter)
+    
+    // Only use retryAfter if it's a valid finite number
+    if (Number.isFinite(parsedRetryAfter) && parsedRetryAfter > 0) {
+      retryAfter = parsedRetryAfter
+      description = `Rate limit exceeded. Please try again in ${retryAfter} seconds.`
+    } else {
+      // Use fallback description when retryAfter is invalid
+      description = "Rate limit exceeded. Please try again in a few seconds."
+    }
   }
 
   return {
