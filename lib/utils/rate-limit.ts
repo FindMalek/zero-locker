@@ -95,10 +95,6 @@ class RateLimitCache {
         removedCount++
       }
     }
-
-    if (removedCount > 0) {
-      console.log(`[Rate Limit] Cleaned up ${removedCount} expired entries`)
-    }
   }
 
   get(key: string): RateLimitEntry | undefined {
