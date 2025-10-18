@@ -32,7 +32,7 @@ export function EmailRoadmapSubscription({
           <Container className="mx-auto max-w-[560px] rounded-[16px] border border-gray-200 bg-white p-[48px] shadow-lg">
             <Section className="mb-[40px] text-center">
               <Img
-                src={siteConfig.images.logo}
+                src={`${siteConfig.url}/email/roadmap.png`}
                 alt={siteConfig.name}
                 className="mx-auto h-auto w-[100px] object-cover"
               />

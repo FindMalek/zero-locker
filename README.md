@@ -1,4 +1,4 @@
-![Zero Locker Hero](github.png)
+![Zero Locker Hero](./public/og.png)
 
 # 🔐 Zero Locker
 
