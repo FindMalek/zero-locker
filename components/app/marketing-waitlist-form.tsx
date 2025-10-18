@@ -9,6 +9,7 @@ import { toast } from "sonner"
 
 import { WaitlistUserDtoSchema, type WaitlistUserDto } from "@/config/schema"
 import { siteConfig } from "@/config/site"
+import { handleORPCError } from "@/lib/utils"
 
 import { Icons } from "@/components/shared/icons"
 import { Button } from "@/components/ui/button"
@@ -58,7 +59,11 @@ export function MarketingWaitlistForm() {
     joinWaitlistMutation.mutate(values, {
       onSuccess: (result) => {
         if (result.success) {
-          toast.success("You've been added to our waitlist.")
+          toast.success("You've been added to our waitlist.", {
+            description: result.position
+              ? `You are #${result.position} in the waitlist!`
+              : undefined,
+          })
           form.reset()
 
           // Show user's position
@@ -68,11 +73,17 @@ export function MarketingWaitlistForm() {
             setIsTransitioning(false)
           }
         } else {
-          toast.error(result.error || "Something went wrong")
+          toast.error("Failed to join waitlist", {
+            description: result.error || "Something went wrong",
+          })
         }
       },
-      onError: () => {
-        toast.error("Something went wrong. Please try again.")
+      onError: (error) => {
+        const { description } = handleORPCError(error)
+
+        toast.error("Failed to join waitlist", {
+          description,
+        })
       },
     })
   }

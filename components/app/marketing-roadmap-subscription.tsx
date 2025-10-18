@@ -4,7 +4,10 @@ import { useState } from "react"
 import { useSubscribeToRoadmap } from "@/orpc/hooks"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
+import { toast } from "sonner"
 import { z } from "zod"
+
+import { handleORPCError } from "@/lib/utils"
 
 import { Icons } from "@/components/shared/icons"
 import { Button } from "@/components/ui/button"
@@ -45,29 +48,48 @@ export function MarketingRoadmapSubscription() {
           if (result.success) {
             setStatus("success")
             form.reset()
+            toast.success("Successfully subscribed!", {
+              description: "You'll receive updates about our roadmap.",
+            })
 
             setTimeout(() => {
               setStatus("idle")
             }, 3000)
           } else {
             setStatus("error")
+            const errorMessage =
+              result.error || "Something went wrong. Please try again."
             form.setError("root", {
-              message:
-                result.error || "Something went wrong. Please try again.",
+              message: errorMessage,
+            })
+            toast.error("Subscription failed", {
+              description: errorMessage,
             })
           }
         },
-        onError: () => {
+        onError: (error) => {
           setStatus("error")
+          const { message, description } = handleORPCError(error)
+
           form.setError("root", {
-            message: "Something went wrong. Please try again.",
+            message,
+          })
+
+          toast.error("Subscription failed", {
+            description,
           })
         },
       })
     } catch (error) {
       setStatus("error")
+      const { message, description } = handleORPCError(error)
+
       form.setError("root", {
-        message: "Something went wrong. Please try again.",
+        message,
+      })
+
+      toast.error("Subscription failed", {
+        description,
       })
     }
   }

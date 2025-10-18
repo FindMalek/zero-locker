@@ -1,7 +1,15 @@
 "use client"
 
 import { useState } from "react"
+import {
+  useEncryptedDataCount,
+  useJoinWaitlist,
+  useUserCount,
+  useWaitlistCount,
+} from "@/orpc/hooks/use-users"
 import { toast } from "sonner"
+
+import { handleORPCError } from "@/lib/utils"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -13,12 +21,6 @@ import {
 } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { Separator } from "@/components/ui/separator"
-import {
-  useEncryptedDataCount,
-  useJoinWaitlist,
-  useUserCount,
-  useWaitlistCount,
-} from "@/orpc/hooks/use-users"
 
 interface RateLimitStats {
   endpoint: string
@@ -90,25 +92,8 @@ export default function RateLimitTestPage() {
       toast.success(`${label} - Request successful`, {
         description: "Rate limit not exceeded",
       })
-    } catch (error: unknown) {
-      // Extract error details
-      let errorMessage = "Unknown error"
-      let retryAfter = 60
-
-      if (error && typeof error === "object" && "message" in error) {
-        errorMessage = String(error.message)
-      }
-
-      if (
-        error &&
-        typeof error === "object" &&
-        "data" in error &&
-        error.data &&
-        typeof error.data === "object" &&
-        "retryAfter" in error.data
-      ) {
-        retryAfter = Number(error.data.retryAfter)
-      }
+    } catch (error) {
+      const { message: errorMessage, retryAfter = 60 } = handleORPCError(error)
 
       // Update stats on error
       setStats((prev) => {
@@ -152,7 +137,9 @@ export default function RateLimitTestPage() {
 
       // Update stats on success
       setStats((prev) => {
-        const existing = prev.find((s) => s.endpoint === "Join Waitlist (Strict)")
+        const existing = prev.find(
+          (s) => s.endpoint === "Join Waitlist (Strict)"
+        )
         if (existing) {
           return prev.map((s) =>
             s.endpoint === "Join Waitlist (Strict)"
@@ -177,24 +164,8 @@ export default function RateLimitTestPage() {
       })
 
       toast.success("Strict endpoint - Request successful")
-    } catch (error: unknown) {
-      let errorMessage = "Unknown error"
-      let retryAfter = 60
-
-      if (error && typeof error === "object" && "message" in error) {
-        errorMessage = String(error.message)
-      }
-
-      if (
-        error &&
-        typeof error === "object" &&
-        "data" in error &&
-        error.data &&
-        typeof error.data === "object" &&
-        "retryAfter" in error.data
-      ) {
-        retryAfter = Number(error.data.retryAfter)
-      }
+    } catch (error) {
+      const { message: errorMessage, retryAfter = 60 } = handleORPCError(error)
 
       // Update stats on error
       setStats((prev) => {
@@ -314,7 +285,7 @@ export default function RateLimitTestPage() {
                   ? "Testing..."
                   : "Test Join Waitlist"}
               </Button>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-muted-foreground text-xs">
                 Click this button 6 times rapidly to trigger the rate limit
               </p>
             </CardContent>
@@ -341,12 +312,12 @@ export default function RateLimitTestPage() {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="font-medium">{stat.endpoint}</p>
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-muted-foreground text-sm">
                         {stat.remaining}/{stat.limit} remaining
                       </p>
                     </div>
                     <div className="text-right">
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-muted-foreground text-sm">
                         Resets in{" "}
                         {Math.max(
                           0,
@@ -361,7 +332,7 @@ export default function RateLimitTestPage() {
                     className="h-2"
                   />
                   {stat.lastError && (
-                    <p className="text-sm text-destructive">{stat.lastError}</p>
+                    <p className="text-destructive text-sm">{stat.lastError}</p>
                   )}
                   {index < stats.length - 1 && <Separator className="mt-4" />}
                 </div>
@@ -375,9 +346,9 @@ export default function RateLimitTestPage() {
           <CardHeader>
             <CardTitle>How It Works</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4 text-sm text-muted-foreground">
+          <CardContent className="text-muted-foreground space-y-4 text-sm">
             <div>
-              <h3 className="font-medium text-foreground">
+              <h3 className="text-foreground font-medium">
                 IP-Based Rate Limiting
               </h3>
               <p>
@@ -387,7 +358,7 @@ export default function RateLimitTestPage() {
               </p>
             </div>
             <div>
-              <h3 className="font-medium text-foreground">Rate Limit Types</h3>
+              <h3 className="text-foreground font-medium">Rate Limit Types</h3>
               <ul className="ml-6 list-disc space-y-1">
                 <li>
                   <strong>Strict (5/min):</strong> For email sending and write
@@ -404,13 +375,13 @@ export default function RateLimitTestPage() {
               </ul>
             </div>
             <div>
-              <h3 className="font-medium text-foreground">
+              <h3 className="text-foreground font-medium">
                 Production Considerations
               </h3>
               <p>
-                In production, this in-memory cache should be replaced with Redis
-                for consistency across multiple server instances. The current
-                implementation works for single-server deployments or
+                In production, this in-memory cache should be replaced with
+                Redis for consistency across multiple server instances. The
+                current implementation works for single-server deployments or
                 development.
               </p>
             </div>
@@ -420,4 +391,3 @@ export default function RateLimitTestPage() {
     </div>
   )
 }
-

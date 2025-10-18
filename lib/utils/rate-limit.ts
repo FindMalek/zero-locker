@@ -87,12 +87,10 @@ class RateLimitCache {
 
   private cleanup(): void {
     const now = Math.floor(Date.now() / 1000)
-    let removedCount = 0
 
     for (const [key, entry] of this.cache.entries()) {
       if (entry.resetAt < now) {
         this.cache.delete(key)
-        removedCount++
       }
     }
   }
@@ -279,4 +277,3 @@ export const RATE_LIMIT_PRESETS = {
     windowSeconds: 60,
   },
 } as const
-

@@ -190,6 +190,50 @@ export function handleErrors(
 }
 
 /**
+ * Handle oRPC errors with special handling for rate limiting
+ *
+ * @param error The error from oRPC mutation/query
+ * @param defaultMessage Default message to show if error type is not recognized
+ * @returns Object with message and optional description (includes retry-after for rate limits)
+ */
+export function handleORPCError(
+  error: unknown,
+  defaultMessage = "Something went wrong. Please try again."
+): {
+  message: string
+  description: string
+  retryAfter?: number
+} {
+  let message = defaultMessage
+  let description = "Please try again later."
+  let retryAfter: number | undefined
+
+  // Extract error message
+  if (error && typeof error === "object" && "message" in error) {
+    message = String(error.message)
+  }
+
+  // Handle rate limit errors specifically
+  if (
+    error &&
+    typeof error === "object" &&
+    "data" in error &&
+    error.data &&
+    typeof error.data === "object" &&
+    "retryAfter" in error.data
+  ) {
+    retryAfter = Number(error.data.retryAfter)
+    description = `Rate limit exceeded. Please try again in ${retryAfter} seconds.`
+  }
+
+  return {
+    message,
+    description,
+    retryAfter,
+  }
+}
+
+/**
  * Returns an object with the given value if it exists, otherwise returns an empty object
  * @param value The value to check
  * @param key The key to use in the returned object
