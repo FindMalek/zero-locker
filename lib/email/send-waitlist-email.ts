@@ -1,8 +1,9 @@
 import { env } from "@/env"
 
-import { EmailWaitlist } from "@/components/app/email-waitlist"
+import { siteConfig } from "@/config/site"
+import { resendClient } from "@/lib/email/resend-client"
 
-import { resendClient } from "./resend-client"
+import { EmailWaitlist } from "@/components/app/email-waitlist"
 
 interface SendWaitlistEmailOptions {
   to: string
@@ -17,7 +18,7 @@ export async function sendWaitlistEmail({
     const { data, error } = await resendClient.emails.send({
       from: env.MARKETING_SUBSCRIPTION_EMAIL,
       to,
-      subject: `Welcome to Zero-Locker Waitlist! You're #${waitlistPosition}`,
+      subject: `Welcome to ${siteConfig.name} Waitlist! You're #${waitlistPosition}`,
       react: EmailWaitlist({ email: to, waitlistPosition }),
     })
 

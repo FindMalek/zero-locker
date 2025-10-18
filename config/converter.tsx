@@ -1,5 +1,3 @@
-import type { RoadmapStatus } from "@/types"
-
 import { CredentialEntity } from "@/entities/credential"
 import { accountStatusEnum } from "@/schemas/credential"
 import {
@@ -8,6 +6,8 @@ import {
   RecentItemType,
   RecentItemTypeEnum,
 } from "@/schemas/utils"
+
+import type { RoadmapStatus } from "@/types"
 
 import { Icons } from "@/components/shared/icons"
 

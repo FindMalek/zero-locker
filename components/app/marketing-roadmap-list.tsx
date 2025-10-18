@@ -4,9 +4,8 @@ import { useEffect, useRef, useState } from "react"
 
 import type { RoadmapItem } from "@/types"
 
+import { MarketingRoadmapItem } from "@/components/app/marketing-roadmap-item"
 import { Icons } from "@/components/shared/icons"
-
-import { MarketingRoadmapItem } from "./marketing-roadmap-item"
 
 interface MarketingRoadmapListProps {
   items: RoadmapItem[]

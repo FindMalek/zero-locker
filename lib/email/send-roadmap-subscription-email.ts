@@ -1,8 +1,9 @@
 import { env } from "@/env"
 
-import { EmailRoadmapSubscription } from "@/components/app/email-roadmap-subscription"
+import { siteConfig } from "@/config/site"
+import { resendClient } from "@/lib/email/resend-client"
 
-import { resendClient } from "./resend-client"
+import { EmailRoadmapSubscription } from "@/components/app/email-roadmap-subscription"
 
 interface SendRoadmapSubscriptionEmailOptions {
   to: string
@@ -15,7 +16,7 @@ export async function sendRoadmapSubscriptionEmail({
     const { data, error } = await resendClient.emails.send({
       from: env.MARKETING_SUBSCRIPTION_EMAIL,
       to,
-      subject: "You're Subscribed to Zero-Locker Updates! 🎉",
+      subject: `You're Subscribed to ${siteConfig.name} Updates! 🎉`,
       react: EmailRoadmapSubscription({ email: to }),
     })
 

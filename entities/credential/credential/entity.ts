@@ -1,3 +1,7 @@
+import {
+  CredentialEntityIncludeDbData,
+  CredentialEntitySimpleDbData,
+} from "@/entities/credential/credential/query"
 import { TagEntity } from "@/entities/utils"
 import {
   accountStatusEnum,
@@ -8,11 +12,6 @@ import {
 import { AccountStatus } from "@prisma/client"
 
 import { decryptData } from "@/lib/encryption"
-
-import {
-  CredentialEntityIncludeDbData,
-  CredentialEntitySimpleDbData,
-} from "./query"
 
 export class CredentialEntity {
   static getSimpleRo(entity: CredentialEntitySimpleDbData): CredentialSimpleRo {
