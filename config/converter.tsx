@@ -1,3 +1,5 @@
+import type { RoadmapStatus } from "@/types"
+
 import { CredentialEntity } from "@/entities/credential"
 import { accountStatusEnum } from "@/schemas/credential"
 import {
@@ -59,5 +61,26 @@ export const statusConfig = {
       accountStatusEnum.ARCHIVED
     ),
     icon: Icons.archive,
+  },
+}
+
+export const roadmapStatusConfig: Record<
+  RoadmapStatus,
+  { label: string; bgColor: string; textColor: string }
+> = {
+  done: {
+    label: "done",
+    bgColor: "bg-emerald-500",
+    textColor: "text-emerald-500",
+  },
+  "in-progress": {
+    label: "in progress",
+    bgColor: "bg-blue-500",
+    textColor: "text-blue-500",
+  },
+  planned: {
+    label: "not started",
+    bgColor: "bg-gray-600",
+    textColor: "text-muted-foreground",
   },
 }
