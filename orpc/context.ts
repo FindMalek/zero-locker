@@ -39,7 +39,7 @@ function getClientIp(headersList: Headers): string {
   }
 
   // Default fallback for local development
-  return "127.0.0.1"
+  return "UNKNOWN-IP"
 }
 
 export async function createContext(): Promise<ORPCContext> {
@@ -61,7 +61,7 @@ export async function createContext(): Promise<ORPCContext> {
     return {
       session: null,
       user: null,
-      ip: "127.0.0.1", // Fallback IP
+      ip: "UNKNOWN-IP",
     }
   }
 }
