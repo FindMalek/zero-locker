@@ -1,6 +1,8 @@
-import { resendClient } from "./resend-client"
-import { EmailWaitlist } from "@/components/app/email-waitlist"
 import { env } from "@/env"
+
+import { EmailWaitlist } from "@/components/app/email-waitlist"
+
+import { resendClient } from "./resend-client"
 
 interface SendWaitlistEmailOptions {
   to: string
@@ -30,4 +32,3 @@ export async function sendWaitlistEmail({
     throw error
   }
 }
-

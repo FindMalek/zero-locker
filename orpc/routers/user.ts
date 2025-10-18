@@ -1,6 +1,12 @@
 import { authMiddleware } from "@/middleware/auth"
 import { database } from "@/prisma/client"
 import {
+  subscribeToRoadmapInputSchema,
+  subscribeToRoadmapOutputSchema,
+  type SubscribeToRoadmapInput,
+  type SubscribeToRoadmapOutput,
+} from "@/schemas/user/roadmap"
+import {
   getEncryptedDataCountOutputSchema,
   getUserCountOutputSchema,
   type GetEncryptedDataCountOutput,
@@ -15,21 +21,12 @@ import {
   type JoinWaitlistInput,
   type JoinWaitlistOutput,
 } from "@/schemas/user/waitlist"
-import {
-  subscribeToRoadmapInputSchema,
-  subscribeToRoadmapOutputSchema,
-  type SubscribeToRoadmapInput,
-  type SubscribeToRoadmapOutput,
-} from "@/schemas/user/roadmap"
 import { ORPCError, os } from "@orpc/server"
 import { Prisma } from "@prisma/client"
 import { z } from "zod"
 
+import { sendRoadmapSubscriptionEmail, sendWaitlistEmail } from "@/lib/email"
 import { createDefaultContainers } from "@/lib/utils/default-containers"
-import {
-  sendWaitlistEmail,
-  sendRoadmapSubscriptionEmail,
-} from "@/lib/email"
 
 import type { ORPCContext } from "../types"
 

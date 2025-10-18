@@ -1,6 +1,8 @@
-import { resendClient } from "./resend-client"
-import { EmailRoadmapSubscription } from "@/components/app/email-roadmap-subscription"
 import { env } from "@/env"
+
+import { EmailRoadmapSubscription } from "@/components/app/email-roadmap-subscription"
+
+import { resendClient } from "./resend-client"
 
 interface SendRoadmapSubscriptionEmailOptions {
   to: string
@@ -28,4 +30,3 @@ export async function sendRoadmapSubscriptionEmail({
     throw error
   }
 }
-

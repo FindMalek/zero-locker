@@ -1,7 +1,10 @@
 import type { Metadata } from "next"
 
+import type { RoadmapItem } from "@/types"
+
 import { siteConfig } from "@/config/site"
 
+import { MarketingRoadmapList } from "@/components/app/marketing-roadmap-list"
 import { MarketingRoadmapSubscription } from "@/components/app/marketing-roadmap-subscription"
 
 export const metadata: Metadata = {
@@ -14,28 +17,22 @@ export const metadata: Metadata = {
   },
 }
 
-interface RoadmapItem {
-  title: string
-  description: string
-  status: "done" | "in-progress" | "planned"
-}
-
 export default function RoadmapPage() {
   const roadmapItems: RoadmapItem[] = [
     {
       title: "Account Management",
       description: "user authentication and profile management",
-      status: "done",
+      status: "in-progress",
     },
     {
       title: "Secret Notes Management",
       description: "secure storage and encryption for private notes",
-      status: "in-progress",
+      status: "planned",
     },
     {
       title: "Cards Management",
       description: "organize and manage card-based content",
-      status: "in-progress",
+      status: "planned",
     },
     {
       title: "OpenAPI Docs",
@@ -45,53 +42,12 @@ export default function RoadmapPage() {
   ]
 
   return (
-    <div className="mx-auto max-w-2xl px-6 py-16 md:py-24">
-      <h1 className="mb-16 font-mono text-3xl font-normal tracking-tight">
-        roadmap
-      </h1>
+    <div className="mx-auto w-full max-w-3xl px-4 py-16 sm:px-6 md:max-w-4xl md:py-24 lg:max-w-5xl">
+      <h1 className="mb-8 text-3xl font-bold tracking-tight">The Roadmap</h1>
 
-      <div className="space-y-12">
-        {roadmapItems.map((item) => (
-          <div key={item.title} className="flex gap-4">
-            <div className="flex-shrink-0 pt-1">
-              <div
-                className={`size-2 rounded-full ${
-                  item.status === "done"
-                    ? "bg-emerald-500"
-                    : item.status === "in-progress"
-                      ? "bg-blue-500"
-                      : "bg-gray-600"
-                }`}
-              />
-            </div>
-            <div className="flex-1">
-              <h2 className="mb-1 font-mono text-lg font-normal">
-                {item.title}
-              </h2>
-              <p className="text-muted-foreground mb-2 font-mono text-sm">
-                {item.description}
-              </p>
-              <p
-                className={`font-mono text-xs ${
-                  item.status === "done"
-                    ? "text-emerald-500"
-                    : item.status === "in-progress"
-                      ? "text-blue-500"
-                      : "text-muted-foreground"
-                }`}
-              >
-                {item.status === "done"
-                  ? "done"
-                  : item.status === "in-progress"
-                    ? "in progress"
-                    : "not started"}
-              </p>
-            </div>
-          </div>
-        ))}
-      </div>
+      <MarketingRoadmapList items={roadmapItems} />
 
-      <div className="border-border mt-20 border-t pt-12">
+      <div className="border-border mt-12 border-t pt-12">
         <MarketingRoadmapSubscription />
       </div>
     </div>

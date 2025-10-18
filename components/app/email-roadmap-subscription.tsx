@@ -9,8 +9,8 @@ import {
   Link,
   Preview,
   Section,
-  Text,
   Tailwind,
+  Text,
 } from "@react-email/components"
 
 interface EmailRoadmapSubscriptionProps {
@@ -25,50 +25,50 @@ export function EmailRoadmapSubscription({
       <Tailwind>
         <Head />
         <Preview>You&apos;re now subscribed to Zero-Locker updates!</Preview>
-        <Body className="bg-gradient-to-br from-gray-50 to-gray-100 font-sans py-[60px]">
-          <Container className="bg-white rounded-[16px] shadow-lg p-[48px] max-w-[560px] mx-auto border border-gray-200">
+        <Body className="bg-gradient-to-br from-gray-50 to-gray-100 py-[60px] font-sans">
+          <Container className="mx-auto max-w-[560px] rounded-[16px] border border-gray-200 bg-white p-[48px] shadow-lg">
             {/* Logo placeholder */}
-            <Section className="text-center mb-[40px]">
+            <Section className="mb-[40px] text-center">
               <Img
-                            // TODO: Please host the logo
+                // TODO: Please host the logo
                 src="https://zero-locker.com/logos/logo.svg"
                 alt="Zero-Locker Logo"
-                className="w-[100px] h-auto object-cover mx-auto"
+                className="mx-auto h-auto w-[100px] object-cover"
               />
             </Section>
 
-            <Heading className="text-[28px] font-bold text-gray-900 mb-[16px] text-center leading-tight">
+            <Heading className="mb-[16px] text-center text-[28px] font-bold leading-tight text-gray-900">
               You&apos;re all set! 🎉
             </Heading>
 
-            <Text className="text-[18px] text-gray-600 mb-[32px] text-center">
+            <Text className="mb-[32px] text-center text-[18px] text-gray-600">
               Welcome to the Zero-Locker community
             </Text>
 
-            <Section className="bg-gradient-to-r from-blue-500 to-purple-600 rounded-[12px] p-[32px] mb-[32px] text-center">
-              <Text className="text-[16px] font-medium text-white mb-[4px]">
+            <Section className="mb-[32px] rounded-[12px] bg-gradient-to-r from-blue-500 to-purple-600 p-[32px] text-center">
+              <Text className="mb-[4px] text-[16px] font-medium text-white">
                 Subscribed with
               </Text>
               <Text className="text-[18px] font-bold text-white">{email}</Text>
             </Section>
 
-            <Text className="text-[16px] text-gray-700 mb-[24px] leading-relaxed">
+            <Text className="mb-[24px] text-[16px] leading-relaxed text-gray-700">
               Thanks for joining us! You&apos;ll now be the first to know about
-              Zero-Locker&apos;s journey as we build the future of digital
-              asset management.
+              Zero-Locker&apos;s journey as we build the future of digital asset
+              management.
             </Text>
 
-            <Section className="border-l-[4px] border-blue-500 pl-[20px] mb-[32px]">
-              <Text className="text-[16px] font-semibold text-gray-900 mb-[16px]">
+            <Section className="mb-[32px] border-l-[4px] border-blue-500 pl-[20px]">
+              <Text className="mb-[16px] text-[16px] font-semibold text-gray-900">
                 What&apos;s coming your way:
               </Text>
-              <Text className="text-[15px] text-gray-700 mb-[8px]">
+              <Text className="mb-[8px] text-[15px] text-gray-700">
                 🚀 Product milestones and feature releases
               </Text>
-              <Text className="text-[15px] text-gray-700 mb-[8px]">
+              <Text className="mb-[8px] text-[15px] text-gray-700">
                 📋 Roadmap updates and behind-the-scenes insights
               </Text>
-              <Text className="text-[15px] text-gray-700 mb-[8px]">
+              <Text className="mb-[8px] text-[15px] text-gray-700">
                 🎯 Early access opportunities
               </Text>
               <Text className="text-[15px] text-gray-700">
@@ -76,22 +76,21 @@ export function EmailRoadmapSubscription({
               </Text>
             </Section>
 
-            <Section className="text-center mb-[32px]">
+            <Section className="mb-[32px] text-center">
               <Link
                 href="https://zero-locker.com/roadmap"
-                className="inline-block bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold py-[12px] px-[24px] rounded-[8px] no-underline"
+                className="inline-block rounded-[8px] bg-gradient-to-r from-blue-600 to-purple-600 px-[24px] py-[12px] font-semibold text-white no-underline"
               >
                 View Our Roadmap →
               </Link>
             </Section>
 
-            <Text className="text-[14px] text-gray-500 mb-[32px] text-center italic">
-              We respect your inbox. Only valuable updates, no spam. Promise!
-              ✋
+            <Text className="mb-[32px] text-center text-[14px] italic text-gray-500">
+              We respect your inbox. Only valuable updates, no spam. Promise! ✋
             </Text>
 
             <Section className="text-center">
-              <Text className="text-[16px] text-gray-700 mb-[8px]">
+              <Text className="mb-[8px] text-[16px] text-gray-700">
                 Excited to have you aboard,
               </Text>
               <Text className="text-[16px] font-bold text-gray-900">
@@ -100,11 +99,11 @@ export function EmailRoadmapSubscription({
             </Section>
 
             {/* Footer */}
-            <Section className="mt-[48px] pt-[32px] border-t border-gray-100">
-              <Text className="text-[12px] text-gray-400 text-center m-0">
+            <Section className="mt-[48px] border-t border-gray-100 pt-[32px]">
+              <Text className="m-0 text-center text-[12px] text-gray-400">
                 © 2024 Zero-Locker • All rights reserved
               </Text>
-              <Text className="text-[12px] text-gray-400 text-center m-0 mt-[8px]">
+              <Text className="m-0 mt-[8px] text-center text-[12px] text-gray-400">
                 123 Innovation Street, Tech City, TC 12345
               </Text>
             </Section>
@@ -120,4 +119,3 @@ EmailRoadmapSubscription.PreviewProps = {
 } as EmailRoadmapSubscriptionProps
 
 export default EmailRoadmapSubscription
-

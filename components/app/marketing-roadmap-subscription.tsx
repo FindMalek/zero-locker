@@ -52,7 +52,8 @@ export function MarketingRoadmapSubscription() {
           } else {
             setStatus("error")
             form.setError("root", {
-              message: result.error || "Something went wrong. Please try again.",
+              message:
+                result.error || "Something went wrong. Please try again.",
             })
           }
         },

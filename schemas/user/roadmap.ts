@@ -18,4 +18,3 @@ export const subscribeToRoadmapOutputSchema = z.object({
 export type SubscribeToRoadmapOutput = z.infer<
   typeof subscribeToRoadmapOutputSchema
 >
-

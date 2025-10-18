@@ -55,3 +55,11 @@ export interface KeyValuePair {
   key: string
   value: string
 }
+
+export type RoadmapStatus = "done" | "in-progress" | "planned"
+
+export type RoadmapItem = {
+  title: string
+  description: string
+  status: RoadmapStatus
+}
