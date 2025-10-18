@@ -13,6 +13,9 @@ import {
   Text,
 } from "@react-email/components"
 
+import { siteConfig } from "@/config/site"
+import { EmailFooter } from "@/components/shared/email-footer"
+
 interface EmailRoadmapSubscriptionProps {
   email: string
 }
@@ -24,15 +27,13 @@ export function EmailRoadmapSubscription({
     <Html lang="en" dir="ltr">
       <Tailwind>
         <Head />
-        <Preview>You&apos;re now subscribed to Zero-Locker updates!</Preview>
+        <Preview>You&apos;re now subscribed to {siteConfig.name} updates!</Preview>
         <Body className="bg-gradient-to-br from-gray-50 to-gray-100 py-[60px] font-sans">
           <Container className="mx-auto max-w-[560px] rounded-[16px] border border-gray-200 bg-white p-[48px] shadow-lg">
-            {/* Logo placeholder */}
             <Section className="mb-[40px] text-center">
               <Img
-                // TODO: Please host the logo
-                src="https://zero-locker.com/logos/logo.svg"
-                alt="Zero-Locker Logo"
+                src={siteConfig.images.logo}
+                alt={siteConfig.name}
                 className="mx-auto h-auto w-[100px] object-cover"
               />
             </Section>
@@ -42,7 +43,7 @@ export function EmailRoadmapSubscription({
             </Heading>
 
             <Text className="mb-[32px] text-center text-[18px] text-gray-600">
-              Welcome to the Zero-Locker community
+              Welcome to the {siteConfig.name} community
             </Text>
 
             <Section className="mb-[32px] rounded-[12px] bg-gradient-to-r from-blue-500 to-purple-600 p-[32px] text-center">
@@ -54,7 +55,7 @@ export function EmailRoadmapSubscription({
 
             <Text className="mb-[24px] text-[16px] leading-relaxed text-gray-700">
               Thanks for joining us! You&apos;ll now be the first to know about
-              Zero-Locker&apos;s journey as we build the future of digital asset
+              {siteConfig.name}&apos;s journey as we build the future of digital asset
               management.
             </Text>
 
@@ -78,7 +79,7 @@ export function EmailRoadmapSubscription({
 
             <Section className="mb-[32px] text-center">
               <Link
-                href="https://zero-locker.com/roadmap"
+                href={`${siteConfig.url}/roadmap`}
                 className="inline-block rounded-[8px] bg-gradient-to-r from-blue-600 to-purple-600 px-[24px] py-[12px] font-semibold text-white no-underline"
               >
                 View Our Roadmap →
@@ -94,19 +95,11 @@ export function EmailRoadmapSubscription({
                 Excited to have you aboard,
               </Text>
               <Text className="text-[16px] font-bold text-gray-900">
-                The Zero-Locker Team
+                The {siteConfig.name} Team
               </Text>
             </Section>
 
-            {/* Footer */}
-            <Section className="mt-[48px] border-t border-gray-100 pt-[32px]">
-              <Text className="m-0 text-center text-[12px] text-gray-400">
-                © 2024 Zero-Locker • All rights reserved
-              </Text>
-              <Text className="m-0 mt-[8px] text-center text-[12px] text-gray-400">
-                123 Innovation Street, Tech City, TC 12345
-              </Text>
-            </Section>
+            <EmailFooter variant="detailed" />
           </Container>
         </Body>
       </Tailwind>
