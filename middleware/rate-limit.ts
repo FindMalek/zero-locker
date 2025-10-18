@@ -34,21 +34,9 @@ export const rateLimitMiddleware = (config: RateLimitConfig) => {
     next: MiddlewareNextFn<unknown>
   }) => {
     const ip = context.ip
-
-    // Check rate limit for this IP
     const result = await checkRateLimit(ip, config)
 
-    // Log rate limit checks in development
-    if (process.env.NODE_ENV === "development") {
-      console.log(`[Rate Limit] IP: ${ip}, Remaining: ${result.remaining}/${result.limit}`)
-    }
-
     if (!result.allowed) {
-      // Log rate limit violations
-      console.warn(
-        `[Rate Limit] IP ${ip} exceeded rate limit (${config.identifier || "default"}). Retry after ${result.retryAfter}s`
-      )
-
       throw new ORPCError("TOO_MANY_REQUESTS", {
         message: "Rate limit exceeded. Please try again later.",
         data: {
