@@ -47,11 +47,6 @@ const strictPublicProcedure = baseProcedure.use(({ context, next }) =>
   strictRateLimit()({ context, next })
 )
 
-// Public procedure with moderate rate limiting
-const moderatePublicProcedure = baseProcedure.use(({ context, next }) =>
-  moderateRateLimit()({ context, next })
-)
-
 const authProcedure = baseProcedure.use(({ context, next }) =>
   authMiddleware({ context, next })
 )

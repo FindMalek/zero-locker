@@ -7,7 +7,7 @@ import type { ORPCContext } from "./types"
 /**
  * Extract IP address from request headers
  * Handles various proxy configurations (Vercel, CloudFlare, etc.)
- * 
+ *
  * SECURITY: Headers are checked in order of trustworthiness to prevent IP spoofing.
  * This is critical for rate limiting, as attackers could bypass limits by spoofing IPs.
  */

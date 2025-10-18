@@ -189,21 +189,21 @@ export async function checkRateLimit(
   config: RateLimitConfig
 ): Promise<RateLimitResult> {
   const { maxRequests, windowSeconds, identifier } = config
-  
+
   // Validate maxRequests
   if (!Number.isFinite(maxRequests) || maxRequests <= 0) {
     throw new Error(
       `Invalid maxRequests: ${maxRequests}. Must be a finite positive number greater than 0.`
     )
   }
-  
+
   // Validate windowSeconds
   if (!Number.isFinite(windowSeconds) || windowSeconds <= 0) {
     throw new Error(
       `Invalid windowSeconds: ${windowSeconds}. Must be a finite positive number greater than 0.`
     )
   }
-  
+
   const key = generateKey(ip, identifier)
   const now = Math.floor(Date.now() / 1000)
 
