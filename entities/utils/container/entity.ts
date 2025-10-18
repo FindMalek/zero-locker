@@ -1,8 +1,7 @@
+import { ContainerEntitySimpleDbData } from "@/entities/utils/container/query"
 import { EntityType, EntityTypeEnum } from "@/schemas/utils"
 import { ContainerSimpleRo } from "@/schemas/utils/container"
 import { ContainerType } from "@prisma/client"
-
-import { ContainerEntitySimpleDbData } from "./query"
 
 export class ContainerEntity {
   static getSimpleRo(entity: ContainerEntitySimpleDbData): ContainerSimpleRo {

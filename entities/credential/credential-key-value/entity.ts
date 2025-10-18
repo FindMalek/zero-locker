@@ -1,3 +1,7 @@
+import {
+  CredentialKeyValuePairDbData,
+  CredentialKeyValuePairSimpleDbData,
+} from "@/entities/credential/credential-key-value/query"
 import { EncryptedDataEntity } from "@/entities/encryption"
 import {
   type CredentialKeyValuePairDto,
@@ -8,11 +12,6 @@ import { type GenericEncryptedKeyValuePairDto } from "@/schemas/encryption/encry
 import { type BaseKeyValuePair } from "@/schemas/utils"
 
 import { encryptData, exportKey, generateEncryptionKey } from "@/lib/encryption"
-
-import {
-  CredentialKeyValuePairDbData,
-  CredentialKeyValuePairSimpleDbData,
-} from "./query"
 
 export class CredentialKeyValuePairEntity {
   static getSimpleRo(

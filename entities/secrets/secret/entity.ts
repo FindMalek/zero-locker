@@ -1,6 +1,5 @@
+import { SecretEntitySimpleDbData } from "@/entities/secrets/secret/query"
 import { SecretSimpleRo } from "@/schemas/secrets"
-
-import { SecretEntitySimpleDbData } from "./query"
 
 export class SecretEntity {
   static getSimpleRo(entity: SecretEntitySimpleDbData): SecretSimpleRo {

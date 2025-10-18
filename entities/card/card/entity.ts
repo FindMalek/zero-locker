@@ -1,3 +1,4 @@
+import { CardEntitySimpleDbData } from "@/entities/card/card/query"
 import {
   cardProviderEnum,
   CardProviderInfer,
@@ -8,8 +9,6 @@ import {
   CardTypeInfer,
 } from "@/schemas/card"
 import { CardProvider, CardStatus, CardType } from "@prisma/client"
-
-import { CardEntitySimpleDbData } from "./query"
 
 export class CardEntity {
   static getSimpleRo(entity: CardEntitySimpleDbData): CardSimpleRo {

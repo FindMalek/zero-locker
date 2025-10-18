@@ -1,6 +1,5 @@
+import { CredentialMetadataEntitySimpleDbData } from "@/entities/credential/credential-metadata/query"
 import { CredentialMetadataSimpleRo } from "@/schemas/credential"
-
-import { CredentialMetadataEntitySimpleDbData } from "./query"
 
 export class CredentialMetadataEntity {
   static getSimpleRo(

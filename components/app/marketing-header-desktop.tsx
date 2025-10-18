@@ -13,11 +13,21 @@ export function MarketingHeaderDesktop() {
   const isMobile = useIsMobile()
   return (
     <header className="flex w-full items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
-      <div className="flex items-center">
-        <h1 className="flex items-center gap-2 text-xl font-bold">
+      <div className="flex items-center gap-8">
+        <Link href="/" className="flex items-center gap-2 text-xl font-bold">
           <Icons.logo />
           {!isMobile && <span className="text-xl">{siteConfig.name}</span>}
-        </h1>
+        </Link>
+        {!isMobile && (
+          <nav className="flex items-center gap-6">
+            <Link
+              href="/roadmap"
+              className="text-muted-foreground hover:text-foreground text-sm font-medium transition-colors"
+            >
+              Roadmap
+            </Link>
+          </nav>
+        )}
       </div>
       <div className="flex items-center">
         <Link

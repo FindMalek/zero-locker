@@ -97,3 +97,18 @@ model Waitlist {
   @@index([email])
   @@map("waitlist")
 }
+
+model RoadmapSubscription {
+  id    String @id @default(uuid())
+  email String @unique
+
+  country   String?
+  city      String?
+  ipAddress String?
+  userAgent String?
+
+  createdAt DateTime @default(now())
+
+  @@index([email])
+  @@map("roadmap_subscription")
+}

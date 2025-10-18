@@ -5,10 +5,26 @@ export interface PermissionContext {
   canOnlyAccessDefaultContainers: boolean
 }
 
+export interface RateLimitInfo {
+  remaining: number
+  limit: number
+  resetAt: number
+}
+
 export interface ORPCContext {
   session: Session | null
   user: User | null
   permissions?: PermissionContext
+  /**
+   * IP address of the request
+   * Used for rate limiting and security logging
+   */
+  ip: string
+  /**
+   * Rate limit information for the current request
+   * Available after rate limiting middleware is applied
+   */
+  rateLimit?: RateLimitInfo
 }
 
 export interface AuthenticatedContext extends ORPCContext {

@@ -1,5 +1,16 @@
 import { authMiddleware } from "@/middleware/auth"
+import {
+  lenientRateLimit,
+  moderateRateLimit,
+  strictRateLimit,
+} from "@/middleware/rate-limit"
 import { database } from "@/prisma/client"
+import {
+  subscribeToRoadmapInputSchema,
+  subscribeToRoadmapOutputSchema,
+  type SubscribeToRoadmapInput,
+  type SubscribeToRoadmapOutput,
+} from "@/schemas/user/roadmap"
 import {
   getEncryptedDataCountOutputSchema,
   getUserCountOutputSchema,
@@ -19,20 +30,29 @@ import { ORPCError, os } from "@orpc/server"
 import { Prisma } from "@prisma/client"
 import { z } from "zod"
 
+import { sendRoadmapSubscriptionEmail, sendWaitlistEmail } from "@/lib/email"
 import { createDefaultContainers } from "@/lib/utils/default-containers"
 
 import type { ORPCContext } from "../types"
 
 const baseProcedure = os.$context<ORPCContext>()
-const publicProcedure = baseProcedure.use(({ context, next }) => {
-  return next({ context })
-})
+
+// Public procedure with lenient rate limiting for read-only operations
+const publicProcedure = baseProcedure.use(({ context, next }) =>
+  lenientRateLimit()({ context, next })
+)
+
+// Public procedure with strict rate limiting for write operations (emails, etc.)
+const strictPublicProcedure = baseProcedure.use(({ context, next }) =>
+  strictRateLimit()({ context, next })
+)
+
 const authProcedure = baseProcedure.use(({ context, next }) =>
   authMiddleware({ context, next })
 )
 
-// Join waitlist
-export const joinWaitlist = publicProcedure
+// Join waitlist - strict rate limit due to email sending
+export const joinWaitlist = strictPublicProcedure
   .input(joinWaitlistInputSchema)
   .output(joinWaitlistOutputSchema)
   .handler(async ({ input }): Promise<JoinWaitlistOutput> => {
@@ -64,6 +84,17 @@ export const joinWaitlist = publicProcedure
           },
         },
       })
+
+      // Send waitlist email
+      try {
+        await sendWaitlistEmail({
+          to: input.email,
+          waitlistPosition: position,
+        })
+      } catch (emailError) {
+        console.error("Failed to send waitlist email:", emailError)
+        // Don't fail the request if email fails
+      }
 
       return { success: true, position }
     } catch (error) {
@@ -177,6 +208,103 @@ export const getCurrentUser = authProcedure
     return user
   })
 
+// Subscribe to roadmap updates - strict rate limit due to email sending
+export const subscribeToRoadmap = strictPublicProcedure
+  .input(subscribeToRoadmapInputSchema)
+  .output(subscribeToRoadmapOutputSchema)
+  .handler(async ({ input }): Promise<SubscribeToRoadmapOutput> => {
+    try {
+      // Check if email already exists in roadmap subscriptions
+      const existingSubscription =
+        await database.roadmapSubscription.findUnique({
+          where: { email: input.email },
+        })
+
+      if (existingSubscription) {
+        return {
+          success: false,
+          error: "Email is already subscribed",
+        }
+      }
+
+      // Add to roadmap subscriptions
+      await database.roadmapSubscription.create({
+        data: {
+          email: input.email,
+        },
+      })
+
+      // Send subscription confirmation email
+      try {
+        await sendRoadmapSubscriptionEmail({
+          to: input.email,
+        })
+      } catch (emailError) {
+        console.error("Failed to send subscription email:", emailError)
+        // Don't fail the request if email fails
+      }
+
+      return { success: true }
+    } catch (error) {
+      // Re-throw ORPC errors to let ORPC handle them
+      if (error instanceof ORPCError) {
+        throw error
+      }
+
+      // Handle Prisma-specific errors
+      if (error instanceof Prisma.PrismaClientKnownRequestError) {
+        console.error("Database constraint error subscribing to roadmap:", {
+          code: error.code,
+          message: error.message,
+          meta: error.meta,
+        })
+
+        // Handle unique constraint violations
+        if (error.code === "P2002") {
+          return {
+            success: false,
+            error: "Email is already subscribed",
+          }
+        }
+
+        // Handle other known Prisma errors
+        return {
+          success: false,
+          error: "Database constraint violation occurred",
+        }
+      }
+
+      // Handle Prisma client errors (connection issues, etc.)
+      if (error instanceof Prisma.PrismaClientUnknownRequestError) {
+        console.error("Unknown Prisma error subscribing to roadmap:", {
+          message: error.message,
+        })
+        return {
+          success: false,
+          error: "Database connection issue occurred",
+        }
+      }
+
+      // Handle Prisma validation errors
+      if (error instanceof Prisma.PrismaClientValidationError) {
+        console.error("Prisma validation error subscribing to roadmap:", {
+          message: error.message,
+        })
+        return {
+          success: false,
+          error: "Invalid data provided",
+        }
+      }
+
+      // Handle unexpected errors
+      console.error("Unexpected error subscribing to roadmap:", error)
+      return {
+        success: false,
+        error: "An unexpected error occurred. Please try again later.",
+      }
+    }
+  })
+
 // Initialize default containers for a user
 export const initializeDefaultContainers = authProcedure
   .input(z.object({}))
@@ -219,5 +347,6 @@ export const userRouter = {
   getUserCount,
   getEncryptedDataCount,
   getCurrentUser,
+  subscribeToRoadmap,
   initializeDefaultContainers,
 }

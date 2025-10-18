@@ -2,7 +2,7 @@
 
 import { headers as nextHeaders } from "next/headers"
 
-import { auth } from "./server"
+import { auth } from "@/lib/auth/server"
 
 export async function verifySession() {
   const session = await auth.api.getSession({
