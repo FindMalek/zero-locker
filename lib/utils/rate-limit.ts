@@ -95,7 +95,7 @@ class RateLimitCache {
     const now = Math.floor(Date.now() / 1000)
 
     for (const [key, entry] of this.cache.entries()) {
-      if (entry.resetAt < now) {
+      if (entry.resetAt <= now) {
         this.cache.delete(key)
       }
     }
@@ -105,7 +105,7 @@ class RateLimitCache {
     const entry = this.cache.get(key)
 
     // Remove expired entries on access
-    if (entry && entry.resetAt < Math.floor(Date.now() / 1000)) {
+    if (entry && entry.resetAt <= Math.floor(Date.now() / 1000)) {
       this.cache.delete(key)
       return undefined
     }
@@ -190,7 +190,7 @@ export async function checkRateLimit(
   }
 
   // Check if the window has expired
-  if (entry.resetAt < now) {
+  if (entry.resetAt <= now) {
     // Reset the window
     entry = {
       count: 1,
