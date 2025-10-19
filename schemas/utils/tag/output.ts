@@ -43,4 +43,3 @@ export type TagSimpleRo = TagSimpleOutput
 export const tagOutputSchema = tagSimpleOutputSchema
 /** @deprecated Use TagSimpleOutput instead */
 export type TagOutput = TagSimpleOutput
-

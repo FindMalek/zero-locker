@@ -50,4 +50,3 @@ export type ContainerSimpleRo = ContainerSimpleOutput
 export const containerOutputSchema = containerSimpleOutputSchema
 /** @deprecated Use ContainerSimpleOutput instead */
 export type ContainerOutput = ContainerSimpleOutput
-

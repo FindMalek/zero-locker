@@ -25,4 +25,3 @@ export const createCredentialWithMetadataInputSchema =
   createWithMetadataInputSchema
 /** @deprecated Use CreateWithMetadataInput instead */
 export type CreateCredentialWithMetadataInput = CreateWithMetadataInput
-

@@ -12,4 +12,3 @@ export const accountStatusSchema = z.enum([
 export const accountStatusEnum = accountStatusSchema.enum
 export const LIST_ACCOUNT_STATUSES = Object.values(accountStatusEnum)
 export type AccountStatusInfer = z.infer<typeof accountStatusSchema>
-

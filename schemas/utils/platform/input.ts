@@ -84,4 +84,3 @@ export type UpdatePlatformDto = UpdatePlatformInput
 export const deletePlatformDtoSchema = deletePlatformInputSchema
 /** @deprecated Use DeletePlatformInput instead */
 export type DeletePlatformDto = DeletePlatformInput
-

@@ -48,4 +48,3 @@ export type SecretSimpleRo = SecretSimpleOutput
 export const secretOutputSchema = secretSimpleOutputSchema
 /** @deprecated Use SecretSimpleOutput instead */
 export type SecretOutput = SecretSimpleOutput
-

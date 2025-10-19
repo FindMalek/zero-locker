@@ -2,8 +2,12 @@
 
 import { CredentialEntity } from "@/entities"
 import { accountStatusEnum } from "@/schemas/credential"
-import type { SortDirection, SortField, ViewMode } from "@/schemas/utils"
-import type { PlatformSimpleRo } from "@/schemas/utils"
+import type {
+  PlatformSimpleRo,
+  SortDirection,
+  SortField,
+  ViewMode,
+} from "@/schemas/utils"
 import { AccountStatus } from "@prisma/client"
 import { Globe, Tag } from "lucide-react"
 

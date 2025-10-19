@@ -59,4 +59,3 @@ export type CardSimpleRo = CardSimpleOutput
 export const cardOutputSchema = cardSimpleOutputSchema
 /** @deprecated Use CardSimpleOutput instead */
 export type CardOutput = CardSimpleOutput
-

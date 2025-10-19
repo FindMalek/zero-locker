@@ -196,4 +196,3 @@ export type CredentialFormInput = FormInput
 export const credentialFormDtoSchema = formInputSchema
 /** @deprecated Use FormInput instead */
 export type CredentialFormDto = FormInput
-

@@ -50,4 +50,3 @@ export const cardStatusSchema = z.enum([
 export const cardStatusEnum = cardStatusSchema.enum
 export const LIST_CARD_STATUSES = Object.values(cardStatusEnum)
 export type CardStatusInfer = z.infer<typeof cardStatusSchema>
-

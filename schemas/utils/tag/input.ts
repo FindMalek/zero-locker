@@ -78,4 +78,3 @@ export type UpdateTagDto = UpdateTagInput
 export const deleteTagDtoSchema = deleteTagInputSchema
 /** @deprecated Use DeleteTagInput instead */
 export type DeleteTagDto = DeleteTagInput
-

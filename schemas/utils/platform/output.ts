@@ -50,4 +50,3 @@ export type PlatformSimpleRo = PlatformSimpleOutput
 export const platformOutputSchema = platformSimpleOutputSchema
 /** @deprecated Use PlatformSimpleOutput instead */
 export type PlatformOutput = PlatformSimpleOutput
-

@@ -85,4 +85,3 @@ export type UpdateSecretDto = UpdateSecretInput
 export const deleteSecretDtoSchema = deleteSecretInputSchema
 /** @deprecated Use DeleteSecretInput instead */
 export type DeleteSecretDto = DeleteSecretInput
-

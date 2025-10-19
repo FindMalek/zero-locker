@@ -36,9 +36,11 @@ export const getContainerInputSchema = z.object({
 export type GetContainerInput = z.infer<typeof getContainerInputSchema>
 
 // Update
-export const updateContainerInputSchema = containerInputSchema.partial().extend({
-  id: z.string().min(1, "Container ID is required"),
-})
+export const updateContainerInputSchema = containerInputSchema
+  .partial()
+  .extend({
+    id: z.string().min(1, "Container ID is required"),
+  })
 
 export type UpdateContainerInput = z.infer<typeof updateContainerInputSchema>
 
@@ -84,4 +86,3 @@ export type UpdateContainerDto = UpdateContainerInput
 export const deleteContainerDtoSchema = deleteContainerInputSchema
 /** @deprecated Use DeleteContainerInput instead */
 export type DeleteContainerDto = DeleteContainerInput
-

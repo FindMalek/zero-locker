@@ -66,11 +66,11 @@ export type CredentialKeyValuePairSimpleRo = KeyValueSimpleOutput
 export const credentialKeyValuePairWithEncryptionRoSchema =
   keyValueWithEncryptionOutputSchema
 /** @deprecated Use KeyValueWithEncryptionOutput instead */
-export type CredentialKeyValuePairWithEncryptionRo = KeyValueWithEncryptionOutput
+export type CredentialKeyValuePairWithEncryptionRo =
+  KeyValueWithEncryptionOutput
 
 /** @deprecated Use keyValueWithValueOutputSchema instead */
 export const credentialKeyValuePairWithValueRoSchema =
   keyValueWithValueOutputSchema
 /** @deprecated Use KeyValueWithValueOutput instead */
 export type CredentialKeyValuePairWithValueRo = KeyValueWithValueOutput
-

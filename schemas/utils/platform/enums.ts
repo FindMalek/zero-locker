@@ -10,4 +10,3 @@ export const platformStatusSchema = z.nativeEnum(PlatformStatus)
 export const platformStatusEnum = platformStatusSchema.enum
 export const LIST_PLATFORM_STATUSES = Object.values(platformStatusEnum)
 export type PlatformStatusInfer = z.infer<typeof platformStatusSchema>
-

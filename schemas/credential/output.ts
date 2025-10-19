@@ -82,4 +82,3 @@ export type CredentialOutput = SimpleOutput
 export const listCredentialsOutputSchema = listOutputSchema
 /** @deprecated Use ListOutput instead */
 export type ListCredentialsOutput = ListOutput
-
