@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react"
 import type { CredentialEntitySimpleDbData } from "@/entities"
-import type { SortDirection, SortField } from "@/schemas"
+import type { SortDirection, SortField } from "@/schemas/utils"
 
 export function useEntitySorting(entities: CredentialEntitySimpleDbData[]) {
   const [sortField, setSortField] = useState<SortField | null>(null)

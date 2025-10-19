@@ -8,7 +8,7 @@ import type {
   DeleteContainerInput,
   ListContainersInput,
   UpdateContainerInput,
-} from "@/schemas/utils/dto"
+} from "@/schemas/utils"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 
 // Query keys factory

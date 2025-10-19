@@ -5,7 +5,7 @@ import { useCredentials } from "@/orpc/hooks/use-credentials"
 import { usePlatforms } from "@/orpc/hooks/use-platforms"
 import type { ListCredentialsOutput } from "@/schemas/credential/dto"
 import type { SortDirection, SortField, ViewMode } from "@/schemas/utils"
-import type { ListPlatformsOutput } from "@/schemas/utils/dto"
+import type { ListPlatformsOutput } from "@/schemas/utils"
 import { AccountStatus } from "@prisma/client"
 
 import { DashboardCredentialCardsView } from "@/components/app/dashboard-credential-cards-view"

@@ -1,9 +1,9 @@
 import { encryptedDataDtoSchema } from "@/schemas/encryption/encryption"
-import { tagDtoSchema } from "@/schemas/utils/tag/input"
+import { tagDtoSchema } from "@/schemas/utils/tag"
 import { AccountStatus } from "@prisma/client"
 import { z } from "zod"
 
-import { metadataInputSchema } from "./metadata/input"
+import { metadataInputSchema } from "./metadata"
 
 // ============================================================================
 // Base Input Schema

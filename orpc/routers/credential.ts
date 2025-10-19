@@ -10,13 +10,13 @@ import {
 } from "@/middleware/permissions"
 import { database } from "@/prisma/client"
 import { credentialFormDtoSchema } from "@/schemas/credential"
-import { credentialKeyValuePairWithValueRoSchema } from "@/schemas/credential/credential-key-value"
+import { credentialKeyValuePairWithValueRoSchema } from "@/schemas/credential/key-value"
 import {
   createCredentialWithMetadataInputSchema,
   createCredentialWithMetadataOutputSchema,
   type CreateCredentialWithMetadataInput,
   type CreateCredentialWithMetadataOutput,
-} from "@/schemas/credential/credential-with-metadata"
+} from "@/schemas/credential/with-metadata"
 import {
   createCredentialInputSchema,
   credentialOutputSchema,
@@ -29,7 +29,7 @@ import {
   updateCredentialPasswordInputSchema,
   type CredentialOutput,
   type ListCredentialsOutput,
-} from "@/schemas/credential/dto"
+} from "@/schemas/credential"
 import { ORPCError, os } from "@orpc/server"
 import { AccountStatus, type Prisma } from "@prisma/client"
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library"

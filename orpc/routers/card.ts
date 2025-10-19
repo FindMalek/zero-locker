@@ -11,7 +11,7 @@ import {
   updateCardInputSchema,
   type CardOutput,
   type ListCardsOutput,
-} from "@/schemas/card/dto"
+} from "@/schemas/card"
 import { ORPCError, os } from "@orpc/server"
 import type { Prisma } from "@prisma/client"
 

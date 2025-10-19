@@ -1,4 +1,4 @@
-import { tagSimpleRoSchema } from "@/schemas/utils/tag/output"
+import { tagSimpleRoSchema } from "@/schemas/utils/tag"
 import { AccountStatus } from "@prisma/client"
 import { z } from "zod"
 

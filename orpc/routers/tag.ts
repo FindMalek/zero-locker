@@ -10,7 +10,7 @@ import {
   updateTagInputSchema,
   type ListTagsOutput,
   type TagOutput,
-} from "@/schemas/utils/dto"
+} from "@/schemas/utils"
 import { ORPCError, os } from "@orpc/server"
 
 import type { ORPCContext } from "../types"

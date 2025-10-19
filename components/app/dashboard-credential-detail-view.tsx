@@ -17,7 +17,7 @@ import type {
   CredentialOutput,
   UpdateCredentialInput,
 } from "@/schemas/credential/dto"
-import type { ListPlatformsOutput } from "@/schemas/utils/dto"
+import type { ListPlatformsOutput } from "@/schemas/utils"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { AccountStatus } from "@prisma/client"
 import { useForm } from "react-hook-form"

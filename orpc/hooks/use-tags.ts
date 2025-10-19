@@ -1,7 +1,7 @@
 "use client"
 
 import { orpc } from "@/orpc/client"
-import type { ListTagsInput } from "@/schemas/utils/dto"
+import type { ListTagsInput } from "@/schemas/utils"
 import { useQuery } from "@tanstack/react-query"
 
 // Query keys factory

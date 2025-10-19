@@ -1,13 +1,13 @@
 import { ContainerType } from "@prisma/client"
 import { z } from "zod"
 
-import { tagDtoSchema } from "./tag.input"
+import { tagDtoSchema } from "../tag"
 
 // ============================================================================
 // Base Input Schema
 // ============================================================================
 
-export const containerInputSchema = z.object({
+export const inputSchema = z.object({
   name: z.string().min(1, "Name is required"),
   icon: z.string().min(1, "Icon is required"),
 
@@ -17,72 +17,100 @@ export const containerInputSchema = z.object({
   tags: z.array(tagDtoSchema),
 })
 
-export type ContainerInput = z.infer<typeof containerInputSchema>
+export type Input = z.infer<typeof inputSchema>
 
 // ============================================================================
 // CRUD Operation Input Schemas
 // ============================================================================
 
 // Create
-export const createContainerInputSchema = containerInputSchema
+export const createInputSchema = inputSchema
 
-export type CreateContainerInput = z.infer<typeof createContainerInputSchema>
+export type CreateInput = z.infer<typeof createInputSchema>
 
 // Get by ID
-export const getContainerInputSchema = z.object({
+export const getInputSchema = z.object({
   id: z.string().min(1, "Container ID is required"),
 })
 
-export type GetContainerInput = z.infer<typeof getContainerInputSchema>
+export type GetInput = z.infer<typeof getInputSchema>
 
 // Update
-export const updateContainerInputSchema = containerInputSchema
-  .partial()
-  .extend({
-    id: z.string().min(1, "Container ID is required"),
-  })
-
-export type UpdateContainerInput = z.infer<typeof updateContainerInputSchema>
-
-// Delete
-export const deleteContainerInputSchema = z.object({
+export const updateInputSchema = inputSchema.partial().extend({
   id: z.string().min(1, "Container ID is required"),
 })
 
-export type DeleteContainerInput = z.infer<typeof deleteContainerInputSchema>
+export type UpdateInput = z.infer<typeof updateInputSchema>
+
+// Delete
+export const deleteInputSchema = z.object({
+  id: z.string().min(1, "Container ID is required"),
+})
+
+export type DeleteInput = z.infer<typeof deleteInputSchema>
 
 // ============================================================================
 // List Operation Input Schema
 // ============================================================================
 
-export const listContainersInputSchema = z.object({
+export const listInputSchema = z.object({
   page: z.number().int().min(1).default(1),
   limit: z.number().int().min(1).max(100).default(10),
   search: z.string().optional(),
 })
 
-export type ListContainersInput = z.infer<typeof listContainersInputSchema>
+export type ListInput = z.infer<typeof listInputSchema>
 
 // ============================================================================
 // Backward Compatibility Aliases (DEPRECATED - use new names)
 // ============================================================================
 
-/** @deprecated Use containerInputSchema instead */
-export const containerDtoSchema = containerInputSchema
-/** @deprecated Use ContainerInput instead */
-export type ContainerDto = ContainerInput
+/** @deprecated Use inputSchema instead */
+export const containerInputSchema = inputSchema
+/** @deprecated Use Input instead */
+export type ContainerInput = Input
 
-/** @deprecated Use getContainerInputSchema instead */
-export const getContainerByIdDtoSchema = getContainerInputSchema
-/** @deprecated Use GetContainerInput instead */
-export type GetContainerByIdDto = GetContainerInput
+/** @deprecated Use inputSchema instead */
+export const containerDtoSchema = inputSchema
+/** @deprecated Use Input instead */
+export type ContainerDto = Input
 
-/** @deprecated Use updateContainerInputSchema instead */
-export const updateContainerDtoSchema = updateContainerInputSchema
-/** @deprecated Use UpdateContainerInput instead */
-export type UpdateContainerDto = UpdateContainerInput
+/** @deprecated Use createInputSchema instead */
+export const createContainerInputSchema = createInputSchema
+/** @deprecated Use CreateInput instead */
+export type CreateContainerInput = CreateInput
 
-/** @deprecated Use deleteContainerInputSchema instead */
-export const deleteContainerDtoSchema = deleteContainerInputSchema
-/** @deprecated Use DeleteContainerInput instead */
-export type DeleteContainerDto = DeleteContainerInput
+/** @deprecated Use getInputSchema instead */
+export const getContainerInputSchema = getInputSchema
+/** @deprecated Use GetInput instead */
+export type GetContainerInput = GetInput
+
+/** @deprecated Use getInputSchema instead */
+export const getContainerByIdDtoSchema = getInputSchema
+/** @deprecated Use GetInput instead */
+export type GetContainerByIdDto = GetInput
+
+/** @deprecated Use updateInputSchema instead */
+export const updateContainerInputSchema = updateInputSchema
+/** @deprecated Use UpdateInput instead */
+export type UpdateContainerInput = UpdateInput
+
+/** @deprecated Use updateInputSchema instead */
+export const updateContainerDtoSchema = updateInputSchema
+/** @deprecated Use UpdateInput instead */
+export type UpdateContainerDto = UpdateInput
+
+/** @deprecated Use deleteInputSchema instead */
+export const deleteContainerInputSchema = deleteInputSchema
+/** @deprecated Use DeleteInput instead */
+export type DeleteContainerInput = DeleteInput
+
+/** @deprecated Use deleteInputSchema instead */
+export const deleteContainerDtoSchema = deleteInputSchema
+/** @deprecated Use DeleteInput instead */
+export type DeleteContainerDto = DeleteInput
+
+/** @deprecated Use listInputSchema instead */
+export const listContainersInputSchema = listInputSchema
+/** @deprecated Use ListInput instead */
+export type ListContainersInput = ListInput

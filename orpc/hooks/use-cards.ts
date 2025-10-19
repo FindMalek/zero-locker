@@ -8,7 +8,7 @@ import type {
   ListCardsInput,
   ListCardsOutput,
   UpdateCardInput,
-} from "@/schemas/card/dto"
+} from "@/schemas/card"
 import {
   useMutation,
   useQuery,

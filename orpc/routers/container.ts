@@ -11,7 +11,7 @@ import {
   createContainerWithSecretsOutputSchema,
   type CreateContainerWithSecretsInput,
   type CreateContainerWithSecretsOutput,
-} from "@/schemas/utils/container-with-secrets"
+} from "@/schemas/utils/container/with-secrets"
 import {
   containerOutputSchema,
   createContainerInputSchema,
@@ -22,7 +22,7 @@ import {
   updateContainerInputSchema,
   type ContainerOutput,
   type ListContainersOutput,
-} from "@/schemas/utils/dto"
+} from "@/schemas/utils"
 import { ORPCError, os } from "@orpc/server"
 import type { Prisma } from "@prisma/client"
 import { z } from "zod"

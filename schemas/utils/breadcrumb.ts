@@ -1,6 +1,6 @@
-import { cardOutputSchema } from "@/schemas/card/dto"
-import { credentialOutputSchema } from "@/schemas/credential/dto"
-import { secretOutputSchema } from "@/schemas/secrets/dto"
+import { cardOutputSchema } from "@/schemas/card"
+import { credentialOutputSchema } from "@/schemas/credential"
+import { secretOutputSchema } from "@/schemas/secrets"
 import { platformSimpleRoSchema } from "@/schemas/utils"
 import { z } from "zod"
 

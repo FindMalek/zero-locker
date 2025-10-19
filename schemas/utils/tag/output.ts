@@ -4,7 +4,7 @@ import { z } from "zod"
 // Simple Return Object (RO)
 // ============================================================================
 
-export const tagSimpleOutputSchema = z.object({
+export const simpleOutputSchema = z.object({
   id: z.string(),
   name: z.string(),
 
@@ -14,32 +14,42 @@ export const tagSimpleOutputSchema = z.object({
   containerId: z.string().nullable(),
 })
 
-export type TagSimpleOutput = z.infer<typeof tagSimpleOutputSchema>
+export type SimpleOutput = z.infer<typeof simpleOutputSchema>
 
 // ============================================================================
 // List Response Output Schema
 // ============================================================================
 
-export const listTagsOutputSchema = z.object({
-  tags: z.array(tagSimpleOutputSchema),
+export const listOutputSchema = z.object({
+  tags: z.array(simpleOutputSchema),
   total: z.number().int(),
   hasMore: z.boolean(),
   page: z.number().int(),
   limit: z.number().int(),
 })
 
-export type ListTagsOutput = z.infer<typeof listTagsOutputSchema>
+export type ListOutput = z.infer<typeof listOutputSchema>
 
 // ============================================================================
 // Backward Compatibility Aliases (DEPRECATED - use new names)
 // ============================================================================
 
-/** @deprecated Use tagSimpleOutputSchema instead */
-export const tagSimpleRoSchema = tagSimpleOutputSchema
-/** @deprecated Use TagSimpleOutput instead */
-export type TagSimpleRo = TagSimpleOutput
+/** @deprecated Use simpleOutputSchema instead */
+export const tagSimpleOutputSchema = simpleOutputSchema
+/** @deprecated Use SimpleOutput instead */
+export type TagSimpleOutput = SimpleOutput
 
-/** @deprecated Use tagSimpleOutputSchema instead */
-export const tagOutputSchema = tagSimpleOutputSchema
-/** @deprecated Use TagSimpleOutput instead */
-export type TagOutput = TagSimpleOutput
+/** @deprecated Use simpleOutputSchema instead */
+export const tagSimpleRoSchema = simpleOutputSchema
+/** @deprecated Use SimpleOutput instead */
+export type TagSimpleRo = SimpleOutput
+
+/** @deprecated Use simpleOutputSchema instead */
+export const tagOutputSchema = simpleOutputSchema
+/** @deprecated Use SimpleOutput instead */
+export type TagOutput = SimpleOutput
+
+/** @deprecated Use listOutputSchema instead */
+export const listTagsOutputSchema = listOutputSchema
+/** @deprecated Use ListOutput instead */
+export type ListTagsOutput = ListOutput

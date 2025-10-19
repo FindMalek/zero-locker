@@ -10,7 +10,7 @@ import {
   updatePlatformInputSchema,
   type ListPlatformsOutput,
   type PlatformOutput,
-} from "@/schemas/utils/dto"
+} from "@/schemas/utils"
 import { ORPCError, os } from "@orpc/server"
 
 import type { ORPCContext } from "../types"

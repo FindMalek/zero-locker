@@ -11,7 +11,7 @@ import {
   updateSecretInputSchema,
   type ListSecretsOutput,
   type SecretOutput,
-} from "@/schemas/secrets/dto"
+} from "@/schemas/secrets"
 import { ORPCError, os } from "@orpc/server"
 import type { Prisma } from "@prisma/client"
 
