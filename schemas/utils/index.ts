@@ -1,6 +1,9 @@
-export * from "./base-key-value-pair"
+// Entity schemas
 export * from "./container"
-export * from "./container-with-secrets"
-export * from "./utils"
-export * from "./tag"
 export * from "./platform"
+export * from "./tag"
+
+// Utility schemas
+export * from "./base-key-value-pair"
+export * from "./breadcrumb"
+export * from "./utils"

@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useState } from "react"
-import { SecretDto } from "@/schemas/secrets/secret"
+import { SecretDto } from "@/schemas/secrets"
 import { useForm } from "react-hook-form"
 
 import { cn } from "@/lib/utils"

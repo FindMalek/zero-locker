@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { useCreateContainerWithSecrets } from "@/orpc/hooks"
-import { SecretDto, secretDtoSchema } from "@/schemas/secrets/secret"
+import { SecretDto, secretDtoSchema } from "@/schemas/secrets"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { ContainerType, SecretStatus, SecretType } from "@prisma/client"
 import { useForm } from "react-hook-form"

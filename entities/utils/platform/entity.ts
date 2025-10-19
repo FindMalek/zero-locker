@@ -1,4 +1,4 @@
-import { PlatformSimpleRo } from "@/schemas/utils/platform"
+import { PlatformSimpleRo } from "@/schemas/utils"
 import { PlatformStatus } from "@prisma/client"
 
 import { PlatformEntitySimpleDbData } from "./query"

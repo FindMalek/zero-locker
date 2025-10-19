@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { useCreateCard } from "@/orpc/hooks"
 import { CardDto, cardDtoSchema } from "@/schemas/card"
-import { TagDto } from "@/schemas/utils/tag"
+import { TagDto } from "@/schemas/utils"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { CardProvider, CardStatus, CardType } from "@prisma/client"
 import { useQueryClient } from "@tanstack/react-query"

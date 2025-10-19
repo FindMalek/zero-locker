@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { PlatformEntity } from "@/entities/utils/platform"
 import { usePlatforms } from "@/orpc/hooks/use-platforms"
-import { AccountStatusInfer } from "@/schemas/credential/credential"
+import { AccountStatusInfer } from "@/schemas/credential"
 import type { CredentialOutput } from "@/schemas/credential/dto"
 import { EntityTypeEnum } from "@/schemas/utils"
 

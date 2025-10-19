@@ -6,7 +6,7 @@ import {
   containerDtoSchema,
   LIST_CONTAINER_TYPES,
   type ContainerDto,
-} from "@/schemas/utils/container"
+} from "@/schemas/utils"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { ContainerType } from "@prisma/client"
 import { useForm } from "react-hook-form"

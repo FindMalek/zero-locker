@@ -2,7 +2,7 @@ import {
   getDatabaseClient,
   type PrismaTransactionClient,
 } from "@/prisma/client"
-import type { TagDto } from "@/schemas/utils/tag"
+import type { TagDto } from "@/schemas/utils"
 import type { Prisma, Tag } from "@prisma/client"
 
 import { generateTagColor } from "./color-helpers"

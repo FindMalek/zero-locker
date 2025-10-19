@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { CardEntity } from "@/entities"
 import { CardDto, LIST_CARD_STATUSES, LIST_CARD_TYPES } from "@/schemas/card"
-import { TagDto } from "@/schemas/utils/tag"
+import { TagDto } from "@/schemas/utils"
 import { CardStatus } from "@prisma/client"
 import { ChevronDown, Plus } from "lucide-react"
 import { UseFormReturn } from "react-hook-form"

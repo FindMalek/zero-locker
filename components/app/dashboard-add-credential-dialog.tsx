@@ -18,7 +18,7 @@ import {
   credentialMetadataDtoSchema,
 } from "@/schemas/credential"
 import { EntityTypeEnum, type BaseKeyValuePair } from "@/schemas/utils"
-import { TagDto } from "@/schemas/utils/tag"
+import { TagDto } from "@/schemas/utils"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 

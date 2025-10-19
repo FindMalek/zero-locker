@@ -4,7 +4,7 @@ import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { PlatformEntity } from "@/entities/utils/platform"
 import type { CredentialOutput } from "@/schemas/credential/dto"
-import type { PlatformSimpleRo } from "@/schemas/utils/platform"
+import type { PlatformSimpleRo } from "@/schemas/utils"
 
 import { DateFormatter } from "@/lib/date-utils"
 import { getLogoDevUrlWithToken, getPlaceholderImage } from "@/lib/utils"

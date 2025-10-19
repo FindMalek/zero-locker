@@ -9,7 +9,7 @@ import {
   requirePermission,
 } from "@/middleware/permissions"
 import { database } from "@/prisma/client"
-import { credentialFormDtoSchema } from "@/schemas/credential/credential"
+import { credentialFormDtoSchema } from "@/schemas/credential"
 import { credentialKeyValuePairWithValueRoSchema } from "@/schemas/credential/credential-key-value"
 import {
   createCredentialWithMetadataInputSchema,

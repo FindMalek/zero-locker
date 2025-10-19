@@ -1,6 +1,6 @@
 import { CardSimpleRo } from "@/schemas/card"
 import { CredentialSimpleRo } from "@/schemas/credential"
-import { SecretSimpleRo } from "@/schemas/secrets/secret"
+import { SecretSimpleRo } from "@/schemas/secrets"
 import {
   ActivityType,
   ActivityTypeEnum,

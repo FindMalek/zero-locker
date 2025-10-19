@@ -58,7 +58,7 @@ export async function generateMetadata({
 
   const { credential, platforms } = data
   const platform = platforms.platforms.find(
-    (p) => p.id === credential.platformId
+    (p: { id: string; name: string }) => p.id === credential.platformId
   )
   const platformName = platform?.name || "Unknown Platform"
 

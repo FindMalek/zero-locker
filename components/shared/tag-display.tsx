@@ -1,6 +1,6 @@
 "use client"
 
-import type { TagSimpleRo } from "@/schemas/utils/tag"
+import type { TagSimpleRo } from "@/schemas/utils"
 import { useTheme } from "next-themes"
 
 import { getLuminance, hexToRgb } from "@/lib/utils"

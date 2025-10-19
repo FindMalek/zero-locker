@@ -12,7 +12,7 @@ import {
 import {
   credentialFormDtoSchema,
   type CredentialFormDto,
-} from "@/schemas/credential/credential"
+} from "@/schemas/credential"
 import type {
   CredentialOutput,
   UpdateCredentialInput,

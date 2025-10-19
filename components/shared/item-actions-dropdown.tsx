@@ -5,7 +5,7 @@ import {
   useUpdateCredential,
 } from "@/orpc/hooks/use-credentials"
 import type { CredentialOutput } from "@/schemas/credential/dto"
-import type { PlatformSimpleRo } from "@/schemas/utils/platform"
+import type { PlatformSimpleRo } from "@/schemas/utils"
 
 import { useUserPermissions } from "@/lib/permissions"
 import { useToast } from "@/hooks/use-toast"
