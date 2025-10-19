@@ -1,6 +1,6 @@
 "use client"
 
-import type { CredentialOutput } from "@/schemas/credential/dto"
+import type { CredentialOutput } from "@/schemas/credential"
 
 import { DateFormatter } from "@/lib/date-utils"
 

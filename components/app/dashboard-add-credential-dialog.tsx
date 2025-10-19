@@ -12,10 +12,10 @@ import {
 import {
   accountStatusEnum,
   AccountStatusInfer,
-  CredentialDto,
-  credentialDtoSchema,
   CredentialMetadataDto,
   credentialMetadataDtoSchema,
+  createCredentialInputSchema,
+  type CreateCredentialInput,
 } from "@/schemas/credential"
 import { EntityTypeEnum, TagDto, type BaseKeyValuePair } from "@/schemas/utils"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -105,8 +105,8 @@ export function DashboardAddCredentialDialog({
     BaseKeyValuePair[]
   >([])
 
-  const credentialForm = useForm<CredentialDto>({
-    resolver: zodResolver(credentialDtoSchema),
+  const credentialForm = useForm<CreateCredentialInput>({
+    resolver: zodResolver(createCredentialInputSchema),
     defaultValues: {
       identifier: "",
       description: "",
@@ -119,7 +119,6 @@ export function DashboardAddCredentialDialog({
         encryptionKey: "",
       },
       tags: [],
-      metadata: [],
     },
   })
 
@@ -233,7 +232,7 @@ export function DashboardAddCredentialDialog({
 
       const credentialData = credentialForm.getValues()
 
-      const credentialDto: CredentialDto = {
+      const credentialDto: CreateCredentialInput = {
         identifier: sensitiveData.identifier,
         passwordEncryption: {
           encryptedValue: encryptResult.encryptedData,
@@ -241,8 +240,7 @@ export function DashboardAddCredentialDialog({
           encryptionKey: keyString,
         },
         status: credentialData.status,
-        tags: credentialData.tags,
-        metadata: credentialData.metadata,
+        tags: credentialData.tags || [],
         description: credentialData.description,
         platformId: credentialData.platformId,
         containerId: credentialData.containerId,
@@ -297,7 +295,6 @@ export function DashboardAddCredentialDialog({
                   encryptionKey: "",
                 },
                 tags: [],
-                metadata: [],
               })
               metadataForm.reset({
                 recoveryEmail: "",

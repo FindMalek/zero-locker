@@ -24,3 +24,5 @@ export type HistorySimpleOutput = z.infer<typeof historySimpleOutputSchema>
 export const credentialHistorySimpleRoSchema = historySimpleOutputSchema
 /** @deprecated Use HistorySimpleOutput instead */
 export type CredentialHistorySimpleRo = HistorySimpleOutput
+
+

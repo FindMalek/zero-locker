@@ -1,9 +1,9 @@
 /**
  * Schema exports
- * 
+ *
  * Each schema module is exported as a namespace to avoid naming conflicts.
  * Import specific schemas from their modules, or use namespace imports.
- * 
+ *
  * Example:
  *   import { credential } from "@/schemas"
  *   import { CredentialOutput } from "@/schemas/credential"

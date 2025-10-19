@@ -96,25 +96,17 @@ export const listCardsInputSchema = z.object({
 export type ListCardsInput = z.infer<typeof listCardsInputSchema>
 
 // ============================================================================
-// Backward Compatibility Aliases (DEPRECATED - use new names)
+// Public API Exports (with entity prefix for clarity)
 // ============================================================================
 
-/** @deprecated Use cardInputSchema instead */
 export const cardDtoSchema = cardInputSchema
-/** @deprecated Use CardInput instead */
 export type CardDto = CardInput
 
-/** @deprecated Use getCardInputSchema instead */
 export const getCardByIdDtoSchema = getCardInputSchema
-/** @deprecated Use GetCardInput instead */
 export type GetCardByIdDto = GetCardInput
 
-/** @deprecated Use updateCardInputSchema instead */
 export const updateCardDtoSchema = updateCardInputSchema
-/** @deprecated Use UpdateCardInput instead */
 export type UpdateCardDto = UpdateCardInput
 
-/** @deprecated Use deleteCardInputSchema instead */
 export const deleteCardDtoSchema = deleteCardInputSchema
-/** @deprecated Use DeleteCardInput instead */
 export type DeleteCardDto = DeleteCardInput

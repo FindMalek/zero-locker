@@ -5,7 +5,7 @@ import {
   useCredentialPassword,
   useUpdateCredentialPassword,
 } from "@/orpc/hooks/use-credentials"
-import type { CredentialOutput } from "@/schemas/credential/dto"
+import type { CredentialOutput } from "@/schemas/credential"
 
 import { encryptData, exportKey, generateEncryptionKey } from "@/lib/encryption"
 import { getSensitiveValueDisplay, handleErrors } from "@/lib/utils"

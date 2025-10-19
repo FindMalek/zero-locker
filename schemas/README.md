@@ -120,6 +120,7 @@ utils/
 ## File Responsibilities
 
 ### `input.ts`
+
 - **Purpose**: Input validation schemas for all operations
 - **Contains**:
   - Base input schema (e.g., `inputSchema`)
@@ -129,6 +130,7 @@ utils/
   - Backward compatibility aliases (deprecated)
 
 ### `output.ts`
+
 - **Purpose**: Return Object (RO) schemas for API responses
 - **Contains**:
   - Simple output schema (`simpleOutputSchema`)
@@ -137,6 +139,7 @@ utils/
   - Backward compatibility aliases (deprecated)
 
 ### `enums.ts` (Optional)
+
 - **Purpose**: Enum definitions and utilities
 - **Contains**:
   - Zod enum schemas
@@ -145,22 +148,26 @@ utils/
   - Type inference helpers
 
 ### `index.ts`
+
 - **Purpose**: Barrel exports for clean imports
 - **Contains**: Re-exports all schemas from the folder and subfolders
 
 ## Naming Conventions
 
 ### Schema Names (NO entity prefix!)
+
 - **Input schemas**: `inputSchema`, `createInputSchema`, `updateInputSchema`, `listInputSchema`
 - **Output schemas**: `simpleOutputSchema`, `includeOutputSchema`, `listOutputSchema`
 - **Enum schemas**: `{property}Schema` (e.g., `accountStatusSchema`)
 
 ### Type Names (NO entity prefix!)
+
 - **Input types**: `Input`, `CreateInput`, `UpdateInput`, `ListInput`
 - **Output types**: `SimpleOutput`, `IncludeOutput`, `ListOutput`
 - **Enum types**: `{Property}Infer` (e.g., `AccountStatusInfer`)
 
 ### Sub-Entity Naming
+
 - **Prefix with sub-entity name**: `historyInputSchema`, `keyValueOutputSchema`, `metadataInputSchema`
 - **Types**: `HistoryInput`, `KeyValueOutput`, `MetadataInput`
 
@@ -171,33 +178,29 @@ utils/
 ```typescript
 // Import from root entity folder
 import {
-  createInputSchema,
-  simpleOutputSchema,
   accountStatusSchema,
+  createInputSchema,
   // Sub-entity schemas
   historyInputSchema,
   keyValueOutputSchema,
+  simpleOutputSchema,
 } from "@/schemas/credential"
-
 // Import from utils entities
 import {
-  createInputSchema as createContainerInput,
   simpleOutputSchema as containerOutput,
+  createInputSchema as createContainerInput,
 } from "@/schemas/utils/container"
-
 // Import specific sub-entity
-import {
-  createWithSecretsInputSchema,
-} from "@/schemas/utils/container/with-secrets"
+import { createWithSecretsInputSchema } from "@/schemas/utils/container/with-secrets"
 ```
 
 ### Direct Imports (If Needed)
 
 ```typescript
-import { inputSchema } from "@/schemas/credential/input"
-import { simpleOutputSchema } from "@/schemas/credential/output"
 import { accountStatusSchema } from "@/schemas/credential/enums"
 import { historyInputSchema } from "@/schemas/credential/history/input"
+import { inputSchema } from "@/schemas/credential/input"
+import { simpleOutputSchema } from "@/schemas/credential/output"
 ```
 
 ## Backward Compatibility
@@ -221,38 +224,43 @@ export type CredentialSimpleRo = SimpleOutput
 
 When updating code, replace old names with new unprefixed names:
 
-| Old Name (Deprecated) | New Name |
-|-----------------------|----------|
-| `credentialInputSchema` | `inputSchema` (from `@/schemas/credential`) |
-| `credentialDtoSchema` | `inputSchema` |
-| `credentialSimpleRoSchema` | `simpleOutputSchema` |
-| `credentialSimpleOutputSchema` | `simpleOutputSchema` |
-| `CredentialDto` | `Input` |
-| `CredentialSimpleRo` | `SimpleOutput` |
+| Old Name (Deprecated)          | New Name                                    |
+| ------------------------------ | ------------------------------------------- |
+| `credentialInputSchema`        | `inputSchema` (from `@/schemas/credential`) |
+| `credentialDtoSchema`          | `inputSchema`                               |
+| `credentialSimpleRoSchema`     | `simpleOutputSchema`                        |
+| `credentialSimpleOutputSchema` | `simpleOutputSchema`                        |
+| `CredentialDto`                | `Input`                                     |
+| `CredentialSimpleRo`           | `SimpleOutput`                              |
 
 ## Benefits of New Architecture
 
 ### 1. **Crystal Clear Organization**
+
 - File names immediately tell you what they contain
 - No redundant entity prefixes cluttering file names
 - Easy to navigate: `credential/input.ts` → contains credential inputs
 
 ### 2. **Reduced Redundancy**
+
 - Schema names are clean: `inputSchema` not `credentialInputSchema`
 - Type names are simple: `Input` not `CredentialInput`
 - Context provided by folder structure, not naming
 
 ### 3. **Better Scalability**
+
 - Sub-entities follow same pattern as main entities
 - Easy to add new sub-entities without naming conflicts
 - Consistent across entire codebase
 
 ### 4. **Improved Imports**
+
 - Barrel exports make imports clean
 - No confusion about which file to import from
 - IDE autocomplete works better
 
 ### 5. **Hierarchical Structure**
+
 - Related schemas grouped in subfolders
 - Clear parent-child relationships
 - Logical organization mirrors entity relationships
@@ -262,6 +270,7 @@ When updating code, replace old names with new unprefixed names:
 ### Main Entities
 
 - ✅ **credential** - input.ts, output.ts, enums.ts + 4 sub-entities
+
   - history/ - input.ts, output.ts
   - key-value/ - input.ts, output.ts
   - metadata/ - input.ts, output.ts
@@ -274,6 +283,7 @@ When updating code, replace old names with new unprefixed names:
 ### Utils Entities
 
 - ✅ **utils/container** - input.ts, output.ts, enums.ts
+
   - with-secrets/ - input.ts, output.ts
 
 - ✅ **utils/platform** - input.ts, output.ts, enums.ts
@@ -283,6 +293,7 @@ When updating code, replace old names with new unprefixed names:
 ## Old vs New Comparison
 
 ### Old Structure (Before Refactor)
+
 ```
 credential/
 ├── credential.input.ts       # 😞 Redundant prefix
@@ -295,12 +306,14 @@ credential/
 ```
 
 **Problems:**
+
 - Redundant entity prefixes everywhere
 - DTOs and ROs mixed in sub-entity files
 - Confusing which file to import from
 - No clear hierarchy
 
 ### New Structure (After Refactor)
+
 ```
 credential/
 ├── input.ts                  # ✅ Clean name
@@ -318,6 +331,7 @@ credential/
 ```
 
 **Benefits:**
+
 - No redundant prefixes
 - Clear separation of concerns
 - Hierarchical structure
@@ -326,6 +340,7 @@ credential/
 ## Best Practices
 
 ### 1. **Use Unprefixed Names**
+
 ```typescript
 // ✅ Good - Clean, contextual names
 export const inputSchema = z.object({ ... })
@@ -337,6 +352,7 @@ export const credentialSimpleOutputSchema = z.object({ ... })
 ```
 
 ### 2. **Import from Barrel Exports**
+
 ```typescript
 // ✅ Good - Use barrel exports
 import { inputSchema, simpleOutputSchema } from "@/schemas/credential"
@@ -346,20 +362,21 @@ import { inputSchema } from "@/schemas/credential/input"
 ```
 
 ### 3. **Use Aliases for Disambiguation**
+
 ```typescript
 // ✅ Good - Use import aliases when needed
-import {
-  inputSchema as credentialInput,
-  outputSchema as credentialOutput,
-} from "@/schemas/credential"
-
 import {
   inputSchema as cardInput,
   outputSchema as cardOutput,
 } from "@/schemas/card"
+import {
+  inputSchema as credentialInput,
+  outputSchema as credentialOutput,
+} from "@/schemas/credential"
 ```
 
 ### 4. **Group Related Schemas in Subfolders**
+
 ```typescript
 // ✅ Good - Create subfolders for related schemas
 credential/
@@ -375,6 +392,7 @@ credential/
 ```
 
 ### 5. **Export Both Schemas and Types**
+
 ```typescript
 // ✅ Good - Export schema and inferred type
 export const inputSchema = z.object({ ... })
@@ -407,5 +425,6 @@ When adding a sub-entity:
 ## Questions?
 
 If you have questions about the schema architecture, please refer to:
+
 - [Zero Locker Patterns](../PATTERNS.md)
 - [Zero Locker Coding Rules](../CODING_RULES.md)

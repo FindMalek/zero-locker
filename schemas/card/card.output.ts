@@ -47,15 +47,11 @@ export const listCardsOutputSchema = z.object({
 export type ListCardsOutput = z.infer<typeof listCardsOutputSchema>
 
 // ============================================================================
-// Backward Compatibility Aliases (DEPRECATED - use new names)
+// Public API Exports (with entity prefix for clarity)
 // ============================================================================
 
-/** @deprecated Use cardSimpleOutputSchema instead */
 export const cardSimpleRoSchema = cardSimpleOutputSchema
-/** @deprecated Use CardSimpleOutput instead */
 export type CardSimpleRo = CardSimpleOutput
 
-/** @deprecated Use cardSimpleOutputSchema instead */
 export const cardOutputSchema = cardSimpleOutputSchema
-/** @deprecated Use CardSimpleOutput instead */
 export type CardOutput = CardSimpleOutput

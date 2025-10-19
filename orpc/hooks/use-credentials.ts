@@ -10,7 +10,7 @@ import type {
   ListCredentialsOutput,
   UpdateCredentialInput,
   UpdateCredentialPasswordInput,
-} from "@/schemas/credential/dto"
+} from "@/schemas/credential"
 import {
   useMutation,
   useQuery,

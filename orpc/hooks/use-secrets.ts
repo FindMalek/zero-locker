@@ -8,7 +8,7 @@ import type {
   ListSecretsOutput,
   SecretOutput,
   UpdateSecretInput,
-} from "@/schemas/secrets/dto"
+} from "@/schemas/secrets"
 import {
   useMutation,
   useQuery,

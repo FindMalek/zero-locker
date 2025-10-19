@@ -63,25 +63,17 @@ export const listSecretsInputSchema = z.object({
 export type ListSecretsInput = z.infer<typeof listSecretsInputSchema>
 
 // ============================================================================
-// Backward Compatibility Aliases (DEPRECATED - use new names)
+// Public API Exports (with entity prefix for clarity)
 // ============================================================================
 
-/** @deprecated Use secretInputSchema instead */
 export const secretDtoSchema = secretInputSchema
-/** @deprecated Use SecretInput instead */
 export type SecretDto = SecretInput
 
-/** @deprecated Use getSecretInputSchema instead */
 export const getSecretByIdDtoSchema = getSecretInputSchema
-/** @deprecated Use GetSecretInput instead */
 export type GetSecretByIdDto = GetSecretInput
 
-/** @deprecated Use updateSecretInputSchema instead */
 export const updateSecretDtoSchema = updateSecretInputSchema
-/** @deprecated Use UpdateSecretInput instead */
 export type UpdateSecretDto = UpdateSecretInput
 
-/** @deprecated Use deleteSecretInputSchema instead */
 export const deleteSecretDtoSchema = deleteSecretInputSchema
-/** @deprecated Use DeleteSecretInput instead */
 export type DeleteSecretDto = DeleteSecretInput

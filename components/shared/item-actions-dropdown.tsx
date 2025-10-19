@@ -4,7 +4,7 @@ import {
   useDuplicateCredential,
   useUpdateCredential,
 } from "@/orpc/hooks/use-credentials"
-import type { CredentialOutput } from "@/schemas/credential/dto"
+import type { CredentialOutput } from "@/schemas/credential"
 import type { PlatformSimpleRo } from "@/schemas/utils"
 
 import { useUserPermissions } from "@/lib/permissions"

@@ -16,7 +16,7 @@ import {
 import type {
   CredentialOutput,
   UpdateCredentialInput,
-} from "@/schemas/credential/dto"
+} from "@/schemas/credential"
 import type { ListPlatformsOutput } from "@/schemas/utils"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { AccountStatus } from "@prisma/client"

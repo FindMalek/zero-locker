@@ -3,7 +3,7 @@
 import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { PlatformEntity } from "@/entities/utils/platform"
-import type { CredentialOutput } from "@/schemas/credential/dto"
+import type { CredentialOutput } from "@/schemas/credential"
 import type { PlatformSimpleRo } from "@/schemas/utils"
 
 import { DateFormatter } from "@/lib/date-utils"

@@ -36,15 +36,11 @@ export const listSecretsOutputSchema = z.object({
 export type ListSecretsOutput = z.infer<typeof listSecretsOutputSchema>
 
 // ============================================================================
-// Backward Compatibility Aliases (DEPRECATED - use new names)
+// Public API Exports (with entity prefix for clarity)
 // ============================================================================
 
-/** @deprecated Use secretSimpleOutputSchema instead */
 export const secretSimpleRoSchema = secretSimpleOutputSchema
-/** @deprecated Use SecretSimpleOutput instead */
 export type SecretSimpleRo = SecretSimpleOutput
 
-/** @deprecated Use secretSimpleOutputSchema instead */
 export const secretOutputSchema = secretSimpleOutputSchema
-/** @deprecated Use SecretSimpleOutput instead */
 export type SecretOutput = SecretSimpleOutput

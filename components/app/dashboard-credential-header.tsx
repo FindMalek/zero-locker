@@ -2,7 +2,7 @@
 
 import Image from "next/image"
 import Link from "next/link"
-import type { CredentialOutput } from "@/schemas/credential/dto"
+import type { CredentialOutput } from "@/schemas/credential"
 import { PlatformOutput } from "@/schemas/utils"
 
 import { getLogoDevUrlWithToken, getPlaceholderImage } from "@/lib/utils"

@@ -50,35 +50,23 @@ export const listOutputSchema = z.object({
 export type ListOutput = z.infer<typeof listOutputSchema>
 
 // ============================================================================
-// Backward Compatibility Aliases (DEPRECATED - use new names)
+// Public API Exports (with entity prefix for clarity)
 // ============================================================================
 
-/** @deprecated Use simpleOutputSchema instead */
 export const credentialSimpleOutputSchema = simpleOutputSchema
-/** @deprecated Use SimpleOutput instead */
 export type CredentialSimpleOutput = SimpleOutput
 
-/** @deprecated Use simpleOutputSchema instead */
 export const credentialSimpleRoSchema = simpleOutputSchema
-/** @deprecated Use SimpleOutput instead */
 export type CredentialSimpleRo = SimpleOutput
 
-/** @deprecated Use includeOutputSchema instead */
 export const credentialIncludeOutputSchema = includeOutputSchema
-/** @deprecated Use IncludeOutput instead */
 export type CredentialIncludeOutput = IncludeOutput
 
-/** @deprecated Use includeOutputSchema instead */
 export const credentialIncludeRoSchema = includeOutputSchema
-/** @deprecated Use IncludeOutput instead */
 export type CredentialIncludeRo = IncludeOutput
 
-/** @deprecated Use simpleOutputSchema instead */
 export const credentialOutputSchema = simpleOutputSchema
-/** @deprecated Use SimpleOutput instead */
 export type CredentialOutput = SimpleOutput
 
-/** @deprecated Use listOutputSchema instead */
 export const listCredentialsOutputSchema = listOutputSchema
-/** @deprecated Use ListOutput instead */
 export type ListCredentialsOutput = ListOutput

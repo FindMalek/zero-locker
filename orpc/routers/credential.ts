@@ -9,16 +9,9 @@ import {
   requirePermission,
 } from "@/middleware/permissions"
 import { database } from "@/prisma/client"
-import { credentialFormDtoSchema } from "@/schemas/credential"
-import { credentialKeyValuePairWithValueRoSchema } from "@/schemas/credential/key-value"
-import {
-  createCredentialWithMetadataInputSchema,
-  createCredentialWithMetadataOutputSchema,
-  type CreateCredentialWithMetadataInput,
-  type CreateCredentialWithMetadataOutput,
-} from "@/schemas/credential/with-metadata"
 import {
   createCredentialInputSchema,
+  credentialFormDtoSchema,
   credentialOutputSchema,
   deleteCredentialInputSchema,
   duplicateCredentialInputSchema,
@@ -30,6 +23,13 @@ import {
   type CredentialOutput,
   type ListCredentialsOutput,
 } from "@/schemas/credential"
+import { credentialKeyValuePairWithValueRoSchema } from "@/schemas/credential/key-value"
+import {
+  createCredentialWithMetadataInputSchema,
+  createCredentialWithMetadataOutputSchema,
+  type CreateCredentialWithMetadataInput,
+  type CreateCredentialWithMetadataOutput,
+} from "@/schemas/credential/with-metadata"
 import { ORPCError, os } from "@orpc/server"
 import { AccountStatus, type Prisma } from "@prisma/client"
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library"
@@ -366,7 +366,7 @@ export const listCredentials = authProcedure
       // But if showArchived is false, exclude ARCHIVED from the list
       const statusesToFilter =
         filters.showArchived === false
-          ? filters.statuses.filter((s) => s !== AccountStatus.ARCHIVED)
+          ? filters.statuses.filter((s: AccountStatus) => s !== AccountStatus.ARCHIVED)
           : filters.statuses
 
       if (statusesToFilter.length > 0) {
@@ -468,7 +468,7 @@ export const createCredential = authWithDefaultAccessProcedure
       // Use transaction for atomicity
       const credential = await database.$transaction(async (tx) => {
         const tagConnections = await createTagsAndGetConnections(
-          input.tags,
+          input.tags || [],
           context.user.id,
           input.containerId,
           tx
@@ -566,7 +566,7 @@ export const updateCredential = authProcedure
     // Handle tags if provided
     if (updateData.tags !== undefined) {
       const tagConnections = await createTagsAndGetConnections(
-        updateData.tags,
+        updateData.tags || [],
         context.user.id,
         updateData.containerId || existingCredential.containerId || undefined
       )
@@ -931,7 +931,7 @@ export const createCredentialWithMetadata = authWithDefaultAccessProcedure
 
         const result = await database.$transaction(async (tx) => {
           const tagConnections = await createTagsAndGetConnections(
-            credentialData.tags,
+            credentialData.tags || [],
             context.user.id,
             credentialData.containerId,
             tx

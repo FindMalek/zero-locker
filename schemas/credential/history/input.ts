@@ -20,3 +20,5 @@ export type HistoryInput = z.infer<typeof historyInputSchema>
 export const credentialHistoryDtoSchema = historyInputSchema
 /** @deprecated Use HistoryInput instead */
 export type CredentialHistoryDto = HistoryInput
+
+

@@ -21,3 +21,5 @@ export type KeyValueInput = z.infer<typeof keyValueInputSchema>
 export const credentialKeyValuePairDtoSchema = keyValueInputSchema
 /** @deprecated Use KeyValueInput instead */
 export type CredentialKeyValuePairDto = KeyValueInput
+
+

@@ -1,9 +1,8 @@
-import { encryptedDataDtoSchema } from "@/schemas/encryption/encryption"
-import { tagDtoSchema } from "@/schemas/utils/tag"
 import { AccountStatus } from "@prisma/client"
 import { z } from "zod"
 
-import { metadataInputSchema } from "./metadata"
+import { encryptedDataDtoSchema } from "@/schemas/encryption/encryption"
+import { tagDtoSchema } from "@/schemas/utils"
 
 // ============================================================================
 // Base Input Schema
@@ -11,14 +10,8 @@ import { metadataInputSchema } from "./metadata"
 
 export const inputSchema = z.object({
   identifier: z.string().min(1, "Username/identifier is required"),
-  passwordEncryption: encryptedDataDtoSchema,
-
-  status: z.nativeEnum(AccountStatus),
   description: z.string().optional(),
-
-  tags: z.array(tagDtoSchema),
-  metadata: z.array(metadataInputSchema),
-
+  status: z.nativeEnum(AccountStatus),
   platformId: z.string().min(1, "Platform is required"),
   containerId: z.string().optional(),
 })
@@ -29,8 +22,12 @@ export type Input = z.infer<typeof inputSchema>
 // CRUD Operation Input Schemas
 // ============================================================================
 
-// Create
-export const createInputSchema = inputSchema
+// Create (includes password encryption data)
+export const createInputSchema = inputSchema.extend({
+  passwordEncryption: encryptedDataDtoSchema,
+  tags: z.array(tagDtoSchema).optional(),
+  metadata: z.any().optional(), // Placeholder for backward compatibility
+})
 
 export type CreateInput = z.infer<typeof createInputSchema>
 
@@ -44,18 +41,16 @@ export type GetInput = z.infer<typeof getInputSchema>
 // Update
 export const updateInputSchema = inputSchema.partial().extend({
   id: z.string().min(1, "Credential ID is required"),
+  tags: z.array(tagDtoSchema).optional(),
+  passwordEncryption: encryptedDataDtoSchema.optional(),
 })
 
 export type UpdateInput = z.infer<typeof updateInputSchema>
 
-// Update Password with History
+// Update Password
 export const updatePasswordInputSchema = z.object({
   id: z.string().min(1, "Credential ID is required"),
-  passwordEncryption: z.object({
-    encryptedValue: z.string().min(1, "Encrypted value is required"),
-    iv: z.string().min(1, "IV is required"),
-    encryptionKey: z.string().min(1, "Encryption key is required"),
-  }),
+  passwordEncryption: encryptedDataDtoSchema,
 })
 
 export type UpdatePasswordInput = z.infer<typeof updatePasswordInputSchema>
@@ -83,38 +78,25 @@ export const listInputSchema = z.object({
   limit: z.number().int().min(1).max(100).default(10),
   search: z.string().optional(),
   containerId: z.string().optional(),
-  // Filters
-  filters: z
-    .object({
-      statuses: z.array(z.nativeEnum(AccountStatus)).optional(),
-      platformIds: z.array(z.string()).optional(),
-      showArchived: z.boolean().optional(),
-    })
-    .optional(),
-  // Sorting
-  sort: z
-    .object({
-      field: z
-        .enum(["identifier", "status", "lastViewed", "createdAt"])
-        .optional(),
-      direction: z.enum(["asc", "desc"]).optional(),
-    })
-    .optional(),
+  platformId: z.string().optional(),
+  status: z.nativeEnum(AccountStatus).optional(),
+  filters: z.any().optional(), // Filters for advanced queries
+  sort: z.any().optional(), // Sorting options
 })
 
 export type ListInput = z.infer<typeof listInputSchema>
 
 // ============================================================================
-// Form-Specific Input Schema
+// Form Input Schema (excludes password field for security)
 // ============================================================================
 
-// Form schema for credential editing (excluding encryption details)
 export const formInputSchema = z.object({
   identifier: z.string().min(1, "Username/identifier is required"),
   description: z.string().optional(),
   status: z.nativeEnum(AccountStatus),
   platformId: z.string().min(1, "Platform is required"),
   containerId: z.string().optional(),
+
   // Security settings (metadata)
   passwordProtection: z.boolean(),
   twoFactorAuth: z.boolean(),
@@ -124,75 +106,47 @@ export const formInputSchema = z.object({
 export type FormInput = z.infer<typeof formInputSchema>
 
 // ============================================================================
-// Backward Compatibility Aliases (DEPRECATED - use new names)
+// Public API Exports (with entity prefix for clarity)
 // ============================================================================
 
-/** @deprecated Use inputSchema instead */
 export const credentialInputSchema = inputSchema
-/** @deprecated Use Input instead */
 export type CredentialInput = Input
 
-/** @deprecated Use inputSchema instead */
 export const credentialDtoSchema = inputSchema
-/** @deprecated Use Input instead */
 export type CredentialDto = Input
 
-/** @deprecated Use createInputSchema instead */
 export const createCredentialInputSchema = createInputSchema
-/** @deprecated Use CreateInput instead */
 export type CreateCredentialInput = CreateInput
 
-/** @deprecated Use getInputSchema instead */
 export const getCredentialInputSchema = getInputSchema
-/** @deprecated Use GetInput instead */
 export type GetCredentialInput = GetInput
 
-/** @deprecated Use getInputSchema instead */
 export const getCredentialByIdDtoSchema = getInputSchema
-/** @deprecated Use GetInput instead */
 export type GetCredentialByIdDto = GetInput
 
-/** @deprecated Use updateInputSchema instead */
 export const updateCredentialInputSchema = updateInputSchema
-/** @deprecated Use UpdateInput instead */
 export type UpdateCredentialInput = UpdateInput
 
-/** @deprecated Use updateInputSchema instead */
 export const updateCredentialDtoSchema = updateInputSchema
-/** @deprecated Use UpdateInput instead */
 export type UpdateCredentialDto = UpdateInput
 
-/** @deprecated Use updatePasswordInputSchema instead */
 export const updateCredentialPasswordInputSchema = updatePasswordInputSchema
-/** @deprecated Use UpdatePasswordInput instead */
 export type UpdateCredentialPasswordInput = UpdatePasswordInput
 
-/** @deprecated Use deleteInputSchema instead */
 export const deleteCredentialInputSchema = deleteInputSchema
-/** @deprecated Use DeleteInput instead */
 export type DeleteCredentialInput = DeleteInput
 
-/** @deprecated Use deleteInputSchema instead */
 export const deleteCredentialDtoSchema = deleteInputSchema
-/** @deprecated Use DeleteInput instead */
 export type DeleteCredentialDto = DeleteInput
 
-/** @deprecated Use duplicateInputSchema instead */
 export const duplicateCredentialInputSchema = duplicateInputSchema
-/** @deprecated Use DuplicateInput instead */
 export type DuplicateCredentialInput = DuplicateInput
 
-/** @deprecated Use listInputSchema instead */
 export const listCredentialsInputSchema = listInputSchema
-/** @deprecated Use ListInput instead */
 export type ListCredentialsInput = ListInput
 
-/** @deprecated Use formInputSchema instead */
 export const credentialFormInputSchema = formInputSchema
-/** @deprecated Use FormInput instead */
 export type CredentialFormInput = FormInput
 
-/** @deprecated Use formInputSchema instead */
 export const credentialFormDtoSchema = formInputSchema
-/** @deprecated Use FormInput instead */
 export type CredentialFormDto = FormInput
