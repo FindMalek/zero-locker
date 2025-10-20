@@ -2,8 +2,12 @@
 
 import { CredentialEntity } from "@/entities"
 import { accountStatusEnum } from "@/schemas/credential"
-import type { SortDirection, SortField, ViewMode } from "@/schemas/utils"
-import type { PlatformSimpleRo } from "@/schemas/utils/platform"
+import type {
+  PlatformSimpleOutput,
+  SortDirection,
+  SortField,
+  ViewMode,
+} from "@/schemas/utils"
 import { AccountStatus } from "@prisma/client"
 import { Globe, Tag } from "lucide-react"
 
@@ -25,7 +29,7 @@ interface EntityFiltersProps {
   onToggleStatusFilter: (status: string) => void
   platformFilters: string[]
   onTogglePlatformFilter: (platform: string) => void
-  platforms: PlatformSimpleRo[]
+  platforms: PlatformSimpleOutput[]
   onClearFilters: () => void
   viewMode: ViewMode
   onViewModeChange: (mode: ViewMode) => void

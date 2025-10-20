@@ -4,11 +4,11 @@ import {
 } from "@/entities/credential/credential-key-value/query"
 import { EncryptedDataEntity } from "@/entities/encryption"
 import {
-  type CredentialKeyValuePairDto,
-  type CredentialKeyValuePairSimpleRo,
-  type CredentialKeyValuePairWithEncryptionRo,
-} from "@/schemas/credential/credential-key-value"
-import { type GenericEncryptedKeyValuePairDto } from "@/schemas/encryption/encryption"
+  type KeyValueInput,
+  type KeyValueSimpleOutput,
+  type KeyValueWithEncryptionOutput,
+} from "@/schemas/credential/key-value"
+import { type GenericEncryptedKeyValuePairInput } from "@/schemas/encryption"
 import { type BaseKeyValuePair } from "@/schemas/utils"
 
 import { encryptData, exportKey, generateEncryptionKey } from "@/lib/encryption"
@@ -16,7 +16,7 @@ import { encryptData, exportKey, generateEncryptionKey } from "@/lib/encryption"
 export class CredentialKeyValuePairEntity {
   static getSimpleRo(
     credentialKeyValuePair: CredentialKeyValuePairSimpleDbData
-  ): CredentialKeyValuePairSimpleRo {
+  ): KeyValueSimpleOutput {
     return {
       id: credentialKeyValuePair.id,
       key: credentialKeyValuePair.key,
@@ -29,7 +29,7 @@ export class CredentialKeyValuePairEntity {
 
   static getWithEncryptionRo(
     credentialKeyValuePair: CredentialKeyValuePairDbData
-  ): CredentialKeyValuePairWithEncryptionRo {
+  ): KeyValueWithEncryptionOutput {
     return {
       id: credentialKeyValuePair.id,
       key: credentialKeyValuePair.key,
@@ -43,8 +43,8 @@ export class CredentialKeyValuePairEntity {
   }
 
   static convertGenericToCredential(
-    generic: GenericEncryptedKeyValuePairDto
-  ): CredentialKeyValuePairDto {
+    generic: GenericEncryptedKeyValuePairInput
+  ): KeyValueInput {
     return {
       id: generic.id,
       key: generic.key,
@@ -54,8 +54,8 @@ export class CredentialKeyValuePairEntity {
   }
 
   static convertCredentialToGeneric(
-    credential: CredentialKeyValuePairDto
-  ): GenericEncryptedKeyValuePairDto {
+    credential: KeyValueInput
+  ): GenericEncryptedKeyValuePairInput {
     return {
       id: credential.id,
       key: credential.key,
@@ -63,7 +63,7 @@ export class CredentialKeyValuePairEntity {
     }
   }
 
-  static convertForKeyValueManager(credential: CredentialKeyValuePairDto): {
+  static convertForKeyValueManager(credential: KeyValueInput): {
     id: string
     key: string
     value: string
@@ -75,9 +75,7 @@ export class CredentialKeyValuePairEntity {
     }
   }
 
-  static convertFromKeyValueManager(
-    pair: BaseKeyValuePair
-  ): CredentialKeyValuePairDto {
+  static convertFromKeyValueManager(pair: BaseKeyValuePair): KeyValueInput {
     return {
       id: pair.id,
       key: pair.key,
@@ -92,7 +90,7 @@ export class CredentialKeyValuePairEntity {
 
   static async encryptKeyValuePair(
     pair: BaseKeyValuePair
-  ): Promise<GenericEncryptedKeyValuePairDto> {
+  ): Promise<GenericEncryptedKeyValuePairInput> {
     if (!pair.key.trim() || !pair.value.trim()) {
       throw new Error("Both key and value are required for encryption")
     }
@@ -114,7 +112,7 @@ export class CredentialKeyValuePairEntity {
 
   static async encryptKeyValuePairs(
     pairs: BaseKeyValuePair[]
-  ): Promise<GenericEncryptedKeyValuePairDto[]> {
+  ): Promise<GenericEncryptedKeyValuePairInput[]> {
     const validPairs = pairs.filter(
       (pair) => pair.key.trim() && pair.value.trim()
     )
@@ -123,7 +121,7 @@ export class CredentialKeyValuePairEntity {
       return []
     }
 
-    const encryptedPairs: GenericEncryptedKeyValuePairDto[] = []
+    const encryptedPairs: GenericEncryptedKeyValuePairInput[] = []
 
     for (const pair of validPairs) {
       const encryptedPair = await this.encryptKeyValuePair(pair)

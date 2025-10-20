@@ -12,13 +12,16 @@ import {
 import {
   accountStatusEnum,
   AccountStatusInfer,
-  CredentialDto,
-  credentialDtoSchema,
-  CredentialMetadataDto,
-  credentialMetadataDtoSchema,
+  createCredentialInputSchema,
+  MetadataInput as CredentialMetadataInput,
+  metadataInputSchema as credentialMetadataInputSchema,
+  type CreateCredentialInput,
 } from "@/schemas/credential"
-import { EntityTypeEnum, type BaseKeyValuePair } from "@/schemas/utils"
-import { TagDto } from "@/schemas/utils/tag"
+import {
+  EntityTypeEnum,
+  TagInput,
+  type BaseKeyValuePair,
+} from "@/schemas/utils"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 
@@ -106,8 +109,8 @@ export function DashboardAddCredentialDialog({
     BaseKeyValuePair[]
   >([])
 
-  const credentialForm = useForm<CredentialDto>({
-    resolver: zodResolver(credentialDtoSchema),
+  const credentialForm = useForm<CreateCredentialInput>({
+    resolver: zodResolver(createCredentialInputSchema),
     defaultValues: {
       identifier: "",
       description: "",
@@ -120,12 +123,11 @@ export function DashboardAddCredentialDialog({
         encryptionKey: "",
       },
       tags: [],
-      metadata: [],
     },
   })
 
-  const metadataForm = useForm<CredentialMetadataDto>({
-    resolver: zodResolver(credentialMetadataDtoSchema),
+  const metadataForm = useForm<CredentialMetadataInput>({
+    resolver: zodResolver(credentialMetadataInputSchema),
     defaultValues: {
       recoveryEmail: "",
       phoneNumber: "",
@@ -234,7 +236,7 @@ export function DashboardAddCredentialDialog({
 
       const credentialData = credentialForm.getValues()
 
-      const credentialDto: CredentialDto = {
+      const credentialDto: CreateCredentialInput = {
         identifier: sensitiveData.identifier,
         passwordEncryption: {
           encryptedValue: encryptResult.encryptedData,
@@ -242,14 +244,13 @@ export function DashboardAddCredentialDialog({
           encryptionKey: keyString,
         },
         status: credentialData.status,
-        tags: credentialData.tags,
-        metadata: credentialData.metadata,
+        tags: credentialData.tags || [],
         description: credentialData.description,
         platformId: credentialData.platformId,
         containerId: credentialData.containerId,
       }
 
-      let metadataDto: CredentialMetadataDto | undefined
+      let metadataDto: CredentialMetadataInput | undefined
 
       if (hasMetadataValues()) {
         const metadataValues = metadataForm.getValues()
@@ -298,7 +299,6 @@ export function DashboardAddCredentialDialog({
                   encryptionKey: "",
                 },
                 tags: [],
-                metadata: [],
               })
               metadataForm.reset({
                 recoveryEmail: "",
@@ -560,19 +560,19 @@ export function DashboardAddCredentialDialog({
                         </TooltipContent>
                       </Tooltip>
                     </div>
-                    <TagSelector<TagDto>
+                    <TagSelector<TagInput>
                       selectedTags={credentialForm.watch("tags") || []}
                       availableTags={availableTags.map((tag) => ({
                         name: tag.name,
                         containerId: tag.containerId || undefined,
                         color: tag.color || undefined,
                       }))}
-                      onChange={(tags: TagDto[]) =>
+                      onChange={(tags: TagInput[]) =>
                         credentialForm.setValue("tags", tags)
                       }
-                      getValue={(tag: TagDto) => tag.name}
-                      getLabel={(tag: TagDto) => tag.name}
-                      createTag={(inputValue: string): TagDto => ({
+                      getValue={(tag: TagInput) => tag.name}
+                      getLabel={(tag: TagInput) => tag.name}
+                      createTag={(inputValue: string): TagInput => ({
                         name: inputValue,
                         containerId: undefined,
                         color: undefined,

@@ -3,10 +3,10 @@
 import { ContainerEntity } from "@/entities/utils/container/entity"
 import { useCreateContainer } from "@/orpc/hooks/use-containers"
 import {
-  containerDtoSchema,
+  containerInputSchema,
   LIST_CONTAINER_TYPES,
-  type ContainerDto,
-} from "@/schemas/utils/container"
+  type ContainerInput,
+} from "@/schemas/utils"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { ContainerType } from "@prisma/client"
 import { useForm } from "react-hook-form"
@@ -69,8 +69,8 @@ export function DashboardCreateContainerDialog({
   const { toast } = useToast()
   const createContainerMutation = useCreateContainer()
 
-  const form = useForm<ContainerDto>({
-    resolver: zodResolver(containerDtoSchema),
+  const form = useForm<ContainerInput>({
+    resolver: zodResolver(containerInputSchema),
     defaultValues: {
       name: "",
       icon: "📁",
@@ -80,7 +80,7 @@ export function DashboardCreateContainerDialog({
     },
   })
 
-  const handleCreateContainer = async (data: ContainerDto) => {
+  const handleCreateContainer = async (data: ContainerInput) => {
     try {
       const result = await createContainerMutation.mutateAsync(data)
       toast(`"${result.name}" has been created successfully.`, "success")

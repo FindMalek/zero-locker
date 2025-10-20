@@ -5,24 +5,24 @@ import {
   requireDefaultContainerAccess,
 } from "@/middleware/permissions"
 import { database } from "@/prisma/client"
-import { EntityTypeSchema } from "@/schemas/utils"
 import {
-  createContainerWithSecretsInputSchema,
-  createContainerWithSecretsOutputSchema,
-  type CreateContainerWithSecretsInput,
-  type CreateContainerWithSecretsOutput,
-} from "@/schemas/utils/container-with-secrets"
-import {
-  containerOutputSchema,
+  containerSimpleOutputSchema,
   createContainerInputSchema,
   deleteContainerInputSchema,
+  EntityTypeSchema,
   getContainerInputSchema,
   listContainersInputSchema,
   listContainersOutputSchema,
   updateContainerInputSchema,
-  type ContainerOutput,
+  type ContainerSimpleOutput,
   type ListContainersOutput,
-} from "@/schemas/utils/dto"
+} from "@/schemas/utils"
+import {
+  createWithSecretsInputSchema,
+  createWithSecretsOutputSchema,
+  type CreateWithSecretsInput,
+  type CreateWithSecretsOutput,
+} from "@/schemas/utils/container/with-secrets"
 import { ORPCError, os } from "@orpc/server"
 import type { Prisma } from "@prisma/client"
 import { z } from "zod"
@@ -44,8 +44,8 @@ const authWithDefaultAccessProcedure = authProcedure.use(({ context, next }) =>
 // Get container by ID
 export const getContainer = authWithDefaultAccessProcedure
   .input(getContainerInputSchema)
-  .output(containerOutputSchema)
-  .handler(async ({ input, context }): Promise<ContainerOutput> => {
+  .output(containerSimpleOutputSchema)
+  .handler(async ({ input, context }): Promise<ContainerSimpleOutput> => {
     const container = await database.container.findFirst({
       where: {
         id: input.id,
@@ -114,8 +114,8 @@ export const createContainer = authWithDefaultAccessProcedure
     )({ context, next })
   )
   .input(createContainerInputSchema)
-  .output(containerOutputSchema)
-  .handler(async ({ input, context }): Promise<ContainerOutput> => {
+  .output(containerSimpleOutputSchema)
+  .handler(async ({ input, context }): Promise<ContainerSimpleOutput> => {
     if (context.permissions?.canOnlyAccessDefaultContainers) {
       throw new ORPCError("FORBIDDEN", {
         message: "Your plan only allows access to default containers.",
@@ -151,8 +151,8 @@ export const updateContainer = authWithDefaultAccessProcedure
     requireContainerPermission(PermissionLevel.WRITE)({ context, next })
   )
   .input(updateContainerInputSchema)
-  .output(containerOutputSchema)
-  .handler(async ({ input, context }): Promise<ContainerOutput> => {
+  .output(containerSimpleOutputSchema)
+  .handler(async ({ input, context }): Promise<ContainerSimpleOutput> => {
     const { id, ...updateData } = input
 
     // Verify container ownership
@@ -203,8 +203,8 @@ export const deleteContainer = authWithDefaultAccessProcedure
     requireContainerPermission(PermissionLevel.ADMIN)({ context, next })
   )
   .input(deleteContainerInputSchema)
-  .output(containerOutputSchema)
-  .handler(async ({ input, context }): Promise<ContainerOutput> => {
+  .output(containerSimpleOutputSchema)
+  .handler(async ({ input, context }): Promise<ContainerSimpleOutput> => {
     // Verify container ownership
     const existingContainer = await database.container.findFirst({
       where: {
@@ -235,104 +235,102 @@ export const createContainerWithSecrets = authWithDefaultAccessProcedure
       Action.CREATE
     )({ context, next })
   )
-  .input(createContainerWithSecretsInputSchema)
-  .output(createContainerWithSecretsOutputSchema)
-  .handler(
-    async ({ input, context }): Promise<CreateContainerWithSecretsOutput> => {
-      if (context.permissions?.canOnlyAccessDefaultContainers) {
-        throw new ORPCError("FORBIDDEN", {
-          message: "Your plan only allows access to default containers.",
+  .input(createWithSecretsInputSchema)
+  .output(createWithSecretsOutputSchema)
+  .handler(async ({ input, context }): Promise<CreateWithSecretsOutput> => {
+    if (context.permissions?.canOnlyAccessDefaultContainers) {
+      throw new ORPCError("FORBIDDEN", {
+        message: "Your plan only allows access to default containers.",
+      })
+    }
+
+    const { container: containerData, secrets: secretsData } = input
+
+    try {
+      const result = await database.$transaction(async (tx) => {
+        // Create container with tags
+        const tagConnections = await createTagsAndGetConnections(
+          containerData.tags,
+          context.user.id,
+          undefined,
+          tx
+        )
+
+        const container = await tx.container.create({
+          data: {
+            name: containerData.name,
+            icon: containerData.icon,
+            description: containerData.description,
+            type: containerData.type,
+            userId: context.user.id,
+            tags: tagConnections,
+          },
         })
-      }
 
-      const { container: containerData, secrets: secretsData } = input
-
-      try {
-        const result = await database.$transaction(async (tx) => {
-          // Create container with tags
-          const tagConnections = await createTagsAndGetConnections(
-            containerData.tags,
-            context.user.id,
-            undefined,
+        // Create encrypted data and secrets
+        const createdSecrets = []
+        for (const secretData of secretsData) {
+          // Use the helper function for consistency
+          const encryptionResult = await createEncryptedData(
+            {
+              iv: secretData.valueEncryption.iv,
+              encryptedValue: secretData.valueEncryption.encryptedValue,
+              encryptionKey: secretData.valueEncryption.encryptionKey,
+            },
             tx
           )
 
-          const container = await tx.container.create({
+          if (!encryptionResult.success || !encryptionResult.encryptedData) {
+            throw new ORPCError("INTERNAL_SERVER_ERROR")
+          }
+
+          // Create secret
+          const secret = await tx.secret.create({
             data: {
-              name: containerData.name,
-              icon: containerData.icon,
-              description: containerData.description,
-              type: containerData.type,
+              name: secretData.name,
+              note: secretData.note,
               userId: context.user.id,
-              tags: tagConnections,
+              containerId: container.id,
+              valueEncryptionId: encryptionResult.encryptedData.id,
             },
           })
 
-          // Create encrypted data and secrets
-          const createdSecrets = []
-          for (const secretData of secretsData) {
-            // Use the helper function for consistency
-            const encryptionResult = await createEncryptedData(
-              {
-                iv: secretData.valueEncryption.iv,
-                encryptedValue: secretData.valueEncryption.encryptedValue,
-                encryptionKey: secretData.valueEncryption.encryptionKey,
-              },
-              tx
-            )
-
-            if (!encryptionResult.success || !encryptionResult.encryptedData) {
-              throw new ORPCError("INTERNAL_SERVER_ERROR")
-            }
-
-            // Create secret
-            const secret = await tx.secret.create({
-              data: {
-                name: secretData.name,
-                note: secretData.note,
-                userId: context.user.id,
-                containerId: container.id,
-                valueEncryptionId: encryptionResult.encryptedData.id,
-              },
-            })
-
-            createdSecrets.push(secret)
-          }
-
-          return { container, createdSecrets }
-        })
-
-        return {
-          success: true,
-          container: ContainerEntity.getSimpleRo(result.container),
-          secrets: result.createdSecrets.map((secret) => ({
-            id: secret.id,
-            name: secret.name,
-            note: secret.note,
-            lastViewed: secret.lastViewed,
-            updatedAt: secret.updatedAt,
-            createdAt: secret.createdAt,
-            userId: secret.userId,
-            containerId: secret.containerId,
-            valueEncryptionId: secret.valueEncryptionId,
-          })),
-        }
-      } catch (error) {
-        console.error("Error creating container with secrets:", error)
-
-        // If it's an ORPCError, re-throw it to maintain consistent error handling
-        if (error instanceof ORPCError) {
-          throw error
+          createdSecrets.push(secret)
         }
 
-        return {
-          success: false,
-          error:
-            error instanceof Error ? error.message : "Unknown error occurred",
-        }
+        return { container, createdSecrets }
+      })
+
+      return {
+        success: true,
+        container: ContainerEntity.getSimpleRo(result.container),
+        secrets: result.createdSecrets.map((secret) => ({
+          id: secret.id,
+          name: secret.name,
+          note: secret.note,
+          lastViewed: secret.lastViewed,
+          updatedAt: secret.updatedAt,
+          createdAt: secret.createdAt,
+          userId: secret.userId,
+          containerId: secret.containerId,
+          valueEncryptionId: secret.valueEncryptionId,
+        })),
+      }
+    } catch (error) {
+      console.error("Error creating container with secrets:", error)
+
+      // If it's an ORPCError, re-throw it to maintain consistent error handling
+      if (error instanceof ORPCError) {
+        throw error
+      }
+
+      return {
+        success: false,
+        error:
+          error instanceof Error ? error.message : "Unknown error occurred",
       }
     }
-  )
+  })
 
 // Get default container for a specific entity type
 export const getDefaultContainerForEntity = authProcedure
@@ -341,28 +339,30 @@ export const getDefaultContainerForEntity = authProcedure
       entityType: EntityTypeSchema,
     })
   )
-  .output(containerOutputSchema.nullable())
-  .handler(async ({ input, context }): Promise<ContainerOutput | null> => {
-    const containerType = ContainerEntity.getDefaultContainerTypeForEntity(
-      input.entityType
-    )
+  .output(containerSimpleOutputSchema.nullable())
+  .handler(
+    async ({ input, context }): Promise<ContainerSimpleOutput | null> => {
+      const containerType = ContainerEntity.getDefaultContainerTypeForEntity(
+        input.entityType
+      )
 
-    const container = await database.container.findFirst({
-      where: {
-        userId: context.user.id,
-        isDefault: true,
-        type: containerType,
-      },
-    })
+      const container = await database.container.findFirst({
+        where: {
+          userId: context.user.id,
+          isDefault: true,
+          type: containerType,
+        },
+      })
 
-    return container ? ContainerEntity.getSimpleRo(container) : null
-  })
+      return container ? ContainerEntity.getSimpleRo(container) : null
+    }
+  )
 
 // Get all default containers for a user
 export const getUserDefaultContainers = authProcedure
   .input(z.object({}))
-  .output(z.array(containerOutputSchema))
-  .handler(async ({ context }): Promise<ContainerOutput[]> => {
+  .output(z.array(containerSimpleOutputSchema))
+  .handler(async ({ context }): Promise<ContainerSimpleOutput[]> => {
     const containers = await database.container.findMany({
       where: {
         userId: context.user.id,

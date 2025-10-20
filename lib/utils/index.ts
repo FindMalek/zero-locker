@@ -1,6 +1,6 @@
-import { CardSimpleRo } from "@/schemas/card"
-import { CredentialSimpleRo } from "@/schemas/credential"
-import { SecretSimpleRo } from "@/schemas/secrets/secret"
+import { CardSimpleOutput } from "@/schemas/card"
+import { CredentialSimpleOutput } from "@/schemas/credential/output"
+import { SecretSimpleOutput } from "@/schemas/secrets"
 import {
   ActivityType,
   ActivityTypeEnum,
@@ -60,11 +60,11 @@ export function sortByPriority(
 export function getItemName(entity: RawEntity, type: RecentItemType): string {
   switch (type) {
     case RecentItemTypeEnum.CREDENTIAL:
-      return (entity as CredentialSimpleRo).identifier
+      return (entity as CredentialSimpleOutput).identifier
     case RecentItemTypeEnum.CARD:
-      return (entity as CardSimpleRo).name
+      return (entity as CardSimpleOutput).name
     case RecentItemTypeEnum.SECRET:
-      return (entity as SecretSimpleRo).name
+      return (entity as SecretSimpleOutput).name
   }
 }
 

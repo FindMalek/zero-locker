@@ -3,8 +3,8 @@
 import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { PlatformEntity } from "@/entities/utils/platform"
-import type { CredentialIncludeOutput } from "@/schemas/credential/dto"
-import type { PlatformSimpleRo } from "@/schemas/utils/platform"
+import type { CredentialIncludeOutput } from "@/schemas/credential"
+import type { PlatformSimpleOutput } from "@/schemas/utils"
 
 import { getRelativeTime } from "@/lib/date-utils"
 import {
@@ -27,7 +27,7 @@ import {
 
 interface CredentialListViewProps {
   credentials: CredentialIncludeOutput[]
-  platforms: PlatformSimpleRo[]
+  platforms: PlatformSimpleOutput[]
 }
 
 export function DashboardCredentialCardsView({

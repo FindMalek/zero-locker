@@ -4,8 +4,8 @@ import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { PlatformEntity } from "@/entities/utils/platform"
 import { useDeleteCredential } from "@/orpc/hooks/use-credentials"
-import type { CredentialOutput } from "@/schemas/credential/dto"
-import type { PlatformSimpleRo } from "@/schemas/utils/platform"
+import type { CredentialSimpleOutput } from "@/schemas/credential"
+import type { PlatformSimpleOutput } from "@/schemas/utils"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
@@ -43,8 +43,8 @@ type DeleteCredentialFormData = z.infer<typeof deleteCredentialSchema>
 interface DeleteCredentialDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  credential: CredentialOutput
-  platforms: PlatformSimpleRo[]
+  credential: CredentialSimpleOutput
+  platforms: PlatformSimpleOutput[]
   shouldRedirect?: boolean
 }
 

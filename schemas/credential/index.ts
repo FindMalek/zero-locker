@@ -1,5 +1,10 @@
-export * from "./credential"
-export * from "./credential-with-metadata"
-export * from "./credential-metadata"
-export * from "./credential-history"
-export * from "./credential-key-value"
+// Main credential schemas
+export * from "./enums"
+export * from "./input"
+export * from "./output"
+
+// Sub-entity schemas
+export * from "./history"
+export * from "./key-value"
+export * from "./metadata"
+export * from "./with-metadata"

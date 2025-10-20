@@ -1,2 +1,6 @@
-export * from "./secret"
-export * from "./secret-metadata"
+// Entity schemas
+export * from "./input"
+export * from "./output"
+
+// Related schemas
+export * from "./metadata"

@@ -2,13 +2,13 @@
 
 import { orpc } from "@/orpc/client"
 import type {
-  CardOutput,
+  CardSimpleOutput,
   CreateCardInput,
   DeleteCardInput,
   ListCardsInput,
   ListCardsOutput,
   UpdateCardInput,
-} from "@/schemas/card/dto"
+} from "@/schemas/card"
 import {
   useMutation,
   useQuery,
@@ -54,7 +54,7 @@ export function useCreateCard() {
 
   return useMutation({
     mutationFn: (input: CreateCardInput) => orpc.cards.create.call(input),
-    onSuccess: (newCard: CardOutput) => {
+    onSuccess: (newCard: CardSimpleOutput) => {
       // Invalidate and refetch card lists
       queryClient.invalidateQueries({ queryKey: cardKeys.lists() })
 
@@ -80,14 +80,14 @@ export function useUpdateCard() {
       })
 
       // Snapshot the previous value
-      const previousCard = queryClient.getQueryData<CardOutput>(
+      const previousCard = queryClient.getQueryData<CardSimpleOutput>(
         cardKeys.detail(input.id)
       )
 
       // Optimistically update the cache
       if (previousCard) {
         const { expiryDate, ...safeInput } = input
-        queryClient.setQueryData<CardOutput>(cardKeys.detail(input.id), {
+        queryClient.setQueryData<CardSimpleOutput>(cardKeys.detail(input.id), {
           ...previousCard,
           ...safeInput,
           ...(expiryDate && { expiryDate: new Date(expiryDate) }),
@@ -106,7 +106,7 @@ export function useUpdateCard() {
       }
       console.error("Failed to update card:", error)
     },
-    onSuccess: (updatedCard: CardOutput) => {
+    onSuccess: (updatedCard: CardSimpleOutput) => {
       // Update the cache with the server response
       queryClient.setQueryData(cardKeys.detail(updatedCard.id), updatedCard)
 
@@ -129,7 +129,7 @@ export function useDeleteCard() {
       })
 
       // Snapshot the previous value
-      const previousCard = queryClient.getQueryData<CardOutput>(
+      const previousCard = queryClient.getQueryData<CardSimpleOutput>(
         cardKeys.detail(input.id)
       )
 

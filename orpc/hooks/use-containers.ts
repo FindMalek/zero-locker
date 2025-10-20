@@ -1,14 +1,14 @@
 "use client"
 
 import { orpc } from "@/orpc/client"
-import type { EntityType } from "@/schemas/utils"
 import type {
-  ContainerOutput,
+  ContainerSimpleOutput,
   CreateContainerInput,
   DeleteContainerInput,
+  EntityType,
   ListContainersInput,
   UpdateContainerInput,
-} from "@/schemas/utils/dto"
+} from "@/schemas/utils"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 
 // Query keys factory
@@ -51,7 +51,7 @@ export function useCreateContainer() {
   return useMutation({
     mutationFn: (input: CreateContainerInput) =>
       orpc.containers.create.call(input),
-    onSuccess: (newContainer: ContainerOutput) => {
+    onSuccess: (newContainer: ContainerSimpleOutput) => {
       // Invalidate and refetch container lists
       queryClient.invalidateQueries({ queryKey: containerKeys.lists() })
 
@@ -110,13 +110,13 @@ export function useUpdateContainer() {
       })
 
       // Snapshot the previous value
-      const previousContainer = queryClient.getQueryData<ContainerOutput>(
+      const previousContainer = queryClient.getQueryData<ContainerSimpleOutput>(
         containerKeys.detail(input.id)
       )
 
       // Optimistically update the cache
       if (previousContainer) {
-        queryClient.setQueryData<ContainerOutput>(
+        queryClient.setQueryData<ContainerSimpleOutput>(
           containerKeys.detail(input.id),
           {
             ...previousContainer,
@@ -137,7 +137,7 @@ export function useUpdateContainer() {
       }
       console.error("Failed to update container:", error)
     },
-    onSuccess: (updatedContainer: ContainerOutput) => {
+    onSuccess: (updatedContainer: ContainerSimpleOutput) => {
       // Update the cache with the server response
       queryClient.setQueryData(
         containerKeys.detail(updatedContainer.id),
@@ -164,7 +164,7 @@ export function useDeleteContainer() {
       })
 
       // Snapshot the previous value
-      const previousContainer = queryClient.getQueryData<ContainerOutput>(
+      const previousContainer = queryClient.getQueryData<ContainerSimpleOutput>(
         containerKeys.detail(input.id)
       )
 

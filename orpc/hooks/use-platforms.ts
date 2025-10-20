@@ -1,10 +1,7 @@
 "use client"
 
 import { orpc } from "@/orpc/client"
-import type {
-  ListPlatformsInput,
-  ListPlatformsOutput,
-} from "@/schemas/utils/dto"
+import type { ListPlatformsInput, ListPlatformsOutput } from "@/schemas/utils"
 import { useQuery, type UseQueryOptions } from "@tanstack/react-query"
 
 export const platformKeys = {

@@ -2,8 +2,8 @@
 
 import Image from "next/image"
 import Link from "next/link"
-import type { CredentialOutput } from "@/schemas/credential/dto"
-import { PlatformOutput } from "@/schemas/utils/dto"
+import type { CredentialSimpleOutput } from "@/schemas/credential"
+import { PlatformSimpleOutput } from "@/schemas/utils"
 
 import { getLogoDevUrlWithToken, getPlaceholderImage } from "@/lib/utils"
 
@@ -11,8 +11,8 @@ import { Icons } from "@/components/shared/icons"
 import { CredentialActionsDropdown } from "@/components/shared/item-actions-dropdown"
 
 interface CredentialHeaderProps {
-  credential: CredentialOutput
-  platform: PlatformOutput
+  credential: CredentialSimpleOutput
+  platform: PlatformSimpleOutput
 }
 
 export function CredentialHeader({

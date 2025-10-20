@@ -1,5 +1,5 @@
 import { CredentialEntity } from "@/entities/credential"
-import { accountStatusEnum } from "@/schemas/credential"
+import { accountStatusEnum } from "@/schemas/credential/enums"
 import {
   ActivityType,
   ActivityTypeEnum,

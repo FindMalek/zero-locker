@@ -1,13 +1,13 @@
 "use client"
 
-import type { CredentialOutput } from "@/schemas/credential/dto"
+import type { CredentialSimpleOutput } from "@/schemas/credential"
 
 import { DateFormatter } from "@/lib/date-utils"
 
 import { Icons } from "@/components/shared/icons"
 
 interface CredentialFooterProps {
-  credential: CredentialOutput
+  credential: CredentialSimpleOutput
 }
 
 export function CredentialFooter({ credential }: CredentialFooterProps) {

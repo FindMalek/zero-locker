@@ -5,7 +5,7 @@ import {
   useCredentialPassword,
   useUpdateCredentialPassword,
 } from "@/orpc/hooks/use-credentials"
-import type { CredentialOutput } from "@/schemas/credential/dto"
+import type { CredentialSimpleOutput } from "@/schemas/credential"
 
 import { encryptData, exportKey, generateEncryptionKey } from "@/lib/encryption"
 import { getSensitiveValueDisplay, handleErrors } from "@/lib/utils"
@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/tooltip"
 
 interface PasswordFieldProps {
-  credential?: CredentialOutput
+  credential?: CredentialSimpleOutput
   onPasswordChange?: (hasChanges: boolean) => void
 }
 

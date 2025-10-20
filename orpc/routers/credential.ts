@@ -9,17 +9,10 @@ import {
   requirePermission,
 } from "@/middleware/permissions"
 import { database } from "@/prisma/client"
-import { credentialFormDtoSchema } from "@/schemas/credential/credential"
-import { credentialKeyValuePairWithValueRoSchema } from "@/schemas/credential/credential-key-value"
-import {
-  createCredentialWithMetadataInputSchema,
-  createCredentialWithMetadataOutputSchema,
-  type CreateCredentialWithMetadataInput,
-  type CreateCredentialWithMetadataOutput,
-} from "@/schemas/credential/credential-with-metadata"
 import {
   createCredentialInputSchema,
-  credentialOutputSchema,
+  credentialFormInputSchema,
+  credentialSimpleOutputSchema,
   deleteCredentialInputSchema,
   duplicateCredentialInputSchema,
   getCredentialInputSchema,
@@ -27,9 +20,16 @@ import {
   listCredentialsOutputSchema,
   updateCredentialInputSchema,
   updateCredentialPasswordInputSchema,
-  type CredentialOutput,
+  type CredentialSimpleOutput,
   type ListCredentialsOutput,
-} from "@/schemas/credential/dto"
+} from "@/schemas/credential"
+import { keyValueWithValueOutputSchema } from "@/schemas/credential/key-value"
+import {
+  createWithMetadataInputSchema,
+  createWithMetadataOutputSchema,
+  type CreateWithMetadataInput,
+  type CreateWithMetadataOutput,
+} from "@/schemas/credential/with-metadata"
 import { ORPCError, os } from "@orpc/server"
 import { AccountStatus, type Prisma } from "@prisma/client"
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library"
@@ -54,8 +54,8 @@ const authWithDefaultAccessProcedure = authProcedure.use(({ context, next }) =>
 // Get credential by ID
 export const getCredential = authProcedure
   .input(getCredentialInputSchema)
-  .output(credentialOutputSchema)
-  .handler(async ({ input, context }): Promise<CredentialOutput> => {
+  .output(credentialSimpleOutputSchema)
+  .handler(async ({ input, context }): Promise<CredentialSimpleOutput> => {
     const credential = await database.credential.findFirst({
       where: {
         id: input.id,
@@ -161,7 +161,7 @@ export const getCredentialKeyValuePairs = authProcedure
 // Get credential key-value pairs with values (for editing mode)
 export const getCredentialKeyValuePairsWithValues = authProcedure
   .input(getCredentialInputSchema)
-  .output(z.array(credentialKeyValuePairWithValueRoSchema))
+  .output(z.array(keyValueWithValueOutputSchema))
   .handler(async ({ input, context }) => {
     const credential = await database.credential.findFirst({
       where: {
@@ -366,7 +366,9 @@ export const listCredentials = authProcedure
       // But if showArchived is false, exclude ARCHIVED from the list
       const statusesToFilter =
         filters.showArchived === false
-          ? filters.statuses.filter((s) => s !== AccountStatus.ARCHIVED)
+          ? filters.statuses.filter(
+              (s: AccountStatus) => s !== AccountStatus.ARCHIVED
+            )
           : filters.statuses
 
       if (statusesToFilter.length > 0) {
@@ -434,8 +436,8 @@ export const createCredential = authWithDefaultAccessProcedure
     })({ context, next })
   )
   .input(createCredentialInputSchema)
-  .output(credentialOutputSchema)
-  .handler(async ({ input, context }): Promise<CredentialOutput> => {
+  .output(credentialSimpleOutputSchema)
+  .handler(async ({ input, context }): Promise<CredentialSimpleOutput> => {
     // Verify platform exists
     const platform = await database.platform.findUnique({
       where: { id: input.platformId },
@@ -468,7 +470,7 @@ export const createCredential = authWithDefaultAccessProcedure
       // Use transaction for atomicity
       const credential = await database.$transaction(async (tx) => {
         const tagConnections = await createTagsAndGetConnections(
-          input.tags,
+          input.tags || [],
           context.user.id,
           input.containerId,
           tx
@@ -530,8 +532,8 @@ export const updateCredential = authProcedure
     })({ context, next })
   )
   .input(updateCredentialInputSchema)
-  .output(credentialOutputSchema)
-  .handler(async ({ input, context }): Promise<CredentialOutput> => {
+  .output(credentialSimpleOutputSchema)
+  .handler(async ({ input, context }): Promise<CredentialSimpleOutput> => {
     const { id, ...updateData } = input
 
     // Verify credential ownership
@@ -566,7 +568,7 @@ export const updateCredential = authProcedure
     // Handle tags if provided
     if (updateData.tags !== undefined) {
       const tagConnections = await createTagsAndGetConnections(
-        updateData.tags,
+        updateData.tags || [],
         context.user.id,
         updateData.containerId || existingCredential.containerId || undefined
       )
@@ -693,9 +695,9 @@ export const updateCredentialWithSecuritySettings = authProcedure
       level: PermissionLevel.WRITE,
     })({ context, next })
   )
-  .input(credentialFormDtoSchema.extend({ id: z.string() }))
-  .output(credentialOutputSchema)
-  .handler(async ({ input, context }): Promise<CredentialOutput> => {
+  .input(credentialFormInputSchema.extend({ id: z.string() }))
+  .output(credentialSimpleOutputSchema)
+  .handler(async ({ input, context }): Promise<CredentialSimpleOutput> => {
     const {
       id,
       passwordProtection,
@@ -865,8 +867,8 @@ export const deleteCredential = authProcedure
     })({ context, next })
   )
   .input(deleteCredentialInputSchema)
-  .output(credentialOutputSchema)
-  .handler(async ({ input, context }): Promise<CredentialOutput> => {
+  .output(credentialSimpleOutputSchema)
+  .handler(async ({ input, context }): Promise<CredentialSimpleOutput> => {
     // Verify credential ownership
     const existingCredential = await database.credential.findFirst({
       where: {
@@ -894,161 +896,158 @@ export const createCredentialWithMetadata = authWithDefaultAccessProcedure
       level: PermissionLevel.WRITE,
     })({ context, next })
   )
-  .input(createCredentialWithMetadataInputSchema)
-  .output(createCredentialWithMetadataOutputSchema)
-  .handler(
-    async ({ input, context }): Promise<CreateCredentialWithMetadataOutput> => {
-      const { credential: credentialData, metadata } = input
+  .input(createWithMetadataInputSchema)
+  .output(createWithMetadataOutputSchema)
+  .handler(async ({ input, context }): Promise<CreateWithMetadataOutput> => {
+    const { credential: credentialData, metadata } = input
 
-      try {
-        // Verify platform exists
-        const platform = await database.platform.findUnique({
-          where: { id: credentialData.platformId },
+    try {
+      // Verify platform exists
+      const platform = await database.platform.findUnique({
+        where: { id: credentialData.platformId },
+      })
+
+      if (!platform) {
+        throw new ORPCError("NOT_FOUND")
+      }
+
+      // Check if Normal user is trying to use non-default container
+      if (
+        context.permissions?.canOnlyAccessDefaultContainers &&
+        credentialData.containerId
+      ) {
+        const container = await database.container.findFirst({
+          where: {
+            id: credentialData.containerId,
+            userId: context.user.id,
+            isDefault: true,
+          },
         })
-
-        if (!platform) {
-          throw new ORPCError("NOT_FOUND")
-        }
-
-        // Check if Normal user is trying to use non-default container
-        if (
-          context.permissions?.canOnlyAccessDefaultContainers &&
-          credentialData.containerId
-        ) {
-          const container = await database.container.findFirst({
-            where: {
-              id: credentialData.containerId,
-              userId: context.user.id,
-              isDefault: true,
-            },
+        if (!container) {
+          throw new ORPCError("FORBIDDEN", {
+            message: "Your plan only allows using default containers.",
           })
-          if (!container) {
-            throw new ORPCError("FORBIDDEN", {
-              message: "Your plan only allows using default containers.",
-            })
-          }
-        }
-
-        const result = await database.$transaction(async (tx) => {
-          const tagConnections = await createTagsAndGetConnections(
-            credentialData.tags,
-            context.user.id,
-            credentialData.containerId,
-            tx
-          )
-
-          // Create encrypted data for password
-          const passwordEncryptionResult = await createEncryptedData(
-            {
-              encryptedValue: credentialData.passwordEncryption.encryptedValue,
-              encryptionKey: credentialData.passwordEncryption.encryptionKey,
-              iv: credentialData.passwordEncryption.iv,
-            },
-            tx
-          )
-
-          if (
-            !passwordEncryptionResult.success ||
-            !passwordEncryptionResult.encryptedData
-          ) {
-            throw new ORPCError("INTERNAL_SERVER_ERROR")
-          }
-          const credential = await tx.credential.create({
-            data: {
-              identifier: credentialData.identifier,
-              passwordEncryptionId: passwordEncryptionResult.encryptedData!.id,
-              status: credentialData.status,
-              platformId: credentialData.platformId,
-              description: credentialData.description,
-              userId: context.user.id,
-              tags: tagConnections,
-              ...getOrReturnEmptyObject(
-                credentialData.containerId,
-                "containerId"
-              ),
-            },
-          })
-
-          // Create metadata if provided
-          if (metadata) {
-            const credentialMetadata = await tx.credentialMetadata.create({
-              data: {
-                credentialId: credential.id,
-                recoveryEmail: metadata.recoveryEmail,
-                phoneNumber: metadata.phoneNumber,
-                has2FA: metadata.has2FA || false,
-              },
-            })
-
-            // Create encrypted key-value pairs if provided
-            if (metadata.keyValuePairs && metadata.keyValuePairs.length > 0) {
-              for (const kvPair of metadata.keyValuePairs) {
-                // Create encrypted data for the value
-                const valueEncryptionResult = await createEncryptedData(
-                  {
-                    encryptedValue: kvPair.valueEncryption.encryptedValue,
-                    encryptionKey: kvPair.valueEncryption.encryptionKey,
-                    iv: kvPair.valueEncryption.iv,
-                  },
-                  tx
-                )
-
-                if (
-                  !valueEncryptionResult.success ||
-                  !valueEncryptionResult.encryptedData
-                ) {
-                  throw new ORPCError("INTERNAL_SERVER_ERROR", {
-                    message:
-                      "Failed to create encrypted data for key-value pair",
-                  })
-                }
-
-                // Create the key-value pair
-                await tx.credentialKeyValuePair.create({
-                  data: {
-                    key: kvPair.key,
-                    valueEncryptionId: valueEncryptionResult.encryptedData.id,
-                    credentialMetadataId: credentialMetadata.id,
-                  },
-                })
-              }
-            }
-          }
-
-          return credential
-        })
-
-        return {
-          success: true,
-          credential: CredentialEntity.getSimpleRo(result),
-        }
-      } catch (error) {
-        console.error("Error creating credential with metadata:", error)
-
-        // Handle unique constraint violation
-        if (
-          error instanceof PrismaClientKnownRequestError &&
-          error.code === "P2002"
-        ) {
-          throw new ORPCError("CONFLICT", {
-            message:
-              "A credential with this identifier already exists for this platform",
-          })
-        }
-
-        // If it's an ORPCError, re-throw it to maintain consistent error handling
-        if (error instanceof ORPCError) {
-          throw error
-        }
-
-        return {
-          success: false,
-          error:
-            error instanceof Error ? error.message : "Unknown error occurred",
         }
       }
+
+      const result = await database.$transaction(async (tx) => {
+        const tagConnections = await createTagsAndGetConnections(
+          credentialData.tags || [],
+          context.user.id,
+          credentialData.containerId,
+          tx
+        )
+
+        // Create encrypted data for password
+        const passwordEncryptionResult = await createEncryptedData(
+          {
+            encryptedValue: credentialData.passwordEncryption.encryptedValue,
+            encryptionKey: credentialData.passwordEncryption.encryptionKey,
+            iv: credentialData.passwordEncryption.iv,
+          },
+          tx
+        )
+
+        if (
+          !passwordEncryptionResult.success ||
+          !passwordEncryptionResult.encryptedData
+        ) {
+          throw new ORPCError("INTERNAL_SERVER_ERROR")
+        }
+        const credential = await tx.credential.create({
+          data: {
+            identifier: credentialData.identifier,
+            passwordEncryptionId: passwordEncryptionResult.encryptedData!.id,
+            status: credentialData.status,
+            platformId: credentialData.platformId,
+            description: credentialData.description,
+            userId: context.user.id,
+            tags: tagConnections,
+            ...getOrReturnEmptyObject(
+              credentialData.containerId,
+              "containerId"
+            ),
+          },
+        })
+
+        // Create metadata if provided
+        if (metadata) {
+          const credentialMetadata = await tx.credentialMetadata.create({
+            data: {
+              credentialId: credential.id,
+              recoveryEmail: metadata.recoveryEmail,
+              phoneNumber: metadata.phoneNumber,
+              has2FA: metadata.has2FA || false,
+            },
+          })
+
+          // Create encrypted key-value pairs if provided
+          if (metadata.keyValuePairs && metadata.keyValuePairs.length > 0) {
+            for (const kvPair of metadata.keyValuePairs) {
+              // Create encrypted data for the value
+              const valueEncryptionResult = await createEncryptedData(
+                {
+                  encryptedValue: kvPair.valueEncryption.encryptedValue,
+                  encryptionKey: kvPair.valueEncryption.encryptionKey,
+                  iv: kvPair.valueEncryption.iv,
+                },
+                tx
+              )
+
+              if (
+                !valueEncryptionResult.success ||
+                !valueEncryptionResult.encryptedData
+              ) {
+                throw new ORPCError("INTERNAL_SERVER_ERROR", {
+                  message: "Failed to create encrypted data for key-value pair",
+                })
+              }
+
+              // Create the key-value pair
+              await tx.credentialKeyValuePair.create({
+                data: {
+                  key: kvPair.key,
+                  valueEncryptionId: valueEncryptionResult.encryptedData.id,
+                  credentialMetadataId: credentialMetadata.id,
+                },
+              })
+            }
+          }
+        }
+
+        return credential
+      })
+
+      return {
+        success: true,
+        credential: CredentialEntity.getSimpleRo(result),
+      }
+    } catch (error) {
+      console.error("Error creating credential with metadata:", error)
+
+      // Handle unique constraint violation
+      if (
+        error instanceof PrismaClientKnownRequestError &&
+        error.code === "P2002"
+      ) {
+        throw new ORPCError("CONFLICT", {
+          message:
+            "A credential with this identifier already exists for this platform",
+        })
+      }
+
+      // If it's an ORPCError, re-throw it to maintain consistent error handling
+      if (error instanceof ORPCError) {
+        throw error
+      }
+
+      return {
+        success: false,
+        error:
+          error instanceof Error ? error.message : "Unknown error occurred",
+      }
     }
-  )
+  })
 
 // Update credential key-value pairs
 export const updateCredentialKeyValuePairs = authProcedure
@@ -1229,8 +1228,8 @@ export const duplicateCredential = authProcedure
     })({ context, next })
   )
   .input(duplicateCredentialInputSchema)
-  .output(credentialOutputSchema)
-  .handler(async ({ input, context }): Promise<CredentialOutput> => {
+  .output(credentialSimpleOutputSchema)
+  .handler(async ({ input, context }): Promise<CredentialSimpleOutput> => {
     // Get the original credential with all data
     const originalCredential = await database.credential.findFirst({
       where: {

@@ -1,11 +1,11 @@
-import { CardMetadataSimpleRo } from "@/schemas/card"
+import { CardMetadataSimpleOutput } from "@/schemas/card"
 
 import { CardMetadataEntitySimpleDbData } from "./query"
 
 export class CardMetadataEntity {
   static getSimpleRo(
     entity: CardMetadataEntitySimpleDbData
-  ): CardMetadataSimpleRo {
+  ): CardMetadataSimpleOutput {
     return {
       id: entity.id,
 

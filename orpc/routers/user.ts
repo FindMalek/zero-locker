@@ -6,25 +6,28 @@ import {
 } from "@/middleware/rate-limit"
 import { database } from "@/prisma/client"
 import {
-  subscribeToRoadmapInputSchema,
-  subscribeToRoadmapOutputSchema,
-  type SubscribeToRoadmapInput,
-  type SubscribeToRoadmapOutput,
+  roadmapSubscribeInputSchema,
+  roadmapSubscribeOutputSchema,
+  type RoadmapSubscribeInput,
+  type RoadmapSubscribeOutput,
 } from "@/schemas/user/roadmap"
 import {
-  getEncryptedDataCountOutputSchema,
-  getUserCountOutputSchema,
-  type GetEncryptedDataCountOutput,
-  type GetUserCountOutput,
+  encryptedDataCountOutputSchema,
+  userCountOutputSchema,
+  type EncryptedDataCountOutput,
+  type UserCountOutput,
 } from "@/schemas/user/statistics"
-import { currentUserDtoSchema, type CurrentUserDto } from "@/schemas/user/user"
 import {
-  getWaitlistCountOutputSchema,
-  joinWaitlistInputSchema,
-  joinWaitlistOutputSchema,
-  type GetWaitlistCountOutput,
-  type JoinWaitlistInput,
-  type JoinWaitlistOutput,
+  userSimpleOutputSchema,
+  type UserSimpleOutput,
+} from "@/schemas/user/user"
+import {
+  waitlistCountOutputSchema,
+  waitlistInputSchema,
+  waitlistJoinOutputSchema,
+  type WaitlistCountOutput,
+  type WaitlistInput,
+  type WaitlistJoinOutput,
 } from "@/schemas/user/waitlist"
 import { ORPCError, os } from "@orpc/server"
 import { Prisma } from "@prisma/client"
@@ -53,9 +56,9 @@ const authProcedure = baseProcedure.use(({ context, next }) =>
 
 // Join waitlist - strict rate limit due to email sending
 export const joinWaitlist = strictPublicProcedure
-  .input(joinWaitlistInputSchema)
-  .output(joinWaitlistOutputSchema)
-  .handler(async ({ input }): Promise<JoinWaitlistOutput> => {
+  .input(waitlistInputSchema)
+  .output(waitlistJoinOutputSchema)
+  .handler(async ({ input }): Promise<WaitlistJoinOutput> => {
     try {
       // Check if email already exists in waitlist
       const existingWaitlistEntry = await database.waitlist.findUnique({
@@ -160,8 +163,8 @@ export const joinWaitlist = strictPublicProcedure
 // Get waitlist count
 export const getWaitlistCount = publicProcedure
   .input(z.object({}))
-  .output(getWaitlistCountOutputSchema)
-  .handler(async (): Promise<GetWaitlistCountOutput> => {
+  .output(waitlistCountOutputSchema)
+  .handler(async (): Promise<WaitlistCountOutput> => {
     const total = await database.waitlist.count()
     return { total }
   })
@@ -169,8 +172,8 @@ export const getWaitlistCount = publicProcedure
 // Get user count
 export const getUserCount = publicProcedure
   .input(z.object({}))
-  .output(getUserCountOutputSchema)
-  .handler(async (): Promise<GetUserCountOutput> => {
+  .output(userCountOutputSchema)
+  .handler(async (): Promise<UserCountOutput> => {
     const total = await database.user.count()
     return { total }
   })
@@ -178,8 +181,8 @@ export const getUserCount = publicProcedure
 // Get encrypted data count
 export const getEncryptedDataCount = publicProcedure
   .input(z.object({}))
-  .output(getEncryptedDataCountOutputSchema)
-  .handler(async (): Promise<GetEncryptedDataCountOutput> => {
+  .output(encryptedDataCountOutputSchema)
+  .handler(async (): Promise<EncryptedDataCountOutput> => {
     const count = await database.encryptedData.count()
     return { count }
   })
@@ -187,8 +190,8 @@ export const getEncryptedDataCount = publicProcedure
 // Get current user profile with plan information
 export const getCurrentUser = authProcedure
   .input(z.object({}))
-  .output(currentUserDtoSchema)
-  .handler(async ({ context }): Promise<CurrentUserDto> => {
+  .output(userSimpleOutputSchema)
+  .handler(async ({ context }): Promise<UserSimpleOutput> => {
     const user = await database.user.findUnique({
       where: { id: context.user.id },
       select: {
@@ -210,9 +213,9 @@ export const getCurrentUser = authProcedure
 
 // Subscribe to roadmap updates - strict rate limit due to email sending
 export const subscribeToRoadmap = strictPublicProcedure
-  .input(subscribeToRoadmapInputSchema)
-  .output(subscribeToRoadmapOutputSchema)
-  .handler(async ({ input }): Promise<SubscribeToRoadmapOutput> => {
+  .input(roadmapSubscribeInputSchema)
+  .output(roadmapSubscribeOutputSchema)
+  .handler(async ({ input }): Promise<RoadmapSubscribeOutput> => {
     try {
       // Check if email already exists in roadmap subscriptions
       const existingSubscription =

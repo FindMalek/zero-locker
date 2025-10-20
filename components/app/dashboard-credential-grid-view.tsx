@@ -3,8 +3,8 @@
 import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { PlatformEntity } from "@/entities/utils/platform"
-import type { CredentialOutput } from "@/schemas/credential/dto"
-import type { PlatformSimpleRo } from "@/schemas/utils/platform"
+import type { CredentialSimpleOutput } from "@/schemas/credential"
+import type { PlatformSimpleOutput } from "@/schemas/utils"
 
 import { DateFormatter } from "@/lib/date-utils"
 import { getLogoDevUrlWithToken, getPlaceholderImage } from "@/lib/utils"
@@ -17,8 +17,8 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 
 interface CredentialGridViewProps {
-  credentials: CredentialOutput[]
-  platforms: PlatformSimpleRo[]
+  credentials: CredentialSimpleOutput[]
+  platforms: PlatformSimpleOutput[]
 }
 
 export function DashboardCredentialGridView({

@@ -1,8 +1,8 @@
 import { TagEntitySimpleDbData } from "@/entities/utils/tag/query"
-import { TagSimpleRo } from "@/schemas/utils/tag"
+import { TagSimpleOutput } from "@/schemas/utils"
 
 export class TagEntity {
-  static getSimpleRo(entity: TagEntitySimpleDbData): TagSimpleRo {
+  static getSimpleRo(entity: TagEntitySimpleDbData): TagSimpleOutput {
     return {
       id: entity.id,
 

@@ -3,8 +3,8 @@
 import { useState } from "react"
 import { PlatformEntity } from "@/entities/utils/platform"
 import { usePlatforms } from "@/orpc/hooks/use-platforms"
-import { AccountStatusInfer } from "@/schemas/credential/credential"
-import type { CredentialOutput } from "@/schemas/credential/dto"
+import { AccountStatusInfer } from "@/schemas/credential"
+import type { CredentialSimpleOutput } from "@/schemas/credential"
 import { EntityTypeEnum } from "@/schemas/utils"
 
 import { statusConfig } from "@/config/converter"
@@ -28,7 +28,7 @@ import {
 } from "@/components/ui/tooltip"
 
 interface CredentialSidebarProps {
-  credential: CredentialOutput
+  credential: CredentialSimpleOutput
   onStatusChange?: (status: AccountStatusInfer) => void
   onContainerChange?: (containerId: string) => void
 }

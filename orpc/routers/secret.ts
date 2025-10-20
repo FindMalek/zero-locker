@@ -7,11 +7,11 @@ import {
   getSecretInputSchema,
   listSecretsInputSchema,
   listSecretsOutputSchema,
-  secretOutputSchema,
+  secretSimpleOutputSchema,
   updateSecretInputSchema,
   type ListSecretsOutput,
-  type SecretOutput,
-} from "@/schemas/secrets/dto"
+  type SecretSimpleOutput,
+} from "@/schemas/secrets"
 import { ORPCError, os } from "@orpc/server"
 import type { Prisma } from "@prisma/client"
 
@@ -27,8 +27,8 @@ const authProcedure = baseProcedure.use(({ context, next }) =>
 // Get secret by ID
 export const getSecret = authProcedure
   .input(getSecretInputSchema)
-  .output(secretOutputSchema)
-  .handler(async ({ input, context }): Promise<SecretOutput> => {
+  .output(secretSimpleOutputSchema)
+  .handler(async ({ input, context }): Promise<SecretSimpleOutput> => {
     const secret = await database.secret.findFirst({
       where: {
         id: input.id,
@@ -90,8 +90,8 @@ export const listSecrets = authProcedure
 // Create secret
 export const createSecret = authProcedure
   .input(createSecretInputSchema)
-  .output(secretOutputSchema)
-  .handler(async ({ input, context }): Promise<SecretOutput> => {
+  .output(secretSimpleOutputSchema)
+  .handler(async ({ input, context }): Promise<SecretSimpleOutput> => {
     const secret = await database.$transaction(async (tx) => {
       const valueEncryptionResult = await createEncryptedData(
         {
@@ -126,8 +126,8 @@ export const createSecret = authProcedure
 // Update secret
 export const updateSecret = authProcedure
   .input(updateSecretInputSchema)
-  .output(secretOutputSchema)
-  .handler(async ({ input, context }): Promise<SecretOutput> => {
+  .output(secretSimpleOutputSchema)
+  .handler(async ({ input, context }): Promise<SecretSimpleOutput> => {
     const { id, ...updateData } = input
 
     // Verify secret ownership
@@ -182,8 +182,8 @@ export const updateSecret = authProcedure
 // Delete secret
 export const deleteSecret = authProcedure
   .input(deleteSecretInputSchema)
-  .output(secretOutputSchema)
-  .handler(async ({ input, context }): Promise<SecretOutput> => {
+  .output(secretSimpleOutputSchema)
+  .handler(async ({ input, context }): Promise<SecretSimpleOutput> => {
     // Verify secret ownership
     const existingSecret = await database.secret.findFirst({
       where: {

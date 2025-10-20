@@ -6,15 +6,17 @@ import { TagEntity } from "@/entities/utils"
 import {
   accountStatusEnum,
   AccountStatusInfer,
-  CredentialIncludeRo,
-  CredentialSimpleRo,
+  CredentialIncludeOutput,
+  CredentialSimpleOutput,
 } from "@/schemas/credential"
 import { AccountStatus } from "@prisma/client"
 
 import { decryptData } from "@/lib/encryption"
 
 export class CredentialEntity {
-  static getSimpleRo(entity: CredentialEntitySimpleDbData): CredentialSimpleRo {
+  static getSimpleRo(
+    entity: CredentialEntitySimpleDbData
+  ): CredentialSimpleOutput {
     return {
       id: entity.id,
 
@@ -34,7 +36,7 @@ export class CredentialEntity {
     }
   }
 
-  static getRo(entity: CredentialEntityIncludeDbData): CredentialIncludeRo {
+  static getRo(entity: CredentialEntityIncludeDbData): CredentialIncludeOutput {
     return {
       ...this.getSimpleRo(entity),
       tags: entity.tags.map((tag) => TagEntity.getSimpleRo(tag)),

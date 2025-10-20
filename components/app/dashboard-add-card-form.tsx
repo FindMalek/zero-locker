@@ -2,8 +2,8 @@
 
 import { useState } from "react"
 import { CardEntity } from "@/entities"
-import { CardDto, LIST_CARD_STATUSES, LIST_CARD_TYPES } from "@/schemas/card"
-import { TagDto } from "@/schemas/utils/tag"
+import { CardInput, LIST_CARD_STATUSES, LIST_CARD_TYPES } from "@/schemas/card"
+import { TagInput } from "@/schemas/utils"
 import { CardStatus } from "@prisma/client"
 import { ChevronDown, Plus } from "lucide-react"
 import { UseFormReturn } from "react-hook-form"
@@ -39,8 +39,8 @@ import {
 } from "@/components/ui/select"
 
 interface CardFormProps {
-  form: UseFormReturn<CardDto>
-  availableTags: TagDto[]
+  form: UseFormReturn<CardInput>
+  availableTags: TagInput[]
   setSensitiveData: React.Dispatch<
     React.SetStateAction<{
       number: string
@@ -194,7 +194,7 @@ export function DashboardAddCardForm({
           <FormItem>
             <FormLabel>Tags</FormLabel>
             <FormControl>
-              <TagSelector<TagDto>
+              <TagSelector<TagInput>
                 availableTags={availableTags}
                 selectedTags={field.value}
                 onChange={field.onChange}

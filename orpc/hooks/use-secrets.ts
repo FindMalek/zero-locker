@@ -6,9 +6,9 @@ import type {
   DeleteSecretInput,
   ListSecretsInput,
   ListSecretsOutput,
-  SecretOutput,
+  SecretSimpleOutput,
   UpdateSecretInput,
-} from "@/schemas/secrets/dto"
+} from "@/schemas/secrets"
 import {
   useMutation,
   useQuery,
@@ -54,7 +54,7 @@ export function useCreateSecret() {
 
   return useMutation({
     mutationFn: (input: CreateSecretInput) => orpc.secrets.create.call(input),
-    onSuccess: (newSecret: SecretOutput) => {
+    onSuccess: (newSecret: SecretSimpleOutput) => {
       // Invalidate and refetch secret lists
       queryClient.invalidateQueries({ queryKey: secretKeys.lists() })
 
@@ -80,16 +80,19 @@ export function useUpdateSecret() {
       })
 
       // Snapshot the previous value
-      const previousSecret = queryClient.getQueryData<SecretOutput>(
+      const previousSecret = queryClient.getQueryData<SecretSimpleOutput>(
         secretKeys.detail(input.id)
       )
 
       // Optimistically update the cache
       if (previousSecret) {
-        queryClient.setQueryData<SecretOutput>(secretKeys.detail(input.id), {
-          ...previousSecret,
-          ...input,
-        })
+        queryClient.setQueryData<SecretSimpleOutput>(
+          secretKeys.detail(input.id),
+          {
+            ...previousSecret,
+            ...input,
+          }
+        )
       }
 
       return { previousSecret }
@@ -104,7 +107,7 @@ export function useUpdateSecret() {
       }
       console.error("Failed to update secret:", error)
     },
-    onSuccess: (updatedSecret: SecretOutput) => {
+    onSuccess: (updatedSecret: SecretSimpleOutput) => {
       // Update the cache with the server response
       queryClient.setQueryData(
         secretKeys.detail(updatedSecret.id),
@@ -130,7 +133,7 @@ export function useDeleteSecret() {
       })
 
       // Snapshot the previous value
-      const previousSecret = queryClient.getQueryData<SecretOutput>(
+      const previousSecret = queryClient.getQueryData<SecretSimpleOutput>(
         secretKeys.detail(input.id)
       )
 

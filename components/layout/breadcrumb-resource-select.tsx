@@ -138,7 +138,7 @@ export function BreadcrumbResourceSelect({
   const { items, isLoading, currentItem } = useMemo(() => {
     const getPlatform = (platformId: string) => {
       if (!platforms?.platforms) {
-        // Return a fallback platform object that matches PlatformSimpleRo type
+        // Return a fallback platform object that matches PlatformSimpleOutput type
         return {
           id: platformId,
           name: "Unknown Platform",
