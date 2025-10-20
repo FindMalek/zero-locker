@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useState } from "react"
-import { SecretDto } from "@/schemas/secrets"
+import { SecretInput } from "@/schemas/secrets"
 import { useForm } from "react-hook-form"
 
 import { cn } from "@/lib/utils"
@@ -27,7 +27,7 @@ interface SecretKeyValue {
 }
 
 interface SecretFormProps {
-  form: ReturnType<typeof useForm<SecretDto>>
+  form: ReturnType<typeof useForm<SecretInput>>
   title?: string
   onTitleChange?: (title: string) => void
   sensitiveData: {

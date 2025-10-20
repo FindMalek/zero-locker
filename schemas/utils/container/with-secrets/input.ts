@@ -1,4 +1,4 @@
-import { encryptedDataDtoSchema } from "@/schemas/encryption"
+import { encryptedDataInputSchema } from "@/schemas/encryption"
 import { z } from "zod"
 
 import { createInputSchema } from "../input"
@@ -13,7 +13,7 @@ export const createWithSecretsInputSchema = z.object({
     z.object({
       name: z.string().min(1, "Secret name is required"),
       note: z.string().optional(),
-      valueEncryption: encryptedDataDtoSchema,
+      valueEncryption: encryptedDataInputSchema,
     })
   ),
 })

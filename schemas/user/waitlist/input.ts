@@ -9,13 +9,3 @@ export const waitlistInputSchema = z.object({
 })
 
 export type WaitlistInput = z.infer<typeof waitlistInputSchema>
-
-// ============================================================================
-// Legacy aliases for backward compatibility
-// ============================================================================
-
-export const joinWaitlistInputSchema = waitlistInputSchema
-export const joinInputSchema = waitlistInputSchema
-
-export type JoinWaitlistInput = WaitlistInput
-export type JoinInput = WaitlistInput

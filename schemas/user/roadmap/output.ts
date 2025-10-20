@@ -9,16 +9,4 @@ export const roadmapSubscribeOutputSchema = z.object({
   error: z.string().optional(),
 })
 
-export type RoadmapSubscribeOutput = z.infer<
-  typeof roadmapSubscribeOutputSchema
->
-
-// ============================================================================
-// Legacy aliases for backward compatibility
-// ============================================================================
-
-export const subscribeToRoadmapOutputSchema = roadmapSubscribeOutputSchema
-export const subscribeOutputSchema = roadmapSubscribeOutputSchema
-
-export type SubscribeToRoadmapOutput = RoadmapSubscribeOutput
-export type SubscribeOutput = RoadmapSubscribeOutput
+export type RoadmapSubscribeOutput = z.infer<typeof roadmapSubscribeOutputSchema>

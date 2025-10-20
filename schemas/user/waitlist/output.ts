@@ -17,17 +17,3 @@ export const waitlistCountOutputSchema = z.object({
 })
 
 export type WaitlistCountOutput = z.infer<typeof waitlistCountOutputSchema>
-
-// ============================================================================
-// Legacy aliases for backward compatibility
-// ============================================================================
-
-export const joinWaitlistOutputSchema = waitlistJoinOutputSchema
-export const getWaitlistCountOutputSchema = waitlistCountOutputSchema
-export const joinOutputSchema = waitlistJoinOutputSchema
-export const countOutputSchema = waitlistCountOutputSchema
-
-export type JoinWaitlistOutput = WaitlistJoinOutput
-export type GetWaitlistCountOutput = WaitlistCountOutput
-export type JoinOutput = WaitlistJoinOutput
-export type CountOutput = WaitlistCountOutput

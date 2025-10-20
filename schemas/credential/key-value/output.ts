@@ -1,4 +1,4 @@
-import { encryptedDataDtoSchema } from "@/schemas/encryption"
+import { encryptedDataInputSchema } from "@/schemas/encryption"
 import { z } from "zod"
 
 // ============================================================================
@@ -26,7 +26,7 @@ export const keyValueWithEncryptionOutputSchema = z.object({
   id: z.string(),
   key: z.string(),
 
-  valueEncryption: encryptedDataDtoSchema,
+  valueEncryption: encryptedDataInputSchema,
   credentialMetadataId: z.string(),
 
   createdAt: z.date(),

@@ -1,4 +1,4 @@
-import { encryptedDataDtoSchema } from "@/schemas/encryption"
+import { encryptedDataInputSchema } from "@/schemas/encryption"
 import { z } from "zod"
 
 // ============================================================================
@@ -6,7 +6,7 @@ import { z } from "zod"
 // ============================================================================
 
 export const historyInputSchema = z.object({
-  passwordEncryption: encryptedDataDtoSchema,
+  passwordEncryption: encryptedDataInputSchema,
   credentialId: z.string(),
 })
 

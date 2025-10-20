@@ -8,7 +8,7 @@ import {
   type CredentialKeyValuePairSimpleRo,
   type CredentialKeyValuePairWithEncryptionRo,
 } from "@/schemas/credential/key-value"
-import { type GenericEncryptedKeyValuePairDto } from "@/schemas/encryption"
+import { type GenericEncryptedKeyValuePairInput } from "@/schemas/encryption"
 import { type BaseKeyValuePair } from "@/schemas/utils"
 
 import { encryptData, exportKey, generateEncryptionKey } from "@/lib/encryption"
@@ -43,7 +43,7 @@ export class CredentialKeyValuePairEntity {
   }
 
   static convertGenericToCredential(
-    generic: GenericEncryptedKeyValuePairDto
+    generic: GenericEncryptedKeyValuePairInput
   ): CredentialKeyValuePairDto {
     return {
       id: generic.id,
@@ -55,7 +55,7 @@ export class CredentialKeyValuePairEntity {
 
   static convertCredentialToGeneric(
     credential: CredentialKeyValuePairDto
-  ): GenericEncryptedKeyValuePairDto {
+  ): GenericEncryptedKeyValuePairInput {
     return {
       id: credential.id,
       key: credential.key,
@@ -92,7 +92,7 @@ export class CredentialKeyValuePairEntity {
 
   static async encryptKeyValuePair(
     pair: BaseKeyValuePair
-  ): Promise<GenericEncryptedKeyValuePairDto> {
+  ): Promise<GenericEncryptedKeyValuePairInput> {
     if (!pair.key.trim() || !pair.value.trim()) {
       throw new Error("Both key and value are required for encryption")
     }
@@ -114,7 +114,7 @@ export class CredentialKeyValuePairEntity {
 
   static async encryptKeyValuePairs(
     pairs: BaseKeyValuePair[]
-  ): Promise<GenericEncryptedKeyValuePairDto[]> {
+  ): Promise<GenericEncryptedKeyValuePairInput[]> {
     const validPairs = pairs.filter(
       (pair) => pair.key.trim() && pair.value.trim()
     )
@@ -123,7 +123,7 @@ export class CredentialKeyValuePairEntity {
       return []
     }
 
-    const encryptedPairs: GenericEncryptedKeyValuePairDto[] = []
+    const encryptedPairs: GenericEncryptedKeyValuePairInput[] = []
 
     for (const pair of validPairs) {
       const encryptedPair = await this.encryptKeyValuePair(pair)

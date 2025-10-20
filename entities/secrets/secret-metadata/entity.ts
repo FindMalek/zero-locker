@@ -1,11 +1,11 @@
-import { SecretMetadataSimpleRo } from "@/schemas/secrets"
+import { SecretMetadataSimpleOutput } from "@/schemas/secrets"
 
 import { SecretMetadataEntitySimpleDbData } from "./query"
 
 export class SecretMetadataEntity {
   static getSimpleRo(
     entity: SecretMetadataEntitySimpleDbData
-  ): SecretMetadataSimpleRo {
+  ): SecretMetadataSimpleOutput {
     return {
       id: entity.id,
       type: entity.type,

@@ -19,9 +19,7 @@ export const cardMetadataSimpleOutputSchema = z.object({
   cardId: z.string(),
 })
 
-export type CardMetadataSimpleOutput = z.infer<
-  typeof cardMetadataSimpleOutputSchema
->
+export type CardMetadataSimpleOutput = z.infer<typeof cardMetadataSimpleOutputSchema>
 
 // ============================================================================
 // Extended Output Schemas
@@ -30,15 +28,3 @@ export type CardMetadataSimpleOutput = z.infer<
 export const cardMetadataOutputSchema = cardMetadataSimpleOutputSchema
 
 export type CardMetadataOutput = CardMetadataSimpleOutput
-
-// ============================================================================
-// Legacy aliases for backward compatibility
-// ============================================================================
-
-export const cardMetadataSimpleRoSchema = cardMetadataSimpleOutputSchema
-export const simpleOutputSchema = cardMetadataSimpleOutputSchema
-export const outputSchema = cardMetadataSimpleOutputSchema
-
-export type CardMetadataSimpleRo = CardMetadataSimpleOutput
-export type SimpleOutput = CardMetadataSimpleOutput
-export type Output = CardMetadataSimpleOutput

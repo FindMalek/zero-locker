@@ -1,5 +1,5 @@
-import { encryptedDataDtoSchema } from "@/schemas/encryption"
-import { tagDtoSchema } from "@/schemas/utils/tag"
+import { encryptedDataInputSchema } from "@/schemas/encryption"
+import { tagInputSchema } from "@/schemas/utils/tag"
 import { CardProvider, CardStatus, CardType } from "@prisma/client"
 import { z } from "zod"
 
@@ -38,15 +38,15 @@ export const cardInputSchema = z.object({
   provider: z.nativeEnum(CardProvider),
   status: z.nativeEnum(CardStatus),
 
-  numberEncryption: encryptedDataDtoSchema,
-  cvvEncryption: encryptedDataDtoSchema,
+  numberEncryption: encryptedDataInputSchema,
+  cvvEncryption: encryptedDataInputSchema,
 
   cardholderName: z.string().min(1, "Cardholder name is required"),
   billingAddress: z.string().optional(),
   cardholderEmail: z.union([z.string().email(), z.literal("")]).optional(),
   expiryDate: cardExpiryDateSchema,
 
-  tags: z.array(tagDtoSchema),
+  tags: z.array(tagInputSchema),
   containerId: z.string().optional(),
 })
 

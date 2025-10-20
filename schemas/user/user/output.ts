@@ -23,15 +23,3 @@ export type UserSimpleOutput = z.infer<typeof userSimpleOutputSchema>
 export const userOutputSchema = userSimpleOutputSchema
 
 export type UserOutput = UserSimpleOutput
-
-// ============================================================================
-// Legacy aliases for backward compatibility
-// ============================================================================
-
-export const currentUserDtoSchema = userSimpleOutputSchema
-export const simpleOutputSchema = userSimpleOutputSchema
-export const outputSchema = userSimpleOutputSchema
-
-export type CurrentUserDto = UserSimpleOutput
-export type SimpleOutput = UserSimpleOutput
-export type Output = UserSimpleOutput

@@ -1,11 +1,11 @@
 import { EncryptedDataEntitySimpleDbData } from "@/entities/encryption/query"
-import { EncryptedDataSimpleRo } from "@/schemas/encryption"
+import { EncryptedDataSimpleOutput } from "@/schemas/encryption"
 import { Prisma } from "@prisma/client"
 
 export class EncryptedDataEntity {
   static getSimpleRo(
     entity: EncryptedDataEntitySimpleDbData
-  ): EncryptedDataSimpleRo {
+  ): EncryptedDataSimpleOutput {
     return {
       id: entity.id,
 

@@ -1,11 +1,11 @@
-import { genericEncryptedKeyValuePairDtoSchema } from "@/schemas/encryption"
+import { genericEncryptedKeyValuePairInputSchema } from "@/schemas/encryption"
 import { z } from "zod"
 
 // ============================================================================
 // Base Input Schema
 // ============================================================================
 
-export const keyValueInputSchema = genericEncryptedKeyValuePairDtoSchema.extend(
+export const keyValueInputSchema = genericEncryptedKeyValuePairInputSchema.extend(
   {
     credentialMetadataId: z.string().optional(),
   }

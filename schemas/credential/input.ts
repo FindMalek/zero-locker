@@ -1,5 +1,5 @@
-import { encryptedDataDtoSchema } from "@/schemas/encryption"
-import { tagDtoSchema } from "@/schemas/utils"
+import { encryptedDataInputSchema } from "@/schemas/encryption"
+import { tagInputSchema } from "@/schemas/utils"
 import { AccountStatus } from "@prisma/client"
 import { z } from "zod"
 
@@ -23,9 +23,9 @@ export type Input = z.infer<typeof inputSchema>
 
 // Create (includes password encryption data)
 export const createInputSchema = inputSchema.extend({
-  passwordEncryption: encryptedDataDtoSchema,
-  tags: z.array(tagDtoSchema).optional(),
-  metadata: z.any().optional(), // Placeholder for backward compatibility
+  passwordEncryption: encryptedDataInputSchema,
+  tags: z.array(tagInputSchema).optional(),
+  metadata: z.any().optional(), // TODO: Placeholder for backward compatibility
 })
 
 export type CreateInput = z.infer<typeof createInputSchema>
@@ -40,8 +40,8 @@ export type GetInput = z.infer<typeof getInputSchema>
 // Update
 export const updateInputSchema = inputSchema.partial().extend({
   id: z.string().min(1, "Credential ID is required"),
-  tags: z.array(tagDtoSchema).optional(),
-  passwordEncryption: encryptedDataDtoSchema.optional(),
+  tags: z.array(tagInputSchema).optional(),
+  passwordEncryption: encryptedDataInputSchema.optional(),
 })
 
 export type UpdateInput = z.infer<typeof updateInputSchema>
@@ -49,7 +49,7 @@ export type UpdateInput = z.infer<typeof updateInputSchema>
 // Update Password
 export const updatePasswordInputSchema = z.object({
   id: z.string().min(1, "Credential ID is required"),
-  passwordEncryption: encryptedDataDtoSchema,
+  passwordEncryption: encryptedDataInputSchema,
 })
 
 export type UpdatePasswordInput = z.infer<typeof updatePasswordInputSchema>

@@ -9,13 +9,3 @@ export const roadmapSubscribeInputSchema = z.object({
 })
 
 export type RoadmapSubscribeInput = z.infer<typeof roadmapSubscribeInputSchema>
-
-// ============================================================================
-// Legacy aliases for backward compatibility
-// ============================================================================
-
-export const subscribeToRoadmapInputSchema = roadmapSubscribeInputSchema
-export const subscribeInputSchema = roadmapSubscribeInputSchema
-
-export type SubscribeToRoadmapInput = RoadmapSubscribeInput
-export type SubscribeInput = RoadmapSubscribeInput

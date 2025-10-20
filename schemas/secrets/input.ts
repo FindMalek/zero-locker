@@ -1,7 +1,7 @@
-import { encryptedDataDtoSchema } from "@/schemas/encryption"
+import { encryptedDataInputSchema } from "@/schemas/encryption"
 import { z } from "zod"
 
-import { secretMetadataDtoSchema } from "./metadata/input"
+import { secretMetadataInputSchema } from "./metadata/input"
 
 // ============================================================================
 // Base Input Schema
@@ -11,8 +11,8 @@ export const secretInputSchema = z.object({
   name: z.string().min(1, "Name is required"),
   note: z.string().optional(),
 
-  valueEncryption: encryptedDataDtoSchema,
-  metadata: z.array(secretMetadataDtoSchema),
+  valueEncryption: encryptedDataInputSchema,
+  metadata: z.array(secretMetadataInputSchema),
 
   containerId: z.string(),
 })
@@ -61,19 +61,3 @@ export const listSecretsInputSchema = z.object({
 })
 
 export type ListSecretsInput = z.infer<typeof listSecretsInputSchema>
-
-// ============================================================================
-// Public API Exports (with entity prefix for clarity)
-// ============================================================================
-
-export const secretDtoSchema = secretInputSchema
-export type SecretDto = SecretInput
-
-export const getSecretByIdDtoSchema = getSecretInputSchema
-export type GetSecretByIdDto = GetSecretInput
-
-export const updateSecretDtoSchema = updateSecretInputSchema
-export type UpdateSecretDto = UpdateSecretInput
-
-export const deleteSecretDtoSchema = deleteSecretInputSchema
-export type DeleteSecretDto = DeleteSecretInput
