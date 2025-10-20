@@ -7,18 +7,18 @@ The `/schemas` folder contains Zod validation schemas for data validation, type 
 ```
 schemas/
 ├── card/              # Card-related schemas
-│   ├── card.enums.ts  # Card enum schemas
-│   ├── card.input.ts  # Card input schemas
-│   ├── card.output.ts # Card output schemas
+│   ├── enums.ts       # Card enum schemas
+│   ├── input.ts       # Card input schemas
+│   ├── output.ts      # Card output schemas
 │   ├── metadata/      # Card metadata subfolder
 │   │   ├── input.ts   # Card metadata input schemas
 │   │   ├── output.ts  # Card metadata output schemas
 │   │   └── index.ts   # Barrel exports
 │   └── index.ts       # Barrel exports
 ├── credential/        # Credential-related schemas
-│   ├── credential.enums.ts # Credential enum schemas
-│   ├── credential.input.ts  # Credential input schemas
-│   ├── credential.output.ts # Credential output schemas
+│   ├── enums.ts       # Credential enum schemas
+│   ├── input.ts       # Credential input schemas
+│   ├── output.ts      # Credential output schemas
 │   ├── history/       # Credential history subfolder
 │   ├── key-value/     # Credential key-value pairs subfolder
 │   ├── metadata/      # Credential metadata subfolder
@@ -29,8 +29,8 @@ schemas/
 │   ├── output.ts      # Encryption output schemas
 │   └── index.ts       # Barrel exports
 ├── secrets/           # Secret-related schemas
-│   ├── secret.input.ts  # Secret input schemas
-│   ├── secret.output.ts # Secret output schemas
+│   ├── input.ts       # Secret input schemas
+│   ├── output.ts      # Secret output schemas
 │   ├── metadata/        # Secret metadata subfolder
 │   └── index.ts         # Barrel exports
 ├── user/              # User-related schemas
