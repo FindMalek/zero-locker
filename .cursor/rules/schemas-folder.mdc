@@ -11,36 +11,100 @@ The `/schemas` folder contains Zod validation schemas for data validation, type 
 ```
 schemas/
 ├── card/              # Card-related schemas
-│   ├── card.ts        # Card entity schemas
-│   ├── card-metadata.ts # Card metadata schemas
-│   └── dto.ts         # Card DTOs
+│   ├── enums.ts       # Card enum schemas
+│   ├── input.ts       # Card input schemas
+│   ├── output.ts      # Card output schemas
+│   ├── metadata/      # Card metadata subfolder
+│   │   ├── input.ts   # Card metadata input schemas
+│   │   ├── output.ts  # Card metadata output schemas
+│   │   └── index.ts   # Barrel exports
+│   └── index.ts       # Barrel exports
 ├── credential/        # Credential-related schemas
-│   ├── credential.ts  # Credential entity schemas
-│   ├── credential-metadata.ts # Credential metadata
-│   ├── credential-key-value.ts # Key-value pairs
-│   ├── credential-with-metadata.ts # Combined schemas
-│   └── dto.ts         # Credential DTOs
+│   ├── enums.ts       # Credential enum schemas
+│   ├── input.ts       # Credential input schemas
+│   ├── output.ts      # Credential output schemas
+│   ├── history/       # Credential history subfolder
+│   │   ├── input.ts   # History input schemas
+│   │   ├── output.ts  # History output schemas
+│   │   └── index.ts   # Barrel exports
+│   ├── key-value/     # Credential key-value pairs subfolder
+│   │   ├── input.ts   # Key-value input schemas
+│   │   ├── output.ts  # Key-value output schemas
+│   │   └── index.ts   # Barrel exports
+│   ├── metadata/      # Credential metadata subfolder
+│   │   ├── input.ts   # Metadata input schemas
+│   │   ├── output.ts  # Metadata output schemas
+│   │   └── index.ts   # Barrel exports
+│   ├── with-metadata/ # Combined credential + metadata subfolder
+│   │   ├── input.ts   # Combined input schemas
+│   │   ├── output.ts  # Combined output schemas
+│   │   └── index.ts   # Barrel exports
+│   └── index.ts       # Barrel exports
 ├── encryption/        # Encryption schemas
-│   └── encryption.ts  # Encrypted data schemas
+│   ├── input.ts       # Encryption input schemas
+│   ├── output.ts      # Encryption output schemas
+│   └── index.ts       # Barrel exports
 ├── secrets/           # Secret-related schemas
+│   ├── input.ts       # Secret input schemas
+│   ├── output.ts      # Secret output schemas
+│   ├── metadata/      # Secret metadata subfolder
+│   │   ├── input.ts   # Metadata input schemas
+│   │   ├── output.ts  # Metadata output schemas
+│   │   └── index.ts   # Barrel exports
+│   └── index.ts       # Barrel exports
 ├── user/              # User-related schemas
+│   ├── user/          # User entity subfolder
+│   │   ├── input.ts   # User input schemas
+│   │   ├── output.ts  # User output schemas
+│   │   └── index.ts   # Barrel exports
+│   ├── waitlist/      # Waitlist subfolder
+│   │   ├── input.ts   # Waitlist input schemas
+│   │   ├── output.ts  # Waitlist output schemas
+│   │   └── index.ts   # Barrel exports
+│   ├── statistics/    # Statistics subfolder
+│   │   ├── input.ts   # Statistics input schemas
+│   │   ├── output.ts  # Statistics output schemas
+│   │   └── index.ts   # Barrel exports
+│   ├── roadmap/       # Roadmap subfolder
+│   │   ├── input.ts   # Roadmap input schemas
+│   │   ├── output.ts  # Roadmap output schemas
+│   │   └── index.ts   # Barrel exports
+│   └── index.ts       # Barrel exports
 ├── utils/             # Utility schemas
+│   ├── container/     # Container subfolder
+│   │   ├── enums.ts   # Container enum schemas
+│   │   ├── input.ts   # Container input schemas
+│   │   ├── output.ts  # Container output schemas
+│   │   ├── with-secrets/ # Container with secrets subfolder
+│   │   │   ├── input.ts   # Combined input schemas
+│   │   │   ├── output.ts  # Combined output schemas
+│   │   │   └── index.ts   # Barrel exports
+│   │   └── index.ts   # Barrel exports
+│   ├── platform/      # Platform subfolder
+│   │   ├── enums.ts   # Platform enum schemas
+│   │   ├── input.ts   # Platform input schemas
+│   │   ├── output.ts  # Platform output schemas
+│   │   └── index.ts   # Barrel exports
+│   ├── tag/           # Tag subfolder
+│   │   ├── input.ts   # Tag input schemas
+│   │   ├── output.ts  # Tag output schemas
+│   │   └── index.ts   # Barrel exports
 │   ├── base-key-value-pair.ts # Base key-value schema
-│   ├── container.ts   # Container schemas
-│   ├── platform.ts    # Platform schemas
-│   ├── tag.ts         # Tag schemas
-│   └── utils.ts       # Utility types
-└── index.ts           # Barrel exports
+│   ├── breadcrumb.ts  # Breadcrumb navigation schemas
+│   ├── utils.ts       # Utility types and schemas
+│   └── index.ts       # Barrel exports
+└── index.ts           # Main barrel exports
 ```
 
 ## Schema Categories
 
 ### 1. Entity Schemas
+
 Define the structure of database entities:
 
 ```tsx
-// credential.ts
-export const credentialSimpleRoSchema = z.object({
+// output.ts
+export const credentialSimpleOutputSchema = z.object({
   id: z.string(),
   identifier: z.string(),
   description: z.string().nullable(),
@@ -54,27 +118,78 @@ export const credentialSimpleRoSchema = z.object({
   passwordEncryptionId: z.string(),
 })
 
-export type CredentialSimpleRo = z.infer<typeof credentialSimpleRoSchema>
+export type CredentialSimpleOutput = z.infer<
+  typeof credentialSimpleOutputSchema
+>
 ```
 
-### 2. DTO Schemas
-Data Transfer Objects for API input/output:
+### 2. Input Schemas
+
+Data Transfer Objects for API input validation:
 
 ```tsx
-// dto.ts
-export const createCredentialInputSchema = credentialDtoSchema
-export const getCredentialInputSchema = getCredentialByIdDtoSchema
-export const updateCredentialInputSchema = updateCredentialDtoSchema
-export const deleteCredentialInputSchema = deleteCredentialDtoSchema
+// input.ts
+export const credentialInputSchema = z.object({
+  identifier: z.string().min(1, "Username/identifier is required"),
+  description: z.string().optional(),
+  status: z.nativeEnum(AccountStatus),
+  platformId: z.string().min(1, "Platform is required"),
+  containerId: z.string().optional(),
+})
 
-// List with pagination
+export type CredentialInput = z.infer<typeof credentialInputSchema>
+
+// CRUD Operation Input Schemas
+export const createCredentialInputSchema = credentialInputSchema.extend({
+  passwordEncryption: encryptedDataInputSchema,
+  tags: z.array(tagInputSchema).optional(),
+})
+
+export const updateCredentialInputSchema = credentialInputSchema
+  .partial()
+  .extend({
+    id: z.string().min(1, "Credential ID is required"),
+    passwordEncryption: encryptedDataInputSchema.optional(),
+  })
+
 export const listCredentialsInputSchema = z.object({
   page: z.number().int().min(1).default(1),
   limit: z.number().int().min(1).max(100).default(10),
   search: z.string().optional(),
   containerId: z.string().optional(),
   platformId: z.string().optional(),
+  status: z.nativeEnum(AccountStatus).optional(),
+  filters: z.any().optional(),
+  sort: z.any().optional(),
 })
+```
+
+### 3. Output Schemas
+
+Return Objects for API responses:
+
+```tsx
+// output.ts
+export const credentialSimpleOutputSchema = z.object({
+  id: z.string(),
+  identifier: z.string(),
+  description: z.string().nullable(),
+  status: z.nativeEnum(AccountStatus),
+  lastViewed: z.date().nullable(),
+  createdAt: z.date(),
+  updatedAt: z.date(),
+  platformId: z.string(),
+  userId: z.string(),
+  containerId: z.string().nullable(),
+  passwordEncryptionId: z.string(),
+})
+
+export const credentialIncludeOutputSchema =
+  credentialSimpleOutputSchema.extend({
+    tags: z.array(tagSimpleOutputSchema),
+    platform: platformSimpleOutputSchema,
+    container: containerSimpleOutputSchema.nullable(),
+  })
 
 export const listCredentialsOutputSchema = z.object({
   credentials: z.array(credentialIncludeOutputSchema),
@@ -85,49 +200,17 @@ export const listCredentialsOutputSchema = z.object({
 })
 ```
 
-### 3. Form Schemas
-Schemas for form validation (excluding sensitive data):
+### 4. Enum Schemas
+
+Schemas for enum definitions:
 
 ```tsx
-// credential.ts
-export const credentialFormDtoSchema = z.object({
-  identifier: z.string().min(1, "Username/identifier is required"),
-  description: z.string().optional(),
-  status: z.nativeEnum(AccountStatus),
-  platformId: z.string().min(1, "Platform is required"),
-  containerId: z.string().optional(),
-  // Security settings (metadata)
-  passwordProtection: z.boolean(),
-  twoFactorAuth: z.boolean(),
-  accessLogging: z.boolean(),
-})
-
-export type CredentialFormDto = z.infer<typeof credentialFormDtoSchema>
-```
-
-### 4. Encryption Schemas
-Schemas for encrypted data:
-
-```tsx
-// encryption.ts
-export const encryptedDataDtoSchema = z.object({
-  encryptedValue: z.string().min(1, "Encrypted value is required"),
-  iv: z.string().min(1, "IV is required"),
-  encryptionKey: z.string().min(1, "Encryption key is required"),
-})
-
-export type EncryptedDataDto = z.infer<typeof encryptedDataDtoSchema>
-```
-
-## Schema Patterns
-
-### Enum Schemas
-```tsx
-// Define enum schemas for type safety
+// enums.ts
 export const accountStatusSchema = z.enum([
   AccountStatus.ACTIVE,
   AccountStatus.SUSPENDED,
   AccountStatus.DELETED,
+  AccountStatus.ARCHIVED,
 ])
 
 export const accountStatusEnum = accountStatusSchema.enum
@@ -135,7 +218,96 @@ export const LIST_ACCOUNT_STATUSES = Object.values(accountStatusEnum)
 export type AccountStatusInfer = z.infer<typeof accountStatusSchema>
 ```
 
+### 5. Encryption Schemas
+
+Schemas for encrypted data:
+
+```tsx
+// encryption/input.ts
+export const encryptedDataInputSchema = z.object({
+  encryptedValue: z.string().min(1, "Encrypted value is required"),
+  iv: z.string().min(1, "IV is required"),
+  encryptionKey: z.string().min(1, "Encryption key is required"),
+})
+
+export type EncryptedDataInput = z.infer<typeof encryptedDataInputSchema>
+
+// encryption/output.ts
+export const encryptedDataSimpleOutputSchema = z.object({
+  id: z.string(),
+  iv: z.string(),
+  encryptionKey: z.string(),
+  encryptedValue: z.string(),
+  createdAt: z.date(),
+  updatedAt: z.date(),
+})
+
+export type EncryptedDataSimpleOutput = z.infer<
+  typeof encryptedDataSimpleOutputSchema
+>
+```
+
+## Naming Conventions
+
+### Schema Names
+
+- **Input Schemas**: `{entity}{Type}InputSchema` (e.g., `credentialInputSchema`, `cardMetadataInputSchema`)
+- **Output Schemas**: `{entity}{Type}OutputSchema` (e.g., `credentialSimpleOutputSchema`, `userSimpleOutputSchema`)
+- **Enum Schemas**: `{entity}Schema` (e.g., `accountStatusSchema`, `cardTypeSchema`)
+
+### Type Names
+
+- **Input Types**: `{Entity}{Type}Input` (e.g., `CredentialInput`, `CardMetadataInput`)
+- **Output Types**: `{Entity}{Type}Output` (e.g., `CredentialSimpleOutput`, `UserSimpleOutput`)
+- **Enum Types**: `{Entity}Infer` (e.g., `AccountStatusInfer`, `CardTypeInfer`)
+
+### CRUD Operation Schemas
+
+- **Create**: `create{Entity}InputSchema` (e.g., `createCredentialInputSchema`)
+- **Get**: `get{Entity}InputSchema` (e.g., `getCredentialInputSchema`)
+- **Update**: `update{Entity}InputSchema` (e.g., `updateCredentialInputSchema`)
+- **Delete**: `delete{Entity}InputSchema` (e.g., `deleteCredentialInputSchema`)
+- **List**: `list{Entity}InputSchema` (e.g., `listCredentialsInputSchema`)
+
+### Output Schema Types
+
+- **Simple**: `{entity}SimpleOutputSchema` (basic entity data)
+- **Include**: `{entity}IncludeOutputSchema` (with related entities)
+- **List**: `list{Entity}OutputSchema` (paginated list response)
+
+## Import Patterns
+
+### Avoiding Circular Dependencies
+
+To prevent circular import issues, schemas should import from specific files rather than barrel exports when importing from other schema modules:
+
+```tsx
+// ✅ Good - Import from specific files
+import { tagInputSchema } from "@/schemas/utils/tag/input"
+import { credentialSimpleOutputSchema } from "@/schemas/credential/output"
+
+// ❌ Avoid - Importing from barrel exports can cause circular dependencies
+import { tagInputSchema } from "@/schemas/utils"
+import { credentialSimpleOutputSchema } from "@/schemas/credential"
+```
+
+### Cross-Schema Dependencies
+
+When schemas need to reference other schemas, use direct imports:
+
+```tsx
+// credential/input.ts
+import { encryptedDataInputSchema } from "@/schemas/encryption"
+import { tagInputSchema } from "@/schemas/utils/tag/input"
+
+// credential/output.ts
+import { tagSimpleOutputSchema } from "@/schemas/utils/tag/output"
+```
+
+## Schema Patterns
+
 ### Optional and Nullable Fields
+
 ```tsx
 // Use .optional() for truly optional fields
 description: z.string().optional(),
@@ -148,6 +320,7 @@ metadata: z.string().nullish(),
 ```
 
 ### Validation Messages
+
 ```tsx
 // Provide clear validation messages
 identifier: z.string().min(1, "Username/identifier is required"),
@@ -156,19 +329,21 @@ password: z.string().min(8, "Password must be at least 8 characters"),
 ```
 
 ### Array Validation
+
 ```tsx
 // Validate arrays with specific item schemas
-tags: z.array(tagDtoSchema),
-metadata: z.array(credentialMetadataDtoSchema),
+tags: z.array(tagInputSchema),
+metadata: z.array(credentialMetadataInputSchema),
 
 // Optional arrays
 keyValuePairs: z.array(keyValuePairSchema).optional(),
 ```
 
 ### Nested Object Validation
+
 ```tsx
 // Nested objects with validation
-passwordEncryption: encryptedDataDtoSchema,
+passwordEncryption: encryptedDataInputSchema,
 platform: z.object({
   id: z.string(),
   name: z.string(),
@@ -179,19 +354,24 @@ platform: z.object({
 ## Schema Composition
 
 ### Extending Schemas
+
 ```tsx
 // Extend base schemas
-export const credentialIncludeRoSchema = credentialSimpleRoSchema.extend({
-  tags: z.array(tagSimpleRoSchema),
-})
+export const credentialIncludeOutputSchema =
+  credentialSimpleOutputSchema.extend({
+    tags: z.array(tagSimpleOutputSchema),
+  })
 
 // Partial schemas for updates
-export const updateCredentialDtoSchema = credentialDtoSchema.partial().extend({
-  id: z.string().min(1, "Credential ID is required"),
-})
+export const updateCredentialInputSchema = credentialInputSchema
+  .partial()
+  .extend({
+    id: z.string().min(1, "Credential ID is required"),
+  })
 ```
 
 ### Schema Reuse
+
 ```tsx
 // Reuse common patterns
 export const baseKeyValuePairSchema = z.object({
@@ -207,32 +387,33 @@ export const credentialKeyValuePairSchema = baseKeyValuePairSchema.extend({
 ## Type Generation
 
 ### Infer Types
+
 ```tsx
 // Generate TypeScript types from schemas
-export type CredentialDto = z.infer<typeof credentialDtoSchema>
-export type CredentialSimpleRo = z.infer<typeof credentialSimpleRoSchema>
+export type CredentialInput = z.infer<typeof credentialInputSchema>
+export type CredentialSimpleOutput = z.infer<
+  typeof credentialSimpleOutputSchema
+>
 export type CreateCredentialInput = z.infer<typeof createCredentialInputSchema>
 ```
 
 ### Export Types
+
 ```tsx
 // Export both schemas and types
 export {
-  credentialDtoSchema,
-  credentialSimpleRoSchema,
-  credentialIncludeRoSchema,
+  credentialInputSchema,
+  credentialSimpleOutputSchema,
+  credentialIncludeOutputSchema,
 }
 
-export type {
-  CredentialDto,
-  CredentialSimpleRo,
-  CredentialIncludeRo,
-}
+export type { CredentialInput, CredentialSimpleOutput, CredentialIncludeOutput }
 ```
 
 ## Validation Patterns
 
 ### Custom Validation
+
 ```tsx
 // Custom validation functions
 const validatePassword = (password: string) => {
@@ -240,77 +421,131 @@ const validatePassword = (password: string) => {
   const hasLowerCase = /[a-z]/.test(password)
   const hasNumbers = /\d/.test(password)
   const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password)
-  
+
   return hasUpperCase && hasLowerCase && hasNumbers && hasSpecialChar
 }
 
-export const passwordSchema = z.string()
+export const passwordSchema = z
+  .string()
   .min(8, "Password must be at least 8 characters")
-  .refine(validatePassword, "Password must contain uppercase, lowercase, number, and special character")
+  .refine(
+    validatePassword,
+    "Password must contain uppercase, lowercase, number, and special character"
+  )
 ```
 
 ### Conditional Validation
+
 ```tsx
 // Conditional validation based on other fields
-export const credentialSchema = z.object({
-  has2FA: z.boolean(),
-  twoFactorCode: z.string().optional(),
-}).refine(
-  (data) => {
-    if (data.has2FA && !data.twoFactorCode) {
-      return false
+export const credentialSchema = z
+  .object({
+    has2FA: z.boolean(),
+    twoFactorCode: z.string().optional(),
+  })
+  .refine(
+    (data) => {
+      if (data.has2FA && !data.twoFactorCode) {
+        return false
+      }
+      return true
+    },
+    {
+      message: "Two-factor code is required when 2FA is enabled",
+      path: ["twoFactorCode"],
     }
-    return true
-  },
-  {
-    message: "Two-factor code is required when 2FA is enabled",
-    path: ["twoFactorCode"],
-  }
-)
+  )
 ```
 
 ## Best Practices
 
 ### 1. Naming Conventions
-- **DTOs**: `{entity}DtoSchema` for input validation
-- **ROs**: `{entity}SimpleRoSchema` for simple output, `{entity}IncludeRoSchema` for complex output
-- **Forms**: `{entity}FormDtoSchema` for form validation
-- **Types**: `{Entity}Dto`, `{Entity}SimpleRo`, etc.
+
+- **Input Schemas**: `{entity}{Type}InputSchema` for input validation
+- **Output Schemas**: `{entity}{Type}OutputSchema` for output validation
+- **Enum Schemas**: `{entity}Schema` for enum definitions
+- **Types**: `{Entity}{Type}Input`, `{Entity}{Type}Output`, etc.
 
 ### 2. Validation Messages
+
 - Provide clear, user-friendly error messages
 - Use consistent message formatting
 - Include field names in messages
 
 ### 3. Schema Organization
+
 - Group related schemas in the same file
 - Use barrel exports for clean imports
-- Separate DTOs from entity schemas
+- Separate input schemas from output schemas
+- Avoid circular dependencies by using direct imports
 
 ### 4. Type Safety
+
 - Always export TypeScript types
 - Use strict TypeScript configuration
 - Validate all external data
 
 ### 5. Performance
+
 - Use appropriate validation levels
 - Avoid complex validation in hot paths
 - Cache compiled schemas when possible
 
 ### 6. Security
+
 - Validate all input data
 - Sanitize user input
 - Use appropriate string length limits
 
+## Migration Guide
+
+### From Legacy Naming
+
+The schema architecture has been updated to use consistent naming conventions. All legacy aliases have been removed:
+
+```tsx
+// ❌ Old naming (removed)
+export const credentialDtoSchema = credentialInputSchema
+export const credentialSimpleRoSchema = credentialSimpleOutputSchema
+export const cardOutputSchema = cardSimpleOutputSchema
+
+// ✅ New naming (current)
+export const credentialInputSchema = z.object({...})
+export const credentialSimpleOutputSchema = z.object({...})
+export const cardSimpleOutputSchema = z.object({...})
+```
+
+### Import Updates
+
+Update imports to use the new naming conventions:
+
+```tsx
+// ❌ Old imports
+import { CredentialDto, credentialDtoSchema } from "@/schemas/credential"
+import { CardOutput, cardOutputSchema } from "@/schemas/card"
+
+// ✅ New imports
+import { CredentialInput, credentialInputSchema } from "@/schemas/credential"
+import { CardSimpleOutput, cardSimpleOutputSchema } from "@/schemas/card"
+```
+
 ## Testing
 
 ### Schema Testing
+
 - Test valid data passes validation
 - Test invalid data fails validation
 - Test edge cases and boundary conditions
 - Test custom validation functions
 
 ### Integration Testing
+
 - Test schemas with real API endpoints
 - Test form validation with user input
 - Test error handling and messages
+
+### Circular Dependency Testing
+
+- Verify build completes successfully
+- Test that all imports resolve correctly
+- Ensure no runtime circular dependency errors
