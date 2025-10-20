@@ -10,8 +10,8 @@ import {
   useUpdateCredentialWithSecuritySettings,
 } from "@/orpc/hooks/use-credentials"
 import {
-  credentialFormDtoSchema,
-  type CredentialFormDto,
+  credentialFormInputSchema,
+  type CredentialFormInput,
 } from "@/schemas/credential"
 import type {
   CredentialOutput,
@@ -67,8 +67,8 @@ export function CredentialDetailView({
   const { data: securitySettings, isLoading: isLoadingSecuritySettings } =
     useCredentialSecuritySettings(credentialId)
 
-  const form = useForm<CredentialFormDto>({
-    resolver: zodResolver(credentialFormDtoSchema),
+  const form = useForm<CredentialFormInput>({
+    resolver: zodResolver(credentialFormInputSchema),
     defaultValues: {
       identifier: "",
       description: "",
@@ -91,7 +91,7 @@ export function CredentialDetailView({
 
   useEffect(() => {
     if (credential && securitySettings) {
-      const initialFormData: CredentialFormDto = {
+      const initialFormData: CredentialFormInput = {
         identifier: credential.identifier,
         description: credential.description || "",
         status: credential.status,
@@ -105,7 +105,7 @@ export function CredentialDetailView({
     }
   }, [credential, securitySettings, reset])
 
-  const handleSave = async (data: CredentialFormDto) => {
+  const handleSave = async (data: CredentialFormInput) => {
     if (!credential) return
 
     try {
@@ -141,7 +141,7 @@ export function CredentialDetailView({
 
   const handleDiscard = () => {
     if (credential && securitySettings) {
-      const originalData: CredentialFormDto = {
+      const originalData: CredentialFormInput = {
         identifier: credential.identifier,
         description: credential.description || "",
         status: credential.status,

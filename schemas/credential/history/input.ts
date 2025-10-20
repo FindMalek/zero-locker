@@ -13,10 +13,10 @@ export const historyInputSchema = z.object({
 export type HistoryInput = z.infer<typeof historyInputSchema>
 
 // ============================================================================
-// Backward Compatibility Aliases (DEPRECATED)
+// CRUD Operation Input Schemas
 // ============================================================================
 
-/** @deprecated Use historyInputSchema instead */
-export const credentialHistoryDtoSchema = historyInputSchema
-/** @deprecated Use HistoryInput instead */
-export type CredentialHistoryDto = HistoryInput
+// Create
+export const createHistoryInputSchema = historyInputSchema
+
+export type CreateHistoryInput = z.infer<typeof createHistoryInputSchema>

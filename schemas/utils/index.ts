@@ -8,13 +8,11 @@ export * from "./base-key-value-pair"
 export * from "./breadcrumb"
 export * from "./utils"
 
-// Backward compatibility - export prefixed schemas from subdirectories
+// Direct exports for commonly used schemas
 export {
   // Container
   containerInputSchema,
-  containerDtoSchema,
   type ContainerInput,
-  type ContainerDto,
   createContainerInputSchema,
   type CreateContainerInput,
   getContainerInputSchema,
@@ -26,11 +24,7 @@ export {
   listContainersInputSchema,
   type ListContainersInput,
   containerSimpleOutputSchema,
-  containerSimpleRoSchema,
   type ContainerSimpleOutput,
-  type ContainerSimpleRo,
-  containerOutputSchema,
-  type ContainerOutput,
   listContainersOutputSchema,
   type ListContainersOutput,
   // Container Enums
@@ -40,9 +34,7 @@ export {
 export {
   // Platform
   platformInputSchema,
-  platformDtoSchema,
   type PlatformInput,
-  type PlatformDto,
   createPlatformInputSchema,
   type CreatePlatformInput,
   getPlatformInputSchema,
@@ -54,11 +46,7 @@ export {
   listPlatformsInputSchema,
   type ListPlatformsInput,
   platformSimpleOutputSchema,
-  platformSimpleRoSchema,
   type PlatformSimpleOutput,
-  type PlatformSimpleRo,
-  platformOutputSchema,
-  type PlatformOutput,
   listPlatformsOutputSchema,
   type ListPlatformsOutput,
 } from "./platform"
@@ -66,9 +54,7 @@ export {
 export {
   // Tag
   tagInputSchema,
-  tagDtoSchema,
   type TagInput,
-  type TagDto,
   createTagInputSchema,
   type CreateTagInput,
   getTagInputSchema,
@@ -80,11 +66,7 @@ export {
   listTagsInputSchema,
   type ListTagsInput,
   tagSimpleOutputSchema,
-  tagSimpleRoSchema,
   type TagSimpleOutput,
-  type TagSimpleRo,
-  tagOutputSchema,
-  type TagOutput,
   listTagsOutputSchema,
   type ListTagsOutput,
 } from "./tag"

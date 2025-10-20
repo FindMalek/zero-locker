@@ -52,25 +52,3 @@ export const keyValueWithValueOutputSchema = z.object({
 export type KeyValueWithValueOutput = z.infer<
   typeof keyValueWithValueOutputSchema
 >
-
-// ============================================================================
-// Backward Compatibility Aliases (DEPRECATED)
-// ============================================================================
-
-/** @deprecated Use keyValueSimpleOutputSchema instead */
-export const credentialKeyValuePairSimpleRoSchema = keyValueSimpleOutputSchema
-/** @deprecated Use KeyValueSimpleOutput instead */
-export type CredentialKeyValuePairSimpleRo = KeyValueSimpleOutput
-
-/** @deprecated Use keyValueWithEncryptionOutputSchema instead */
-export const credentialKeyValuePairWithEncryptionRoSchema =
-  keyValueWithEncryptionOutputSchema
-/** @deprecated Use KeyValueWithEncryptionOutput instead */
-export type CredentialKeyValuePairWithEncryptionRo =
-  KeyValueWithEncryptionOutput
-
-/** @deprecated Use keyValueWithValueOutputSchema instead */
-export const credentialKeyValuePairWithValueRoSchema =
-  keyValueWithValueOutputSchema
-/** @deprecated Use KeyValueWithValueOutput instead */
-export type CredentialKeyValuePairWithValueRo = KeyValueWithValueOutput

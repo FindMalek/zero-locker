@@ -3,7 +3,7 @@
 import { CredentialEntity } from "@/entities"
 import { accountStatusEnum } from "@/schemas/credential"
 import type {
-  PlatformSimpleRo,
+  PlatformSimpleOutput,
   SortDirection,
   SortField,
   ViewMode,
@@ -29,7 +29,7 @@ interface EntityFiltersProps {
   onToggleStatusFilter: (status: string) => void
   platformFilters: string[]
   onTogglePlatformFilter: (platform: string) => void
-  platforms: PlatformSimpleRo[]
+  platforms: PlatformSimpleOutput[]
   onClearFilters: () => void
   viewMode: ViewMode
   onViewModeChange: (mode: ViewMode) => void

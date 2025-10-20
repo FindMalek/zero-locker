@@ -2,14 +2,14 @@ import { CardEntity } from "@/entities/card/card"
 import { authMiddleware } from "@/middleware/auth"
 import { database } from "@/prisma/client"
 import {
-  cardOutputSchema,
+  cardSimpleOutputSchema,
   createCardInputSchema,
   deleteCardInputSchema,
   getCardInputSchema,
   listCardsInputSchema,
   listCardsOutputSchema,
   updateCardInputSchema,
-  type CardOutput,
+  type CardSimpleOutput,
   type ListCardsOutput,
 } from "@/schemas/card"
 import { ORPCError, os } from "@orpc/server"
@@ -30,8 +30,8 @@ const authProcedure = baseProcedure.use(({ context, next }) =>
 // Get card by ID
 export const getCard = authProcedure
   .input(getCardInputSchema)
-  .output(cardOutputSchema)
-  .handler(async ({ input, context }): Promise<CardOutput> => {
+  .output(cardSimpleOutputSchema)
+  .handler(async ({ input, context }): Promise<CardSimpleOutput> => {
     const card = await database.card.findFirst({
       where: {
         id: input.id,
@@ -90,8 +90,8 @@ export const listCards = authProcedure
 // Create card
 export const createCard = authProcedure
   .input(createCardInputSchema)
-  .output(cardOutputSchema)
-  .handler(async ({ input, context }): Promise<CardOutput> => {
+  .output(cardSimpleOutputSchema)
+  .handler(async ({ input, context }): Promise<CardSimpleOutput> => {
     // Handle expiry date using shared utility
     const expiryDate = CardExpiryDateUtils.processServerExpiryDate(
       input.expiryDate
@@ -160,8 +160,8 @@ export const createCard = authProcedure
 // Update card
 export const updateCard = authProcedure
   .input(updateCardInputSchema)
-  .output(cardOutputSchema)
-  .handler(async ({ input, context }): Promise<CardOutput> => {
+  .output(cardSimpleOutputSchema)
+  .handler(async ({ input, context }): Promise<CardSimpleOutput> => {
     const { id, ...updateData } = input
 
     // Verify card ownership
@@ -262,8 +262,8 @@ export const updateCard = authProcedure
 // Delete card
 export const deleteCard = authProcedure
   .input(deleteCardInputSchema)
-  .output(cardOutputSchema)
-  .handler(async ({ input, context }): Promise<CardOutput> => {
+  .output(cardSimpleOutputSchema)
+  .handler(async ({ input, context }): Promise<CardSimpleOutput> => {
     // Verify card ownership
     const existingCard = await database.card.findFirst({
       where: {

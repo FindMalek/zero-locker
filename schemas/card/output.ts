@@ -45,13 +45,3 @@ export const listCardsOutputSchema = z.object({
 })
 
 export type ListCardsOutput = z.infer<typeof listCardsOutputSchema>
-
-// ============================================================================
-// Public API Exports (with entity prefix for clarity)
-// ============================================================================
-
-export const cardSimpleRoSchema = cardSimpleOutputSchema
-export type CardSimpleRo = CardSimpleOutput
-
-export const cardOutputSchema = cardSimpleOutputSchema
-export type CardOutput = CardSimpleOutput

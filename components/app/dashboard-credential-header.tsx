@@ -3,7 +3,7 @@
 import Image from "next/image"
 import Link from "next/link"
 import type { CredentialOutput } from "@/schemas/credential"
-import { PlatformOutput } from "@/schemas/utils"
+import { PlatformSimpleOutput } from "@/schemas/utils"
 
 import { getLogoDevUrlWithToken, getPlaceholderImage } from "@/lib/utils"
 
@@ -12,7 +12,7 @@ import { CredentialActionsDropdown } from "@/components/shared/item-actions-drop
 
 interface CredentialHeaderProps {
   credential: CredentialOutput
-  platform: PlatformOutput
+  platform: PlatformSimpleOutput
 }
 
 export function CredentialHeader({

@@ -1,7 +1,10 @@
 "use client"
 
 import React from "react"
-import type { CredentialFormDto, CredentialOutput } from "@/schemas/credential"
+import type {
+  CredentialFormInput,
+  CredentialOutput,
+} from "@/schemas/credential"
 import { UseFormReturn } from "react-hook-form"
 
 import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard"
@@ -22,7 +25,7 @@ import {
 
 interface CredentialFormProps {
   credential?: CredentialOutput
-  form: UseFormReturn<CredentialFormDto>
+  form: UseFormReturn<CredentialFormInput>
   onPasswordChange?: (hasChanges: boolean) => void
 }
 

@@ -2,8 +2,8 @@
 
 import { useState } from "react"
 import { useCreateCard } from "@/orpc/hooks"
-import { CardDto, cardDtoSchema } from "@/schemas/card"
-import { TagDto } from "@/schemas/utils"
+import { CardInput, cardInputSchema } from "@/schemas/card"
+import { TagInput } from "@/schemas/utils"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { CardProvider, CardStatus, CardType } from "@prisma/client"
 import { useQueryClient } from "@tanstack/react-query"
@@ -22,7 +22,7 @@ import { Form } from "@/components/ui/form"
 interface CardDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  availableTags?: TagDto[]
+  availableTags?: TagInput[]
 }
 
 export function DashboardAddCardDialog({
@@ -43,7 +43,7 @@ export function DashboardAddCardDialog({
   })
 
   const form = useForm({
-    resolver: zodResolver(cardDtoSchema),
+    resolver: zodResolver(cardInputSchema),
     defaultValues: {
       name: "",
       description: "",
@@ -104,7 +104,7 @@ export function DashboardAddCardDialog({
 
       const cardData = form.getValues()
 
-      const cardDataWithEncryption: CardDto = {
+      const cardDataWithEncryption: CardInput = {
         ...cardData,
         numberEncryption: {
           encryptedValue: encryptNumberResult.encryptedData,

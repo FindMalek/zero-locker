@@ -6,10 +6,10 @@ import {
   getTagInputSchema,
   listTagsInputSchema,
   listTagsOutputSchema,
-  tagOutputSchema,
+  tagSimpleOutputSchema,
   updateTagInputSchema,
   type ListTagsOutput,
-  type TagOutput,
+  type TagSimpleOutput,
 } from "@/schemas/utils"
 import { ORPCError, os } from "@orpc/server"
 

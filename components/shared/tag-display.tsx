@@ -1,6 +1,6 @@
 "use client"
 
-import type { TagSimpleRo } from "@/schemas/utils"
+import type { TagSimpleOutput } from "@/schemas/utils"
 import { useTheme } from "next-themes"
 
 import { getLuminance, hexToRgb } from "@/lib/utils"
@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/hover-card"
 
 interface TagDisplayProps {
-  tags: TagSimpleRo[]
+  tags: TagSimpleOutput[]
   size?: "sm" | "md"
 }
 
@@ -63,7 +63,7 @@ export function TagDisplay({ tags, size = "sm" }: TagDisplayProps) {
 }
 
 interface TagBadgeProps {
-  tag: TagSimpleRo
+  tag: TagSimpleOutput
   size?: "sm" | "md"
   isConnected?: boolean
 }

@@ -5,7 +5,7 @@ import { z } from "zod"
 // Base Input Schema
 // ============================================================================
 
-export const inputSchema = z.object({
+export const platformInputSchema = z.object({
   name: z.string().min(1, "Name is required"),
 
   logo: z.string().optional(),
@@ -17,100 +17,46 @@ export const inputSchema = z.object({
     .default(PlatformStatus.PENDING),
 })
 
-export type Input = z.infer<typeof inputSchema>
+export type PlatformInput = z.infer<typeof platformInputSchema>
 
 // ============================================================================
 // CRUD Operation Input Schemas
 // ============================================================================
 
 // Create
-export const createInputSchema = inputSchema
+export const createPlatformInputSchema = platformInputSchema
 
-export type CreateInput = z.infer<typeof createInputSchema>
+export type CreatePlatformInput = z.infer<typeof createPlatformInputSchema>
 
 // Get by ID
-export const getInputSchema = z.object({
+export const getPlatformInputSchema = z.object({
   id: z.string().min(1, "Platform ID is required"),
 })
 
-export type GetInput = z.infer<typeof getInputSchema>
+export type GetPlatformInput = z.infer<typeof getPlatformInputSchema>
 
 // Update
-export const updateInputSchema = inputSchema.partial().extend({
+export const updatePlatformInputSchema = platformInputSchema.partial().extend({
   id: z.string().min(1, "Platform ID is required"),
 })
 
-export type UpdateInput = z.infer<typeof updateInputSchema>
+export type UpdatePlatformInput = z.infer<typeof updatePlatformInputSchema>
 
 // Delete
-export const deleteInputSchema = z.object({
+export const deletePlatformInputSchema = z.object({
   id: z.string().min(1, "Platform ID is required"),
 })
 
-export type DeleteInput = z.infer<typeof deleteInputSchema>
+export type DeletePlatformInput = z.infer<typeof deletePlatformInputSchema>
 
 // ============================================================================
 // List Operation Input Schema
 // ============================================================================
 
-export const listInputSchema = z.object({
+export const listPlatformsInputSchema = z.object({
   page: z.number().int().min(1).default(1),
   limit: z.number().int().min(1).max(100).default(10),
   search: z.string().optional(),
 })
 
-export type ListInput = z.infer<typeof listInputSchema>
-
-// ============================================================================
-// Backward Compatibility Aliases (DEPRECATED - use new names)
-// ============================================================================
-
-/** @deprecated Use inputSchema instead */
-export const platformInputSchema = inputSchema
-/** @deprecated Use Input instead */
-export type PlatformInput = Input
-
-/** @deprecated Use inputSchema instead */
-export const platformDtoSchema = inputSchema
-/** @deprecated Use Input instead */
-export type PlatformDto = Input
-
-/** @deprecated Use createInputSchema instead */
-export const createPlatformInputSchema = createInputSchema
-/** @deprecated Use CreateInput instead */
-export type CreatePlatformInput = CreateInput
-
-/** @deprecated Use getInputSchema instead */
-export const getPlatformInputSchema = getInputSchema
-/** @deprecated Use GetInput instead */
-export type GetPlatformInput = GetInput
-
-/** @deprecated Use getInputSchema instead */
-export const getPlatformByIdDtoSchema = getInputSchema
-/** @deprecated Use GetInput instead */
-export type GetPlatformByIdDto = GetInput
-
-/** @deprecated Use updateInputSchema instead */
-export const updatePlatformInputSchema = updateInputSchema
-/** @deprecated Use UpdateInput instead */
-export type UpdatePlatformInput = UpdateInput
-
-/** @deprecated Use updateInputSchema instead */
-export const updatePlatformDtoSchema = updateInputSchema
-/** @deprecated Use UpdateInput instead */
-export type UpdatePlatformDto = UpdateInput
-
-/** @deprecated Use deleteInputSchema instead */
-export const deletePlatformInputSchema = deleteInputSchema
-/** @deprecated Use DeleteInput instead */
-export type DeletePlatformInput = DeleteInput
-
-/** @deprecated Use deleteInputSchema instead */
-export const deletePlatformDtoSchema = deleteInputSchema
-/** @deprecated Use DeleteInput instead */
-export type DeletePlatformDto = DeleteInput
-
-/** @deprecated Use listInputSchema instead */
-export const listPlatformsInputSchema = listInputSchema
-/** @deprecated Use ListInput instead */
-export type ListPlatformsInput = ListInput
+export type ListPlatformsInput = z.infer<typeof listPlatformsInputSchema>

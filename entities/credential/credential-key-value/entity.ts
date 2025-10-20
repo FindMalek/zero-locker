@@ -4,9 +4,9 @@ import {
 } from "@/entities/credential/credential-key-value/query"
 import { EncryptedDataEntity } from "@/entities/encryption"
 import {
-  type CredentialKeyValuePairDto,
-  type CredentialKeyValuePairSimpleRo,
-  type CredentialKeyValuePairWithEncryptionRo,
+  type KeyValueInput,
+  type KeyValueSimpleOutput,
+  type KeyValueWithEncryptionOutput,
 } from "@/schemas/credential/key-value"
 import { type GenericEncryptedKeyValuePairInput } from "@/schemas/encryption"
 import { type BaseKeyValuePair } from "@/schemas/utils"
@@ -16,7 +16,7 @@ import { encryptData, exportKey, generateEncryptionKey } from "@/lib/encryption"
 export class CredentialKeyValuePairEntity {
   static getSimpleRo(
     credentialKeyValuePair: CredentialKeyValuePairSimpleDbData
-  ): CredentialKeyValuePairSimpleRo {
+  ): KeyValueSimpleOutput {
     return {
       id: credentialKeyValuePair.id,
       key: credentialKeyValuePair.key,
@@ -29,7 +29,7 @@ export class CredentialKeyValuePairEntity {
 
   static getWithEncryptionRo(
     credentialKeyValuePair: CredentialKeyValuePairDbData
-  ): CredentialKeyValuePairWithEncryptionRo {
+  ): KeyValueWithEncryptionOutput {
     return {
       id: credentialKeyValuePair.id,
       key: credentialKeyValuePair.key,
@@ -44,7 +44,7 @@ export class CredentialKeyValuePairEntity {
 
   static convertGenericToCredential(
     generic: GenericEncryptedKeyValuePairInput
-  ): CredentialKeyValuePairDto {
+  ): KeyValueInput {
     return {
       id: generic.id,
       key: generic.key,
@@ -54,7 +54,7 @@ export class CredentialKeyValuePairEntity {
   }
 
   static convertCredentialToGeneric(
-    credential: CredentialKeyValuePairDto
+    credential: KeyValueInput
   ): GenericEncryptedKeyValuePairInput {
     return {
       id: credential.id,
@@ -63,7 +63,7 @@ export class CredentialKeyValuePairEntity {
     }
   }
 
-  static convertForKeyValueManager(credential: CredentialKeyValuePairDto): {
+  static convertForKeyValueManager(credential: KeyValueInput): {
     id: string
     key: string
     value: string
@@ -75,9 +75,7 @@ export class CredentialKeyValuePairEntity {
     }
   }
 
-  static convertFromKeyValueManager(
-    pair: BaseKeyValuePair
-  ): CredentialKeyValuePairDto {
+  static convertFromKeyValueManager(pair: BaseKeyValuePair): KeyValueInput {
     return {
       id: pair.id,
       key: pair.key,

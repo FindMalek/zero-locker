@@ -15,12 +15,3 @@ export const historySimpleOutputSchema = z.object({
 })
 
 export type HistorySimpleOutput = z.infer<typeof historySimpleOutputSchema>
-
-// ============================================================================
-// Backward Compatibility Aliases (DEPRECATED)
-// ============================================================================
-
-/** @deprecated Use historySimpleOutputSchema instead */
-export const credentialHistorySimpleRoSchema = historySimpleOutputSchema
-/** @deprecated Use HistorySimpleOutput instead */
-export type CredentialHistorySimpleRo = HistorySimpleOutput

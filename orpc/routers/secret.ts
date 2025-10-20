@@ -10,7 +10,7 @@ import {
   secretOutputSchema,
   updateSecretInputSchema,
   type ListSecretsOutput,
-  type SecretOutput,
+  type SecretSimpleOutput,
 } from "@/schemas/secrets"
 import { ORPCError, os } from "@orpc/server"
 import type { Prisma } from "@prisma/client"
@@ -28,7 +28,7 @@ const authProcedure = baseProcedure.use(({ context, next }) =>
 export const getSecret = authProcedure
   .input(getSecretInputSchema)
   .output(secretOutputSchema)
-  .handler(async ({ input, context }): Promise<SecretOutput> => {
+  .handler(async ({ input, context }): Promise<SecretSimpleOutput> => {
     const secret = await database.secret.findFirst({
       where: {
         id: input.id,
@@ -91,7 +91,7 @@ export const listSecrets = authProcedure
 export const createSecret = authProcedure
   .input(createSecretInputSchema)
   .output(secretOutputSchema)
-  .handler(async ({ input, context }): Promise<SecretOutput> => {
+  .handler(async ({ input, context }): Promise<SecretSimpleOutput> => {
     const secret = await database.$transaction(async (tx) => {
       const valueEncryptionResult = await createEncryptedData(
         {
@@ -127,7 +127,7 @@ export const createSecret = authProcedure
 export const updateSecret = authProcedure
   .input(updateSecretInputSchema)
   .output(secretOutputSchema)
-  .handler(async ({ input, context }): Promise<SecretOutput> => {
+  .handler(async ({ input, context }): Promise<SecretSimpleOutput> => {
     const { id, ...updateData } = input
 
     // Verify secret ownership
@@ -183,7 +183,7 @@ export const updateSecret = authProcedure
 export const deleteSecret = authProcedure
   .input(deleteSecretInputSchema)
   .output(secretOutputSchema)
-  .handler(async ({ input, context }): Promise<SecretOutput> => {
+  .handler(async ({ input, context }): Promise<SecretSimpleOutput> => {
     // Verify secret ownership
     const existingSecret = await database.secret.findFirst({
       where: {

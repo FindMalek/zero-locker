@@ -2,7 +2,7 @@ import { CardEntitySimpleDbData } from "@/entities/card/card/query"
 import {
   cardProviderEnum,
   CardProviderInfer,
-  CardSimpleRo,
+  CardSimpleOutput,
   cardStatusEnum,
   CardStatusInfer,
   cardTypeEnum,
@@ -11,7 +11,7 @@ import {
 import { CardProvider, CardStatus, CardType } from "@prisma/client"
 
 export class CardEntity {
-  static getSimpleRo(entity: CardEntitySimpleDbData): CardSimpleRo {
+  static getSimpleRo(entity: CardEntitySimpleDbData): CardSimpleOutput {
     return {
       id: entity.id,
 

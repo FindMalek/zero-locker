@@ -1,5 +1,5 @@
 import { encryptedDataInputSchema } from "@/schemas/encryption"
-import { tagInputSchema } from "@/schemas/utils/tag"
+import { tagInputSchema } from "@/schemas/utils"
 import { CardProvider, CardStatus, CardType } from "@prisma/client"
 import { z } from "zod"
 
@@ -94,19 +94,3 @@ export const listCardsInputSchema = z.object({
 })
 
 export type ListCardsInput = z.infer<typeof listCardsInputSchema>
-
-// ============================================================================
-// Public API Exports (with entity prefix for clarity)
-// ============================================================================
-
-export const cardDtoSchema = cardInputSchema
-export type CardDto = CardInput
-
-export const getCardByIdDtoSchema = getCardInputSchema
-export type GetCardByIdDto = GetCardInput
-
-export const updateCardDtoSchema = updateCardInputSchema
-export type UpdateCardDto = UpdateCardInput
-
-export const deleteCardDtoSchema = deleteCardInputSchema
-export type DeleteCardDto = DeleteCardInput

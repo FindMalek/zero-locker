@@ -1,10 +1,10 @@
 import { CredentialHistoryEntitySimpleDbData } from "@/entities/credential/credential-history/query"
-import { CredentialHistorySimpleRo } from "@/schemas/credential"
+import { HistorySimpleOutput } from "@/schemas/credential/history"
 
 export class CredentialHistoryEntity {
   static getSimpleRo(
     entity: CredentialHistoryEntitySimpleDbData
-  ): CredentialHistorySimpleRo {
+  ): HistorySimpleOutput {
     return {
       id: entity.id,
 

@@ -4,7 +4,7 @@ import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { PlatformEntity } from "@/entities/utils/platform"
 import type { CredentialOutput } from "@/schemas/credential"
-import type { PlatformSimpleRo } from "@/schemas/utils"
+import type { PlatformSimpleOutput } from "@/schemas/utils"
 
 import { DateFormatter } from "@/lib/date-utils"
 import { getLogoDevUrlWithToken, getPlaceholderImage } from "@/lib/utils"
@@ -18,7 +18,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card"
 
 interface CredentialGridViewProps {
   credentials: CredentialOutput[]
-  platforms: PlatformSimpleRo[]
+  platforms: PlatformSimpleOutput[]
 }
 
 export function DashboardCredentialGridView({

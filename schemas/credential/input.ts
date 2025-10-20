@@ -7,7 +7,7 @@ import { z } from "zod"
 // Base Input Schema
 // ============================================================================
 
-export const inputSchema = z.object({
+export const credentialInputSchema = z.object({
   identifier: z.string().min(1, "Username/identifier is required"),
   description: z.string().optional(),
   status: z.nativeEnum(AccountStatus),
@@ -15,64 +15,70 @@ export const inputSchema = z.object({
   containerId: z.string().optional(),
 })
 
-export type Input = z.infer<typeof inputSchema>
+export type CredentialInput = z.infer<typeof credentialInputSchema>
 
 // ============================================================================
 // CRUD Operation Input Schemas
 // ============================================================================
 
 // Create (includes password encryption data)
-export const createInputSchema = inputSchema.extend({
+export const createCredentialInputSchema = credentialInputSchema.extend({
   passwordEncryption: encryptedDataInputSchema,
   tags: z.array(tagInputSchema).optional(),
   metadata: z.any().optional(), // TODO: Placeholder for backward compatibility
 })
 
-export type CreateInput = z.infer<typeof createInputSchema>
+export type CreateCredentialInput = z.infer<typeof createCredentialInputSchema>
 
 // Get by ID
-export const getInputSchema = z.object({
+export const getCredentialInputSchema = z.object({
   id: z.string().min(1, "Credential ID is required"),
 })
 
-export type GetInput = z.infer<typeof getInputSchema>
+export type GetCredentialInput = z.infer<typeof getCredentialInputSchema>
 
 // Update
-export const updateInputSchema = inputSchema.partial().extend({
-  id: z.string().min(1, "Credential ID is required"),
-  tags: z.array(tagInputSchema).optional(),
-  passwordEncryption: encryptedDataInputSchema.optional(),
-})
+export const updateCredentialInputSchema = credentialInputSchema
+  .partial()
+  .extend({
+    id: z.string().min(1, "Credential ID is required"),
+    tags: z.array(tagInputSchema).optional(),
+    passwordEncryption: encryptedDataInputSchema.optional(),
+  })
 
-export type UpdateInput = z.infer<typeof updateInputSchema>
+export type UpdateCredentialInput = z.infer<typeof updateCredentialInputSchema>
 
 // Update Password
-export const updatePasswordInputSchema = z.object({
+export const updateCredentialPasswordInputSchema = z.object({
   id: z.string().min(1, "Credential ID is required"),
   passwordEncryption: encryptedDataInputSchema,
 })
 
-export type UpdatePasswordInput = z.infer<typeof updatePasswordInputSchema>
+export type UpdateCredentialPasswordInput = z.infer<
+  typeof updateCredentialPasswordInputSchema
+>
 
 // Delete
-export const deleteInputSchema = z.object({
+export const deleteCredentialInputSchema = z.object({
   id: z.string().min(1, "Credential ID is required"),
 })
 
-export type DeleteInput = z.infer<typeof deleteInputSchema>
+export type DeleteCredentialInput = z.infer<typeof deleteCredentialInputSchema>
 
 // Duplicate
-export const duplicateInputSchema = z.object({
+export const duplicateCredentialInputSchema = z.object({
   id: z.string().min(1, "Credential ID is required"),
 })
 
-export type DuplicateInput = z.infer<typeof duplicateInputSchema>
+export type DuplicateCredentialInput = z.infer<
+  typeof duplicateCredentialInputSchema
+>
 
 // ============================================================================
 // List Operation Input Schema
 // ============================================================================
 
-export const listInputSchema = z.object({
+export const listCredentialsInputSchema = z.object({
   page: z.number().int().min(1).default(1),
   limit: z.number().int().min(1).max(100).default(10),
   search: z.string().optional(),
@@ -83,13 +89,13 @@ export const listInputSchema = z.object({
   sort: z.any().optional(), // Sorting options
 })
 
-export type ListInput = z.infer<typeof listInputSchema>
+export type ListCredentialsInput = z.infer<typeof listCredentialsInputSchema>
 
 // ============================================================================
 // Form Input Schema (excludes password field for security)
 // ============================================================================
 
-export const formInputSchema = z.object({
+export const credentialFormInputSchema = z.object({
   identifier: z.string().min(1, "Username/identifier is required"),
   description: z.string().optional(),
   status: z.nativeEnum(AccountStatus),
@@ -102,50 +108,4 @@ export const formInputSchema = z.object({
   accessLogging: z.boolean(),
 })
 
-export type FormInput = z.infer<typeof formInputSchema>
-
-// ============================================================================
-// Public API Exports (with entity prefix for clarity)
-// ============================================================================
-
-export const credentialInputSchema = inputSchema
-export type CredentialInput = Input
-
-export const credentialDtoSchema = inputSchema
-export type CredentialDto = Input
-
-export const createCredentialInputSchema = createInputSchema
-export type CreateCredentialInput = CreateInput
-
-export const getCredentialInputSchema = getInputSchema
-export type GetCredentialInput = GetInput
-
-export const getCredentialByIdDtoSchema = getInputSchema
-export type GetCredentialByIdDto = GetInput
-
-export const updateCredentialInputSchema = updateInputSchema
-export type UpdateCredentialInput = UpdateInput
-
-export const updateCredentialDtoSchema = updateInputSchema
-export type UpdateCredentialDto = UpdateInput
-
-export const updateCredentialPasswordInputSchema = updatePasswordInputSchema
-export type UpdateCredentialPasswordInput = UpdatePasswordInput
-
-export const deleteCredentialInputSchema = deleteInputSchema
-export type DeleteCredentialInput = DeleteInput
-
-export const deleteCredentialDtoSchema = deleteInputSchema
-export type DeleteCredentialDto = DeleteInput
-
-export const duplicateCredentialInputSchema = duplicateInputSchema
-export type DuplicateCredentialInput = DuplicateInput
-
-export const listCredentialsInputSchema = listInputSchema
-export type ListCredentialsInput = ListInput
-
-export const credentialFormInputSchema = formInputSchema
-export type CredentialFormInput = FormInput
-
-export const credentialFormDtoSchema = formInputSchema
-export type CredentialFormDto = FormInput
+export type CredentialFormInput = z.infer<typeof credentialFormInputSchema>

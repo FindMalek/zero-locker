@@ -1,10 +1,10 @@
-import { PlatformSimpleRo } from "@/schemas/utils"
+import { PlatformSimpleOutput } from "@/schemas/utils"
 import { PlatformStatus } from "@prisma/client"
 
 import { PlatformEntitySimpleDbData } from "./query"
 
 export class PlatformEntity {
-  static getSimpleRo(entity: PlatformEntitySimpleDbData): PlatformSimpleRo {
+  static getSimpleRo(entity: PlatformEntitySimpleDbData): PlatformSimpleOutput {
     return {
       id: entity.id,
 
@@ -32,7 +32,7 @@ export class PlatformEntity {
   static findById(
     platforms: PlatformEntitySimpleDbData[],
     platformId: string
-  ): PlatformSimpleRo {
+  ): PlatformSimpleOutput {
     const platform = platforms.find((p) => p.id === platformId)
     if (!platform) {
       return {
@@ -63,7 +63,7 @@ export class PlatformEntity {
   static findByIdStrict(
     platforms: PlatformEntitySimpleDbData[],
     platformId: string
-  ): PlatformSimpleRo {
+  ): PlatformSimpleOutput {
     const platform = platforms.find((p) => p.id === platformId)
     if (!platform) {
       throw new Error(`Platform with id ${platformId} not found`)

@@ -6,10 +6,10 @@ import {
   getPlatformInputSchema,
   listPlatformsInputSchema,
   listPlatformsOutputSchema,
-  platformOutputSchema,
+  platformSimpleOutputSchema,
   updatePlatformInputSchema,
   type ListPlatformsOutput,
-  type PlatformOutput,
+  type PlatformSimpleOutput,
 } from "@/schemas/utils"
 import { ORPCError, os } from "@orpc/server"
 

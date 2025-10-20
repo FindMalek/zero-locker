@@ -1,9 +1,9 @@
-import { CardSimpleRo, cardSimpleRoSchema } from "@/schemas/card"
+import { CardSimpleOutput, cardSimpleOutputSchema } from "@/schemas/card"
 import {
-  CredentialSimpleRo,
-  credentialSimpleRoSchema,
+  CredentialSimpleOutput,
+  credentialSimpleOutputSchema,
 } from "@/schemas/credential"
-import { SecretSimpleRo, secretSimpleRoSchema } from "@/schemas/secrets"
+import { SecretSimpleOutput, secretSimpleOutputSchema } from "@/schemas/secrets"
 import { z } from "zod"
 
 export const ActivityTypeSchema = z.enum(["CREATED", "UPDATED", "COPIED"])
@@ -32,21 +32,21 @@ export type RecentItemBase = z.infer<typeof RecentItemBaseSchema>
 
 export const RecentCredentialItemSchema = RecentItemBaseSchema.extend({
   type: z.literal(RecentItemTypeEnum.CREDENTIAL),
-  entity: credentialSimpleRoSchema,
+  entity: credentialSimpleOutputSchema,
 })
 
 export type RecentCredentialItem = z.infer<typeof RecentCredentialItemSchema>
 
 export const RecentCardItemSchema = RecentItemBaseSchema.extend({
   type: z.literal(RecentItemTypeEnum.CARD),
-  entity: cardSimpleRoSchema,
+  entity: cardSimpleOutputSchema,
 })
 
 export type RecentCardItem = z.infer<typeof RecentCardItemSchema>
 
 export const RecentSecretItemSchema = RecentItemBaseSchema.extend({
   type: z.literal(RecentItemTypeEnum.SECRET),
-  entity: secretSimpleRoSchema,
+  entity: secretSimpleOutputSchema,
 })
 
 export type RecentSecretItem = z.infer<typeof RecentSecretItemSchema>
@@ -62,7 +62,10 @@ export type RecentItem =
   | RecentCardItem
   | RecentSecretItem
 
-export type RawEntity = CredentialSimpleRo | CardSimpleRo | SecretSimpleRo
+export type RawEntity =
+  | CredentialSimpleOutput
+  | CardSimpleOutput
+  | SecretSimpleOutput
 
 export const EntityTypeSchema = z.enum(["CREDENTIAL", "CARD", "SECRET"])
 export const EntityTypeEnum = EntityTypeSchema.enum

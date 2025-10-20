@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 import { PlatformEntity } from "@/entities/utils/platform"
 import { useDeleteCredential } from "@/orpc/hooks/use-credentials"
 import type { CredentialOutput } from "@/schemas/credential"
-import type { PlatformSimpleRo } from "@/schemas/utils"
+import type { PlatformSimpleOutput } from "@/schemas/utils"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
@@ -44,7 +44,7 @@ interface DeleteCredentialDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   credential: CredentialOutput
-  platforms: PlatformSimpleRo[]
+  platforms: PlatformSimpleOutput[]
   shouldRedirect?: boolean
 }
 

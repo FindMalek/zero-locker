@@ -2,24 +2,24 @@ import {
   getDatabaseClient,
   type PrismaTransactionClient,
 } from "@/prisma/client"
-import type { TagDto } from "@/schemas/utils"
+import type { TagInput } from "@/schemas/utils"
 import type { Prisma, Tag } from "@prisma/client"
 
 import { generateTagColor } from "./color-helpers"
 
 export async function createTagsAndGetConnections(
-  tags: TagDto[],
+  tags: TagInput[],
   userId: string,
   containerId?: string
 ): Promise<Prisma.TagCreateNestedManyWithoutContainerInput>
 export async function createTagsAndGetConnections(
-  tags: TagDto[],
+  tags: TagInput[],
   userId: string,
   containerId: string | undefined,
   tx: PrismaTransactionClient
 ): Promise<Prisma.TagCreateNestedManyWithoutContainerInput>
 export async function createTagsAndGetConnections(
-  tags: TagDto[],
+  tags: TagInput[],
   userId: string,
   containerId?: string,
   tx?: PrismaTransactionClient
@@ -38,7 +38,7 @@ export async function createTagsAndGetConnections(
         if (!trimmedName) return null
         return [trimmedName.toLowerCase(), { ...t, name: trimmedName }]
       })
-      .filter(Boolean) as [string, TagDto][]
+      .filter(Boolean) as [string, TagInput][]
   )
   const normalizedTags = Array.from(tagMap.values())
   const normalizedNames = Array.from(tagMap.keys())

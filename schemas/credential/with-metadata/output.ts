@@ -1,6 +1,6 @@
 import { z } from "zod"
 
-import { simpleOutputSchema } from "../output"
+import { credentialSimpleOutputSchema } from "../output"
 
 // ============================================================================
 // Create With Metadata Output Schema
@@ -8,7 +8,7 @@ import { simpleOutputSchema } from "../output"
 
 export const createWithMetadataOutputSchema = z.object({
   success: z.boolean(),
-  credential: simpleOutputSchema.optional(),
+  credential: credentialSimpleOutputSchema.optional(),
   error: z.string().optional(),
   issues: z.array(z.string()).optional(),
 })
@@ -16,13 +16,3 @@ export const createWithMetadataOutputSchema = z.object({
 export type CreateWithMetadataOutput = z.infer<
   typeof createWithMetadataOutputSchema
 >
-
-// ============================================================================
-// Backward Compatibility Aliases (DEPRECATED)
-// ============================================================================
-
-/** @deprecated Use createWithMetadataOutputSchema instead */
-export const createCredentialWithMetadataOutputSchema =
-  createWithMetadataOutputSchema
-/** @deprecated Use CreateWithMetadataOutput instead */
-export type CreateCredentialWithMetadataOutput = CreateWithMetadataOutput

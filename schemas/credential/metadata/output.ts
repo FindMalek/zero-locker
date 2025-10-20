@@ -15,12 +15,3 @@ export const metadataSimpleOutputSchema = z.object({
 })
 
 export type MetadataSimpleOutput = z.infer<typeof metadataSimpleOutputSchema>
-
-// ============================================================================
-// Backward Compatibility Aliases (DEPRECATED)
-// ============================================================================
-
-/** @deprecated Use metadataSimpleOutputSchema instead */
-export const credentialMetadataSimpleRoSchema = metadataSimpleOutputSchema
-/** @deprecated Use MetadataSimpleOutput instead */
-export type CredentialMetadataSimpleRo = MetadataSimpleOutput

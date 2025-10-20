@@ -13,10 +13,31 @@ export const keyValueInputSchema =
 export type KeyValueInput = z.infer<typeof keyValueInputSchema>
 
 // ============================================================================
-// Backward Compatibility Aliases (DEPRECATED)
+// CRUD Operation Input Schemas
 // ============================================================================
 
-/** @deprecated Use keyValueInputSchema instead */
-export const credentialKeyValuePairDtoSchema = keyValueInputSchema
-/** @deprecated Use KeyValueInput instead */
-export type CredentialKeyValuePairDto = KeyValueInput
+// Create
+export const createKeyValuePairInputSchema = keyValueInputSchema
+
+export type CreateKeyValuePairInput = z.infer<
+  typeof createKeyValuePairInputSchema
+>
+
+// Update
+export const updateKeyValuePairInputSchema = z.object({
+  id: z.string().min(1, "Key-value pair ID is required"),
+  data: keyValueInputSchema.partial(),
+})
+
+export type UpdateKeyValuePairInput = z.infer<
+  typeof updateKeyValuePairInputSchema
+>
+
+// Delete
+export const deleteKeyValuePairInputSchema = z.object({
+  id: z.string().min(1, "Key-value pair ID is required"),
+})
+
+export type DeleteKeyValuePairInput = z.infer<
+  typeof deleteKeyValuePairInputSchema
+>

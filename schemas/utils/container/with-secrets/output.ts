@@ -1,7 +1,7 @@
 import { secretSimpleOutputSchema } from "@/schemas/secrets"
 import { z } from "zod"
 
-import { simpleOutputSchema } from "../output"
+import { containerSimpleOutputSchema } from "../output"
 
 // ============================================================================
 // Create With Secrets Output Schema
@@ -9,7 +9,7 @@ import { simpleOutputSchema } from "../output"
 
 export const createWithSecretsOutputSchema = z.object({
   success: z.boolean(),
-  container: simpleOutputSchema.optional(),
+  container: containerSimpleOutputSchema.optional(),
   secrets: z.array(secretSimpleOutputSchema).optional(),
   error: z.string().optional(),
 })
@@ -17,13 +17,3 @@ export const createWithSecretsOutputSchema = z.object({
 export type CreateWithSecretsOutput = z.infer<
   typeof createWithSecretsOutputSchema
 >
-
-// ============================================================================
-// Backward Compatibility Aliases (DEPRECATED)
-// ============================================================================
-
-/** @deprecated Use createWithSecretsOutputSchema instead */
-export const createContainerWithSecretsOutputSchema =
-  createWithSecretsOutputSchema
-/** @deprecated Use CreateWithSecretsOutput instead */
-export type CreateContainerWithSecretsOutput = CreateWithSecretsOutput
