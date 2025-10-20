@@ -22,14 +22,18 @@ export type SecretMetadataInput = z.infer<typeof secretMetadataInputSchema>
 // Create
 export const createSecretMetadataInputSchema = secretMetadataInputSchema
 
-export type CreateSecretMetadataInput = z.infer<typeof createSecretMetadataInputSchema>
+export type CreateSecretMetadataInput = z.infer<
+  typeof createSecretMetadataInputSchema
+>
 
 // Get by Secret ID
 export const getSecretMetadataInputSchema = z.object({
   secretId: z.string().min(1, "Secret ID is required"),
 })
 
-export type GetSecretMetadataInput = z.infer<typeof getSecretMetadataInputSchema>
+export type GetSecretMetadataInput = z.infer<
+  typeof getSecretMetadataInputSchema
+>
 
 // Update
 export const updateSecretMetadataInputSchema = z.object({
@@ -37,21 +41,27 @@ export const updateSecretMetadataInputSchema = z.object({
   data: secretMetadataInputSchema.partial(),
 })
 
-export type UpdateSecretMetadataInput = z.infer<typeof updateSecretMetadataInputSchema>
+export type UpdateSecretMetadataInput = z.infer<
+  typeof updateSecretMetadataInputSchema
+>
 
 // Delete
 export const deleteSecretMetadataInputSchema = z.object({
   id: z.string().min(1, "Metadata ID is required"),
 })
 
-export type DeleteSecretMetadataInput = z.infer<typeof deleteSecretMetadataInputSchema>
+export type DeleteSecretMetadataInput = z.infer<
+  typeof deleteSecretMetadataInputSchema
+>
 
 // List
 export const listSecretMetadataInputSchema = z.object({
   secretId: z.string().min(1, "Secret ID is required"),
 })
 
-export type ListSecretMetadataInput = z.infer<typeof listSecretMetadataInputSchema>
+export type ListSecretMetadataInput = z.infer<
+  typeof listSecretMetadataInputSchema
+>
 
 // ============================================================================
 // Legacy aliases for backward compatibility

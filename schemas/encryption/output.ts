@@ -13,7 +13,9 @@ export const encryptedDataSimpleOutputSchema = z.object({
   updatedAt: z.date(),
 })
 
-export type EncryptedDataSimpleOutput = z.infer<typeof encryptedDataSimpleOutputSchema>
+export type EncryptedDataSimpleOutput = z.infer<
+  typeof encryptedDataSimpleOutputSchema
+>
 
 // ============================================================================
 // Extended Output Schemas

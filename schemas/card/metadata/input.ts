@@ -37,14 +37,18 @@ export const updateCardMetadataInputSchema = z.object({
   data: cardMetadataInputSchema.partial(),
 })
 
-export type UpdateCardMetadataInput = z.infer<typeof updateCardMetadataInputSchema>
+export type UpdateCardMetadataInput = z.infer<
+  typeof updateCardMetadataInputSchema
+>
 
 // Delete
 export const deleteCardMetadataInputSchema = z.object({
   id: z.string().min(1, "Metadata ID is required"),
 })
 
-export type DeleteCardMetadataInput = z.infer<typeof deleteCardMetadataInputSchema>
+export type DeleteCardMetadataInput = z.infer<
+  typeof deleteCardMetadataInputSchema
+>
 
 // List
 export const listCardMetadataInputSchema = z.object({
