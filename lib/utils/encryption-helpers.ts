@@ -2,7 +2,7 @@ import {
   getDatabaseClient,
   type PrismaTransactionClient,
 } from "@/prisma/client"
-import type { EncryptedDataDto } from "@/schemas/encryption/encryption"
+import type { EncryptedDataDto } from "@/schemas/encryption"
 
 export async function createEncryptedData(data: EncryptedDataDto): Promise<{
   success: boolean

@@ -1,4 +1,4 @@
-import { genericEncryptedKeyValuePairDtoSchema } from "@/schemas/encryption/encryption"
+import { genericEncryptedKeyValuePairDtoSchema } from "@/schemas/encryption"
 import { z } from "zod"
 
 // ============================================================================
@@ -21,5 +21,3 @@ export type KeyValueInput = z.infer<typeof keyValueInputSchema>
 export const credentialKeyValuePairDtoSchema = keyValueInputSchema
 /** @deprecated Use KeyValueInput instead */
 export type CredentialKeyValuePairDto = KeyValueInput
-
-

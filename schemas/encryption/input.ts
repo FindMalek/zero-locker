@@ -1,5 +1,9 @@
 import { z } from "zod"
 
+// ============================================================================
+// Encryption Input Schemas
+// ============================================================================
+
 export const encryptedDataDtoSchema = z.object({
   iv: z.string().min(1, "IV is required"),
   encryptedValue: z.string().min(1, "Encrypted value is required"),
@@ -8,20 +12,10 @@ export const encryptedDataDtoSchema = z.object({
 
 export type EncryptedDataDto = z.infer<typeof encryptedDataDtoSchema>
 
-export const encryptedDataSimpleRoSchema = z.object({
-  id: z.string(),
+// ============================================================================
+// Generic Encrypted Key-Value Pair Input Schema
+// ============================================================================
 
-  iv: z.string(),
-  encryptionKey: z.string(),
-  encryptedValue: z.string(),
-
-  createdAt: z.date(),
-  updatedAt: z.date(),
-})
-
-export type EncryptedDataSimpleRo = z.infer<typeof encryptedDataSimpleRoSchema>
-
-// Generic encrypted key-value pair interface for reusable components
 export const genericEncryptedKeyValuePairDtoSchema = z.object({
   id: z.string().optional(),
   key: z.string().min(1, "Key is required"),

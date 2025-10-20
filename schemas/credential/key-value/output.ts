@@ -1,4 +1,4 @@
-import { encryptedDataDtoSchema } from "@/schemas/encryption/encryption"
+import { encryptedDataDtoSchema } from "@/schemas/encryption"
 import { z } from "zod"
 
 // ============================================================================
@@ -74,5 +74,3 @@ export const credentialKeyValuePairWithValueRoSchema =
   keyValueWithValueOutputSchema
 /** @deprecated Use KeyValueWithValueOutput instead */
 export type CredentialKeyValuePairWithValueRo = KeyValueWithValueOutput
-
-

@@ -8,7 +8,7 @@ import {
   type CredentialKeyValuePairSimpleRo,
   type CredentialKeyValuePairWithEncryptionRo,
 } from "@/schemas/credential/key-value"
-import { type GenericEncryptedKeyValuePairDto } from "@/schemas/encryption/encryption"
+import { type GenericEncryptedKeyValuePairDto } from "@/schemas/encryption"
 import { type BaseKeyValuePair } from "@/schemas/utils"
 
 import { encryptData, exportKey, generateEncryptionKey } from "@/lib/encryption"

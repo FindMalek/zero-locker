@@ -1,8 +1,7 @@
+import { encryptedDataDtoSchema } from "@/schemas/encryption"
+import { tagDtoSchema } from "@/schemas/utils"
 import { AccountStatus } from "@prisma/client"
 import { z } from "zod"
-
-import { encryptedDataDtoSchema } from "@/schemas/encryption/encryption"
-import { tagDtoSchema } from "@/schemas/utils"
 
 // ============================================================================
 // Base Input Schema

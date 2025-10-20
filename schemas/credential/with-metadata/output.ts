@@ -26,5 +26,3 @@ export const createCredentialWithMetadataOutputSchema =
   createWithMetadataOutputSchema
 /** @deprecated Use CreateWithMetadataOutput instead */
 export type CreateCredentialWithMetadataOutput = CreateWithMetadataOutput
-
-

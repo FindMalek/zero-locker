@@ -24,5 +24,3 @@ export type MetadataSimpleOutput = z.infer<typeof metadataSimpleOutputSchema>
 export const credentialMetadataSimpleRoSchema = metadataSimpleOutputSchema
 /** @deprecated Use MetadataSimpleOutput instead */
 export type CredentialMetadataSimpleRo = MetadataSimpleOutput
-
-

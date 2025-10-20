@@ -12,9 +12,9 @@ import {
 import {
   accountStatusEnum,
   AccountStatusInfer,
+  createCredentialInputSchema,
   CredentialMetadataDto,
   credentialMetadataDtoSchema,
-  createCredentialInputSchema,
   type CreateCredentialInput,
 } from "@/schemas/credential"
 import { EntityTypeEnum, TagDto, type BaseKeyValuePair } from "@/schemas/utils"

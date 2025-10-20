@@ -1,8 +1,7 @@
 "use client"
 
 import React from "react"
-import type { CredentialFormDto } from "@/schemas/credential"
-import type { CredentialOutput } from "@/schemas/credential"
+import type { CredentialFormDto, CredentialOutput } from "@/schemas/credential"
 import { UseFormReturn } from "react-hook-form"
 
 import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard"

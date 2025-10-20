@@ -1,7 +1,7 @@
-import { encryptedDataDtoSchema } from "@/schemas/encryption/encryption"
+import { encryptedDataDtoSchema } from "@/schemas/encryption"
 import { z } from "zod"
 
-import { secretMetadataDtoSchema } from "./secret-metadata"
+import { secretMetadataDtoSchema } from "./metadata/input"
 
 // ============================================================================
 // Base Input Schema

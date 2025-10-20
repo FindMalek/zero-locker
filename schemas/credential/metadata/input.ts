@@ -24,5 +24,3 @@ export type MetadataInput = z.infer<typeof metadataInputSchema>
 export const credentialMetadataDtoSchema = metadataInputSchema
 /** @deprecated Use MetadataInput instead */
 export type CredentialMetadataDto = MetadataInput
-
-

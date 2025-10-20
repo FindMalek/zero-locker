@@ -1,4 +1,4 @@
-import { encryptedDataDtoSchema } from "@/schemas/encryption/encryption"
+import { encryptedDataDtoSchema } from "@/schemas/encryption"
 import { tagDtoSchema } from "@/schemas/utils/tag"
 import { CardProvider, CardStatus, CardType } from "@prisma/client"
 import { z } from "zod"

@@ -366,7 +366,9 @@ export const listCredentials = authProcedure
       // But if showArchived is false, exclude ARCHIVED from the list
       const statusesToFilter =
         filters.showArchived === false
-          ? filters.statuses.filter((s: AccountStatus) => s !== AccountStatus.ARCHIVED)
+          ? filters.statuses.filter(
+              (s: AccountStatus) => s !== AccountStatus.ARCHIVED
+            )
           : filters.statuses
 
       if (statusesToFilter.length > 0) {

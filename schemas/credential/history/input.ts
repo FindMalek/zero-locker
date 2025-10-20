@@ -1,4 +1,4 @@
-import { encryptedDataDtoSchema } from "@/schemas/encryption/encryption"
+import { encryptedDataDtoSchema } from "@/schemas/encryption"
 import { z } from "zod"
 
 // ============================================================================
@@ -20,5 +20,3 @@ export type HistoryInput = z.infer<typeof historyInputSchema>
 export const credentialHistoryDtoSchema = historyInputSchema
 /** @deprecated Use HistoryInput instead */
 export type CredentialHistoryDto = HistoryInput
-
-

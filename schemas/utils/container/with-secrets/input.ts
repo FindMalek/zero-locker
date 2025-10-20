@@ -1,4 +1,4 @@
-import { encryptedDataDtoSchema } from "@/schemas/encryption/encryption"
+import { encryptedDataDtoSchema } from "@/schemas/encryption"
 import { z } from "zod"
 
 import { createInputSchema } from "../input"
@@ -31,5 +31,3 @@ export const createContainerWithSecretsInputSchema =
   createWithSecretsInputSchema
 /** @deprecated Use CreateWithSecretsInput instead */
 export type CreateContainerWithSecretsInput = CreateWithSecretsInput
-
-
