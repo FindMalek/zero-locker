@@ -34,7 +34,3 @@ export const listSecretsOutputSchema = z.object({
 })
 
 export type ListSecretsOutput = z.infer<typeof listSecretsOutputSchema>
-
-// Alias for backward compatibility
-export const secretOutputSchema = secretSimpleOutputSchema
-export type SecretOutput = SecretSimpleOutput

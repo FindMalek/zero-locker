@@ -4,7 +4,7 @@ import {
   useDuplicateCredential,
   useUpdateCredential,
 } from "@/orpc/hooks/use-credentials"
-import type { CredentialOutput } from "@/schemas/credential"
+import type { CredentialSimpleOutput } from "@/schemas/credential"
 import type { PlatformSimpleOutput } from "@/schemas/utils"
 
 import { useUserPermissions } from "@/lib/permissions"
@@ -44,7 +44,7 @@ interface ItemActionsProps {
 }
 
 interface CredentialActionsProps {
-  credential: CredentialOutput
+  credential: CredentialSimpleOutput
   platforms: PlatformSimpleOutput[]
   variant?: "dropdown" | "context"
   children?: React.ReactNode

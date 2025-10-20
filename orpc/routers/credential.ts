@@ -12,7 +12,7 @@ import { database } from "@/prisma/client"
 import {
   createCredentialInputSchema,
   credentialFormInputSchema,
-  credentialOutputSchema,
+  credentialSimpleOutputSchema,
   deleteCredentialInputSchema,
   duplicateCredentialInputSchema,
   getCredentialInputSchema,
@@ -54,7 +54,7 @@ const authWithDefaultAccessProcedure = authProcedure.use(({ context, next }) =>
 // Get credential by ID
 export const getCredential = authProcedure
   .input(getCredentialInputSchema)
-  .output(credentialOutputSchema)
+  .output(credentialSimpleOutputSchema)
   .handler(async ({ input, context }): Promise<CredentialSimpleOutput> => {
     const credential = await database.credential.findFirst({
       where: {
@@ -436,7 +436,7 @@ export const createCredential = authWithDefaultAccessProcedure
     })({ context, next })
   )
   .input(createCredentialInputSchema)
-  .output(credentialOutputSchema)
+  .output(credentialSimpleOutputSchema)
   .handler(async ({ input, context }): Promise<CredentialSimpleOutput> => {
     // Verify platform exists
     const platform = await database.platform.findUnique({
@@ -532,7 +532,7 @@ export const updateCredential = authProcedure
     })({ context, next })
   )
   .input(updateCredentialInputSchema)
-  .output(credentialOutputSchema)
+  .output(credentialSimpleOutputSchema)
   .handler(async ({ input, context }): Promise<CredentialSimpleOutput> => {
     const { id, ...updateData } = input
 
@@ -696,7 +696,7 @@ export const updateCredentialWithSecuritySettings = authProcedure
     })({ context, next })
   )
   .input(credentialFormInputSchema.extend({ id: z.string() }))
-  .output(credentialOutputSchema)
+  .output(credentialSimpleOutputSchema)
   .handler(async ({ input, context }): Promise<CredentialSimpleOutput> => {
     const {
       id,
@@ -867,7 +867,7 @@ export const deleteCredential = authProcedure
     })({ context, next })
   )
   .input(deleteCredentialInputSchema)
-  .output(credentialOutputSchema)
+  .output(credentialSimpleOutputSchema)
   .handler(async ({ input, context }): Promise<CredentialSimpleOutput> => {
     // Verify credential ownership
     const existingCredential = await database.credential.findFirst({
@@ -1228,7 +1228,7 @@ export const duplicateCredential = authProcedure
     })({ context, next })
   )
   .input(duplicateCredentialInputSchema)
-  .output(credentialOutputSchema)
+  .output(credentialSimpleOutputSchema)
   .handler(async ({ input, context }): Promise<CredentialSimpleOutput> => {
     // Get the original credential with all data
     const originalCredential = await database.credential.findFirst({

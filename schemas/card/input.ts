@@ -1,5 +1,5 @@
 import { encryptedDataInputSchema } from "@/schemas/encryption"
-import { tagInputSchema } from "@/schemas/utils"
+import { tagInputSchema } from "@/schemas/utils/tag/input"
 import { CardProvider, CardStatus, CardType } from "@prisma/client"
 import { z } from "zod"
 

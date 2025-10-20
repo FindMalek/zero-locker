@@ -7,7 +7,7 @@ import {
   getSecretInputSchema,
   listSecretsInputSchema,
   listSecretsOutputSchema,
-  secretOutputSchema,
+  secretSimpleOutputSchema,
   updateSecretInputSchema,
   type ListSecretsOutput,
   type SecretSimpleOutput,
@@ -27,7 +27,7 @@ const authProcedure = baseProcedure.use(({ context, next }) =>
 // Get secret by ID
 export const getSecret = authProcedure
   .input(getSecretInputSchema)
-  .output(secretOutputSchema)
+  .output(secretSimpleOutputSchema)
   .handler(async ({ input, context }): Promise<SecretSimpleOutput> => {
     const secret = await database.secret.findFirst({
       where: {
@@ -90,7 +90,7 @@ export const listSecrets = authProcedure
 // Create secret
 export const createSecret = authProcedure
   .input(createSecretInputSchema)
-  .output(secretOutputSchema)
+  .output(secretSimpleOutputSchema)
   .handler(async ({ input, context }): Promise<SecretSimpleOutput> => {
     const secret = await database.$transaction(async (tx) => {
       const valueEncryptionResult = await createEncryptedData(
@@ -126,7 +126,7 @@ export const createSecret = authProcedure
 // Update secret
 export const updateSecret = authProcedure
   .input(updateSecretInputSchema)
-  .output(secretOutputSchema)
+  .output(secretSimpleOutputSchema)
   .handler(async ({ input, context }): Promise<SecretSimpleOutput> => {
     const { id, ...updateData } = input
 
@@ -182,7 +182,7 @@ export const updateSecret = authProcedure
 // Delete secret
 export const deleteSecret = authProcedure
   .input(deleteSecretInputSchema)
-  .output(secretOutputSchema)
+  .output(secretSimpleOutputSchema)
   .handler(async ({ input, context }): Promise<SecretSimpleOutput> => {
     // Verify secret ownership
     const existingSecret = await database.secret.findFirst({

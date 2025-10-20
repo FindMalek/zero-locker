@@ -1,5 +1,5 @@
 import { CardSimpleOutput } from "@/schemas/card"
-import { CredentialSimpleOutput } from "@/schemas/credential"
+import { CredentialSimpleOutput } from "@/schemas/credential/output"
 import { SecretSimpleOutput } from "@/schemas/secrets"
 import {
   ActivityType,

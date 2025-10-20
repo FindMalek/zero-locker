@@ -1,7 +1,7 @@
 import { cardSimpleOutputSchema } from "@/schemas/card"
-import { credentialSimpleOutputSchema } from "@/schemas/credential"
+import { credentialSimpleOutputSchema } from "@/schemas/credential/output"
 import { secretSimpleOutputSchema } from "@/schemas/secrets"
-import { platformSimpleOutputSchema } from "@/schemas/utils"
+import { platformSimpleOutputSchema } from "@/schemas/utils/platform/output"
 import { z } from "zod"
 
 // Breadcrumb item schemas for navigation components

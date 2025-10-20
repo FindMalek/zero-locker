@@ -3,7 +3,7 @@
 import React from "react"
 import type {
   CredentialFormInput,
-  CredentialOutput,
+  CredentialSimpleOutput,
 } from "@/schemas/credential"
 import { UseFormReturn } from "react-hook-form"
 
@@ -24,7 +24,7 @@ import {
 } from "@/components/ui/tooltip"
 
 interface CredentialFormProps {
-  credential?: CredentialOutput
+  credential?: CredentialSimpleOutput
   form: UseFormReturn<CredentialFormInput>
   onPasswordChange?: (hasChanges: boolean) => void
 }

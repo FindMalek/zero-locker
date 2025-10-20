@@ -2,7 +2,7 @@ import { CardSimpleOutput, cardSimpleOutputSchema } from "@/schemas/card"
 import {
   CredentialSimpleOutput,
   credentialSimpleOutputSchema,
-} from "@/schemas/credential"
+} from "@/schemas/credential/output"
 import { SecretSimpleOutput, secretSimpleOutputSchema } from "@/schemas/secrets"
 import { z } from "zod"
 

@@ -4,7 +4,7 @@ import { useEffect } from "react"
 import Image from "next/image"
 import { PlatformEntity } from "@/entities/utils/platform"
 import { useUpdateCredential } from "@/orpc/hooks/use-credentials"
-import type { CredentialOutput } from "@/schemas/credential"
+import type { CredentialSimpleOutput } from "@/schemas/credential"
 import type { PlatformSimpleOutput } from "@/schemas/utils"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
@@ -43,7 +43,7 @@ type MoveCredentialFormData = z.infer<typeof moveCredentialSchema>
 interface MoveCredentialDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  credential: CredentialOutput
+  credential: CredentialSimpleOutput
   platforms: PlatformSimpleOutput[]
 }
 

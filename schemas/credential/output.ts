@@ -1,4 +1,4 @@
-import { tagSimpleOutputSchema } from "@/schemas/utils"
+import { tagSimpleOutputSchema } from "@/schemas/utils/tag/output"
 import { AccountStatus } from "@prisma/client"
 import { z } from "zod"
 
@@ -53,7 +53,3 @@ export const listCredentialsOutputSchema = z.object({
 })
 
 export type ListCredentialsOutput = z.infer<typeof listCredentialsOutputSchema>
-
-// Alias for backward compatibility
-export const credentialOutputSchema = credentialSimpleOutputSchema
-export type CredentialOutput = CredentialSimpleOutput

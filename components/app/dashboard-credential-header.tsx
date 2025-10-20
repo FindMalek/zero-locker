@@ -2,7 +2,7 @@
 
 import Image from "next/image"
 import Link from "next/link"
-import type { CredentialOutput } from "@/schemas/credential"
+import type { CredentialSimpleOutput } from "@/schemas/credential"
 import { PlatformSimpleOutput } from "@/schemas/utils"
 
 import { getLogoDevUrlWithToken, getPlaceholderImage } from "@/lib/utils"
@@ -11,7 +11,7 @@ import { Icons } from "@/components/shared/icons"
 import { CredentialActionsDropdown } from "@/components/shared/item-actions-dropdown"
 
 interface CredentialHeaderProps {
-  credential: CredentialOutput
+  credential: CredentialSimpleOutput
   platform: PlatformSimpleOutput
 }
 

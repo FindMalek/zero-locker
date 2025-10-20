@@ -14,7 +14,7 @@ import {
   type CredentialFormInput,
 } from "@/schemas/credential"
 import type {
-  CredentialOutput,
+  CredentialSimpleOutput,
   UpdateCredentialInput,
 } from "@/schemas/credential"
 import type { ListPlatformsOutput } from "@/schemas/utils"
@@ -39,7 +39,7 @@ import { Separator } from "@/components/ui/separator"
 interface CredentialDetailViewProps {
   credentialId: string
   initialData: {
-    credential: CredentialOutput
+    credential: CredentialSimpleOutput
     platforms: ListPlatformsOutput
   }
 }

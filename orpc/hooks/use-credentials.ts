@@ -3,7 +3,7 @@
 import { orpc } from "@/orpc/client"
 import type {
   CreateCredentialInput,
-  CredentialOutput,
+  CredentialSimpleOutput,
   DeleteCredentialInput,
   DuplicateCredentialInput,
   ListCredentialsInput,
@@ -31,7 +31,10 @@ export const credentialKeys = {
 // Get single credential
 export function useCredential(
   id: string,
-  options?: Omit<UseQueryOptions<CredentialOutput>, "queryKey" | "queryFn">
+  options?: Omit<
+    UseQueryOptions<CredentialSimpleOutput>,
+    "queryKey" | "queryFn"
+  >
 ) {
   return useQuery({
     queryKey: credentialKeys.detail(id),
@@ -135,7 +138,7 @@ export function useCreateCredential() {
   return useMutation({
     mutationFn: (input: CreateCredentialInput) =>
       orpc.credentials.create.call(input),
-    onSuccess: (newCredential: CredentialOutput) => {
+    onSuccess: (newCredential: CredentialSimpleOutput) => {
       // Invalidate and refetch credential lists
       queryClient.invalidateQueries({ queryKey: credentialKeys.lists() })
 
@@ -191,13 +194,14 @@ export function useUpdateCredential() {
       })
 
       // Snapshot the previous value
-      const previousCredential = queryClient.getQueryData<CredentialOutput>(
-        credentialKeys.detail(input.id)
-      )
+      const previousCredential =
+        queryClient.getQueryData<CredentialSimpleOutput>(
+          credentialKeys.detail(input.id)
+        )
 
       // Optimistically update the cache
       if (previousCredential) {
-        queryClient.setQueryData<CredentialOutput>(
+        queryClient.setQueryData<CredentialSimpleOutput>(
           credentialKeys.detail(input.id),
           {
             ...previousCredential,
@@ -218,7 +222,7 @@ export function useUpdateCredential() {
       }
       console.error("Failed to update credential:", error)
     },
-    onSuccess: (updatedCredential: CredentialOutput) => {
+    onSuccess: (updatedCredential: CredentialSimpleOutput) => {
       // Update the cache with the server response
       queryClient.setQueryData(
         credentialKeys.detail(updatedCredential.id),
@@ -244,9 +248,10 @@ export function useUpdateCredentialWithSecuritySettings() {
       })
 
       // Snapshot the previous value
-      const previousCredential = queryClient.getQueryData<CredentialOutput>(
-        credentialKeys.detail(input.id)
-      )
+      const previousCredential =
+        queryClient.getQueryData<CredentialSimpleOutput>(
+          credentialKeys.detail(input.id)
+        )
 
       return { previousCredential }
     },
@@ -263,7 +268,7 @@ export function useUpdateCredentialWithSecuritySettings() {
         error
       )
     },
-    onSuccess: (updatedCredential: CredentialOutput, variables) => {
+    onSuccess: (updatedCredential: CredentialSimpleOutput, variables) => {
       // Update the cache with the server response
       queryClient.setQueryData(
         credentialKeys.detail(updatedCredential.id),
@@ -351,7 +356,7 @@ export function useDuplicateCredential() {
   return useMutation({
     mutationFn: (input: DuplicateCredentialInput) =>
       orpc.credentials.duplicate.call(input),
-    onSuccess: (duplicatedCredential: CredentialOutput) => {
+    onSuccess: (duplicatedCredential: CredentialSimpleOutput) => {
       // Invalidate and refetch credential lists
       queryClient.invalidateQueries({ queryKey: credentialKeys.lists() })
 
@@ -381,9 +386,10 @@ export function useDeleteCredential() {
       })
 
       // Snapshot the previous value
-      const previousCredential = queryClient.getQueryData<CredentialOutput>(
-        credentialKeys.detail(input.id)
-      )
+      const previousCredential =
+        queryClient.getQueryData<CredentialSimpleOutput>(
+          credentialKeys.detail(input.id)
+        )
 
       // Optimistically remove from cache
       queryClient.removeQueries({

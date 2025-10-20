@@ -3,7 +3,7 @@
 import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { PlatformEntity } from "@/entities/utils/platform"
-import type { CredentialOutput } from "@/schemas/credential"
+import type { CredentialSimpleOutput } from "@/schemas/credential"
 import type { PlatformSimpleOutput } from "@/schemas/utils"
 
 import { DateFormatter } from "@/lib/date-utils"
@@ -17,7 +17,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 
 interface CredentialGridViewProps {
-  credentials: CredentialOutput[]
+  credentials: CredentialSimpleOutput[]
   platforms: PlatformSimpleOutput[]
 }
 
