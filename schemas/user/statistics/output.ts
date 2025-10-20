@@ -14,4 +14,6 @@ export const encryptedDataCountOutputSchema = z.object({
   count: z.number().int().min(0),
 })
 
-export type EncryptedDataCountOutput = z.infer<typeof encryptedDataCountOutputSchema>
+export type EncryptedDataCountOutput = z.infer<
+  typeof encryptedDataCountOutputSchema
+>

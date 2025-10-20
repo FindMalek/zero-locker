@@ -14,7 +14,9 @@ export const secretMetadataSimpleOutputSchema = z.object({
   secretId: z.string(),
 })
 
-export type SecretMetadataSimpleOutput = z.infer<typeof secretMetadataSimpleOutputSchema>
+export type SecretMetadataSimpleOutput = z.infer<
+  typeof secretMetadataSimpleOutputSchema
+>
 
 // ============================================================================
 // Extended Output Schemas

@@ -17,7 +17,10 @@ import {
   type EncryptedDataCountOutput,
   type UserCountOutput,
 } from "@/schemas/user/statistics"
-import { userSimpleOutputSchema, type UserSimpleOutput } from "@/schemas/user/user"
+import {
+  userSimpleOutputSchema,
+  type UserSimpleOutput,
+} from "@/schemas/user/user"
 import {
   waitlistCountOutputSchema,
   waitlistInputSchema,

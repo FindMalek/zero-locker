@@ -22,4 +22,6 @@ export const genericEncryptedKeyValuePairInputSchema = z.object({
   valueEncryption: encryptedDataInputSchema,
 })
 
-export type GenericEncryptedKeyValuePairInput = z.infer<typeof genericEncryptedKeyValuePairInputSchema>
+export type GenericEncryptedKeyValuePairInput = z.infer<
+  typeof genericEncryptedKeyValuePairInputSchema
+>

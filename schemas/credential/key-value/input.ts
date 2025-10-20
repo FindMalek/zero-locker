@@ -5,11 +5,10 @@ import { z } from "zod"
 // Base Input Schema
 // ============================================================================
 
-export const keyValueInputSchema = genericEncryptedKeyValuePairInputSchema.extend(
-  {
+export const keyValueInputSchema =
+  genericEncryptedKeyValuePairInputSchema.extend({
     credentialMetadataId: z.string().optional(),
-  }
-)
+  })
 
 export type KeyValueInput = z.infer<typeof keyValueInputSchema>
 

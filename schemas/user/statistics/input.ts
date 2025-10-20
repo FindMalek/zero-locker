@@ -13,4 +13,6 @@ export type UserCountInput = z.infer<typeof userCountInputSchema>
 
 export const encryptedDataCountInputSchema = z.object({})
 
-export type EncryptedDataCountInput = z.infer<typeof encryptedDataCountInputSchema>
+export type EncryptedDataCountInput = z.infer<
+  typeof encryptedDataCountInputSchema
+>
