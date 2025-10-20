@@ -7,12 +7,20 @@ import { z } from "zod"
 // Statistics typically don't require input parameters
 // but we can define common query parameters if needed
 
-export const getUserCountInputSchema = z.object({})
+export const userCountInputSchema = z.object({})
 
-export type GetUserCountInput = z.infer<typeof getUserCountInputSchema>
+export type UserCountInput = z.infer<typeof userCountInputSchema>
 
-export const getEncryptedDataCountInputSchema = z.object({})
+export const encryptedDataCountInputSchema = z.object({})
 
-export type GetEncryptedDataCountInput = z.infer<
-  typeof getEncryptedDataCountInputSchema
->
+export type EncryptedDataCountInput = z.infer<typeof encryptedDataCountInputSchema>
+
+// ============================================================================
+// Legacy aliases for backward compatibility
+// ============================================================================
+
+export const getUserCountInputSchema = userCountInputSchema
+export const getEncryptedDataCountInputSchema = encryptedDataCountInputSchema
+
+export type GetUserCountInput = UserCountInput
+export type GetEncryptedDataCountInput = EncryptedDataCountInput

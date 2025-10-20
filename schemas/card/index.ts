@@ -1,7 +1,7 @@
 // Entity schemas
-export * from "./card.enums"
-export * from "./card.input"
-export * from "./card.output"
+export * from "./enums"
+export * from "./input"
+export * from "./output"
 
 // Related schemas
 export * from "./metadata"

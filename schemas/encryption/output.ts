@@ -4,7 +4,7 @@ import { z } from "zod"
 // Encryption Output Schemas
 // ============================================================================
 
-export const encryptedDataSimpleRoSchema = z.object({
+export const encryptedDataSimpleOutputSchema = z.object({
   id: z.string(),
   iv: z.string(),
   encryptionKey: z.string(),
@@ -13,4 +13,24 @@ export const encryptedDataSimpleRoSchema = z.object({
   updatedAt: z.date(),
 })
 
-export type EncryptedDataSimpleRo = z.infer<typeof encryptedDataSimpleRoSchema>
+export type EncryptedDataSimpleOutput = z.infer<typeof encryptedDataSimpleOutputSchema>
+
+// ============================================================================
+// Extended Output Schemas
+// ============================================================================
+
+export const encryptedDataOutputSchema = encryptedDataSimpleOutputSchema
+
+export type EncryptedDataOutput = EncryptedDataSimpleOutput
+
+// ============================================================================
+// Legacy aliases for backward compatibility
+// ============================================================================
+
+export const encryptedDataSimpleRoSchema = encryptedDataSimpleOutputSchema
+export const simpleOutputSchema = encryptedDataSimpleOutputSchema
+export const outputSchema = encryptedDataSimpleOutputSchema
+
+export type EncryptedDataSimpleRo = EncryptedDataSimpleOutput
+export type SimpleOutput = EncryptedDataSimpleOutput
+export type Output = EncryptedDataSimpleOutput

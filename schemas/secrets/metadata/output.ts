@@ -5,7 +5,7 @@ import { z } from "zod"
 // Secret Metadata Output Schemas
 // ============================================================================
 
-export const secretMetadataSimpleRoSchema = z.object({
+export const secretMetadataSimpleOutputSchema = z.object({
   id: z.string(),
   type: z.nativeEnum(SecretType),
   status: z.nativeEnum(SecretStatus),
@@ -14,16 +14,24 @@ export const secretMetadataSimpleRoSchema = z.object({
   secretId: z.string(),
 })
 
-export type SecretMetadataSimpleRo = z.infer<
-  typeof secretMetadataSimpleRoSchema
->
+export type SecretMetadataSimpleOutput = z.infer<typeof secretMetadataSimpleOutputSchema>
 
 // ============================================================================
 // Extended Output Schemas
 // ============================================================================
 
-export const simpleOutputSchema = secretMetadataSimpleRoSchema
-export const outputSchema = secretMetadataSimpleRoSchema
+export const secretMetadataOutputSchema = secretMetadataSimpleOutputSchema
 
-export type SimpleOutput = SecretMetadataSimpleRo
-export type Output = SecretMetadataSimpleRo
+export type SecretMetadataOutput = SecretMetadataSimpleOutput
+
+// ============================================================================
+// Legacy aliases for backward compatibility
+// ============================================================================
+
+export const secretMetadataSimpleRoSchema = secretMetadataSimpleOutputSchema
+export const simpleOutputSchema = secretMetadataSimpleOutputSchema
+export const outputSchema = secretMetadataSimpleOutputSchema
+
+export type SecretMetadataSimpleRo = SecretMetadataSimpleOutput
+export type SimpleOutput = SecretMetadataSimpleOutput
+export type Output = SecretMetadataSimpleOutput

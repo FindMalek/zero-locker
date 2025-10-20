@@ -4,47 +4,47 @@ import { z } from "zod"
 import { UserDto } from "@/config/schema"
 
 // ============================================================================
-// Base User Input Schema
+// User Input Schemas
 // ============================================================================
 
-export const inputSchema = UserDto
+export const userInputSchema = UserDto
 
-export type Input = z.infer<typeof inputSchema>
+export type UserInput = z.infer<typeof userInputSchema>
 
 // ============================================================================
 // CRUD Operation Input Schemas
 // ============================================================================
 
 // Create
-export const createInputSchema = inputSchema
+export const createUserInputSchema = userInputSchema
 
-export type CreateInput = z.infer<typeof createInputSchema>
+export type CreateUserInput = z.infer<typeof createUserInputSchema>
 
 // Get by ID
-export const getInputSchema = z.object({
+export const getUserInputSchema = z.object({
   id: z.string().min(1, "User ID is required"),
 })
 
-export type GetInput = z.infer<typeof getInputSchema>
+export type GetUserInput = z.infer<typeof getUserInputSchema>
 
 // Update
-export const updateInputSchema = inputSchema.partial().extend({
+export const updateUserInputSchema = userInputSchema.partial().extend({
   id: z.string().min(1, "User ID is required"),
 })
 
-export type UpdateInput = z.infer<typeof updateInputSchema>
+export type UpdateUserInput = z.infer<typeof updateUserInputSchema>
 
 // Delete
-export const deleteInputSchema = z.object({
+export const deleteUserInputSchema = z.object({
   id: z.string().min(1, "User ID is required"),
 })
 
-export type DeleteInput = z.infer<typeof deleteInputSchema>
+export type DeleteUserInput = z.infer<typeof deleteUserInputSchema>
 
 // List
-export const listInputSchema = z.object({
+export const listUsersInputSchema = z.object({
   page: z.number().min(1).default(1),
   limit: z.number().min(1).max(100).default(10),
 })
 
-export type ListInput = z.infer<typeof listInputSchema>
+export type ListUsersInput = z.infer<typeof listUsersInputSchema>

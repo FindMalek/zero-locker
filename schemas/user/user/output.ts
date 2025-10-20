@@ -5,7 +5,7 @@ import { z } from "zod"
 // User Output Schemas
 // ============================================================================
 
-export const currentUserDtoSchema = z.object({
+export const userSimpleOutputSchema = z.object({
   id: z.string(),
   name: z.string(),
   email: z.string().email(),
@@ -14,14 +14,24 @@ export const currentUserDtoSchema = z.object({
   createdAt: z.union([z.date(), z.string().datetime()]),
 })
 
-export type CurrentUserDto = z.infer<typeof currentUserDtoSchema>
+export type UserSimpleOutput = z.infer<typeof userSimpleOutputSchema>
+
+// ============================================================================
+// Extended Output Schemas
+// ============================================================================
+
+export const userOutputSchema = userSimpleOutputSchema
+
+export type UserOutput = UserSimpleOutput
 
 // ============================================================================
 // Legacy aliases for backward compatibility
 // ============================================================================
 
-export const simpleOutputSchema = currentUserDtoSchema
-export const outputSchema = currentUserDtoSchema
+export const currentUserDtoSchema = userSimpleOutputSchema
+export const simpleOutputSchema = userSimpleOutputSchema
+export const outputSchema = userSimpleOutputSchema
 
-export type SimpleOutput = CurrentUserDto
-export type Output = CurrentUserDto
+export type CurrentUserDto = UserSimpleOutput
+export type SimpleOutput = UserSimpleOutput
+export type Output = UserSimpleOutput

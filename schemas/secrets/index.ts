@@ -1,6 +1,6 @@
 // Entity schemas
-export * from "./secret.input"
-export * from "./secret.output"
+export * from "./input"
+export * from "./output"
 
 // Related schemas
 export * from "./metadata"

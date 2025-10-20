@@ -4,19 +4,19 @@ import { z } from "zod"
 // Roadmap Output Schemas
 // ============================================================================
 
-export const subscribeToRoadmapOutputSchema = z.object({
+export const roadmapSubscribeOutputSchema = z.object({
   success: z.boolean(),
   error: z.string().optional(),
 })
 
-export type SubscribeToRoadmapOutput = z.infer<
-  typeof subscribeToRoadmapOutputSchema
->
+export type RoadmapSubscribeOutput = z.infer<typeof roadmapSubscribeOutputSchema>
 
 // ============================================================================
 // Legacy aliases for backward compatibility
 // ============================================================================
 
-export const subscribeOutputSchema = subscribeToRoadmapOutputSchema
+export const subscribeToRoadmapOutputSchema = roadmapSubscribeOutputSchema
+export const subscribeOutputSchema = roadmapSubscribeOutputSchema
 
-export type SubscribeOutput = SubscribeToRoadmapOutput
+export type SubscribeToRoadmapOutput = RoadmapSubscribeOutput
+export type SubscribeOutput = RoadmapSubscribeOutput

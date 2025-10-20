@@ -4,7 +4,7 @@ import { z } from "zod"
 // Card Metadata Input Schemas
 // ============================================================================
 
-export const inputSchema = z.object({
+export const cardMetadataInputSchema = z.object({
   creditLimit: z.number().optional(),
   availableCredit: z.number().optional(),
   interestRate: z.number().optional(),
@@ -18,37 +18,37 @@ export const inputSchema = z.object({
   cardId: z.string(),
 })
 
-export type Input = z.infer<typeof inputSchema>
+export type CardMetadataInput = z.infer<typeof cardMetadataInputSchema>
 
 // ============================================================================
 // CRUD Operation Input Schemas
 // ============================================================================
 
 // Get by Card ID
-export const getInputSchema = z.object({
+export const getCardMetadataInputSchema = z.object({
   cardId: z.string().min(1, "Card ID is required"),
 })
 
-export type GetInput = z.infer<typeof getInputSchema>
+export type GetCardMetadataInput = z.infer<typeof getCardMetadataInputSchema>
 
 // Update
-export const updateInputSchema = z.object({
+export const updateCardMetadataInputSchema = z.object({
   id: z.string().min(1, "Metadata ID is required"),
-  data: inputSchema.partial(),
+  data: cardMetadataInputSchema.partial(),
 })
 
-export type UpdateInput = z.infer<typeof updateInputSchema>
+export type UpdateCardMetadataInput = z.infer<typeof updateCardMetadataInputSchema>
 
 // Delete
-export const deleteInputSchema = z.object({
+export const deleteCardMetadataInputSchema = z.object({
   id: z.string().min(1, "Metadata ID is required"),
 })
 
-export type DeleteInput = z.infer<typeof deleteInputSchema>
+export type DeleteCardMetadataInput = z.infer<typeof deleteCardMetadataInputSchema>
 
 // List
-export const listInputSchema = z.object({
+export const listCardMetadataInputSchema = z.object({
   cardId: z.string().min(1, "Card ID is required"),
 })
 
-export type ListInput = z.infer<typeof listInputSchema>
+export type ListCardMetadataInput = z.infer<typeof listCardMetadataInputSchema>

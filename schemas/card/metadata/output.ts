@@ -4,7 +4,7 @@ import { z } from "zod"
 // Card Metadata Output Schemas
 // ============================================================================
 
-export const cardMetadataSimpleRoSchema = z.object({
+export const cardMetadataSimpleOutputSchema = z.object({
   id: z.string(),
   creditLimit: z.number().nullable(),
   availableCredit: z.number().nullable(),
@@ -19,14 +19,24 @@ export const cardMetadataSimpleRoSchema = z.object({
   cardId: z.string(),
 })
 
-export type CardMetadataSimpleRo = z.infer<typeof cardMetadataSimpleRoSchema>
+export type CardMetadataSimpleOutput = z.infer<typeof cardMetadataSimpleOutputSchema>
 
 // ============================================================================
 // Extended Output Schemas
 // ============================================================================
 
-export const simpleOutputSchema = cardMetadataSimpleRoSchema
-export const outputSchema = cardMetadataSimpleRoSchema
+export const cardMetadataOutputSchema = cardMetadataSimpleOutputSchema
 
-export type SimpleOutput = CardMetadataSimpleRo
-export type Output = CardMetadataSimpleRo
+export type CardMetadataOutput = CardMetadataSimpleOutput
+
+// ============================================================================
+// Legacy aliases for backward compatibility
+// ============================================================================
+
+export const cardMetadataSimpleRoSchema = cardMetadataSimpleOutputSchema
+export const simpleOutputSchema = cardMetadataSimpleOutputSchema
+export const outputSchema = cardMetadataSimpleOutputSchema
+
+export type CardMetadataSimpleRo = CardMetadataSimpleOutput
+export type SimpleOutput = CardMetadataSimpleOutput
+export type Output = CardMetadataSimpleOutput
