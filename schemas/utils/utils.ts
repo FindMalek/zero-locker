@@ -1,9 +1,12 @@
-import { CardSimpleOutput, cardSimpleOutputSchema } from "@/schemas/card"
+import { CardSimpleOutput, cardSimpleOutputSchema } from "@/schemas/card/output"
 import {
   CredentialSimpleOutput,
   credentialSimpleOutputSchema,
 } from "@/schemas/credential/output"
-import { SecretSimpleOutput, secretSimpleOutputSchema } from "@/schemas/secrets"
+import {
+  SecretSimpleOutput,
+  secretSimpleOutputSchema,
+} from "@/schemas/secrets/output"
 import { z } from "zod"
 
 export const ActivityTypeSchema = z.enum(["CREATED", "UPDATED", "COPIED"])

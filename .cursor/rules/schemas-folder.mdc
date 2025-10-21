@@ -323,24 +323,32 @@ export type EncryptedDataSimpleOutput = z.infer<
 
 ## Import Patterns
 
-### Namespace-Based Imports
+### Concrete File Imports
 
-The schemas use namespace exports to avoid naming conflicts and provide clean import paths:
+Schemas must import from specific files to avoid circular dependencies. Never use barrel imports within the schemas folder:
 
 ```tsx
-// Main namespace imports
-import { credential, user, utils } from "@/schemas"
-
-// Specific schema imports (preferred)
+// ✅ Correct - Concrete file imports
 import { loginInputSchema, signUpInputSchema } from "@/schemas/user/user"
 import { waitlistInputSchema } from "@/schemas/user/waitlist"
-import { credentialInputSchema } from "@/schemas/credential"
-import { EntityTypeSchema } from "@/schemas/utils"
+import { credentialInputSchema } from "@/schemas/credential/input"
+import { cardInputSchema } from "@/schemas/card/input"
+import { secretInputSchema } from "@/schemas/secrets/input"
+import { encryptedDataInputSchema } from "@/schemas/encryption/input"
+import { EntityTypeSchema } from "@/schemas/utils/utils"
 
 // Type imports
 import type { LoginInput, SignUpInput } from "@/schemas/user/user"
-import type { CredentialInput } from "@/schemas/credential"
-import type { EntityType } from "@/schemas/utils"
+import type { CredentialInput } from "@/schemas/credential/input"
+import type { CardInput } from "@/schemas/card/input"
+import type { SecretInput } from "@/schemas/secrets/input"
+import type { EntityType } from "@/schemas/utils/utils"
+
+// ❌ Avoid - Barrel imports within schemas
+import { credential } from "@/schemas/credential"
+import { card } from "@/schemas/card"
+import { secrets } from "@/schemas/secrets"
+import { encryption } from "@/schemas/encryption"
 ```
 
 ### Avoiding Circular Dependencies
