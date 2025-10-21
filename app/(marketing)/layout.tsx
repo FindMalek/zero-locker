@@ -11,10 +11,10 @@ export default function MarketingLayout({ children }: MarketingLayoutProps) {
     <div className="relative flex min-h-screen flex-col">
       <div className="absolute inset-0 overflow-hidden bg-black/5">
         <AnimatedGridPattern
-          numSquares={30}
+          numSquares={45}
           maxOpacity={1}
           duration={3}
-          className="text-primary/10"
+          className="text-primary/20"
         />
       </div>
 

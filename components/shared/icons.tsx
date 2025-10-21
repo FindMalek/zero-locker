@@ -138,6 +138,30 @@ function HashiCorpIcon({ className }: { className?: string }) {
   )
 }
 
+function OnePasswordIcon({ className }: { className?: string }) {
+  return (
+    <Image
+      src="/logos/1password.svg"
+      alt="1Password"
+      width={48}
+      height={48}
+      className={cn(className, "inline-block object-contain align-middle")}
+    />
+  )
+}
+
+function DashlaneIcon({ className }: { className?: string }) {
+  return (
+    <Image
+      src="/logos/dashlane.svg"
+      alt="Dashlane"
+      width={48}
+      height={48}
+      className={cn(className, "inline-block object-contain align-middle")}
+    />
+  )
+}
+
 export const Icons = {
   logo: LogoIcon,
   logoLucide: ChevronsRightIcon,
@@ -236,6 +260,8 @@ export const Icons = {
   login: LogIn,
   lastPass: LastPassIcon,
   hashicorp: HashiCorpIcon,
+  onePassword: OnePasswordIcon,
+  dashlane: DashlaneIcon,
   github: FaGithub,
   githubLucide: GithubIcon,
   logs: LogsIcon,
