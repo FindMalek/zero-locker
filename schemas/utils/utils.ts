@@ -1,9 +1,12 @@
-import { CardSimpleOutput, cardSimpleOutputSchema } from "@/schemas/card"
+import { CardSimpleOutput, cardSimpleOutputSchema } from "@/schemas/card/output"
 import {
   CredentialSimpleOutput,
   credentialSimpleOutputSchema,
 } from "@/schemas/credential/output"
-import { SecretSimpleOutput, secretSimpleOutputSchema } from "@/schemas/secrets"
+import {
+  SecretSimpleOutput,
+  secretSimpleOutputSchema,
+} from "@/schemas/secrets/output"
 import { z } from "zod"
 
 export const ActivityTypeSchema = z.enum(["CREATED", "UPDATED", "COPIED"])
@@ -75,3 +78,22 @@ export const LIST_ENTITY_TYPE = Object.values(EntityTypeEnum)
 export type SortField = "identifier" | "status" | "lastViewed" | "createdAt"
 export type SortDirection = "asc" | "desc" | null
 export type ViewMode = "cards" | "rows"
+
+// ============================================================================
+// QR Code Utility Schemas
+// ============================================================================
+
+export const qrCodeFormInputSchema = z.object({
+  url: z.string().min(1, "URL is required"),
+  requirePassword: z.boolean(),
+  password: z.string().optional(),
+})
+
+export type QrCodeFormInput = z.infer<typeof qrCodeFormInputSchema>
+
+// ============================================================================
+// Empty Input Schemas
+// ============================================================================
+
+export const emptyInputSchema = z.object({})
+export type EmptyInput = z.infer<typeof emptyInputSchema>

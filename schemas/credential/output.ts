@@ -1,3 +1,7 @@
+import {
+  credentialKeyValuePairOutputSchema,
+  credentialKeyValuePairWithValueOutputSchema,
+} from "@/schemas/credential/key-value/output"
 import { tagSimpleOutputSchema } from "@/schemas/utils/tag/output"
 import { AccountStatus } from "@prisma/client"
 import { z } from "zod"
@@ -53,3 +57,23 @@ export const listCredentialsOutputSchema = z.object({
 })
 
 export type ListCredentialsOutput = z.infer<typeof listCredentialsOutputSchema>
+
+// ============================================================================
+// Array Output Schemas
+// ============================================================================
+
+// Array of credential key-value pairs
+export const credentialKeyValuePairsArrayOutputSchema = z.array(
+  credentialKeyValuePairOutputSchema
+)
+export type CredentialKeyValuePairsArrayOutput = z.infer<
+  typeof credentialKeyValuePairsArrayOutputSchema
+>
+
+// Array of credential key-value pairs with values
+export const credentialKeyValuePairsWithValueArrayOutputSchema = z.array(
+  credentialKeyValuePairWithValueOutputSchema
+)
+export type CredentialKeyValuePairsWithValueArrayOutput = z.infer<
+  typeof credentialKeyValuePairsWithValueArrayOutputSchema
+>

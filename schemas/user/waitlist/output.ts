@@ -17,3 +17,11 @@ export const waitlistCountOutputSchema = z.object({
 })
 
 export type WaitlistCountOutput = z.infer<typeof waitlistCountOutputSchema>
+
+export const waitlistUserOutputSchema = z.object({
+  id: z.string(),
+  email: z.string().email(),
+  createdAt: z.date(),
+})
+
+export type WaitlistUserOutput = z.infer<typeof waitlistUserOutputSchema>

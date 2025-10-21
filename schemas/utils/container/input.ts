@@ -2,6 +2,7 @@ import { ContainerType } from "@prisma/client"
 import { z } from "zod"
 
 import { tagInputSchema } from "../tag"
+import { EntityTypeSchema } from "../utils"
 
 // ============================================================================
 // Base Input Schema
@@ -62,3 +63,15 @@ export const listContainersInputSchema = z.object({
 })
 
 export type ListContainersInput = z.infer<typeof listContainersInputSchema>
+
+// ============================================================================
+// Container Entity Type Schema
+// ============================================================================
+
+export const getDefaultContainerForEntityInputSchema = z.object({
+  entityType: EntityTypeSchema,
+})
+
+export type GetDefaultContainerForEntityInput = z.infer<
+  typeof getDefaultContainerForEntityInputSchema
+>

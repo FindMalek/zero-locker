@@ -2,10 +2,10 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
+import { loginInputSchema, type LoginInput } from "@/schemas/user/user"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 
-import { loginSchema, type LoginFormData } from "@/config/schema"
 import { signIn } from "@/lib/auth/client"
 import { cn } from "@/lib/utils"
 
@@ -30,8 +30,8 @@ export function AuthLoginForm({
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
 
-  const form = useForm<LoginFormData>({
-    resolver: zodResolver(loginSchema),
+  const form = useForm<LoginInput>({
+    resolver: zodResolver(loginInputSchema),
     defaultValues: {
       email: "",
       password: "",
@@ -39,7 +39,7 @@ export function AuthLoginForm({
     },
   })
 
-  async function onSubmit(data: LoginFormData) {
+  async function onSubmit(data: LoginInput) {
     try {
       setIsLoading(true)
       const { error } = await signIn.email(

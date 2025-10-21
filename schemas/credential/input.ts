@@ -109,3 +109,38 @@ export const credentialFormInputSchema = z.object({
 })
 
 export type CredentialFormInput = z.infer<typeof credentialFormInputSchema>
+
+// ============================================================================
+// Credential Action Input Schemas
+// ============================================================================
+
+// Move credential to different container
+export const moveCredentialInputSchema = z.object({
+  containerId: z.string().optional(),
+})
+
+export type MoveCredentialInput = z.infer<typeof moveCredentialInputSchema>
+
+// Delete credential confirmation
+export const deleteCredentialConfirmationInputSchema = z.object({
+  confirmationText: z.string().min(1, "Confirmation text is required"),
+})
+
+export type DeleteCredentialConfirmationInput = z.infer<
+  typeof deleteCredentialConfirmationInputSchema
+>
+
+// ============================================================================
+// Form Input Schemas (with ID for updates)
+// ============================================================================
+
+// Credential form with ID for updates
+export const credentialFormWithIdInputSchema = credentialFormInputSchema.extend(
+  {
+    id: z.string().min(1, "Credential ID is required"),
+  }
+)
+
+export type CredentialFormWithIdInput = z.infer<
+  typeof credentialFormWithIdInputSchema
+>

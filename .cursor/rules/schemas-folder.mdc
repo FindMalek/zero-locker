@@ -4,7 +4,7 @@ globs: schemas/**/*
 
 # Schemas Folder - Zod Validation Schemas
 
-The `/schemas` folder contains Zod validation schemas for data validation, type safety, and API contracts. This ensures consistent data validation across the application.
+The `/schemas` folder is the **single source of truth** for all Zod validation schemas in the Zero Locker application. This centralized approach ensures consistent data validation, type safety, and API contracts across the entire codebase.
 
 ## Structure Overview
 
@@ -54,7 +54,7 @@ schemas/
 │   └── index.ts       # Barrel exports
 ├── user/              # User-related schemas
 │   ├── user/          # User entity subfolder
-│   │   ├── input.ts   # User input schemas
+│   │   ├── input.ts   # User input schemas (includes auth schemas)
 │   │   ├── output.ts  # User output schemas
 │   │   └── index.ts   # Barrel exports
 │   ├── waitlist/      # Waitlist subfolder
@@ -91,16 +91,16 @@ schemas/
 │   │   └── index.ts   # Barrel exports
 │   ├── base-key-value-pair.ts # Base key-value schema
 │   ├── breadcrumb.ts  # Breadcrumb navigation schemas
-│   ├── utils.ts       # Utility types and schemas
+│   ├── utils.ts       # Utility types and schemas (includes environment validation)
 │   └── index.ts       # Barrel exports
-└── index.ts           # Main barrel exports
+└── index.ts           # Main barrel exports (namespace exports)
 ```
 
 ## Schema Categories
 
 ### 1. Entity Schemas
 
-Define the structure of database entities:
+Define the structure of database entities and their transformations:
 
 ```tsx
 // output.ts
@@ -123,9 +123,9 @@ export type CredentialSimpleOutput = z.infer<
 >
 ```
 
-### 2. Input Schemas
+### 2. Input Schemas (Data Transfer Objects)
 
-Data Transfer Objects for API input validation:
+Data Transfer Objects for API input validation and form handling:
 
 ```tsx
 // input.ts
@@ -138,6 +138,20 @@ export const credentialInputSchema = z.object({
 })
 
 export type CredentialInput = z.infer<typeof credentialInputSchema>
+
+// Authentication schemas (in user/user/input.ts)
+export const loginInputSchema = z.object({
+  email: z.string().email("Please enter a valid email address"),
+  password: z.string().min(8, "Password must be at least 8 characters"),
+  rememberMe: z.boolean(),
+})
+
+export const signUpInputSchema = z.object({
+  name: z.string().min(2, "Name must be at least 2 characters"),
+  email: z.string().email("Please enter a valid email address"),
+  password: z.string().min(8, "Password must be at least 8 characters"),
+  image: z.string().url("Please enter a valid image URL").optional(),
+})
 
 // CRUD Operation Input Schemas
 export const createCredentialInputSchema = credentialInputSchema.extend({
@@ -164,9 +178,9 @@ export const listCredentialsInputSchema = z.object({
 })
 ```
 
-### 3. Output Schemas
+### 3. Output Schemas (Return Objects)
 
-Return Objects for API responses:
+Return Objects for API responses and client-safe data:
 
 ```tsx
 // output.ts
@@ -202,7 +216,7 @@ export const listCredentialsOutputSchema = z.object({
 
 ### 4. Enum Schemas
 
-Schemas for enum definitions:
+Schemas for enum definitions and type safety:
 
 ```tsx
 // enums.ts
@@ -218,9 +232,41 @@ export const LIST_ACCOUNT_STATUSES = Object.values(accountStatusEnum)
 export type AccountStatusInfer = z.infer<typeof accountStatusSchema>
 ```
 
-### 5. Encryption Schemas
+### 5. Utility Schemas
 
-Schemas for encrypted data:
+Common utility schemas for shared functionality:
+
+```tsx
+// utils/utils.ts
+export const ActivityTypeSchema = z.enum(["CREATED", "UPDATED", "COPIED"])
+export const ActivityTypeEnum = ActivityTypeSchema.enum
+export type ActivityType = z.infer<typeof ActivityTypeSchema>
+export const LIST_ACTIVITY_TYPE = Object.values(ActivityTypeEnum)
+
+export const EntityTypeSchema = z.enum(["CREDENTIAL", "CARD", "SECRET"])
+export const EntityTypeEnum = EntityTypeSchema.enum
+export type EntityType = z.infer<typeof EntityTypeSchema>
+export const LIST_ENTITY_TYPE = Object.values(EntityTypeEnum)
+
+// Environment validation schemas
+export const environmentServerSchema = z.object({
+  DATABASE_URL: z.string().min(1).url(),
+  NODE_ENV: z.enum(["development", "production"]),
+  BETTER_AUTH_SECRET: z.string().min(10),
+  LOGO_DEV_TOKEN: z.string().min(10),
+  RESEND_API_KEY: z.string().min(10),
+  MARKETING_SUBSCRIPTION_EMAIL: z.string().email(),
+})
+
+export const environmentClientSchema = z.object({
+  NEXT_PUBLIC_APP_URL: z.string().url(),
+  NEXT_PUBLIC_LOGO_DEV_TOKEN: z.string().min(10),
+})
+```
+
+### 6. Encryption Schemas
+
+Schemas for encrypted data handling:
 
 ```tsx
 // encryption/input.ts
@@ -276,6 +322,34 @@ export type EncryptedDataSimpleOutput = z.infer<
 - **List**: `list{Entity}OutputSchema` (paginated list response)
 
 ## Import Patterns
+
+### Concrete File Imports
+
+Schemas must import from specific files to avoid circular dependencies. Never use barrel imports within the schemas folder:
+
+```tsx
+// ✅ Correct - Concrete file imports
+import { loginInputSchema, signUpInputSchema } from "@/schemas/user/user"
+import { waitlistInputSchema } from "@/schemas/user/waitlist"
+import { credentialInputSchema } from "@/schemas/credential/input"
+import { cardInputSchema } from "@/schemas/card/input"
+import { secretInputSchema } from "@/schemas/secrets/input"
+import { encryptedDataInputSchema } from "@/schemas/encryption/input"
+import { EntityTypeSchema } from "@/schemas/utils/utils"
+
+// Type imports
+import type { LoginInput, SignUpInput } from "@/schemas/user/user"
+import type { CredentialInput } from "@/schemas/credential/input"
+import type { CardInput } from "@/schemas/card/input"
+import type { SecretInput } from "@/schemas/secrets/input"
+import type { EntityType } from "@/schemas/utils/utils"
+
+// ❌ Avoid - Barrel imports within schemas
+import { credential } from "@/schemas/credential"
+import { card } from "@/schemas/card"
+import { secrets } from "@/schemas/secrets"
+import { encryption } from "@/schemas/encryption"
+```
 
 ### Avoiding Circular Dependencies
 
@@ -499,35 +573,83 @@ export const credentialSchema = z
 
 ## Migration Guide
 
-### From Legacy Naming
+### From Legacy Configuration Files
 
-The schema architecture has been updated to use consistent naming conventions. All legacy aliases have been removed:
+The schema architecture has been centralized to use the `/schemas` folder as the single source of truth. All schemas have been migrated from configuration files:
 
 ```tsx
-// ❌ Old naming (removed)
-export const credentialDtoSchema = credentialInputSchema
-export const credentialSimpleRoSchema = credentialSimpleOutputSchema
-export const cardOutputSchema = cardSimpleOutputSchema
+// ❌ Old approach (removed)
+// config/schema.ts
+export const loginSchema = z.object({...})
+export const signUpSchema = z.object({...})
+export const UserDto = z.object({...})
 
-// ✅ New naming (current)
-export const credentialInputSchema = z.object({...})
-export const credentialSimpleOutputSchema = z.object({...})
-export const cardSimpleOutputSchema = z.object({...})
+// ✅ New approach (current)
+// schemas/user/user/input.ts
+export const loginInputSchema = z.object({...})
+export const signUpInputSchema = z.object({...})
+export const userInputSchema = z.object({...})
 ```
 
 ### Import Updates
 
-Update imports to use the new naming conventions:
+Update imports to use the new schema locations:
 
 ```tsx
-// ❌ Old imports
-import { CredentialDto, credentialDtoSchema } from "@/schemas/credential"
-import { CardOutput, cardOutputSchema } from "@/schemas/card"
+// ❌ Old imports (removed)
+import { loginSchema, signUpSchema } from "@/config/schema"
+import { UserDto, UserRo } from "@/config/schema"
 
-// ✅ New imports
-import { CredentialInput, credentialInputSchema } from "@/schemas/credential"
-import { CardSimpleOutput, cardSimpleOutputSchema } from "@/schemas/card"
+// ✅ New imports (current)
+import { loginInputSchema, signUpInputSchema } from "@/schemas/user/user"
+import { userInputSchema, userSimpleOutputSchema } from "@/schemas/user/user"
+import { waitlistInputSchema } from "@/schemas/user/waitlist"
 ```
+
+### Component Updates
+
+Update React components to use the new schema imports:
+
+```tsx
+// ❌ Old component imports
+import { loginSchema, type LoginFormData } from "@/config/schema"
+
+// ✅ New component imports
+import { loginInputSchema, type LoginInput } from "@/schemas/user/user"
+
+// Update form usage
+const form = useForm<LoginInput>({
+  resolver: zodResolver(loginInputSchema),
+  // ...
+})
+```
+
+## Current Architecture Benefits
+
+### 1. Single Source of Truth
+- **Centralized**: All Zod schemas live in the `/schemas` folder
+- **No Duplication**: Eliminates duplicate schema definitions across the codebase
+- **Consistency**: Ensures uniform validation patterns across the application
+
+### 2. Type Safety
+- **Full TypeScript Coverage**: All schemas properly typed with `z.infer<>`
+- **Compile-time Validation**: Catches type mismatches during development
+- **IDE Support**: Excellent autocomplete and error detection
+
+### 3. Maintainability
+- **Organized Structure**: Clear folder hierarchy based on domain entities
+- **Easy Discovery**: Developers can quickly find relevant schemas
+- **Scalable**: Easy to add new schemas following established patterns
+
+### 4. Performance
+- **Namespace Exports**: Prevents circular dependencies and improves build times
+- **Tree Shaking**: Only imports what's needed
+- **Optimized Imports**: Direct imports from specific files
+
+### 5. Developer Experience
+- **Clear Import Paths**: Intuitive import statements
+- **Consistent Naming**: Predictable schema and type names
+- **Documentation**: Well-documented patterns and examples
 
 ## Testing
 
