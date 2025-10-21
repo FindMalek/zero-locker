@@ -72,4 +72,6 @@ export const getDefaultContainerForEntityInputSchema = z.object({
   entityType: EntityTypeSchema,
 })
 
-export type GetDefaultContainerForEntityInput = z.infer<typeof getDefaultContainerForEntityInputSchema>
+export type GetDefaultContainerForEntityInput = z.infer<
+  typeof getDefaultContainerForEntityInputSchema
+>

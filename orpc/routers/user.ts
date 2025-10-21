@@ -18,11 +18,9 @@ import {
   type UserCountOutput,
 } from "@/schemas/user/statistics"
 import {
-  initializeDefaultContainersOutputSchema,
-  type InitializeDefaultContainersOutput,
-} from "@/schemas/utils/container"
-import { userSimpleOutputSchema } from "@/schemas/user/user"
-import { type UserSimpleOutput } from "@/schemas/user/user"
+  userSimpleOutputSchema,
+  type UserSimpleOutput,
+} from "@/schemas/user/user"
 import {
   waitlistCountOutputSchema,
   waitlistInputSchema,
@@ -31,6 +29,10 @@ import {
   type WaitlistInput,
   type WaitlistJoinOutput,
 } from "@/schemas/user/waitlist"
+import {
+  initializeDefaultContainersOutputSchema,
+  type InitializeDefaultContainersOutput,
+} from "@/schemas/utils/container"
 import { ORPCError, os } from "@orpc/server"
 import { Prisma } from "@prisma/client"
 import { z } from "zod"

@@ -63,7 +63,9 @@ export const credentialSecuritySettingsOutputSchema = z.object({
   accessLogging: z.boolean(),
 })
 
-export type CredentialSecuritySettingsOutput = z.infer<typeof credentialSecuritySettingsOutputSchema>
+export type CredentialSecuritySettingsOutput = z.infer<
+  typeof credentialSecuritySettingsOutputSchema
+>
 
 export const credentialKeyValuePairOutputSchema = z.object({
   id: z.string(),
@@ -72,7 +74,9 @@ export const credentialKeyValuePairOutputSchema = z.object({
   updatedAt: z.date(),
 })
 
-export type CredentialKeyValuePairOutput = z.infer<typeof credentialKeyValuePairOutputSchema>
+export type CredentialKeyValuePairOutput = z.infer<
+  typeof credentialKeyValuePairOutputSchema
+>
 
 export const credentialKeyValuePairWithValueOutputSchema = z.object({
   id: z.string(),
@@ -82,28 +86,38 @@ export const credentialKeyValuePairWithValueOutputSchema = z.object({
   updatedAt: z.date(),
 })
 
-export type CredentialKeyValuePairWithValueOutput = z.infer<typeof credentialKeyValuePairWithValueOutputSchema>
+export type CredentialKeyValuePairWithValueOutput = z.infer<
+  typeof credentialKeyValuePairWithValueOutputSchema
+>
 
 export const credentialPasswordOutputSchema = z.object({
   password: z.string(),
 })
 
-export type CredentialPasswordOutput = z.infer<typeof credentialPasswordOutputSchema>
+export type CredentialPasswordOutput = z.infer<
+  typeof credentialPasswordOutputSchema
+>
 
 export const credentialKeyValuePairValueOutputSchema = z.object({
   value: z.string(),
 })
 
-export type CredentialKeyValuePairValueOutput = z.infer<typeof credentialKeyValuePairValueOutputSchema>
+export type CredentialKeyValuePairValueOutput = z.infer<
+  typeof credentialKeyValuePairValueOutputSchema
+>
 
 export const updateCredentialPasswordOutputSchema = z.object({
   success: z.boolean(),
 })
 
-export type UpdateCredentialPasswordOutput = z.infer<typeof updateCredentialPasswordOutputSchema>
+export type UpdateCredentialPasswordOutput = z.infer<
+  typeof updateCredentialPasswordOutputSchema
+>
 
 export const updateCredentialKeyValuePairsOutputSchema = z.object({
   success: z.boolean(),
 })
 
-export type UpdateCredentialKeyValuePairsOutput = z.infer<typeof updateCredentialKeyValuePairsOutputSchema>
+export type UpdateCredentialKeyValuePairsOutput = z.infer<
+  typeof updateCredentialKeyValuePairsOutputSchema
+>

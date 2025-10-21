@@ -3,11 +3,14 @@
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import { useJoinWaitlist, useWaitlistCount } from "@/orpc/hooks"
+import {
+  waitlistInputSchema,
+  type WaitlistInput,
+} from "@/schemas/user/waitlist"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { toast } from "sonner"
 
-import { waitlistInputSchema, type WaitlistInput } from "@/schemas/user/waitlist"
 import { siteConfig } from "@/config/site"
 import { handleORPCError } from "@/lib/utils"
 

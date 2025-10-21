@@ -42,4 +42,6 @@ export const initializeDefaultContainersOutputSchema = z.object({
   message: z.string(),
 })
 
-export type InitializeDefaultContainersOutput = z.infer<typeof initializeDefaultContainersOutputSchema>
+export type InitializeDefaultContainersOutput = z.infer<
+  typeof initializeDefaultContainersOutputSchema
+>

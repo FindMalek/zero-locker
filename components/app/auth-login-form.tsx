@@ -2,10 +2,10 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
+import { loginInputSchema, type LoginInput } from "@/schemas/user/user"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 
-import { loginInputSchema, type LoginInput } from "@/schemas/user/user"
 import { signIn } from "@/lib/auth/client"
 import { cn } from "@/lib/utils"
 

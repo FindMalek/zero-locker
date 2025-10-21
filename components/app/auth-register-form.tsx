@@ -3,10 +3,10 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { useInitializeDefaultContainers } from "@/orpc/hooks/use-users"
+import { signUpInputSchema, type SignUpInput } from "@/schemas/user/user"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 
-import { signUpInputSchema, type SignUpInput } from "@/schemas/user/user"
 import { signUp } from "@/lib/auth/client"
 import { cn } from "@/lib/utils"
 

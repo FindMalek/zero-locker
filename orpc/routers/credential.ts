@@ -12,34 +12,34 @@ import { database } from "@/prisma/client"
 import {
   createCredentialInputSchema,
   credentialFormInputSchema,
-  credentialSimpleOutputSchema,
-  credentialSecuritySettingsOutputSchema,
   credentialKeyValuePairOutputSchema,
+  credentialKeyValuePairValueOutputSchema,
   credentialKeyValuePairWithValueOutputSchema,
   credentialPasswordOutputSchema,
-  credentialKeyValuePairValueOutputSchema,
-  updateCredentialPasswordOutputSchema,
-  updateCredentialKeyValuePairsOutputSchema,
+  credentialSecuritySettingsOutputSchema,
+  credentialSimpleOutputSchema,
   deleteCredentialInputSchema,
   duplicateCredentialInputSchema,
   getCredentialInputSchema,
   getCredentialKeyValuePairValueInputSchema,
-  updateCredentialKeyValuePairsInputSchema,
   listCredentialsInputSchema,
   listCredentialsOutputSchema,
   updateCredentialInputSchema,
+  updateCredentialKeyValuePairsInputSchema,
+  updateCredentialKeyValuePairsOutputSchema,
   updateCredentialPasswordInputSchema,
-  type CredentialSimpleOutput,
-  type ListCredentialsOutput,
-  type CredentialSecuritySettingsOutput,
+  updateCredentialPasswordOutputSchema,
   type CredentialKeyValuePairOutput,
+  type CredentialKeyValuePairValueOutput,
   type CredentialKeyValuePairWithValueOutput,
   type CredentialPasswordOutput,
-  type CredentialKeyValuePairValueOutput,
-  type UpdateCredentialPasswordOutput,
-  type UpdateCredentialKeyValuePairsOutput,
+  type CredentialSecuritySettingsOutput,
+  type CredentialSimpleOutput,
   type GetCredentialKeyValuePairValueInput,
+  type ListCredentialsOutput,
   type UpdateCredentialKeyValuePairsInput,
+  type UpdateCredentialKeyValuePairsOutput,
+  type UpdateCredentialPasswordOutput,
 } from "@/schemas/credential"
 import { keyValueWithValueOutputSchema } from "@/schemas/credential/key-value"
 import {
@@ -99,10 +99,7 @@ export const getCredentialSecuritySettings = authProcedure
   .input(getCredentialInputSchema)
   .output(credentialSecuritySettingsOutputSchema)
   .handler(
-    async ({
-      input,
-      context,
-    }): Promise<CredentialSecuritySettingsOutput> => {
+    async ({ input, context }): Promise<CredentialSecuritySettingsOutput> => {
       const credential = await database.credential.findFirst({
         where: {
           id: input.id,
