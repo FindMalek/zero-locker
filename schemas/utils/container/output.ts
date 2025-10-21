@@ -45,3 +45,10 @@ export const initializeDefaultContainersOutputSchema = z.object({
 export type InitializeDefaultContainersOutput = z.infer<
   typeof initializeDefaultContainersOutputSchema
 >
+
+// ============================================================================
+// Array Output Schemas
+// ============================================================================
+
+export const containersArrayOutputSchema = z.array(containerSimpleOutputSchema)
+export type ContainersArrayOutput = z.infer<typeof containersArrayOutputSchema>

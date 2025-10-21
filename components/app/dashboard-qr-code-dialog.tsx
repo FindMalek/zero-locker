@@ -1,9 +1,9 @@
 "use client"
 
 import { useState } from "react"
+import { qrCodeFormInputSchema, type QrCodeFormInput } from "@/schemas/utils"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
-import { z } from "zod"
 
 import { Icons } from "@/components/shared/icons"
 import { Badge } from "@/components/ui/badge"
@@ -18,13 +18,6 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 
-const qrCodeFormSchema = z.object({
-  url: z.string().min(1, "URL is required"),
-  requirePassword: z.boolean(),
-  password: z.string().optional(),
-})
-
-type QrCodeFormData = z.infer<typeof qrCodeFormSchema>
 
 interface QrCodeDialogProps {
   open: boolean
@@ -40,8 +33,8 @@ export function DashboardQrCodeDialog({
   const [qrCodeColor, setQrCodeColor] = useState("#DF6547")
   const [showLogo, setShowLogo] = useState(true)
 
-  const form = useForm<QrCodeFormData>({
-    resolver: zodResolver(qrCodeFormSchema),
+  const form = useForm<QrCodeFormInput>({
+    resolver: zodResolver(qrCodeFormInputSchema),
     defaultValues: {
       url: `https://zero-locker.app/credential/${credentialId}`,
       requirePassword: false,
@@ -61,7 +54,7 @@ export function DashboardQrCodeDialog({
     console.log("Copy QR code image")
   }
 
-  const handleSaveChanges = (data: QrCodeFormData) => {
+  const handleSaveChanges = (data: QrCodeFormInput) => {
     // TODO: Implement QR code generation with settings
     console.log("Save QR code settings:", data)
     onOpenChange(false)

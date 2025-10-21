@@ -27,7 +27,7 @@ import {
 } from "@/schemas/utils/container/with-secrets"
 import { ORPCError, os } from "@orpc/server"
 import type { Prisma } from "@prisma/client"
-import { z } from "zod"
+import { emptyInputSchema, containersArrayOutputSchema } from "@/schemas/utils"
 
 import { Action, PermissionLevel } from "@/lib/permissions"
 import { createEncryptedData } from "@/lib/utils/encryption-helpers"
@@ -358,8 +358,8 @@ export const getDefaultContainerForEntity = authProcedure
 
 // Get all default containers for a user
 export const getUserDefaultContainers = authProcedure
-  .input(z.object({}))
-  .output(z.array(containerSimpleOutputSchema))
+  .input(emptyInputSchema)
+  .output(containersArrayOutputSchema)
   .handler(async ({ context }): Promise<ContainerSimpleOutput[]> => {
     const containers = await database.container.findMany({
       where: {

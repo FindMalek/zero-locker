@@ -51,7 +51,11 @@ import {
 import { ORPCError, os } from "@orpc/server"
 import { AccountStatus, type Prisma } from "@prisma/client"
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library"
-import { z } from "zod"
+import {
+  credentialFormWithIdInputSchema,
+  credentialKeyValuePairsArrayOutputSchema,
+  credentialKeyValuePairsWithValueArrayOutputSchema,
+} from "@/schemas/credential"
 
 import { decryptData, encryptData } from "@/lib/encryption"
 import { Feature, PermissionLevel } from "@/lib/permissions"
@@ -119,7 +123,7 @@ export const getCredentialSecuritySettings = authProcedure
 // Get credential key-value pairs (keys only, no values for security)
 export const getCredentialKeyValuePairs = authProcedure
   .input(getCredentialInputSchema)
-  .output(z.array(credentialKeyValuePairOutputSchema))
+  .output(credentialKeyValuePairsArrayOutputSchema)
   .handler(async ({ input, context }) => {
     const credential = await database.credential.findFirst({
       where: {
@@ -157,7 +161,7 @@ export const getCredentialKeyValuePairs = authProcedure
 // Get credential key-value pairs with values (for editing mode)
 export const getCredentialKeyValuePairsWithValues = authProcedure
   .input(getCredentialInputSchema)
-  .output(z.array(credentialKeyValuePairWithValueOutputSchema))
+  .output(credentialKeyValuePairsWithValueArrayOutputSchema)
   .handler(async ({ input, context }) => {
     const credential = await database.credential.findFirst({
       where: {
@@ -682,7 +686,7 @@ export const updateCredentialWithSecuritySettings = authProcedure
       level: PermissionLevel.WRITE,
     })({ context, next })
   )
-  .input(credentialFormInputSchema.extend({ id: z.string() }))
+  .input(credentialFormWithIdInputSchema)
   .output(credentialSimpleOutputSchema)
   .handler(async ({ input, context }): Promise<CredentialSimpleOutput> => {
     const {

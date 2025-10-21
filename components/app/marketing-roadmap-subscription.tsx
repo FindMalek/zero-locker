@@ -2,10 +2,10 @@
 
 import { useEffect, useState } from "react"
 import { useSubscribeToRoadmap } from "@/orpc/hooks"
+import { roadmapSubscribeInputSchema, type RoadmapSubscribeInput } from "@/schemas/user/roadmap"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { toast } from "sonner"
-import { z } from "zod"
 
 import { handleORPCError } from "@/lib/utils"
 
@@ -20,11 +20,6 @@ import {
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 
-const subscriptionSchema = z.object({
-  email: z.string().min(1, "Email is required").email("Invalid email address"),
-})
-
-type SubscriptionFormData = z.infer<typeof subscriptionSchema>
 
 export function MarketingRoadmapSubscription() {
   const subscribeToRoadmapMutation = useSubscribeToRoadmap()
@@ -32,8 +27,8 @@ export function MarketingRoadmapSubscription() {
   const [showSuccess, setShowSuccess] = useState(false)
   const [isTransitioning, setIsTransitioning] = useState(false)
 
-  const form = useForm<SubscriptionFormData>({
-    resolver: zodResolver(subscriptionSchema),
+  const form = useForm<RoadmapSubscribeInput>({
+    resolver: zodResolver(roadmapSubscribeInputSchema),
     defaultValues: {
       email: "",
     },
@@ -54,7 +49,7 @@ export function MarketingRoadmapSubscription() {
     }
   }, [showSuccess])
 
-  async function onSubmit(values: SubscriptionFormData) {
+  async function onSubmit(values: RoadmapSubscribeInput) {
     subscribeToRoadmapMutation.mutate(values, {
       onSuccess: (result) => {
         if (result.success) {

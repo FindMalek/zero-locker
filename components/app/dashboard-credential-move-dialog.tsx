@@ -6,9 +6,9 @@ import { PlatformEntity } from "@/entities/utils/platform"
 import { useUpdateCredential } from "@/orpc/hooks/use-credentials"
 import type { CredentialSimpleOutput } from "@/schemas/credential"
 import type { PlatformSimpleOutput } from "@/schemas/utils"
+import { moveCredentialInputSchema, type MoveCredentialInput } from "@/schemas/credential"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
-import { z } from "zod"
 
 import { useUserPermissions } from "@/lib/permissions"
 import { getLogoDevUrlWithToken, getPlaceholderImage } from "@/lib/utils"
@@ -34,11 +34,6 @@ import {
   ResponsiveDialogTitle,
 } from "@/components/ui/responsive-dialog"
 
-const moveCredentialSchema = z.object({
-  containerId: z.string().optional(),
-})
-
-type MoveCredentialFormData = z.infer<typeof moveCredentialSchema>
 
 interface MoveCredentialDialogProps {
   open: boolean
@@ -57,8 +52,8 @@ export function DashboardMoveCredentialDialog({
   const permissions = useUserPermissions()
   const updateCredentialMutation = useUpdateCredential()
 
-  const form = useForm<MoveCredentialFormData>({
-    resolver: zodResolver(moveCredentialSchema),
+  const form = useForm<MoveCredentialInput>({
+    resolver: zodResolver(moveCredentialInputSchema),
     defaultValues: {
       containerId: credential.containerId || undefined,
     },
@@ -82,7 +77,7 @@ export function DashboardMoveCredentialDialog({
     }
   }, [credential.id, credential.containerId, open, form])
 
-  const handleMove = async (data: MoveCredentialFormData) => {
+  const handleMove = async (data: MoveCredentialInput) => {
     if (!canMoveCredential) {
       toast("Moving credentials is only available for PRO plan users.", "error")
       return

@@ -27,6 +27,8 @@ export {
   type ContainerSimpleOutput,
   listContainersOutputSchema,
   type ListContainersOutput,
+  containersArrayOutputSchema,
+  type ContainersArrayOutput,
   // Container Enums
   LIST_CONTAINER_TYPES,
   // Container Entity Type Schema

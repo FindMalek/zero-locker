@@ -6,9 +6,9 @@ import { PlatformEntity } from "@/entities/utils/platform"
 import { useDeleteCredential } from "@/orpc/hooks/use-credentials"
 import type { CredentialSimpleOutput } from "@/schemas/credential"
 import type { PlatformSimpleOutput } from "@/schemas/utils"
+import { deleteCredentialConfirmationInputSchema, type DeleteCredentialConfirmationInput } from "@/schemas/credential"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
-import { z } from "zod"
 
 import { getLogoDevUrlWithToken, getPlaceholderImage } from "@/lib/utils"
 import { useToast } from "@/hooks/use-toast"
@@ -34,11 +34,6 @@ import {
   ResponsiveAlertDialogTitle,
 } from "@/components/ui/responsive-alert-dialog"
 
-const deleteCredentialSchema = z.object({
-  confirmationText: z.string().min(1, "Confirmation text is required"),
-})
-
-type DeleteCredentialFormData = z.infer<typeof deleteCredentialSchema>
 
 interface DeleteCredentialDialogProps {
   open: boolean
@@ -59,8 +54,8 @@ export function DashboardDeleteCredentialDialog({
   const { toast } = useToast()
   const deleteCredentialMutation = useDeleteCredential()
 
-  const form = useForm<DeleteCredentialFormData>({
-    resolver: zodResolver(deleteCredentialSchema),
+  const form = useForm<DeleteCredentialConfirmationInput>({
+    resolver: zodResolver(deleteCredentialConfirmationInputSchema),
     defaultValues: {
       confirmationText: "",
     },
@@ -78,7 +73,7 @@ export function DashboardDeleteCredentialDialog({
     return null
   }
 
-  const handleDelete = async (data: DeleteCredentialFormData) => {
+  const handleDelete = async (data: DeleteCredentialConfirmationInput) => {
     if (data.confirmationText !== credential.identifier) {
       form.setError("confirmationText", {
         message:

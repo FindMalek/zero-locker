@@ -35,7 +35,7 @@ import {
 } from "@/schemas/utils/container"
 import { ORPCError, os } from "@orpc/server"
 import { Prisma } from "@prisma/client"
-import { z } from "zod"
+import { emptyInputSchema } from "@/schemas/utils"
 
 import { sendRoadmapSubscriptionEmail, sendWaitlistEmail } from "@/lib/email"
 import { createDefaultContainers } from "@/lib/utils/default-containers"
@@ -166,7 +166,7 @@ export const joinWaitlist = strictPublicProcedure
 
 // Get waitlist count
 export const getWaitlistCount = publicProcedure
-  .input(z.object({}))
+  .input(emptyInputSchema)
   .output(waitlistCountOutputSchema)
   .handler(async (): Promise<WaitlistCountOutput> => {
     const total = await database.waitlist.count()
@@ -175,7 +175,7 @@ export const getWaitlistCount = publicProcedure
 
 // Get user count
 export const getUserCount = publicProcedure
-  .input(z.object({}))
+  .input(emptyInputSchema)
   .output(userCountOutputSchema)
   .handler(async (): Promise<UserCountOutput> => {
     const total = await database.user.count()
@@ -184,7 +184,7 @@ export const getUserCount = publicProcedure
 
 // Get encrypted data count
 export const getEncryptedDataCount = publicProcedure
-  .input(z.object({}))
+  .input(emptyInputSchema)
   .output(encryptedDataCountOutputSchema)
   .handler(async (): Promise<EncryptedDataCountOutput> => {
     const count = await database.encryptedData.count()
@@ -193,7 +193,7 @@ export const getEncryptedDataCount = publicProcedure
 
 // Get current user profile with plan information
 export const getCurrentUser = authProcedure
-  .input(z.object({}))
+  .input(emptyInputSchema)
   .output(userSimpleOutputSchema)
   .handler(async ({ context }): Promise<UserSimpleOutput> => {
     const user = await database.user.findUnique({
@@ -314,7 +314,7 @@ export const subscribeToRoadmap = strictPublicProcedure
 
 // Initialize default containers for a user
 export const initializeDefaultContainers = authProcedure
-  .input(z.object({}))
+  .input(emptyInputSchema)
   .output(initializeDefaultContainersOutputSchema)
   .handler(async ({ context }): Promise<InitializeDefaultContainersOutput> => {
     try {
