@@ -175,6 +175,9 @@ importers:
       react-hook-form:
         specifier: ^7.56.3
         version: 7.56.3(react@19.1.0)
+      react-icons:
+        specifier: ^5.5.0
+        version: 5.5.0(react@19.1.0)
       react-payment-inputs:
         specifier: ^1.2.0
         version: 1.2.0(react@19.1.0)(styled-components@6.1.18(react-dom@19.1.0(react@19.1.0))(react@19.1.0))
@@ -5408,6 +5411,14 @@ packages:
     peerDependencies:
       react: ^16.8.0 || ^17 || ^18 || ^19
 
+  react-icons@5.5.0:
+    resolution:
+      {
+        integrity: sha512-MEFcXdkP3dLo8uumGI5xN3lDFNsRtrjbOEKDLD7yv76v4wpnEq2Lt2qeHaQOr34I/wPN3s3+N08WkQ+CW37Xiw==,
+      }
+    peerDependencies:
+      react: "*"
+
   react-is@16.13.1:
     resolution:
       {
@@ -9635,6 +9646,10 @@ snapshots:
       scheduler: 0.26.0
 
   react-hook-form@7.56.3(react@19.1.0):
+    dependencies:
+      react: 19.1.0
+
+  react-icons@5.5.0(react@19.1.0):
     dependencies:
       react: 19.1.0
 

@@ -101,8 +101,10 @@ import {
   UserPlus,
   Users,
   X,
+  XIcon,
   ZapIcon,
 } from "lucide-react"
+import { FaGithub, FaTwitter } from "react-icons/fa"
 
 import { cn } from "@/lib/utils"
 
@@ -129,6 +131,30 @@ function HashiCorpIcon({ className }: { className?: string }) {
     <Image
       src="/logos/hashicorp.svg"
       alt="HashiCorp"
+      width={48}
+      height={48}
+      className={cn(className, "inline-block object-contain align-middle")}
+    />
+  )
+}
+
+function OnePasswordIcon({ className }: { className?: string }) {
+  return (
+    <Image
+      src="/logos/1password.svg"
+      alt="1Password"
+      width={48}
+      height={48}
+      className={cn(className, "inline-block object-contain align-middle")}
+    />
+  )
+}
+
+function DashlaneIcon({ className }: { className?: string }) {
+  return (
+    <Image
+      src="/logos/dashlane.svg"
+      alt="Dashlane"
       width={48}
       height={48}
       className={cn(className, "inline-block object-contain align-middle")}
@@ -234,7 +260,10 @@ export const Icons = {
   login: LogIn,
   lastPass: LastPassIcon,
   hashicorp: HashiCorpIcon,
-  github: GithubIcon,
+  onePassword: OnePasswordIcon,
+  dashlane: DashlaneIcon,
+  github: FaGithub,
+  githubLucide: GithubIcon,
   logs: LogsIcon,
   grid: Grid3X3Icon,
   list: ListIcon,
@@ -259,6 +288,8 @@ export const Icons = {
   truck: Truck,
   construction: Construction,
   rocket: RocketIcon,
+  twitter: FaTwitter,
+  twitterLucide: XIcon,
 }
 
 export const getEntityIcon = (itemType: RecentItemType) => {

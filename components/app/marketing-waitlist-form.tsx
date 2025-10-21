@@ -1,7 +1,6 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import Link from "next/link"
 import { useJoinWaitlist, useWaitlistCount } from "@/orpc/hooks"
 import {
   waitlistInputSchema,
@@ -11,7 +10,6 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { toast } from "sonner"
 
-import { siteConfig } from "@/config/site"
 import { handleORPCError } from "@/lib/utils"
 
 import { Icons } from "@/components/shared/icons"
@@ -135,14 +133,8 @@ export function MarketingWaitlistForm() {
           >
             {joinWaitlistMutation.isPending && (
               <Icons.spinner className="size-4 animate-spin" />
-            )}{" "}
+            )}
             Join Waitlist
-          </Button>
-          <Button variant="secondary" size="lg" asChild>
-            <Link href={siteConfig.links.github}>
-              <Icons.github />
-              <span className="sm:hidden">Star us on GitHub</span>
-            </Link>
           </Button>
         </form>
         <div className="flex items-center gap-2">

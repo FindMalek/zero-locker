@@ -7,7 +7,8 @@ export function MarketingHowItWorks() {
             How It Works
           </h2>
           <p className="text-muted-foreground mx-auto max-w-lg text-base sm:max-w-2xl sm:text-lg">
-            Get started with Zero-Locker in three simple steps
+            Manage your credentials in the web app, auto-fill with Chrome
+            extension
           </p>
         </div>
 
@@ -17,11 +18,11 @@ export function MarketingHowItWorks() {
               1
             </div>
             <h3 className="mb-2 text-lg font-semibold sm:mb-3 sm:text-xl">
-              Create Account
+              Web Dashboard
             </h3>
             <p className="text-muted-foreground text-sm sm:text-base">
-              Sign up with your email and create a secure master password that
-              only you know.
+              Access your Zero Locker dashboard in any browser. Create, edit,
+              and organize your credentials with powerful management tools.
             </p>
           </div>
 
@@ -30,11 +31,11 @@ export function MarketingHowItWorks() {
               2
             </div>
             <h3 className="mb-2 text-lg font-semibold sm:mb-3 sm:text-xl">
-              Import & Store
+              Chrome Extension
             </h3>
             <p className="text-muted-foreground text-sm sm:text-base">
-              Import existing passwords or add new ones. Store cards, accounts,
-              and any sensitive data.
+              Install our Chrome extension for seamless auto-fill. Passwords and
+              forms are filled automatically when you visit websites.
             </p>
           </div>
 
@@ -43,11 +44,11 @@ export function MarketingHowItWorks() {
               3
             </div>
             <h3 className="mb-2 text-lg font-semibold sm:mb-3 sm:text-xl">
-              Access Anywhere
+              Secure Sync
             </h3>
             <p className="text-muted-foreground text-sm sm:text-base">
-              Use Zero-Locker on all your devices with seamless sync across
-              platforms.
+              All your data syncs securely across devices. Self-hosted option
+              available for complete control over your credentials.
             </p>
           </div>
         </div>

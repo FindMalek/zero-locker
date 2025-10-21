@@ -33,7 +33,7 @@ export type SiteConfig = {
   description: string
   url: string
   links: {
-    twitter?: string
+    twitter: string
     github: string
     discord?: string
   }
