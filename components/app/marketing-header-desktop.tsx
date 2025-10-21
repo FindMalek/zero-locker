@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import { useCurrentUser } from "@/orpc/hooks/use-users"
 
 import { siteConfig } from "@/config/site"
 import { cn } from "@/lib/utils"
@@ -8,9 +9,14 @@ import { useIsMobile } from "@/hooks/use-mobile"
 
 import { Icons } from "@/components/shared/icons"
 import { buttonVariants } from "@/components/ui/button"
+import { Skeleton } from "@/components/ui/skeleton"
 
 export function MarketingHeaderDesktop() {
   const isMobile = useIsMobile()
+  const { data: currentUser, isLoading } = useCurrentUser()
+
+  const isLoggedIn = !!currentUser
+
   return (
     <header className="flex w-full items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
       <div className="flex items-center gap-8">
@@ -56,12 +62,28 @@ export function MarketingHeaderDesktop() {
           </Link>
         </div>
 
-        <Link
-          href="/login"
-          className={cn(buttonVariants({ variant: "default" }))}
-        >
-          {isMobile ? <Icons.login /> : "Login"}
-        </Link>
+        {isLoading ? (
+          <Skeleton
+            className={cn(buttonVariants({ variant: "default" }), "h-10 w-24")}
+          />
+        ) : (
+          <Link
+            href={isLoggedIn ? "/dashboard" : "/register"}
+            className={cn(buttonVariants({ variant: "default" }))}
+          >
+            {isMobile ? (
+              isLoggedIn ? (
+                <Icons.dashboard />
+              ) : (
+                <Icons.register />
+              )
+            ) : isLoggedIn ? (
+              "Dashboard"
+            ) : (
+              "Register"
+            )}
+          </Link>
+        )}
       </div>
     </header>
   )

@@ -84,7 +84,10 @@ export function MarketingHero() {
             </h1>
 
             <p className="text-muted-foreground xs:max-w-sm xs:text-lg max-w-xs text-base leading-relaxed sm:max-w-xl md:max-w-2xl md:text-xl">
-              The open source alternative to traditional password managers.
+              The modern, open-source password manager that combines
+              enterprise-grade security with intuitive design, built for
+              developers and security-conscious users who demand both simplicity
+              and powerful encryption.
             </p>
 
             <div className="w-full max-w-md sm:max-w-lg">
