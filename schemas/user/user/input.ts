@@ -1,13 +1,16 @@
 import { UserPlan } from "@prisma/client"
 import { z } from "zod"
 
-import { UserDto } from "@/config/schema"
-
 // ============================================================================
 // User Input Schemas
 // ============================================================================
 
-export const userInputSchema = UserDto
+export const userInputSchema = z.object({
+  name: z.string().min(2, "Name must be at least 2 characters"),
+  email: z.string().email("Please enter a valid email address"),
+  emailVerified: z.boolean().default(false),
+  image: z.string().url().optional(),
+})
 
 export type UserInput = z.infer<typeof userInputSchema>
 
@@ -48,3 +51,24 @@ export const listUsersInputSchema = z.object({
 })
 
 export type ListUsersInput = z.infer<typeof listUsersInputSchema>
+
+// ============================================================================
+// Authentication Form Schemas
+// ============================================================================
+
+export const loginInputSchema = z.object({
+  email: z.string().email("Please enter a valid email address"),
+  password: z.string().min(8, "Password must be at least 8 characters"),
+  rememberMe: z.boolean(),
+})
+
+export type LoginInput = z.infer<typeof loginInputSchema>
+
+export const signUpInputSchema = z.object({
+  name: z.string().min(2, "Name must be at least 2 characters"),
+  email: z.string().email("Please enter a valid email address"),
+  password: z.string().min(8, "Password must be at least 8 characters"),
+  image: z.string().url("Please enter a valid image URL").optional(),
+})
+
+export type SignUpInput = z.infer<typeof signUpInputSchema>

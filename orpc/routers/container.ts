@@ -11,11 +11,13 @@ import {
   deleteContainerInputSchema,
   EntityTypeSchema,
   getContainerInputSchema,
+  getDefaultContainerForEntityInputSchema,
   listContainersInputSchema,
   listContainersOutputSchema,
   updateContainerInputSchema,
   type ContainerSimpleOutput,
   type ListContainersOutput,
+  type GetDefaultContainerForEntityInput,
 } from "@/schemas/utils"
 import {
   createWithSecretsInputSchema,
@@ -334,11 +336,7 @@ export const createContainerWithSecrets = authWithDefaultAccessProcedure
 
 // Get default container for a specific entity type
 export const getDefaultContainerForEntity = authProcedure
-  .input(
-    z.object({
-      entityType: EntityTypeSchema,
-    })
-  )
+  .input(getDefaultContainerForEntityInputSchema)
   .output(containerSimpleOutputSchema.nullable())
   .handler(
     async ({ input, context }): Promise<ContainerSimpleOutput | null> => {

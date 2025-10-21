@@ -29,6 +29,9 @@ export {
   type ListContainersOutput,
   // Container Enums
   LIST_CONTAINER_TYPES,
+  // Container Entity Type Schema
+  getDefaultContainerForEntityInputSchema,
+  type GetDefaultContainerForEntityInput,
 } from "./container"
 
 export {

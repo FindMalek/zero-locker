@@ -6,7 +6,7 @@ import { useInitializeDefaultContainers } from "@/orpc/hooks/use-users"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 
-import { signUpSchema, type SignUpFormData } from "@/config/schema"
+import { signUpInputSchema, type SignUpInput } from "@/schemas/user/user"
 import { signUp } from "@/lib/auth/client"
 import { cn } from "@/lib/utils"
 
@@ -31,8 +31,8 @@ export function AuthRegisterForm({
   const [isLoading, setIsLoading] = useState(false)
   const initializeContainers = useInitializeDefaultContainers()
 
-  const form = useForm<SignUpFormData>({
-    resolver: zodResolver(signUpSchema),
+  const form = useForm<SignUpInput>({
+    resolver: zodResolver(signUpInputSchema),
     defaultValues: {
       email: "",
       name: "",
@@ -41,7 +41,7 @@ export function AuthRegisterForm({
     },
   })
 
-  async function onSubmit(data: SignUpFormData) {
+  async function onSubmit(data: SignUpInput) {
     try {
       setIsLoading(true)
       const { error } = await signUp.email(

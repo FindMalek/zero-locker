@@ -41,3 +41,33 @@ export const deleteKeyValuePairInputSchema = z.object({
 export type DeleteKeyValuePairInput = z.infer<
   typeof deleteKeyValuePairInputSchema
 >
+
+export const credentialSecuritySettingsInputSchema = z.object({
+  passwordProtection: z.boolean(),
+  twoFactorAuth: z.boolean(),
+  accessLogging: z.boolean(),
+})
+
+export type CredentialSecuritySettingsInput = z.infer<typeof credentialSecuritySettingsInputSchema>
+
+export const credentialKeyValuePairInputSchema = z.object({
+  id: z.string().optional(),
+  key: z.string(),
+  value: z.string().optional(),
+})
+
+export type CredentialKeyValuePairInput = z.infer<typeof credentialKeyValuePairInputSchema>
+
+export const updateCredentialKeyValuePairsInputSchema = z.object({
+  credentialId: z.string(),
+  keyValuePairs: z.array(credentialKeyValuePairInputSchema),
+})
+
+export type UpdateCredentialKeyValuePairsInput = z.infer<typeof updateCredentialKeyValuePairsInputSchema>
+
+export const getCredentialKeyValuePairValueInputSchema = z.object({
+  credentialId: z.string(),
+  keyValuePairId: z.string(),
+})
+
+export type GetCredentialKeyValuePairValueInput = z.infer<typeof getCredentialKeyValuePairValueInputSchema>

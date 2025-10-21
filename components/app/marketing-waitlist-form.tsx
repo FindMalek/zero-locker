@@ -7,7 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { toast } from "sonner"
 
-import { WaitlistUserDtoSchema, type WaitlistUserDto } from "@/config/schema"
+import { waitlistInputSchema, type WaitlistInput } from "@/schemas/user/waitlist"
 import { siteConfig } from "@/config/site"
 import { handleORPCError } from "@/lib/utils"
 
@@ -32,8 +32,8 @@ export function MarketingWaitlistForm() {
 
   const displayCount = waitlistData?.total ?? 0
 
-  const form = useForm<WaitlistUserDto>({
-    resolver: zodResolver(WaitlistUserDtoSchema),
+  const form = useForm<WaitlistInput>({
+    resolver: zodResolver(waitlistInputSchema),
     defaultValues: {
       email: "",
     },
@@ -55,7 +55,7 @@ export function MarketingWaitlistForm() {
     }
   }, [showPosition, userPosition])
 
-  async function onSubmit(values: WaitlistUserDto) {
+  async function onSubmit(values: WaitlistInput) {
     joinWaitlistMutation.mutate(values, {
       onSuccess: (result) => {
         if (result.success) {

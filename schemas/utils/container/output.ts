@@ -36,3 +36,10 @@ export const listContainersOutputSchema = z.object({
 })
 
 export type ListContainersOutput = z.infer<typeof listContainersOutputSchema>
+
+export const initializeDefaultContainersOutputSchema = z.object({
+  success: z.boolean(),
+  message: z.string(),
+})
+
+export type InitializeDefaultContainersOutput = z.infer<typeof initializeDefaultContainersOutputSchema>

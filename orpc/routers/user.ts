@@ -18,9 +18,11 @@ import {
   type UserCountOutput,
 } from "@/schemas/user/statistics"
 import {
-  userSimpleOutputSchema,
-  type UserSimpleOutput,
-} from "@/schemas/user/user"
+  initializeDefaultContainersOutputSchema,
+  type InitializeDefaultContainersOutput,
+} from "@/schemas/utils/container"
+import { userSimpleOutputSchema } from "@/schemas/user/user"
+import { type UserSimpleOutput } from "@/schemas/user/user"
 import {
   waitlistCountOutputSchema,
   waitlistInputSchema,
@@ -311,8 +313,8 @@ export const subscribeToRoadmap = strictPublicProcedure
 // Initialize default containers for a user
 export const initializeDefaultContainers = authProcedure
   .input(z.object({}))
-  .output(z.object({ success: z.boolean(), message: z.string() }))
-  .handler(async ({ context }) => {
+  .output(initializeDefaultContainersOutputSchema)
+  .handler(async ({ context }): Promise<InitializeDefaultContainersOutput> => {
     try {
       // Check if user already has all default containers
       const existingDefaultContainers = await database.container.findMany({

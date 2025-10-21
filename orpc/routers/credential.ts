@@ -13,15 +13,33 @@ import {
   createCredentialInputSchema,
   credentialFormInputSchema,
   credentialSimpleOutputSchema,
+  credentialSecuritySettingsOutputSchema,
+  credentialKeyValuePairOutputSchema,
+  credentialKeyValuePairWithValueOutputSchema,
+  credentialPasswordOutputSchema,
+  credentialKeyValuePairValueOutputSchema,
+  updateCredentialPasswordOutputSchema,
+  updateCredentialKeyValuePairsOutputSchema,
   deleteCredentialInputSchema,
   duplicateCredentialInputSchema,
   getCredentialInputSchema,
+  getCredentialKeyValuePairValueInputSchema,
+  updateCredentialKeyValuePairsInputSchema,
   listCredentialsInputSchema,
   listCredentialsOutputSchema,
   updateCredentialInputSchema,
   updateCredentialPasswordInputSchema,
   type CredentialSimpleOutput,
   type ListCredentialsOutput,
+  type CredentialSecuritySettingsOutput,
+  type CredentialKeyValuePairOutput,
+  type CredentialKeyValuePairWithValueOutput,
+  type CredentialPasswordOutput,
+  type CredentialKeyValuePairValueOutput,
+  type UpdateCredentialPasswordOutput,
+  type UpdateCredentialKeyValuePairsOutput,
+  type GetCredentialKeyValuePairValueInput,
+  type UpdateCredentialKeyValuePairsInput,
 } from "@/schemas/credential"
 import { keyValueWithValueOutputSchema } from "@/schemas/credential/key-value"
 import {
@@ -79,22 +97,12 @@ export const getCredential = authProcedure
 // Get credential security settings (decrypted on server for security)
 export const getCredentialSecuritySettings = authProcedure
   .input(getCredentialInputSchema)
-  .output(
-    z.object({
-      passwordProtection: z.boolean(),
-      twoFactorAuth: z.boolean(),
-      accessLogging: z.boolean(),
-    })
-  )
+  .output(credentialSecuritySettingsOutputSchema)
   .handler(
     async ({
       input,
       context,
-    }): Promise<{
-      passwordProtection: boolean
-      twoFactorAuth: boolean
-      accessLogging: boolean
-    }> => {
+    }): Promise<CredentialSecuritySettingsOutput> => {
       const credential = await database.credential.findFirst({
         where: {
           id: input.id,
@@ -114,16 +122,7 @@ export const getCredentialSecuritySettings = authProcedure
 // Get credential key-value pairs (keys only, no values for security)
 export const getCredentialKeyValuePairs = authProcedure
   .input(getCredentialInputSchema)
-  .output(
-    z.array(
-      z.object({
-        id: z.string(),
-        key: z.string(),
-        createdAt: z.date(),
-        updatedAt: z.date(),
-      })
-    )
-  )
+  .output(z.array(credentialKeyValuePairOutputSchema))
   .handler(async ({ input, context }) => {
     const credential = await database.credential.findFirst({
       where: {
@@ -161,7 +160,7 @@ export const getCredentialKeyValuePairs = authProcedure
 // Get credential key-value pairs with values (for editing mode)
 export const getCredentialKeyValuePairsWithValues = authProcedure
   .input(getCredentialInputSchema)
-  .output(z.array(keyValueWithValueOutputSchema))
+  .output(z.array(credentialKeyValuePairWithValueOutputSchema))
   .handler(async ({ input, context }) => {
     const credential = await database.credential.findFirst({
       where: {
@@ -235,17 +234,8 @@ export const getCredentialKeyValuePairsWithValues = authProcedure
 
 // Get specific key-value pair value (for viewing)
 export const getCredentialKeyValuePairValue = authProcedure
-  .input(
-    z.object({
-      credentialId: z.string(),
-      keyValuePairId: z.string(),
-    })
-  )
-  .output(
-    z.object({
-      value: z.string(),
-    })
-  )
+  .input(getCredentialKeyValuePairValueInputSchema)
+  .output(credentialKeyValuePairValueOutputSchema)
   .handler(async ({ input, context }) => {
     const credential = await database.credential.findFirst({
       where: {
@@ -297,8 +287,8 @@ export const getCredentialKeyValuePairValue = authProcedure
 // Get credential password (decrypted on server for security)
 export const getCredentialPassword = authProcedure
   .input(getCredentialInputSchema)
-  .output(z.object({ password: z.string() }))
-  .handler(async ({ input, context }): Promise<{ password: string }> => {
+  .output(credentialPasswordOutputSchema)
+  .handler(async ({ input, context }): Promise<CredentialPasswordOutput> => {
     const credential = await database.credential.findFirst({
       where: {
         id: input.id,
@@ -625,7 +615,7 @@ export const updateCredentialPassword = authProcedure
     })({ context, next })
   )
   .input(updateCredentialPasswordInputSchema)
-  .output(z.object({ success: z.boolean() }))
+  .output(updateCredentialPasswordOutputSchema)
   .handler(async ({ input, context }) => {
     const { id, passwordEncryption } = input
 
@@ -1057,19 +1047,8 @@ export const updateCredentialKeyValuePairs = authProcedure
       level: PermissionLevel.WRITE,
     })({ context, next })
   )
-  .input(
-    z.object({
-      credentialId: z.string(),
-      keyValuePairs: z.array(
-        z.object({
-          id: z.string().optional(),
-          key: z.string(),
-          value: z.string().optional(),
-        })
-      ),
-    })
-  )
-  .output(z.object({ success: z.boolean() }))
+  .input(updateCredentialKeyValuePairsInputSchema)
+  .output(updateCredentialKeyValuePairsOutputSchema)
   .handler(async ({ input, context }) => {
     const { credentialId, keyValuePairs } = input
 
