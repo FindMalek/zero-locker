@@ -29,7 +29,33 @@ export function MarketingHeaderDesktop() {
           </nav>
         )}
       </div>
-      <div className="flex items-center">
+      <div className="flex items-center gap-4">
+        {/* Social Media Links */}
+        <div className="flex items-center gap-2">
+          <Link
+            href={siteConfig.links.github}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={cn(
+              buttonVariants({ variant: "secondary", size: "icon" })
+            )}
+            aria-label="GitHub"
+          >
+            <Icons.github className="size-4" />
+          </Link>
+          <Link
+            href={siteConfig.links.twitter}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={cn(
+              buttonVariants({ variant: "secondary", size: "icon" })
+            )}
+            aria-label="X (Twitter)"
+          >
+            <Icons.twitter className="size-4" />
+          </Link>
+        </div>
+
         <Link
           href="/login"
           className={cn(buttonVariants({ variant: "default" }))}

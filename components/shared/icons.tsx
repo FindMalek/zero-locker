@@ -101,8 +101,10 @@ import {
   UserPlus,
   Users,
   X,
+  XIcon,
   ZapIcon,
 } from "lucide-react"
+import { FaGithub, FaTwitter } from "react-icons/fa"
 
 import { cn } from "@/lib/utils"
 
@@ -234,7 +236,8 @@ export const Icons = {
   login: LogIn,
   lastPass: LastPassIcon,
   hashicorp: HashiCorpIcon,
-  github: GithubIcon,
+  github: FaGithub,
+  githubLucide: GithubIcon,
   logs: LogsIcon,
   grid: Grid3X3Icon,
   list: ListIcon,
@@ -259,6 +262,8 @@ export const Icons = {
   truck: Truck,
   construction: Construction,
   rocket: RocketIcon,
+  twitter: FaTwitter,
+  twitterLucide: XIcon,
 }
 
 export const getEntityIcon = (itemType: RecentItemType) => {
