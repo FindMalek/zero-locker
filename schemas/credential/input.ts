@@ -126,15 +126,21 @@ export const deleteCredentialConfirmationInputSchema = z.object({
   confirmationText: z.string().min(1, "Confirmation text is required"),
 })
 
-export type DeleteCredentialConfirmationInput = z.infer<typeof deleteCredentialConfirmationInputSchema>
+export type DeleteCredentialConfirmationInput = z.infer<
+  typeof deleteCredentialConfirmationInputSchema
+>
 
 // ============================================================================
 // Form Input Schemas (with ID for updates)
 // ============================================================================
 
 // Credential form with ID for updates
-export const credentialFormWithIdInputSchema = credentialFormInputSchema.extend({
-  id: z.string().min(1, "Credential ID is required"),
-})
+export const credentialFormWithIdInputSchema = credentialFormInputSchema.extend(
+  {
+    id: z.string().min(1, "Credential ID is required"),
+  }
+)
 
-export type CredentialFormWithIdInput = z.infer<typeof credentialFormWithIdInputSchema>
+export type CredentialFormWithIdInput = z.infer<
+  typeof credentialFormWithIdInputSchema
+>

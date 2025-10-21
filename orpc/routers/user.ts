@@ -29,13 +29,13 @@ import {
   type WaitlistInput,
   type WaitlistJoinOutput,
 } from "@/schemas/user/waitlist"
+import { emptyInputSchema } from "@/schemas/utils"
 import {
   initializeDefaultContainersOutputSchema,
   type InitializeDefaultContainersOutput,
 } from "@/schemas/utils/container"
 import { ORPCError, os } from "@orpc/server"
 import { Prisma } from "@prisma/client"
-import { emptyInputSchema } from "@/schemas/utils"
 
 import { sendRoadmapSubscriptionEmail, sendWaitlistEmail } from "@/lib/email"
 import { createDefaultContainers } from "@/lib/utils/default-containers"

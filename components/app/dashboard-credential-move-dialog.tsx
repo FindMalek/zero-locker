@@ -5,8 +5,11 @@ import Image from "next/image"
 import { PlatformEntity } from "@/entities/utils/platform"
 import { useUpdateCredential } from "@/orpc/hooks/use-credentials"
 import type { CredentialSimpleOutput } from "@/schemas/credential"
+import {
+  moveCredentialInputSchema,
+  type MoveCredentialInput,
+} from "@/schemas/credential"
 import type { PlatformSimpleOutput } from "@/schemas/utils"
-import { moveCredentialInputSchema, type MoveCredentialInput } from "@/schemas/credential"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 
@@ -33,7 +36,6 @@ import {
   ResponsiveDialogHeader,
   ResponsiveDialogTitle,
 } from "@/components/ui/responsive-dialog"
-
 
 interface MoveCredentialDialogProps {
   open: boolean

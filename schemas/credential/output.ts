@@ -1,8 +1,8 @@
-import { tagSimpleOutputSchema } from "@/schemas/utils/tag/output"
-import { 
+import {
   credentialKeyValuePairOutputSchema,
-  credentialKeyValuePairWithValueOutputSchema
+  credentialKeyValuePairWithValueOutputSchema,
 } from "@/schemas/credential/key-value/output"
+import { tagSimpleOutputSchema } from "@/schemas/utils/tag/output"
 import { AccountStatus } from "@prisma/client"
 import { z } from "zod"
 

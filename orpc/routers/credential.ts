@@ -12,7 +12,10 @@ import { database } from "@/prisma/client"
 import {
   createCredentialInputSchema,
   credentialFormInputSchema,
+  credentialFormWithIdInputSchema,
   credentialKeyValuePairOutputSchema,
+  credentialKeyValuePairsArrayOutputSchema,
+  credentialKeyValuePairsWithValueArrayOutputSchema,
   credentialKeyValuePairValueOutputSchema,
   credentialKeyValuePairWithValueOutputSchema,
   credentialPasswordOutputSchema,
@@ -51,11 +54,6 @@ import {
 import { ORPCError, os } from "@orpc/server"
 import { AccountStatus, type Prisma } from "@prisma/client"
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library"
-import {
-  credentialFormWithIdInputSchema,
-  credentialKeyValuePairsArrayOutputSchema,
-  credentialKeyValuePairsWithValueArrayOutputSchema,
-} from "@/schemas/credential"
 
 import { decryptData, encryptData } from "@/lib/encryption"
 import { Feature, PermissionLevel } from "@/lib/permissions"

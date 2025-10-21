@@ -6,9 +6,11 @@ import {
 } from "@/middleware/permissions"
 import { database } from "@/prisma/client"
 import {
+  containersArrayOutputSchema,
   containerSimpleOutputSchema,
   createContainerInputSchema,
   deleteContainerInputSchema,
+  emptyInputSchema,
   EntityTypeSchema,
   getContainerInputSchema,
   getDefaultContainerForEntityInputSchema,
@@ -27,7 +29,6 @@ import {
 } from "@/schemas/utils/container/with-secrets"
 import { ORPCError, os } from "@orpc/server"
 import type { Prisma } from "@prisma/client"
-import { emptyInputSchema, containersArrayOutputSchema } from "@/schemas/utils"
 
 import { Action, PermissionLevel } from "@/lib/permissions"
 import { createEncryptedData } from "@/lib/utils/encryption-helpers"

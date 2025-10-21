@@ -5,8 +5,11 @@ import { useRouter } from "next/navigation"
 import { PlatformEntity } from "@/entities/utils/platform"
 import { useDeleteCredential } from "@/orpc/hooks/use-credentials"
 import type { CredentialSimpleOutput } from "@/schemas/credential"
+import {
+  deleteCredentialConfirmationInputSchema,
+  type DeleteCredentialConfirmationInput,
+} from "@/schemas/credential"
 import type { PlatformSimpleOutput } from "@/schemas/utils"
-import { deleteCredentialConfirmationInputSchema, type DeleteCredentialConfirmationInput } from "@/schemas/credential"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 
@@ -33,7 +36,6 @@ import {
   ResponsiveAlertDialogHeader,
   ResponsiveAlertDialogTitle,
 } from "@/components/ui/responsive-alert-dialog"
-
 
 interface DeleteCredentialDialogProps {
   open: boolean
