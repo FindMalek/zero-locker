@@ -9,6 +9,9 @@ export const env = createEnv({
     LOGO_DEV_TOKEN: z.string().min(10),
     RESEND_API_KEY: z.string().min(10),
     MARKETING_SUBSCRIPTION_EMAIL: z.string().email(),
+    LEMON_SQUEEZY_API_KEY: z.string().min(10),
+    LEMON_SQUEEZY_STORE_ID: z.string().min(10),
+    LEMON_SQUEEZY_WEBHOOK_SECRET: z.string().min(10),
   },
   client: {
     NEXT_PUBLIC_APP_URL: z.string().url(),
@@ -23,5 +26,8 @@ export const env = createEnv({
     NEXT_PUBLIC_LOGO_DEV_TOKEN: process.env.NEXT_PUBLIC_LOGO_DEV_TOKEN,
     RESEND_API_KEY: process.env.RESEND_API_KEY,
     MARKETING_SUBSCRIPTION_EMAIL: process.env.MARKETING_SUBSCRIPTION_EMAIL,
+    LEMON_SQUEEZY_API_KEY: process.env.LEMON_SQUEEZY_API_KEY,
+    LEMON_SQUEEZY_STORE_ID: process.env.LEMON_SQUEEZY_STORE_ID,
+    LEMON_SQUEEZY_WEBHOOK_SECRET: process.env.LEMON_SQUEEZY_WEBHOOK_SECRET,
   },
 })
