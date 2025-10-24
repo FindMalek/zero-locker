@@ -22,6 +22,9 @@ model User {
   credentials         Credential[]
   credentialHistories CredentialHistory[]
 
+  // Payment relations
+  paymentSubscriptions PaymentSubscription[]
+
   @@unique([email])
   @@map("user")
 }
