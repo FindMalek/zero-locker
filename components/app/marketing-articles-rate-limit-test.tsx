@@ -193,7 +193,9 @@ export function MarketingArticlesRateLimitTest({
             How to Test
           </h4>
           <ol className="space-y-1 text-sm text-blue-800 dark:text-blue-200">
-            <li>1. Click "Send Request" rapidly to test rate limiting</li>
+            <li>
+              1. Click &quot;Send Request&quot; rapidly to test rate limiting
+            </li>
             <li>2. Watch the request log for success/failure responses</li>
             <li>
               3. After {maxRequests} requests, you should see rate limit errors
