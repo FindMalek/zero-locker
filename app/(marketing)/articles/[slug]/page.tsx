@@ -2,9 +2,8 @@ import Image from "next/image"
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import { MDXContent } from "@content-collections/mdx/react"
-import { allArticles } from "../../../../lib/.content-collections/generated"
+import { allArticles } from "@/content-collections"
 
-import { Badge } from "@/components/ui/badge"
 import { buttonVariants } from "@/components/ui/button"
 import { Icons } from "@/components/shared/icons"
 
@@ -31,7 +30,7 @@ export async function generateMetadata({ params }: ArticlePageProps) {
   }
 
   return {
-    title: `${article.title} - Zero Locker Articles`,
+    title: `${article.title}`,
     description: article.description,
     openGraph: {
       title: article.title,
@@ -52,7 +51,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
     notFound()
   }
 
-  const { image, title, description, author, publishedAt, tags, html } = article
+  const { image, title, description, publishedAt, html } = article
 
   return (
     <div className="container max-w-4xl px-4 py-16 md:py-24">
@@ -79,15 +78,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
           )}
         </div>
 
-        <div className="mb-8">
-          <div className="flex flex-wrap gap-2 mb-4">
-            {tags?.map((tag) => (
-              <Badge key={tag} variant="secondary">
-                {tag}
-              </Badge>
-            ))}
-          </div>
-          
+        <div className="mb-8">          
           <h1 className="mb-4 text-4xl font-bold tracking-tight">{title}</h1>
           
           <p className="text-muted-foreground mb-6 text-lg">
@@ -95,8 +86,6 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
           </p>
 
           <div className="flex items-center gap-4 text-sm text-muted-foreground">
-            <span>By {author}</span>
-            <span>•</span>
             <span>{new Date(publishedAt).toLocaleDateString()}</span>
           </div>
         </div>
