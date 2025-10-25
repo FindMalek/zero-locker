@@ -38,7 +38,6 @@ export async function generateMetadata({ params }: ArticlePageProps) {
     openGraph: {
       title: article.title,
       description: article.description,
-      images: article.image ? [article.image] : [],
     },
   }
 }
