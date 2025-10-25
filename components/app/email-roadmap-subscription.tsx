@@ -17,19 +17,24 @@ import { siteConfig } from "@/config/site"
 
 import { EmailFooter } from "@/components/shared/email-footer"
 
-interface EmailRoadmapSubscriptionProps {
+interface EmailSubscriptionProps {
   email: string
+  type: "roadmap" | "articles"
 }
 
-export function EmailRoadmapSubscription({
-  email,
-}: EmailRoadmapSubscriptionProps) {
+export function EmailSubscription({ email, type }: EmailSubscriptionProps) {
+  const isRoadmap = type === "roadmap"
+  const title = isRoadmap ? "Roadmap" : "Articles"
+  const linkUrl = isRoadmap ? "/roadmap" : "/articles"
+  const linkText = isRoadmap ? "View Roadmap" : "Read Articles"
+
   return (
     <Html lang="en" dir="ltr">
       <Tailwind>
         <Head />
         <Preview>
-          You&apos;re now subscribed to {siteConfig.name} updates!
+          You&apos;re now subscribed to {siteConfig.name} {title.toLowerCase()}{" "}
+          updates!
         </Preview>
         <Body className="bg-white py-[24px] font-sans">
           <Container className="mx-auto max-w-[600px] bg-white">
@@ -67,26 +72,45 @@ export function EmailRoadmapSubscription({
                 <Text className="mb-[12px] text-[14px] font-medium text-gray-900">
                   What to expect:
                 </Text>
-                <Text className="mb-[4px] text-[13px] leading-relaxed text-gray-600">
-                  • Product milestones and feature releases
-                </Text>
-                <Text className="mb-[4px] text-[13px] leading-relaxed text-gray-600">
-                  • Roadmap updates and insights
-                </Text>
-                <Text className="mb-[4px] text-[13px] leading-relaxed text-gray-600">
-                  • Early access opportunities
-                </Text>
-                <Text className="text-[13px] leading-relaxed text-gray-600">
-                  • Tips and best practices
-                </Text>
+                {isRoadmap ? (
+                  <>
+                    <Text className="mb-[4px] text-[13px] leading-relaxed text-gray-600">
+                      • Product milestones and feature releases
+                    </Text>
+                    <Text className="mb-[4px] text-[13px] leading-relaxed text-gray-600">
+                      • Roadmap updates and insights
+                    </Text>
+                    <Text className="mb-[4px] text-[13px] leading-relaxed text-gray-600">
+                      • Early access opportunities
+                    </Text>
+                    <Text className="text-[13px] leading-relaxed text-gray-600">
+                      • Tips and best practices
+                    </Text>
+                  </>
+                ) : (
+                  <>
+                    <Text className="mb-[4px] text-[13px] leading-relaxed text-gray-600">
+                      • Technical insights and challenges
+                    </Text>
+                    <Text className="mb-[4px] text-[13px] leading-relaxed text-gray-600">
+                      • Business updates and milestones
+                    </Text>
+                    <Text className="mb-[4px] text-[13px] leading-relaxed text-gray-600">
+                      • Feature announcements
+                    </Text>
+                    <Text className="text-[13px] leading-relaxed text-gray-600">
+                      • Behind-the-scenes content
+                    </Text>
+                  </>
+                )}
               </Section>
 
               <Section className="mb-[24px] text-center">
                 <Link
-                  href={`${siteConfig.url}/roadmap`}
+                  href={`${siteConfig.url}${linkUrl}`}
                   className="inline-block rounded-[4px] bg-orange-600 px-[24px] py-[10px] text-[14px] font-medium text-white no-underline"
                 >
-                  View Roadmap
+                  {linkText}
                 </Link>
               </Section>
 
@@ -105,8 +129,9 @@ export function EmailRoadmapSubscription({
   )
 }
 
-EmailRoadmapSubscription.PreviewProps = {
+EmailSubscription.PreviewProps = {
   email: "hi@findmalek.com",
-} as EmailRoadmapSubscriptionProps
+  type: "roadmap",
+} as EmailSubscriptionProps
 
-export default EmailRoadmapSubscription
+export default EmailSubscription

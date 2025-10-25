@@ -8,8 +8,12 @@ import { database } from "@/prisma/client"
 import {
   roadmapSubscribeInputSchema,
   roadmapSubscribeOutputSchema,
+  subscriptionInputSchema,
+  subscriptionOutputSchema,
   type RoadmapSubscribeInput,
   type RoadmapSubscribeOutput,
+  type SubscriptionInput,
+  type SubscriptionOutput,
 } from "@/schemas/user/roadmap"
 import {
   encryptedDataCountOutputSchema,
@@ -37,7 +41,7 @@ import {
 import { ORPCError, os } from "@orpc/server"
 import { Prisma } from "@prisma/client"
 
-import { sendRoadmapSubscriptionEmail, sendWaitlistEmail } from "@/lib/email"
+import { sendSubscriptionEmail, sendWaitlistEmail } from "@/lib/email"
 import { createDefaultContainers } from "@/lib/utils/default-containers"
 
 import type { ORPCContext } from "../types"
@@ -243,8 +247,9 @@ export const subscribeToRoadmap = strictPublicProcedure
 
       // Send subscription confirmation email
       try {
-        await sendRoadmapSubscriptionEmail({
+        await sendSubscriptionEmail({
           to: input.email,
+          type: "roadmap",
         })
       } catch (emailError) {
         console.error("Failed to send subscription email:", emailError)
@@ -312,6 +317,110 @@ export const subscribeToRoadmap = strictPublicProcedure
     }
   })
 
+// Subscribe to updates (roadmap or articles) - unified endpoint
+export const subscribeToUpdates = strictPublicProcedure
+  .input(subscriptionInputSchema)
+  .output(subscriptionOutputSchema)
+  .handler(async ({ input }): Promise<SubscriptionOutput> => {
+    try {
+      const { email, type } = input
+
+      // Check if email already exists in subscriptions for this type
+      const existingSubscription =
+        await database.roadmapSubscription.findUnique({
+          where: { email },
+        })
+
+      if (existingSubscription) {
+        return {
+          success: false,
+          error: "Email is already subscribed",
+        }
+      }
+
+      // Add to roadmap subscriptions (we'll use the same table for now)
+      // TODO: Consider creating a unified subscriptions table with a type field
+      await database.roadmapSubscription.create({
+        data: {
+          email,
+        },
+      })
+
+      // Send subscription confirmation email
+      try {
+        await sendSubscriptionEmail({
+          to: email,
+          type,
+        })
+      } catch (emailError) {
+        console.error(`Failed to send ${type} subscription email:`, emailError)
+        // Don't fail the request if email fails
+      }
+
+      return { success: true }
+    } catch (error) {
+      // Re-throw ORPC errors to let ORPC handle them
+      if (error instanceof ORPCError) {
+        throw error
+      }
+
+      // Handle Prisma-specific errors
+      if (error instanceof Prisma.PrismaClientKnownRequestError) {
+        console.error(
+          `Database constraint error subscribing to ${input.type}:`,
+          {
+            code: error.code,
+            message: error.message,
+            meta: error.meta,
+          }
+        )
+
+        // Handle unique constraint violations
+        if (error.code === "P2002") {
+          return {
+            success: false,
+            error: "Email is already subscribed",
+          }
+        }
+
+        // Handle other known Prisma errors
+        return {
+          success: false,
+          error: "Database constraint violation occurred",
+        }
+      }
+
+      // Handle Prisma client errors (connection issues, etc.)
+      if (error instanceof Prisma.PrismaClientUnknownRequestError) {
+        console.error(`Unknown Prisma error subscribing to ${input.type}:`, {
+          message: error.message,
+        })
+        return {
+          success: false,
+          error: "Database connection issue occurred",
+        }
+      }
+
+      // Handle Prisma validation errors
+      if (error instanceof Prisma.PrismaClientValidationError) {
+        console.error(`Prisma validation error subscribing to ${input.type}:`, {
+          message: error.message,
+        })
+        return {
+          success: false,
+          error: "Invalid data provided",
+        }
+      }
+
+      // Handle unexpected errors
+      console.error(`Unexpected error subscribing to ${input.type}:`, error)
+      return {
+        success: false,
+        error: "An unexpected error occurred. Please try again later.",
+      }
+    }
+  })
+
 // Initialize default containers for a user
 export const initializeDefaultContainers = authProcedure
   .input(emptyInputSchema)
@@ -355,5 +464,6 @@ export const userRouter = {
   getEncryptedDataCount,
   getCurrentUser,
   subscribeToRoadmap,
+  subscribeToUpdates,
   initializeDefaultContainers,
 }

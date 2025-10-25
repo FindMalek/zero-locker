@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+
 import { Button } from "@/components/ui/button"
 
 interface CounterProps {
@@ -16,7 +17,7 @@ export function Counter({ initialValue = 0, step = 1 }: CounterProps) {
   const reset = () => setCount(initialValue)
 
   return (
-    <div className="flex flex-col items-center gap-4 p-6 border rounded-lg bg-card">
+    <div className="bg-card flex flex-col items-center gap-4 rounded-lg border p-6">
       <div className="text-2xl font-bold">{count}</div>
       <div className="flex gap-2">
         <Button onClick={decrement} variant="outline" size="sm">

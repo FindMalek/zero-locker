@@ -1,7 +1,6 @@
+import { articleSchema } from "@/schemas/utils/article"
 import { defineCollection, defineConfig } from "@content-collections/core"
 import { compileMDX } from "@content-collections/mdx"
-
-import { articleSchema } from "@/schemas/utils/article"
 
 const articles = defineCollection({
   name: "articles",

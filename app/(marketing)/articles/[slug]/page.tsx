@@ -1,13 +1,12 @@
 import Image from "next/image"
 import Link from "next/link"
 import { notFound } from "next/navigation"
-import { MDXContent } from "@content-collections/mdx/react"
 import { allArticles } from "@/content-collections"
-
-import { buttonVariants } from "@/components/ui/button"
-import { Icons } from "@/components/shared/icons"
+import { MDXContent } from "@content-collections/mdx/react"
 
 import { Counter } from "@/components/shared/counter"
+import { Icons } from "@/components/shared/icons"
+import { buttonVariants } from "@/components/ui/button"
 
 interface ArticlePageProps {
   params: Promise<{ slug: string }>
@@ -58,7 +57,11 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
       <div className="relative mx-auto">
         <Link
           href="/articles"
-          className={buttonVariants({ variant: "ghost", size: "sm", className: "absolute -top-8 left-0" })}
+          className={buttonVariants({
+            variant: "ghost",
+            size: "sm",
+            className: "absolute -top-8 left-0",
+          })}
         >
           <Icons.chevronLeft className="mr-1 size-4" />
           Back to Articles
@@ -78,22 +81,20 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
           )}
         </div>
 
-        <div className="mb-8">          
+        <div className="mb-8">
           <h1 className="mb-4 text-4xl font-bold tracking-tight">{title}</h1>
-          
-          <p className="text-muted-foreground mb-6 text-lg">
-            {description}
-          </p>
 
-          <div className="flex items-center gap-4 text-sm text-muted-foreground">
+          <p className="text-muted-foreground mb-6 text-lg">{description}</p>
+
+          <div className="text-muted-foreground flex items-center gap-4 text-sm">
             <span>{new Date(publishedAt).toLocaleDateString()}</span>
           </div>
         </div>
 
         {html && (
           <div className="prose prose-gray dark:prose-invert mx-auto max-w-3xl">
-            <MDXContent 
-              code={html} 
+            <MDXContent
+              code={html}
               components={{
                 Counter,
               }}
