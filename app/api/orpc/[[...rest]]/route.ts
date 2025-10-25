@@ -8,7 +8,7 @@ async function handleRequest(request: Request) {
   try {
     const { response } = await handler.handle(request, {
       prefix: "/api/orpc",
-      context: await createContext(),
+      context: await createContext(request),
     })
 
     return response ?? new Response("Not found", { status: 404 })

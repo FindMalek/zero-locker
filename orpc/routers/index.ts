@@ -5,6 +5,7 @@ import { platformRouter } from "./platform"
 import { secretRouter } from "./secret"
 import { tagRouter } from "./tag"
 import { userRouter } from "./user"
+import { webhookRouter } from "./webhook"
 
 export const appRouter = {
   cards: cardRouter,
@@ -14,6 +15,7 @@ export const appRouter = {
   platforms: platformRouter,
   tags: tagRouter,
   users: userRouter,
+  webhooks: webhookRouter,
 }
 
 export type AppRouter = typeof appRouter

@@ -30,7 +30,12 @@
     "docker:backup": "docker compose exec postgres pg_dump -U postgres zerolocker > backup.sql",
     "docker:restore": "docker compose exec -T postgres psql -U postgres -d zerolocker < backup.sql",
     "docker:reset": "docker compose down -v && docker compose up -d postgres",
-    "docker:clean": "docker compose down -v --rmi all"
+    "docker:clean": "docker compose down -v --rmi all",
+    "webhook:tunnel": "ngrok http 3000 --log=stdout",
+    "webhook:dev": "concurrently \"pnpm dev\" \"pnpm webhook:tunnel\"",
+    "test:webhook": "node scripts/test-webhook.js",
+    "test:status-mapping": "tsx scripts/test-status-mapping.ts",
+    "test:webhook-security": "tsx scripts/test-webhook-security.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.0.1",
@@ -115,6 +120,7 @@
     "@types/ws": "^8.18.1",
     "bcryptjs": "^3.0.2",
     "bufferutil": "^4.0.9",
+    "concurrently": "^8.2.2",
     "eslint": "^9",
     "eslint-config-next": "15.3.2",
     "eslint-config-prettier": "^9.1.0",
@@ -124,6 +130,7 @@
     "prisma": "^6.18.0",
     "tailwindcss": "^4",
     "ts-node": "^10.9.2",
+    "tsx": "^4.7.0",
     "tw-animate-css": "^1.2.9",
     "typescript": "^5",
     "ws": "^8.18.2"

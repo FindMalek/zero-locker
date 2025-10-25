@@ -108,6 +108,11 @@ BETTER_AUTH_SECRET=your-secret-key-minimum-32-characters-for-production
 # Optional: Logo.dev API (for fetching website logos)
 LOGO_DEV_TOKEN=your-logo-dev-token
 NEXT_PUBLIC_LOGO_DEV_TOKEN=your-public-logo-dev-token
+
+# Lemon Squeezy Integration (for payments)
+LEMON_SQUEEZY_API_KEY=your-lemon-squeezy-api-key
+LEMON_SQUEEZY_STORE_ID=your-store-id
+LEMON_SQUEEZY_WEBHOOK_SECRET=your-webhook-secret
 ```
 
 > ⚠️ **Security Note**: The `BETTER_AUTH_SECRET` should be a strong, random string (minimum 32 characters) in production. Generate one using:
@@ -219,6 +224,101 @@ The development server includes:
 - 🔄 Auto-reloading on file changes
 - 🐛 Detailed error messages
 - 📊 React Query DevTools (bottom-left corner)
+
+## 🔗 Webhook Development with ngrok
+
+Zero Locker integrates with Lemon Squeezy for payment processing. To test webhooks locally, you'll need to expose your local development server to the internet using ngrok.
+
+### Prerequisites
+
+1. **Install ngrok**: Download from [ngrok.com](https://ngrok.com/download) or install via package manager:
+   ```bash
+   # macOS with Homebrew
+   brew install ngrok
+   
+   # Or download from https://ngrok.com/download
+   ```
+
+2. **Sign up for ngrok**: Create a free account at [ngrok.com](https://ngrok.com) and get your auth token.
+
+3. **Authenticate ngrok**:
+   ```bash
+   ngrok config add-authtoken YOUR_AUTH_TOKEN
+   ```
+
+### Running with Webhook Support
+
+#### Option 1: Run Both Services Together
+```bash
+# Start both Next.js dev server and ngrok tunnel
+pnpm webhook:dev
+```
+
+This will:
+- Start Next.js on `http://localhost:3000`
+- Create an ngrok tunnel (e.g., `https://abc123.ngrok.io`)
+- Display both URLs in the terminal
+
+#### Option 2: Run Services Separately
+```bash
+# Terminal 1: Start Next.js development server
+pnpm dev
+
+# Terminal 2: Start ngrok tunnel
+pnpm webhook:tunnel
+```
+
+### Setting Up Lemon Squeezy Webhooks
+
+1. **Get your ngrok URL**: After running `pnpm webhook:tunnel`, you'll see output like:
+   ```
+   Forwarding  https://abc123.ngrok.io -> http://localhost:3000
+   ```
+
+2. **Configure Lemon Squeezy Webhook**:
+   - Go to your Lemon Squeezy dashboard
+   - Navigate to Settings → Webhooks
+   - Add a new webhook with URL: `https://abc123.ngrok.io/api/orpc/webhooks.handle`
+   - Select events: `subscription_created`, `subscription_updated`, `subscription_cancelled`, etc.
+
+3. **Test the Webhook**:
+   - Create a test subscription in Lemon Squeezy
+   - Check your terminal logs for webhook events
+   - Verify data is stored in your database
+
+### Testing Webhooks Locally
+
+You can test the webhook integration locally using the included test script:
+
+```bash
+# Make sure your dev server is running
+pnpm dev
+
+# In another terminal, run the webhook test
+pnpm test:webhook
+```
+
+This will:
+- Send a mock `subscription_created` event to your local webhook endpoint
+- Verify the webhook signature validation
+- Test the subscription processing logic
+- Show detailed response information
+
+### Webhook Endpoint
+
+The webhook endpoint is available at:
+```
+POST /api/orpc/webhooks.handle
+```
+
+This endpoint:
+- ✅ **Verifies Lemon Squeezy webhook signatures** (critical security feature)
+- ✅ Processes subscription events (created, updated, cancelled, etc.)
+- ✅ Updates user subscription status in the database
+- ✅ Handles payment events (success, failed, recovered)
+- ✅ Provides detailed logging for debugging
+
+**Security Note**: The webhook signature verification is handled at the router level using middleware. The `webhookSignatureMiddleware` verifies the `X-Signature` header using HMAC-SHA256 with your webhook secret before processing any webhook requests. This ensures only legitimate requests from Lemon Squeezy are processed, preventing unauthorized access to your subscription data.
 
 ## 📝 License
 
