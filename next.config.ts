@@ -16,6 +16,14 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: 'avatar.vercel.sh',
       },
+      {
+        protocol: 'https',
+        hostname: 'www.malekgarahellal.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'www.findmalek.com',
+      },
     ],
   },
 };

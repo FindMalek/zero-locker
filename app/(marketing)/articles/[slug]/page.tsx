@@ -6,7 +6,6 @@ import { MDXContent } from "@content-collections/mdx/react"
 
 import { DateFormatter } from "@/lib/date-utils"
 
-import { Counter } from "@/components/shared/counter"
 import { Icons } from "@/components/shared/icons"
 import { buttonVariants } from "@/components/ui/button"
 import { Link as CustomLink } from "@/components/ui/link"
@@ -104,7 +103,6 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
             <MDXContent
               code={html}
               components={{
-                Counter,
                 a: CustomLink,
               }}
             />

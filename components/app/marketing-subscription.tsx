@@ -1,11 +1,12 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { useSubscribeToUpdates } from "@/orpc/hooks/use-users"
-import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
 import { toast } from "sonner"
-import { z } from "zod"
+
+import { useSubscribeToUpdates } from "@/orpc/hooks/use-users"
+import { subscriptionInputSchema, type SubscriptionInput } from "@/schemas/user/roadmap"
 
 import { Icons } from "@/components/shared/icons"
 import { Button } from "@/components/ui/button"
@@ -17,12 +18,6 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
-
-const subscriptionInputSchema = z.object({
-  email: z.string().email("Please enter a valid email address"),
-})
-
-type SubscriptionInput = z.infer<typeof subscriptionInputSchema>
 
 interface MarketingSubscriptionProps {
   type: "roadmap" | "articles"
