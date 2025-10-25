@@ -1,318 +1,31 @@
 ---
-id: 1
+id: 3
 title: "Building Bulletproof APIs: A Complete Guide to Rate Limiting with oRPC"
 description: "Learn how to implement enterprise-grade rate limiting for your oRPC APIs to protect against abuse, DoS attacks, and resource exhaustion. Complete with code examples and interactive demos."
 publishedAt: "2025-10-25"
-image: "/logos/zero-locker-logo.svg"
 href: "/articles/building-bulletproof-apis-rate-limiting-orpc"
 ---
 
-# Building Bulletproof APIs: A Complete Guide to Rate Limiting with oRPC
+Ever had your API get hammered by a bot or someone trying to spam your endpoints? Yeah, we've all been there. Let's fix that with some solid rate limiting for your [oRPC](https://orpc.dev) APIs.
 
-In today's digital landscape, protecting your APIs from abuse is not just a best practice—it's essential for survival. Whether you're building a startup MVP or scaling an enterprise application, implementing robust rate limiting can mean the difference between a thriving service and a compromised system.
+This isn't just another tutorial - we're building the same rate limiting system that protects Zero Locker in production. No fluff, just the good stuff.
 
-This comprehensive guide walks you through implementing enterprise-grade rate limiting for [oRPC](https://orpc.dev) APIs, using real-world examples from our Zero Locker password manager. You'll learn not just the "how" but the "why" behind each decision.
+## 🎯 What We're Building
 
-## 🎯 The Problem: Unprotected APIs Are Vulnerable
+By the end of this, you'll have:
 
-Before implementing rate limiting, our public API endpoints were completely unprotected:
+- ✅ A multi-tier rate limiting system that actually works
+- ✅ oRPC middleware that's a breeze to use
+- ✅ Smart IP detection (because proxies are everywhere)
+- ✅ Interactive testing so you can see it in action
 
-- **Waitlist signup** - Vulnerable to email bombing
-- **Newsletter subscription** - Could be spammed endlessly
-- **Public statistics** - Subject to DoS attacks
-- **User registration** - Brute force attack targets
+## 🧪 See It In Action First
 
-### Real-World Attack Scenarios
+Before we dive into the code, let's see what we're building! Try clicking these buttons rapidly - you'll hit the rate limits and see exactly how the system protects your APIs.
 
-**Scenario 1: Email Bombing**
+### Strict Rate Limiting (5 requests/minute)
 
-```bash
-# Malicious script targeting waitlist endpoint
-for i in {1..1000}; do
-  curl -X POST /api/orpc/users.joinWaitlist \
-    -d "{\"email\":\"spam$i@attacker.com\"}"
-done
-```
-
-**Scenario 2: Resource Exhaustion**
-
-```bash
-# DoS attack on statistics endpoint
-while true; do
-  curl /api/orpc/users.getUserCount &
-done
-```
-
-Without rate limiting, these attacks could:
-
-- ✋ Exhaust server resources
-- 📧 Overwhelm email services
-- 💰 Incur unexpected costs
-- 🔥 Cause service downtime
-
-## ✨ The Solution: Multi-Tier Rate Limiting System
-
-We implemented a sophisticated rate limiting system with four distinct tiers, each optimized for different endpoint types:
-
-### Rate Limit Tiers
-
-<table>
-  <thead>
-    <tr>
-      <th>Tier</th>
-      <th>Requests/Min</th>
-      <th>Use Case</th>
-      <th>Example Endpoints</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td><strong>Strict</strong></td>
-      <td>5</td>
-      <td>Email sending, sensitive operations</td>
-      <td>Password reset, waitlist signup</td>
-    </tr>
-    <tr>
-      <td><strong>Moderate</strong></td>
-      <td>30</td>
-      <td>General public endpoints</td>
-      <td>User registration, contact forms</td>
-    </tr>
-    <tr>
-      <td><strong>Lenient</strong></td>
-      <td>100</td>
-      <td>High-traffic read-only</td>
-      <td>Statistics, public data</td>
-    </tr>
-    <tr>
-      <td><strong>Very Lenient</strong></td>
-      <td>300</td>
-      <td>Health checks, static content</td>
-      <td>Status endpoints, monitoring</td>
-    </tr>
-  </tbody>
-</table>
-
-## 🏗️ Architecture Deep Dive
-
-### Core Components
-
-Our rate limiting system consists of four key components:
-
-1. **Rate Limiting Utility** - Core algorithm and caching
-2. **Middleware Integration** - oRPC-specific implementation
-3. **IP Detection** - Multi-proxy header support
-4. **Protected Routes** - Applied rate limits
-
-Let's examine each component in detail.
-
-## 📦 Implementation Guide
-
-### 1. Core Rate Limiting Utility
-
-The heart of our system is a sliding window rate limiter with automatic cleanup:
-
-```typescript
-// lib/utils/rate-limit.ts
-export interface RateLimitConfig {
-  maxRequests: number
-  windowSeconds: number
-  identifier?: string
-}
-
-export interface RateLimitResult {
-  allowed: boolean
-  remaining: number
-  limit: number
-  resetAt: number
-  retryAfter?: number
-}
-
-class RateLimitCache {
-  private cache: Map<string, RateLimitEntry> = new Map()
-  private cleanupInterval: NodeJS.Timeout | null = null
-
-  constructor() {
-    this.startCleanup()
-  }
-
-  private startCleanup(): void {
-    this.cleanupInterval = setInterval(() => {
-      this.cleanup()
-    }, 60000) // Cleanup every minute
-  }
-
-  private cleanup(): void {
-    const now = Math.floor(Date.now() / 1000)
-    let removedCount = 0
-
-    for (const [key, entry] of this.cache.entries()) {
-      if (entry.resetAt < now) {
-        this.cache.delete(key)
-        removedCount++
-      }
-    }
-
-    if (removedCount > 0) {
-      console.log(`[Rate Limit] Cleaned up ${removedCount} expired entries`)
-    }
-  }
-}
-```
-
-**Key Features:**
-
-- **Sliding Window Algorithm** - More accurate than fixed windows
-- **Automatic Cleanup** - Prevents memory leaks
-- **Configurable Limits** - Flexible per-endpoint configuration
-- **Production Ready** - Handles edge cases gracefully
-
-### 2. oRPC Middleware Integration
-
-The middleware seamlessly integrates with oRPC's context system:
-
-```typescript
-// middleware/rate-limit.ts
-export const rateLimitMiddleware = (config: RateLimitConfig) => {
-  return async ({
-    context,
-    next,
-  }: {
-    context: PublicContext
-    next: MiddlewareNextFn<unknown>
-  }) => {
-    const ip = context.ip
-    const result = await checkRateLimit(ip, config)
-
-    if (!result.allowed) {
-      throw new ORPCError("TOO_MANY_REQUESTS", {
-        message: "Rate limit exceeded. Please try again later.",
-        data: {
-          retryAfter: result.retryAfter,
-          limit: result.limit,
-          resetAt: result.resetAt,
-        },
-      })
-    }
-
-    return next({
-      context: {
-        ...context,
-        rateLimit: {
-          remaining: result.remaining,
-          limit: result.limit,
-          resetAt: result.resetAt,
-        },
-      },
-    })
-  }
-}
-```
-
-**Predefined Configurations:**
-
-```typescript
-export const strictRateLimit = () => {
-  return rateLimitMiddleware({
-    maxRequests: 5,
-    windowSeconds: 60,
-    identifier: "strict",
-  })
-}
-
-export const moderateRateLimit = () => {
-  return rateLimitMiddleware({
-    maxRequests: 30,
-    windowSeconds: 60,
-    identifier: "moderate",
-  })
-}
-```
-
-### 3. Smart IP Detection
-
-Handling various proxy configurations is crucial for accurate rate limiting:
-
-```typescript
-// orpc/context.ts
-function getClientIp(headersList: Headers): string {
-  // Try multiple headers in order of preference
-  const forwardedFor = headersList.get("x-forwarded-for")
-  const realIp = headersList.get("x-real-ip")
-  const vercelIp = headersList.get("x-vercel-forwarded-for")
-  const cfConnectingIp = headersList.get("cf-connecting-ip")
-
-  // X-Forwarded-For can contain multiple IPs
-  if (forwardedFor) {
-    const ips = forwardedFor.split(",").map((ip) => ip.trim())
-    if (ips[0]) return ips[0]
-  }
-
-  // Vercel-specific header
-  if (vercelIp) {
-    const ips = vercelIp.split(",").map((ip) => ip.trim())
-    if (ips[0]) return ips[0]
-  }
-
-  // CloudFlare-specific header
-  if (cfConnectingIp) {
-    return cfConnectingIp
-  }
-
-  // Fallback to X-Real-IP
-  if (realIp) {
-    return realIp
-  }
-
-  return "UNKNOWN-IP"
-}
-```
-
-**Supported Proxy Types:**
-
-- ✅ **Vercel** - `x-vercel-forwarded-for`
-- ✅ **CloudFlare** - `cf-connecting-ip`
-- ✅ **Standard Proxies** - `x-forwarded-for`
-- ✅ **Generic Proxies** - `x-real-ip`
-
-### 4. Protected Route Implementation
-
-Applying rate limits to your oRPC routes is straightforward:
-
-```typescript
-// orpc/routers/user.ts
-const baseProcedure = os.$context<ORPCContext>()
-
-// Different rate limit tiers
-const publicProcedure = baseProcedure.use(({ context, next }) =>
-  lenientRateLimit()({ context, next })
-)
-
-const strictPublicProcedure = baseProcedure.use(({ context, next }) =>
-  strictRateLimit()({ context, next })
-)
-
-// Apply to specific endpoints
-export const joinWaitlist = strictPublicProcedure
-  .input(waitlistInputSchema)
-  .output(waitlistJoinOutputSchema)
-  .handler(async ({ input }): Promise<WaitlistJoinOutput> => {
-    // Implementation with 5 requests/minute limit
-  })
-
-export const getUserCount = publicProcedure
-  .input(emptyInputSchema)
-  .output(userCountOutputSchema)
-  .handler(async (): Promise<UserCountOutput> => {
-    // Implementation with 100 requests/minute limit
-  })
-```
-
-## 🧪 Interactive Testing
-
-Let's test our rate limiting implementation with real examples:
-
-### Test Strict Rate Limiting (5 requests/minute)
+_Perfect for email endpoints - very restrictive to prevent spam_
 
 <RateLimitTest
   endpoint="strict"
@@ -320,7 +33,9 @@ Let's test our rate limiting implementation with real examples:
   description="Email sending endpoints - Very restrictive to prevent spam"
 />
 
-### Test Moderate Rate Limiting (30 requests/minute)
+### Moderate Rate Limiting (30 requests/minute)
+
+_Good for general API calls - balanced protection_
 
 <RateLimitTest
   endpoint="moderate"
@@ -328,241 +43,124 @@ Let's test our rate limiting implementation with real examples:
   description="General public endpoints - Balanced protection"
 />
 
-## 📝 Code Examples
+Pretty cool, right? Now let's build this thing step by step.
 
-### Core Rate Limiting Implementation
+## 📋 Step 1: The Core Rate Limiting Engine
+
+First things first - we need the brain of our rate limiting system. This handles the sliding window algorithm and keeps track of who's been naughty.
+
+Let's start with the basic types:
 
 <CodeBlock 
   language="typescript"
-  title="lib/utils/rate-limit.ts - Core Rate Limiting Utility"
-  code={`/**
- * IP-based Rate Limiting Utility
- *
- * This module provides rate limiting functionality based on IP addresses.
- * It uses an in-memory cache for development and can be easily switched to Redis for production.
- *
- * Features:
- * - Sliding window rate limiting
- * - Per-IP tracking
- * - Automatic cleanup of expired entries
- * - Configurable limits and windows
- */
-
-export interface RateLimitConfig {
-  /**
-   * Maximum number of requests allowed within the window
-   */
+  title="lib/utils/rate-limit.ts - Basic Types"
+  code={`export interface RateLimitConfig {
   maxRequests: number
-
-/\*\*
-
-- Time window in seconds
-  \*/
   windowSeconds: number
-
-/\*\*
-
-- Optional identifier for the rate limit (e.g., "api", "auth", "public")
-  \*/
   identifier?: string
-  }
+}
 
 export interface RateLimitResult {
-  /**
-   * Whether the request is allowed
-   */
   allowed: boolean
-
-/\*\*
-
-- Number of requests remaining in the current window
-  \*/
   remaining: number
-
-/\*\*
-
-- Total limit for the window
-  \*/
   limit: number
-
-/\*\*
-
-- Timestamp when the rate limit will reset (in seconds)
-  \*/
   resetAt: number
-
-/\*\*
-
-- Number of seconds to wait before retrying
-  \*/
   retryAfter?: number
-  }
+}`}
+/>
 
-interface RateLimitEntry {
-count: number
-resetAt: number
+Now let's add a simple cache to store our rate limit data:
+
+<CodeBlock 
+  language="typescript"
+  title="Add Cache Class"
+  code={`interface RateLimitEntry {
+  count: number
+  resetAt: number
 }
 
-/\*\*
-
-- In-memory cache for rate limiting
-- In production, replace this with Redis or another distributed cache
-  \*/
-  class RateLimitCache {
-  private cache: Map<string, RateLimitEntry> = new Map()
-  private cleanupInterval: NodeJS.Timeout | null = null
+class RateLimitCache {
+private cache = new Map<string, RateLimitEntry>()
+private cleanupInterval: NodeJS.Timeout | null = null
 
 constructor() {
-// Start cleanup interval to remove expired entries every minute
-this.startCleanup()
+this.cleanupInterval = setInterval(() => this.cleanup(), 60000)
 }
 
-private startCleanup(): void {
-// Clear existing interval if any
-if (this.cleanupInterval) {
-clearInterval(this.cleanupInterval)
-}
-
-    // Run cleanup every 60 seconds
-    this.cleanupInterval = setInterval(() => {
-      this.cleanup()
-    }, 60000)
-
-}
-
-private cleanup(): void {
+private cleanup() {
 const now = Math.floor(Date.now() / 1000)
-let removedCount = 0
-
-    for (const [key, entry] of this.cache.entries()) {
-      if (entry.resetAt < now) {
-        this.cache.delete(key)
-        removedCount++
-      }
-    }
-
-    if (removedCount > 0) {
-      console.log(\`[Rate Limit] Cleaned up \${removedCount} expired entries\`)
-    }
-
+for (const [key, entry] of this.cache.entries()) {
+if (entry.resetAt < now) this.cache.delete(key)
+}
 }
 
-get(key: string): RateLimitEntry | undefined {
+get(key: string) {
 const entry = this.cache.get(key)
-
-    // Remove expired entries on access
-    if (entry && entry.resetAt < Math.floor(Date.now() / 1000)) {
-      this.cache.delete(key)
-      return undefined
-    }
-
-    return entry
-
+if (entry && entry.resetAt < Math.floor(Date.now() / 1000)) {
+this.cache.delete(key)
+return undefined
+}
+return entry
 }
 
-set(key: string, entry: RateLimitEntry): void {
+set(key: string, entry: RateLimitEntry) {
 this.cache.set(key, entry)
 }
-
-delete(key: string): void {
-this.cache.delete(key)
 }
 
-clear(): void {
-this.cache.clear()
-}
+const rateLimitCache = new RateLimitCache()`}
+/>
 
-size(): number {
-return this.cache.size
-}
+Add a helper function to generate cache keys:
 
-destroy(): void {
-if (this.cleanupInterval) {
-clearInterval(this.cleanupInterval)
-this.cleanupInterval = null
-}
-this.cache.clear()
-}
-}
-
-// Singleton cache instance
-const rateLimitCache = new RateLimitCache()
-
-/\*\*
-
-- Get rate limit cache instance (useful for testing or manual cleanup)
-  \*/
-  export function getRateLimitCache(): RateLimitCache {
-  return rateLimitCache
-  }
-
-/\*\*
-
-- Generate a unique key for rate limiting
-  \*/
-  function generateKey(ip: string, identifier?: string): string {
+<CodeBlock
+  language="typescript"
+  title="Add Key Generation"
+  code={`function generateKey(ip: string, identifier?: string) {
   return identifier ? \`ratelimit:\${identifier}:\${ip}\` : \`ratelimit:\${ip}\`
-  }
+}`}
+/>
 
-/\*\*
+Now the main rate limiting logic:
 
-- Check and increment rate limit for an IP address
--
-- @param ip - The IP address to check
-- @param config - Rate limit configuration
-- @returns Rate limit result indicating if the request is allowed
-  \*/
-  export async function checkRateLimit(
+<CodeBlock 
+  language="typescript"
+  title="Core Rate Limiting Function"
+  code={`export async function checkRateLimit(
   ip: string,
   config: RateLimitConfig
-  ): Promise<RateLimitResult> {
+): Promise<RateLimitResult> {
   const { maxRequests, windowSeconds, identifier } = config
   const key = generateKey(ip, identifier)
   const now = Math.floor(Date.now() / 1000)
 
-// Get existing entry or create new one
 let entry = rateLimitCache.get(key)
 
 if (!entry) {
-// First request from this IP
-entry = {
-count: 1,
-resetAt: now + windowSeconds,
-}
+entry = { count: 1, resetAt: now + windowSeconds }
 rateLimitCache.set(key, entry)
-
-    return {
-      allowed: true,
-      remaining: maxRequests - 1,
-      limit: maxRequests,
-      resetAt: entry.resetAt,
-    }
-
+return {
+allowed: true,
+remaining: maxRequests - 1,
+limit: maxRequests,
+resetAt: entry.resetAt,
+}
 }
 
-// Check if the window has expired
 if (entry.resetAt < now) {
-// Reset the window
-entry = {
-count: 1,
-resetAt: now + windowSeconds,
-}
+entry = { count: 1, resetAt: now + windowSeconds }
 rateLimitCache.set(key, entry)
-
-    return {
-      allowed: true,
-      remaining: maxRequests - 1,
-      limit: maxRequests,
-      resetAt: entry.resetAt,
-    }
-
+return {
+allowed: true,
+remaining: maxRequests - 1,
+limit: maxRequests,
+resetAt: entry.resetAt,
+}
 }
 
-// Increment the count
 entry.count++
 rateLimitCache.set(key, entry)
 
-// Check if limit is exceeded
 if (entry.count > maxRequests) {
 return {
 allowed: false,
@@ -579,204 +177,91 @@ remaining: maxRequests - entry.count,
 limit: maxRequests,
 resetAt: entry.resetAt,
 }
-}
+}`}
+/>
 
-/\*\*
+Finally, add some convenient presets:
 
-- Predefined rate limit configurations
-  \*/
-  export const RATE_LIMIT_PRESETS = {
-  // Very strict - for sensitive endpoints (e.g., password reset)
-  STRICT: {
-  maxRequests: 5,
-  windowSeconds: 60,
-  },
-  // Moderate - for general public endpoints
-  MODERATE: {
-  maxRequests: 30,
-  windowSeconds: 60,
-  },
-  // Lenient - for high-traffic public endpoints
-  LENIENT: {
-  maxRequests: 100,
-  windowSeconds: 60,
-  },
-  // Very lenient - for static content or health checks
-  VERY_LENIENT: {
-  maxRequests: 300,
-  windowSeconds: 60,
-  },
-  } as const`}
-  />
+<CodeBlock
+  language="typescript"
+  title="Rate Limit Presets"
+  code={`export const RATE_LIMIT_PRESETS = {
+  STRICT: { maxRequests: 5, windowSeconds: 60 },
+  MODERATE: { maxRequests: 30, windowSeconds: 60 },
+  LENIENT: { maxRequests: 100, windowSeconds: 60 },
+  VERY_LENIENT: { maxRequests: 300, windowSeconds: 60 },
+} as const`}
+/>
 
-### oRPC Middleware Integration
+## 🔧 Step 2: The Middleware Magic
+
+Now let's create the middleware that makes this all work seamlessly with oRPC. This is where the magic happens - it intercepts requests and checks if they're allowed through.
+
+Create `middleware/rate-limit.ts`:
 
 <CodeBlock 
   language="typescript"
-  title="middleware/rate-limit.ts - oRPC Middleware"
+  title="middleware/rate-limit.ts"
   code={`import { ORPCError } from "@orpc/server"
 import type { MiddlewareNextFn } from "@orpc/server"
-
+import { checkRateLimit, RATE_LIMIT_PRESETS, type RateLimitConfig } from "@/lib/utils/rate-limit"
 import type { PublicContext } from "@/orpc/types"
-import {
-  checkRateLimit,
-  RATE_LIMIT_PRESETS,
-  type RateLimitConfig,
-} from "@/lib/utils/rate-limit"
 
-/\*\*
+export const rateLimitMiddleware = (config: RateLimitConfig) => {
+  return async ({ context, next }: { context: PublicContext; next: MiddlewareNextFn<unknown> }) => {
+    const result = await checkRateLimit(context.ip, config)
 
-- Rate limiting middleware for oRPC
--
-- This middleware applies IP-based rate limiting to protect against abuse and DoS attacks.
-- It should be applied to public endpoints that don't require authentication.
--
-- @example
-- \`\`\`ts
-- const publicProcedure = baseProcedure
-- .use(rateLimitMiddleware({ maxRequests: 30, windowSeconds: 60 }))
--
-- export const getPublicData = publicProcedur
-  e
-- .handler(async () => {
--     // Handler implementation
-- })
-- \`\`\`
-  \*/
-  export const rateLimitMiddleware = (config: RateLimitConfig) => {
-  return async ({
-  context,
-  next,
-  }: {
-  context: PublicContext
-  next: MiddlewareNextFn<unknown>
-  }) => {
-  const ip = context.ip
-  const result = await checkRateLimit(ip, config)
-
-      if (!result.allowed) {
-        throw new ORPCError("TOO_MANY_REQUESTS", {
-          message: "Rate limit exceeded. Please try again later.",
-          data: {
-            retryAfter: result.retryAfter,
-            limit: result.limit,
-            resetAt: result.resetAt,
-          },
-        })
-      }
-
-      // Continue to the next middleware with rate limit info in context
-      return next({
-        context: {
-          ...context,
-          rateLimit: {
-            remaining: result.remaining,
-            limit: result.limit,
-            resetAt: result.resetAt,
-          },
-        },
+    if (!result.allowed) {
+      throw new ORPCError("TOO_MANY_REQUESTS", {
+        message: "Rate limit exceeded. Please try again later.",
+        data: { retryAfter: result.retryAfter, limit: result.limit, resetAt: result.resetAt },
       })
+    }
 
-  }
-  }
+    return next({
+      context: {
+        ...context,
+        rateLimit: { remaining: result.remaining, limit: result.limit, resetAt: result.resetAt },
+      },
+    })
 
-/\*\*
+}
+}
 
-- Predefined rate limit middleware configurations
-  \*/
+export const strictRateLimit = () => rateLimitMiddleware({ ...RATE_LIMIT_PRESETS.STRICT, identifier: "strict" })
+export const moderateRateLimit = () => rateLimitMiddleware({ ...RATE_LIMIT_PRESETS.MODERATE, identifier: "moderate" })
+export const lenientRateLimit = () => rateLimitMiddleware({ ...RATE_LIMIT_PRESETS.LENIENT, identifier: "lenient" })
+export const veryLenientRateLimit = () => rateLimitMiddleware({ ...RATE_LIMIT_PRESETS.VERY_LENIENT, identifier: "very-lenient" })`}
+/>
 
-/\*\*
+## 🌐 Step 3: Smart IP Detection (Because Proxies Are Tricky)
 
-- Strict rate limit - for sensitive endpoints (e.g., password reset, email sending)
-- 5 requests per minute
-  \*/
-  export const strictRateLimit = () => {
-  return rateLimitMiddleware({
-  ...RATE_LIMIT_PRESETS.STRICT,
-  identifier: "strict",
-  })
-  }
+Here's the thing - getting the real client IP is harder than it should be. Between Vercel, CloudFlare, and other proxies, we need to be smart about this.
 
-/\*\*
-
-- Moderate rate limit - for general public endpoints (default)
-- 30 requests per minute
-  \*/
-  export const moderateRateLimit = () => {
-  return rateLimitMiddleware({
-  ...RATE_LIMIT_PRESETS.MODERATE,
-  identifier: "moderate",
-  })
-  }
-
-/\*\*
-
-- Lenient rate limit - for high-traffic public endpoints
-- 100 requests per minute
-  \*/
-  export const lenientRateLimit = () => {
-  return rateLimitMiddleware({
-  ...RATE_LIMIT_PRESETS.LENIENT,
-  identifier: "lenient",
-  })
-  }
-
-/\*\*
-
-- Very lenient rate limit - for static content or health checks
-- 300 requests per minute
-  \*/
-  export const veryLenientRateLimit = () => {
-  return rateLimitMiddleware({
-  ...RATE_LIMIT_PRESETS.VERY_LENIENT,
-  identifier: "very-lenient",
-  })
-  }`}
-  />
-
-### Smart IP Detection
+Update `orpc/context.ts`:
 
 <CodeBlock 
   language="typescript"
-  title="orpc/context.ts - IP Detection"
-  code={`import type { ORPCContext } from "./types"
-
-/\*\*
-
-- Extract IP address from request headers
-- Handles various proxy configurations (Vercel, CloudFlare, etc.)
-  \*/
-  function getClientIp(headersList: Headers): string {
-  // Try multiple headers in order of preference
+  title="orpc/context.ts"
+  code={`function getClientIp(headersList: Headers): string {
   const forwardedFor = headersList.get("x-forwarded-for")
-  const realIp = headersList.get("x-real-ip")
   const vercelIp = headersList.get("x-vercel-forwarded-for")
   const cfConnectingIp = headersList.get("cf-connecting-ip")
+  const realIp = headersList.get("x-real-ip")
 
-// X-Forwarded-For can contain multiple IPs (client, proxy1, proxy2, ...)
-// The first IP is the original client
 if (forwardedFor) {
 const ips = forwardedFor.split(",").map((ip) => ip.trim())
 if (ips[0]) return ips[0]
 }
 
-// Vercel-specific header
 if (vercelIp) {
 const ips = vercelIp.split(",").map((ip) => ip.trim())
 if (ips[0]) return ips[0]
 }
 
-// CloudFlare-specific header
-if (cfConnectingIp) {
-return cfConnectingIp
-}
+if (cfConnectingIp) return cfConnectingIp
+if (realIp) return realIp
 
-// Fallback to X-Real-IP
-if (realIp) {
-return realIp
-}
-
-// Default fallback for local development
 return "UNKNOWN-IP"
 }
 
@@ -784,10 +269,7 @@ export async function createContext(): Promise<ORPCContext> {
   try {
     const headersList = await headers()
     const ip = getClientIp(headersList)
-
-    const authResult = await auth.api.getSession({
-      headers: headersList,
-    })
+    const authResult = await auth.api.getSession({ headers: headersList })
 
     return {
       session: authResult?.session || null,
@@ -796,318 +278,156 @@ export async function createContext(): Promise<ORPCContext> {
     }
 
 } catch (error) {
-console.error("Failed to get session:", error)
-return {
-session: null,
-user: null,
-ip: "UNKNOWN-IP",
-}
+return { session: null, user: null, ip: "UNKNOWN-IP" }
 }
 }`}
 />
 
-### Protected Route Implementation
+Update `orpc/types.ts`:
 
 <CodeBlock 
   language="typescript"
-  title="orpc/routers/user.ts - Protected Routes"
-  code={`import { authMiddleware } from "@/middleware/auth"
-import {
-  lenientRateLimit,
-  moderateRateLimit,
-  strictRateLimit,
-} from "@/middleware/rate-limit"
-import { database } from "@/prisma/client"
-import {
-  subscribeToRoadmapInputSchema,
-  subscribeToRoadmapOutputSchema,
-  type SubscribeToRoadmapInput,
-  type SubscribeToRoadmapOutput,
-} from "@/schemas/user/roadmap"
-import {
-  encryptedDataCountOutputSchema,
-  userCountOutputSchema,
-  type EncryptedDataCountOutput,
-  type UserCountOutput,
-} from "@/schemas/user/statistics"
-import {
-  userSimpleOutputSchema,
-  type UserSimpleOutput,
-} from "@/schemas/user/user"
-import {
-  waitlistCountOutputSchema,
-  waitlistInputSchema,
-  waitlistJoinOutputSchema,
-  type WaitlistCountOutput,
-  type WaitlistInput,
-  type WaitlistJoinOutput,
-} from "@/schemas/user/waitlist"
-import { emptyInputSchema } from "@/schemas/utils"
-import {
-  initializeDefaultContainersOutputSchema,
-  type InitializeDefaultContainersOutput,
-} from "@/schemas/utils/container"
-import { ORPCError, os } from "@orpc/server"
-import { Prisma } from "@prisma/client"
+  title="orpc/types.ts"
+  code={`export interface ORPCContext {
+  session: Session | null
+  user: User | null
+  ip: string
+}
 
-import { sendSubscriptionEmail, sendWaitlistEmail } from "@/lib/email"
-import { createDefaultContainers } from "@/lib/utils/default-containers"
+export interface PublicContext {
+  session: Session | null
+  user: User | null
+  ip: string
+}
 
-import type { ORPCContext } from "../types"
+export interface RateLimitInfo {
+  remaining: number
+  limit: number
+  resetAt: number
+}`}
+/>
+
+## 🛡️ Step 4: Protect Your Routes (The Fun Part)
+
+Now comes the satisfying part - actually protecting your endpoints. We'll create different procedures for different levels of protection.
+
+Update `orpc/routers/user.ts`:
+
+<CodeBlock 
+  language="typescript"
+  title="orpc/routers/user.ts"
+  code={`import { strictRateLimit, lenientRateLimit } from "@/middleware/rate-limit"
 
 const baseProcedure = os.$context<ORPCContext>()
 
-// Public procedure with lenient rate limiting for read-only operations
 const publicProcedure = baseProcedure.use(({ context, next }) =>
 lenientRateLimit()({ context, next })
 )
 
-// Public procedure with strict rate limiting for write operations (emails, etc.)
 const strictPublicProcedure = baseProcedure.use(({ context, next }) =>
 strictRateLimit()({ context, next })
 )
 
-// Public procedure with moderate rate limiting
-const moderatePublicProcedure = baseProcedure.use(({ context, next }) =>
-moderateRateLimit()({ context, next })
-)
-
-const authProcedure = baseProcedure.use(({ context, next }) =>
-authMiddleware({ context, next })
-)
-
-// Join waitlist - strict rate limit due to email sending
+// Apply to endpoints
 export const joinWaitlist = strictPublicProcedure
 .input(waitlistInputSchema)
 .output(waitlistJoinOutputSchema)
-.handler(async ({ input }): Promise<WaitlistJoinOutput> => {
-// Implementation with 5 requests/minute limit
+.handler(async ({ input }) => {
+// 5 requests/minute limit
 })
 
-// Subscribe to roadmap updates - strict rate limit due to email sending
-export const subscribeToRoadmap = strictPublicProcedure
-.input(subscribeToRoadmapInputSchema)
-.output(subscribeToRoadmapOutputSchema)
-.handler(async ({ input }): Promise<SubscribeToRoadmapOutput> => {
-// Implementation with 5 requests/minute limit
-})
-
-// Get user count - lenient rate limit for high traffic
 export const getUserCount = publicProcedure
-.input(emptyInputSchema)
-.output(userCountOutputSchema)
-.handler(async (): Promise<UserCountOutput> => {
-// Implementation with 100 requests/minute limit
+  .input(emptyInputSchema)
+  .output(userCountOutputSchema)
+  .handler(async () => {
+    // 100 requests/minute limit
+  })`}
+/>
+
+## 🧪 Step 5: Let's Test This Thing
+
+Time to see our rate limiting in action! We'll create some test endpoints and interactive components so you can actually see it working.
+
+<CodeBlock 
+  language="typescript"
+  title="orpc/routers/test.ts"
+  code={`export const testRateLimit = baseProcedure
+  .input(z.object({ endpoint: z.enum(["strict", "moderate"]), timestamp: z.string() }))
+  .output(z.object({ success: z.boolean(), remaining: z.number(), limit: z.number(), resetAt: z.number(), endpoint: z.string() }))
+  .handler(async ({ input, context }) => {
+    const config = input.endpoint === "strict" 
+      ? { maxRequests: 5, windowSeconds: 60, identifier: "test-strict" }
+      : { maxRequests: 30, windowSeconds: 60, identifier: "test-moderate" }
+
+    const result = await checkRateLimit(context.ip, config)
+
+    if (!result.allowed) {
+      throw new ORPCError("TOO_MANY_REQUESTS", {
+        message: "Rate limit exceeded. Please try again later.",
+        data: { retryAfter: result.retryAfter, limit: result.limit, resetAt: result.resetAt },
+      })
+    }
+
+    return {
+      success: true,
+      remaining: result.remaining,
+      limit: result.limit,
+      resetAt: result.resetAt,
+      endpoint: input.endpoint,
+    }
+
 })`}
 />
 
-## 🔒 Security Features
+## 🚀 Step 6: Deploy and Scale
 
-### IP Spoofing Prevention
+### Vercel Ready (Zero Config!)
 
-Our implementation includes multiple layers of IP validation:
+The best part? This works perfectly on Vercel with zero configuration. We're using Vercel-specific headers for IP detection, so it just works.
 
-```typescript
-// Multiple header validation prevents IP spoofing
-const headers = [
-  "x-forwarded-for", // Standard proxy
-  "x-vercel-forwarded-for", // Vercel-specific
-  "cf-connecting-ip", // CloudFlare
-  "x-real-ip", // Generic proxy
-]
-```
+### When to Scale Up
 
-### Rate Limit Bypass Prevention
+**Current setup is perfect for:**
 
-- **Per-endpoint tracking** - Different limits for different operations
-- **IP-based identification** - Consistent tracking across requests
-- **Automatic cleanup** - Prevents cache poisoning attacks
-
-### Error Response Format
-
-When rate limits are exceeded, clients receive clear error information:
-
-```json
-{
-  "error": "TOO_MANY_REQUESTS",
-  "message": "Rate limit exceeded. Please try again later.",
-  "data": {
-    "retryAfter": 45,
-    "limit": 5,
-    "resetAt": 1697654321
-  }
-}
-```
-
-## 🚀 Deployment Considerations
-
-### Vercel Compatibility
-
-Our implementation is fully compatible with Vercel's serverless architecture:
-
-- ✅ **Zero Configuration** - Works out of the box
-- ✅ **IP Detection** - Uses Vercel-specific headers
-- ✅ **Serverless Ready** - No external dependencies
-- ✅ **Cost Effective** - No additional infrastructure needed
-
-### Production Scaling
-
-**Current Implementation (In-Memory):**
-
-- ✅ Perfect for MVP and early-stage deployments
-- ✅ Suitable for < 1000 daily users
+- ✅ MVP and early-stage apps
+- ✅ Under 1000 daily users
 - ✅ Single-region deployments
-- ✅ Development and testing
 
-**High-Traffic Considerations:**
-For 1000+ concurrent users, consider upgrading to Redis:
+**Need Redis when you hit:**
 
-```typescript
-// Future Redis implementation
-class RedisRateLimitCache {
-  async get(key: string): Promise<RateLimitEntry | undefined> {
-    const data = await redis.get(key)
-    return data ? JSON.parse(data) : undefined
-  }
+- 🔥 1000+ concurrent users
+- 🌍 Multi-region deployments
+- 📈 High-traffic production apps
 
-  async set(key: string, entry: RateLimitEntry): Promise<void> {
-    await redis.setex(
-      key,
-      entry.resetAt - Math.floor(Date.now() / 1000),
-      JSON.stringify(entry)
-    )
-  }
-}
-```
+## 🎯 Pro Tips
 
-## 📊 Monitoring and Analytics
+**Pick the right limits:**
 
-### Built-in Logging
+- Email stuff: `strictRateLimit()` (5/min) - nobody likes spam
+- User signups: `moderateRateLimit()` (30/min) - reasonable for humans
+- Public data: `lenientRateLimit()` (100/min) - let the good traffic flow
 
-Our system includes comprehensive logging for monitoring:
+**Start conservative, adjust later:**
+
+- Begin with tight limits
+- Watch your logs for violations
+- Loosen up as you learn your traffic patterns
+
+**Error messages matter:**
 
 ```typescript
-// Automatic cleanup logging
-console.log(`[Rate Limit] Cleaned up ${removedCount} expired entries`)
-
-// Rate limit violation logging (add to middleware)
-if (!result.allowed) {
-  console.warn(
-    `[Rate Limit] Blocked request from ${ip}: ${entry.count}/${maxRequests}`
-  )
-}
-```
-
-### Metrics to Track
-
-- **Request volume per IP**
-- **Rate limit violations**
-- **Cache hit/miss ratios**
-- **Cleanup efficiency**
-
-## 🎯 Best Practices
-
-### 1. Choose Appropriate Limits
-
-```typescript
-// Email sending - Very restrictive
-strictRateLimit() // 5/min
-
-// User registration - Moderate
-moderateRateLimit() // 30/min
-
-// Public data - Lenient
-lenientRateLimit() // 100/min
-```
-
-### 2. Implement Graceful Degradation
-
-```typescript
-// Provide helpful error messages
 throw new ORPCError("TOO_MANY_REQUESTS", {
   message: "Rate limit exceeded. Please try again later.",
-  data: {
-    retryAfter: result.retryAfter,
-    limit: result.limit,
-  },
+  data: { retryAfter: result.retryAfter, limit: result.limit },
 })
 ```
 
-### 3. Monitor and Adjust
+## 🎉 You're Done!
 
-- Start with conservative limits
-- Monitor violation rates
-- Adjust based on legitimate usage patterns
-- Consider different limits for authenticated vs anonymous users
+That's it! You now have bulletproof rate limiting for your oRPC APIs. No more worrying about bots hammering your endpoints or someone trying to crash your server.
 
-## 🔧 Troubleshooting Common Issues
-
-### Issue 1: False Positives
-
-**Problem:** Legitimate users hitting rate limits
-**Solution:** Implement different limits for authenticated users
-
-```typescript
-const authenticatedProcedure = authProcedure.use(({ context, next }) =>
-  moderateRateLimit()({ context, next })
-)
-```
-
-### Issue 2: Shared IP Addresses
-
-**Problem:** Multiple users behind corporate NAT hitting limits
-**Solution:** Implement user-based rate limiting for authenticated endpoints
-
-```typescript
-// User-based rate limiting
-const userKey = `user:${context.user.id}:${identifier}`
-```
-
-### Issue 3: Development Environment
-
-**Problem:** Rate limits interfering with development
-**Solution:** Disable in development or use very lenient limits
-
-```typescript
-const isDevelopment = process.env.NODE_ENV === "development"
-const rateLimit = isDevelopment ? veryLenientRateLimit() : strictRateLimit()
-```
-
-## 📈 Performance Impact
-
-### Memory Usage
-
-- **Minimal overhead** - ~1KB per unique IP
-- **Automatic cleanup** - Prevents memory leaks
-- **Efficient storage** - Simple key-value structure
-
-### CPU Impact
-
-- **O(1) operations** - Constant time lookups
-- **Background cleanup** - Non-blocking maintenance
-- **Minimal processing** - Simple arithmetic operations
-
-## 🎉 Conclusion
-
-Implementing rate limiting with oRPC provides robust protection against API abuse while maintaining excellent developer experience. Our multi-tier approach ensures appropriate protection for different endpoint types, while the sliding window algorithm provides accurate rate limiting.
-
-### Key Takeaways
-
-1. **Start Simple** - Begin with in-memory implementation
-2. **Monitor Closely** - Track violation rates and adjust accordingly
-3. **Plan for Scale** - Design for Redis migration when needed
-4. **Test Thoroughly** - Use interactive testing tools
-5. **Document Everything** - Clear error messages and retry guidance
-
-### Next Steps
-
-- Implement rate limiting for your own oRPC APIs
-- Monitor usage patterns and adjust limits
-- Consider Redis for high-traffic deployments
-- Add user-based rate limiting for authenticated endpoints
-
-Ready to protect your APIs? [Get started with Zero Locker](/register) and see our rate limiting in action, or explore our [open source implementation](https://github.com/FindMalek/zero-locker) for your own projects.
+Want to see this in action? [Try Zero Locker](/register) - we're using this exact system in production. Or check out our [open source implementation](https://github.com/FindMalek/zero-locker) to adapt it for your own projects.
 
 ---
 
-_This article demonstrates real-world implementation from [Zero Locker's rate limiting system](https://github.com/FindMalek/zero-locker/pull/27). The code examples are production-ready and can be adapted for any oRPC application._
+_This is the real deal - the same rate limiting system protecting Zero Locker in production. No toy examples, just battle-tested code that actually works._
