@@ -4,7 +4,7 @@ import * as React from "react"
 import * as SelectPrimitive from "@radix-ui/react-select"
 import { CheckIcon, ChevronDownIcon, ChevronUpIcon } from "lucide-react"
 
-import { cn } from "@/lib/utils"
+import { cn } from "@/lib/utils/index"
 
 function Select({
   ...props
@@ -28,11 +28,9 @@ function SelectTrigger({
   className,
   size = "default",
   children,
-  hideIcon = false,
   ...props
 }: React.ComponentProps<typeof SelectPrimitive.Trigger> & {
   size?: "sm" | "default"
-  hideIcon?: boolean
 }) {
   return (
     <SelectPrimitive.Trigger
@@ -45,11 +43,9 @@ function SelectTrigger({
       {...props}
     >
       {children}
-      {!hideIcon && (
-        <SelectPrimitive.Icon asChild>
-          <ChevronDownIcon className="size-4 opacity-50" />
-        </SelectPrimitive.Icon>
-      )}
+      <SelectPrimitive.Icon asChild>
+        <ChevronDownIcon className="size-4 opacity-50" />
+      </SelectPrimitive.Icon>
     </SelectPrimitive.Trigger>
   )
 }
@@ -58,6 +54,7 @@ function SelectContent({
   className,
   children,
   position = "popper",
+  align = "center",
   ...props
 }: React.ComponentProps<typeof SelectPrimitive.Content>) {
   return (
@@ -71,6 +68,7 @@ function SelectContent({
           className
         )}
         position={position}
+        align={align}
         {...props}
       >
         <SelectScrollUpButton />

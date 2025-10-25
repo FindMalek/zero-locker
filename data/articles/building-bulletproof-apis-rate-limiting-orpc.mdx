@@ -53,7 +53,7 @@ Let's start with the basic types:
 
 <CodeBlock 
   language="typescript"
-  title="lib/utils/rate-limit.ts - Basic Types"
+  filename="lib/utils/rate-limit.ts"
   code={`export interface RateLimitConfig {
   maxRequests: number
   windowSeconds: number
@@ -73,7 +73,7 @@ Now let's add a simple cache to store our rate limit data:
 
 <CodeBlock 
   language="typescript"
-  title="Add Cache Class"
+  filename="lib/utils/rate-limit.ts"
   code={`interface RateLimitEntry {
   count: number
   resetAt: number
@@ -115,7 +115,7 @@ Add a helper function to generate cache keys:
 
 <CodeBlock
   language="typescript"
-  title="Add Key Generation"
+  filename="lib/utils/rate-limit.ts"
   code={`function generateKey(ip: string, identifier?: string) {
   return identifier ? \`ratelimit:\${identifier}:\${ip}\` : \`ratelimit:\${ip}\`
 }`}
@@ -125,7 +125,7 @@ Now the main rate limiting logic:
 
 <CodeBlock 
   language="typescript"
-  title="Core Rate Limiting Function"
+  filename="lib/utils/rate-limit.ts"
   code={`export async function checkRateLimit(
   ip: string,
   config: RateLimitConfig
@@ -184,7 +184,7 @@ Finally, add some convenient presets:
 
 <CodeBlock
   language="typescript"
-  title="Rate Limit Presets"
+  filename="lib/utils/rate-limit.ts"
   code={`export const RATE_LIMIT_PRESETS = {
   STRICT: { maxRequests: 5, windowSeconds: 60 },
   MODERATE: { maxRequests: 30, windowSeconds: 60 },
@@ -201,7 +201,7 @@ Create `middleware/rate-limit.ts`:
 
 <CodeBlock 
   language="typescript"
-  title="middleware/rate-limit.ts"
+  filename="middleware/rate-limit.ts"
   code={`import { ORPCError } from "@orpc/server"
 import type { MiddlewareNextFn } from "@orpc/server"
 import { checkRateLimit, RATE_LIMIT_PRESETS, type RateLimitConfig } from "@/lib/utils/rate-limit"
@@ -242,7 +242,7 @@ Update `orpc/context.ts`:
 
 <CodeBlock 
   language="typescript"
-  title="orpc/context.ts"
+  filename="orpc/context.ts"
   code={`function getClientIp(headersList: Headers): string {
   const forwardedFor = headersList.get("x-forwarded-for")
   const vercelIp = headersList.get("x-vercel-forwarded-for")
@@ -287,7 +287,7 @@ Update `orpc/types.ts`:
 
 <CodeBlock 
   language="typescript"
-  title="orpc/types.ts"
+  filename="orpc/types.ts"
   code={`export interface ORPCContext {
   session: Session | null
   user: User | null
@@ -315,7 +315,7 @@ Update `orpc/routers/user.ts`:
 
 <CodeBlock 
   language="typescript"
-  title="orpc/routers/user.ts"
+  filename="orpc/routers/user.ts"
   code={`import { strictRateLimit, lenientRateLimit } from "@/middleware/rate-limit"
 
 const baseProcedure = os.$context<ORPCContext>()
@@ -350,7 +350,7 @@ Time to see our rate limiting in action! We'll create some test endpoints and in
 
 <CodeBlock 
   language="typescript"
-  title="orpc/routers/test.ts"
+  filename="orpc/routers/test.ts"
   code={`export const testRateLimit = baseProcedure
   .input(z.object({ endpoint: z.enum(["strict", "moderate"]), timestamp: z.string() }))
   .output(z.object({ success: z.boolean(), remaining: z.number(), limit: z.number(), resetAt: z.number(), endpoint: z.string() }))
