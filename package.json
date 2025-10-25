@@ -33,6 +33,9 @@
     "docker:clean": "docker compose down -v --rmi all"
   },
   "dependencies": {
+    "@content-collections/core": "^0.11.1",
+    "@content-collections/mdx": "^0.2.2",
+    "@content-collections/next": "^0.2.8",
     "@hookform/resolvers": "^5.0.1",
     "@neondatabase/serverless": "^0.10.4",
     "@orpc/client": "^1.5.2",
