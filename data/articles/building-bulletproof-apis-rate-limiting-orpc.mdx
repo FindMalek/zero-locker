@@ -2,7 +2,7 @@
 id: 1
 title: "Building Bulletproof APIs: A Complete Guide to Rate Limiting with oRPC"
 description: "Learn how to implement enterprise-grade rate limiting for your oRPC APIs to protect against abuse, DoS attacks, and resource exhaustion. Complete with code examples and interactive demos."
-publishedAt: "2024-01-25"
+publishedAt: "2025-10-25"
 image: "/logos/zero-locker-logo.svg"
 href: "/articles/building-bulletproof-apis-rate-limiting-orpc"
 ---
@@ -56,12 +56,42 @@ We implemented a sophisticated rate limiting system with four distinct tiers, ea
 
 ### Rate Limit Tiers
 
-| Tier             | Requests/Min | Use Case                            | Example Endpoints                |
-| ---------------- | ------------ | ----------------------------------- | -------------------------------- |
-| **Strict**       | 5            | Email sending, sensitive operations | Password reset, waitlist signup  |
-| **Moderate**     | 30           | General public endpoints            | User registration, contact forms |
-| **Lenient**      | 100          | High-traffic read-only              | Statistics, public data          |
-| **Very Lenient** | 300          | Health checks, static content       | Status endpoints, monitoring     |
+<table>
+  <thead>
+    <tr>
+      <th>Tier</th>
+      <th>Requests/Min</th>
+      <th>Use Case</th>
+      <th>Example Endpoints</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Strict</strong></td>
+      <td>5</td>
+      <td>Email sending, sensitive operations</td>
+      <td>Password reset, waitlist signup</td>
+    </tr>
+    <tr>
+      <td><strong>Moderate</strong></td>
+      <td>30</td>
+      <td>General public endpoints</td>
+      <td>User registration, contact forms</td>
+    </tr>
+    <tr>
+      <td><strong>Lenient</strong></td>
+      <td>100</td>
+      <td>High-traffic read-only</td>
+      <td>Statistics, public data</td>
+    </tr>
+    <tr>
+      <td><strong>Very Lenient</strong></td>
+      <td>300</td>
+      <td>Health checks, static content</td>
+      <td>Status endpoints, monitoring</td>
+    </tr>
+  </tbody>
+</table>
 
 ## 🏗️ Architecture Deep Dive
 
