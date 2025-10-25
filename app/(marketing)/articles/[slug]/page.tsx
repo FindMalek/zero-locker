@@ -6,8 +6,10 @@ import { MDXContent } from "@content-collections/mdx/react"
 
 import { DateFormatter } from "@/lib/date-utils"
 
+import { MarketingArticlesRateLimitTest } from "@/components/app/marketing-articles-rate-limit-test"
 import { Icons } from "@/components/shared/icons"
 import { buttonVariants } from "@/components/ui/button"
+import { SimpleCodeBlock } from "@/components/ui/code-block"
 import { Link as CustomLink } from "@/components/ui/link"
 
 interface ArticlePageProps {
@@ -103,6 +105,8 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
             <MDXContent
               code={html}
               components={{
+                CodeBlock: SimpleCodeBlock,
+                RateLimitTest: MarketingArticlesRateLimitTest,
                 a: CustomLink,
               }}
             />

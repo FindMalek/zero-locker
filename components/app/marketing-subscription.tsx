@@ -1,12 +1,14 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { toast } from "sonner"
-
 import { useSubscribeToUpdates } from "@/orpc/hooks/use-users"
-import { subscriptionInputSchema, type SubscriptionInput } from "@/schemas/user/roadmap"
+import {
+  subscriptionInputSchema,
+  type SubscriptionInput,
+} from "@/schemas/user/roadmap"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm } from "react-hook-form"
+import { toast } from "sonner"
 
 import { Icons } from "@/components/shared/icons"
 import { Button } from "@/components/ui/button"

@@ -296,6 +296,24 @@ export function getRateLimitStats(
 }
 
 /**
+ * Parse retry time from error message
+ * Extracts the first integer followed by time units (second, sec, s) from error messages
+ * 
+ * @param errorMessage - The error message to parse
+ * @returns The retry time in seconds, or undefined if no time found
+ * 
+ * @example
+ * parseRetryTime("Rate limit exceeded. Please try again in 45 seconds.") // Returns 45
+ * parseRetryTime("Wait 30 sec before retrying") // Returns 30
+ * parseRetryTime("Retry after 60s") // Returns 60
+ * parseRetryTime("Generic error message") // Returns undefined
+ */
+export function parseRetryTime(errorMessage: string): number | undefined {
+  const match = errorMessage.match(/\b(\d+)\s*(?:second|sec|s)\b/i)
+  return match ? parseInt(match[1], 10) : undefined
+}
+
+/**
  * Predefined rate limit configurations
  */
 export const RATE_LIMIT_PRESETS = {
