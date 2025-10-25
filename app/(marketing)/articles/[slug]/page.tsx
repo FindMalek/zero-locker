@@ -4,9 +4,12 @@ import { notFound } from "next/navigation"
 import { allArticles } from "@/content-collections"
 import { MDXContent } from "@content-collections/mdx/react"
 
+import { DateFormatter } from "@/lib/date-utils"
+
 import { Counter } from "@/components/shared/counter"
 import { Icons } from "@/components/shared/icons"
 import { buttonVariants } from "@/components/ui/button"
+import { Link as CustomLink } from "@/components/ui/link"
 
 interface ArticlePageProps {
   params: Promise<{ slug: string }>
@@ -53,23 +56,38 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
   const { image, title, description, publishedAt, html } = article
 
   return (
-    <div className="container max-w-4xl px-4 py-16 md:py-24">
-      <div className="relative mx-auto">
-        <Link
-          href="/articles"
-          className={buttonVariants({
-            variant: "ghost",
-            size: "sm",
-            className: "absolute -top-8 left-0",
-          })}
-        >
-          <Icons.chevronLeft className="mr-1 size-4" />
-          Back to Articles
-        </Link>
+    <div className="mx-auto w-full max-w-4xl px-4 py-16 sm:px-6 md:py-24">
+      <div className="relative">
+        <div className="mb-8 flex items-center justify-between">
+          <Link
+            href="/articles"
+            className={buttonVariants({
+              variant: "ghost",
+              size: "sm",
+            })}
+          >
+            <Icons.chevronLeft className="mr-1 size-4" />
+            Back to Articles
+          </Link>
 
-        <div className="mb-8 pt-2">
-          {image && (
-            <div className="relative min-h-[200px] w-full overflow-hidden rounded-lg border bg-white md:min-h-[300px]">
+          <div className="text-muted-foreground text-sm">
+            {DateFormatter.formatShortDate(publishedAt)}
+          </div>
+        </div>
+
+        <header className="mb-12">
+          <h1 className="text-foreground mb-6 text-4xl font-bold tracking-tight sm:text-5xl">
+            {title}
+          </h1>
+
+          <p className="text-muted-foreground mb-6 text-xl leading-relaxed">
+            {description}
+          </p>
+        </header>
+
+        {image && (
+          <div className="mb-12">
+            <div className="bg-muted relative aspect-video w-full overflow-hidden rounded-xl border">
               <Image
                 src={image}
                 alt={`${title} cover image`}
@@ -78,28 +96,19 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
                 priority
               />
             </div>
-          )}
-        </div>
-
-        <div className="mb-8">
-          <h1 className="mb-4 text-4xl font-bold tracking-tight">{title}</h1>
-
-          <p className="text-muted-foreground mb-6 text-lg">{description}</p>
-
-          <div className="text-muted-foreground flex items-center gap-4 text-sm">
-            <span>{new Date(publishedAt).toLocaleDateString()}</span>
           </div>
-        </div>
+        )}
 
         {html && (
-          <div className="prose prose-gray dark:prose-invert mx-auto max-w-3xl">
+          <article className="prose prose-lg prose-gray dark:prose-invert max-w-none">
             <MDXContent
               code={html}
               components={{
                 Counter,
+                a: CustomLink,
               }}
             />
-          </div>
+          </article>
         )}
       </div>
     </div>

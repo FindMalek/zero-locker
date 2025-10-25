@@ -15,9 +15,9 @@ Zero Locker goes beyond basic password management to provide enterprise-grade se
 
 Our MFA implementation supports multiple authentication methods:
 
-- **TOTP (Time-based One-Time Password)** - Compatible with Google Authenticator, Authy, and other TOTP apps
-- **Hardware Security Keys** - Support for FIDO2/WebAuthn compatible devices
-- **SMS Backup** - Optional SMS-based backup codes
+- **TOTP (Time-based One-Time Password)** - Compatible with [Google Authenticator](https://play.google.com/store/apps/details?id=com.google.android.apps.authenticator2), [Authy](https://authy.com/), and other TOTP apps
+- **Hardware Security Keys** - Support for [FIDO2/WebAuthn](https://webauthn.io/) compatible devices like [YubiKey](https://www.yubico.com/)
+- **SMS Backup** - Optional SMS-based backup codes (though we recommend using authenticator apps for better security)
 
 ## Breach Monitoring
 
@@ -31,7 +31,7 @@ The counter above represents how many breach notifications you might receive. Wi
 
 ### AES-256-GCM Encryption
 
-All data is encrypted using AES-256-GCM, which provides:
+All data is encrypted using [AES-256-GCM](https://en.wikipedia.org/wiki/Galois/Counter_Mode), which provides:
 
 - **Confidentiality** - Your data cannot be read without the encryption key
 - **Integrity** - Any tampering with your data will be detected
@@ -39,7 +39,7 @@ All data is encrypted using AES-256-GCM, which provides:
 
 ### Key Derivation
 
-We use PBKDF2 with 100,000 iterations to derive encryption keys from your master password, making brute force attacks computationally infeasible.
+We use [PBKDF2](https://en.wikipedia.org/wiki/PBKDF2) with 100,000 iterations to derive encryption keys from your master password, making brute force attacks computationally infeasible. This follows the recommendations from [NIST SP 800-132](https://csrc.nist.gov/publications/detail/sp/800-132/final).
 
 ## Zero-Knowledge Architecture
 
@@ -61,5 +61,7 @@ Here are some tips to maximize your security:
 ## Conclusion
 
 Zero Locker's advanced security features provide the protection you need in an increasingly dangerous digital world. With military-grade encryption and zero-knowledge architecture, your data remains secure and private.
+
+For more information about security best practices, check out the [OWASP guidelines](https://owasp.org/www-project-top-ten/) and [NIST cybersecurity framework](https://www.nist.gov/cyberframework).
 
 [Learn more about our security features](/security) or [get started with Zero Locker](/register) today.

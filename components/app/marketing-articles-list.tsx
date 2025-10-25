@@ -4,8 +4,9 @@ import { useEffect, useRef, useState } from "react"
 import Link from "next/link"
 import { allArticles } from "@/content-collections"
 
+import { DateFormatter } from "@/lib/date-utils"
+
 import { Icons } from "@/components/shared/icons"
-import { buttonVariants } from "@/components/ui/button"
 
 export function MarketingArticlesList() {
   const [showScrollIndicator, setShowScrollIndicator] = useState(true)
@@ -35,31 +36,33 @@ export function MarketingArticlesList() {
         className="border-border bg-card/50 h-[500px] space-y-8 overflow-y-auto rounded-lg border p-6 pr-4"
       >
         {allArticles.map((article, index) => (
-          <div key={`${article.title}-${index}`} className="flex gap-4">
+          <Link
+            key={`${article.title}-${index}`}
+            href={article.href}
+            className="hover:bg-muted/50 group flex gap-4 rounded-lg p-4 transition-all"
+          >
             <div className="flex-shrink-0 pt-1.5">
               <div className="bg-primary size-2 rounded-full" />
             </div>
             <div className="flex-1">
               <div className="mb-2">
-                <h2 className="mb-1 text-lg font-medium">{article.title}</h2>
+                <h2 className="group-hover:text-primary mb-1 text-lg font-medium transition-colors">
+                  {article.title}
+                </h2>
                 <p className="text-muted-foreground mb-2 text-sm">
                   {article.description}
                 </p>
                 <div className="text-muted-foreground flex items-center gap-4 text-xs">
                   <span>
-                    {new Date(article.publishedAt).toLocaleDateString()}
+                    {DateFormatter.formatShortDate(article.publishedAt)}
                   </span>
                 </div>
               </div>
-              <Link
-                href={article.href}
-                className={buttonVariants({ variant: "outline", size: "sm" })}
-              >
-                Read Article
-                <Icons.arrowRight className="ml-1 size-3" />
-              </Link>
             </div>
-          </div>
+            <div className="flex-shrink-0 pt-1.5">
+              <Icons.arrowRight className="text-muted-foreground size-4 opacity-0 transition-all group-hover:translate-x-1 group-hover:opacity-100" />
+            </div>
+          </Link>
         ))}
       </div>
 
