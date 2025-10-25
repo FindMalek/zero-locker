@@ -33,6 +33,9 @@
     "docker:clean": "docker compose down -v --rmi all"
   },
   "dependencies": {
+    "@content-collections/core": "^0.11.1",
+    "@content-collections/mdx": "^0.2.2",
+    "@content-collections/next": "^0.2.8",
     "@hookform/resolvers": "^5.0.1",
     "@neondatabase/serverless": "^0.10.4",
     "@orpc/client": "^1.5.2",
@@ -70,6 +73,7 @@
     "@radix-ui/react-tooltip": "^1.2.6",
     "@react-email/components": "^0.5.6",
     "@t3-oss/env-nextjs": "^0.13.4",
+    "@tailwindcss/typography": "^0.5.19",
     "@tanstack/react-query": "^5.80.7",
     "@tanstack/react-query-devtools": "^4.39.2",
     "@vercel/analytics": "^1.5.0",

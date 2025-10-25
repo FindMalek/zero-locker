@@ -1,16 +1,12 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { useSubscribeToRoadmap } from "@/orpc/hooks"
-import {
-  roadmapSubscribeInputSchema,
-  type RoadmapSubscribeInput,
-} from "@/schemas/user/roadmap"
-import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
 import { toast } from "sonner"
 
-import { handleORPCError } from "@/lib/utils"
+import { useSubscribeToUpdates } from "@/orpc/hooks/use-users"
+import { subscriptionInputSchema, type SubscriptionInput } from "@/schemas/user/roadmap"
 
 import { Icons } from "@/components/shared/icons"
 import { Button } from "@/components/ui/button"
@@ -23,14 +19,24 @@ import {
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 
-export function MarketingRoadmapSubscription() {
-  const subscribeToRoadmapMutation = useSubscribeToRoadmap()
+interface MarketingSubscriptionProps {
+  type: "roadmap" | "articles"
+  successMessage?: string
+  description?: string
+}
 
+export function MarketingSubscription({
+  type,
+  successMessage,
+  description,
+}: MarketingSubscriptionProps) {
   const [showSuccess, setShowSuccess] = useState(false)
   const [isTransitioning, setIsTransitioning] = useState(false)
 
-  const form = useForm<RoadmapSubscribeInput>({
-    resolver: zodResolver(roadmapSubscribeInputSchema),
+  const subscribeToUpdatesMutation = useSubscribeToUpdates()
+
+  const form = useForm<SubscriptionInput>({
+    resolver: zodResolver(subscriptionInputSchema),
     defaultValues: {
       email: "",
     },
@@ -51,40 +57,43 @@ export function MarketingRoadmapSubscription() {
     }
   }, [showSuccess])
 
-  async function onSubmit(values: RoadmapSubscribeInput) {
-    subscribeToRoadmapMutation.mutate(values, {
-      onSuccess: (result) => {
-        if (result.success) {
-          toast.success("Successfully subscribed!", {
-            description: "You'll receive updates about our roadmap.",
-          })
-          form.reset()
+  async function onSubmit(values: SubscriptionInput) {
+    subscribeToUpdatesMutation.mutate(
+      { email: values.email, type },
+      {
+        onSuccess: (result) => {
+          if (result.success) {
+            toast.success("Successfully subscribed!", {
+              description:
+                successMessage || `You'll receive updates about our ${type}.`,
+            })
+            form.reset()
 
-          // Show success indicator
-          setShowSuccess(true)
-          setIsTransitioning(false)
-        } else {
+            // Show success indicator
+            setShowSuccess(true)
+            setIsTransitioning(false)
+          } else {
+            toast.error("Subscription failed", {
+              description: result.error || "Something went wrong",
+            })
+          }
+        },
+        onError: (error) => {
           toast.error("Subscription failed", {
-            description: result.error || "Something went wrong",
+            description:
+              error.message || "Something went wrong. Please try again.",
           })
-        }
-      },
-      onError: (error) => {
-        const { description } = handleORPCError(error)
-
-        toast.error("Subscription failed", {
-          description,
-        })
-      },
-    })
+        },
+      }
+    )
   }
 
   const getDisplayText = () => {
     if (showSuccess) {
-      return "You're now subscribed to roadmap updates!"
+      return `You're now subscribed to ${type} updates!`
     }
 
-    return "Stay updated on our progress and upcoming features"
+    return description || `Stay updated on our latest ${type} and insights`
   }
 
   return (
@@ -104,7 +113,7 @@ export function MarketingRoadmapSubscription() {
                   <Input
                     type="email"
                     placeholder="your@email.com"
-                    disabled={subscribeToRoadmapMutation.isPending}
+                    disabled={subscribeToUpdatesMutation.isPending}
                     {...field}
                   />
                 </FormControl>
@@ -115,9 +124,9 @@ export function MarketingRoadmapSubscription() {
           <Button
             type="submit"
             className="w-full sm:w-auto"
-            disabled={subscribeToRoadmapMutation.isPending}
+            disabled={subscribeToUpdatesMutation.isPending}
           >
-            {subscribeToRoadmapMutation.isPending && (
+            {subscribeToUpdatesMutation.isPending && (
               <Icons.spinner className="size-4 animate-spin" />
             )}{" "}
             Subscribe

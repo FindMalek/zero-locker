@@ -5,7 +5,7 @@ import type { RoadmapItem } from "@/types"
 import { siteConfig } from "@/config/site"
 
 import { MarketingRoadmapList } from "@/components/app/marketing-roadmap-list"
-import { MarketingRoadmapSubscription } from "@/components/app/marketing-roadmap-subscription"
+import { MarketingSubscription } from "@/components/app/marketing-subscription"
 
 export const metadata: Metadata = {
   title: "Roadmap",
@@ -64,7 +64,10 @@ export default function RoadmapPage() {
       <MarketingRoadmapList items={roadmapItems} />
 
       <div className="pt-12">
-        <MarketingRoadmapSubscription />
+        <MarketingSubscription
+          type="roadmap"
+          description="Stay updated on our progress and upcoming features"
+        />
       </div>
     </div>
   )
