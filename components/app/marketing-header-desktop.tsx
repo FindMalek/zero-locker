@@ -27,6 +27,12 @@ export function MarketingHeaderDesktop() {
         {!isMobile && (
           <nav className="flex items-center gap-6">
             <Link
+              href="/articles"
+              className="text-muted-foreground hover:text-foreground text-sm font-medium transition-colors"
+            >
+              Articles
+            </Link>
+            <Link
               href="/roadmap"
               className="text-muted-foreground hover:text-foreground text-sm font-medium transition-colors"
             >

@@ -1,4 +1,9 @@
 import type { NextConfig } from "next";
+import { createContentCollectionPlugin } from "@content-collections/next";
+
+const withPlugin = createContentCollectionPlugin({
+  configPath: "./lib/content-collections.ts",
+});
 
 const nextConfig: NextConfig = {
   images: {
@@ -15,4 +20,4 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+export default withPlugin(nextConfig);

@@ -1,0 +1,66 @@
+---
+id: 2
+title: "Advanced Security Features in Zero Locker"
+description: "Explore the advanced security features that make Zero Locker the most secure password manager available."
+author: "Security Team"
+publishedAt: "2024-01-20"
+image: "/logos/zero-locker-logo.svg"
+href: "/articles/advanced-security-features"
+---
+
+# Advanced Security Features in Zero Locker
+
+Zero Locker goes beyond basic password management to provide enterprise-grade security features that protect your digital identity.
+
+## Multi-Factor Authentication (MFA)
+
+Our MFA implementation supports multiple authentication methods:
+
+- **TOTP (Time-based One-Time Password)** - Compatible with Google Authenticator, Authy, and other TOTP apps
+- **Hardware Security Keys** - Support for FIDO2/WebAuthn compatible devices
+- **SMS Backup** - Optional SMS-based backup codes
+
+## Breach Monitoring
+
+Stay informed about security breaches that might affect your accounts:
+
+<Counter initialValue={0} step={5} />
+
+The counter above represents how many breach notifications you might receive. With Zero Locker's breach monitoring, you'll be instantly notified if any of your accounts appear in known data breaches.
+
+## Advanced Encryption
+
+### AES-256-GCM Encryption
+
+All data is encrypted using AES-256-GCM, which provides:
+
+- **Confidentiality** - Your data cannot be read without the encryption key
+- **Integrity** - Any tampering with your data will be detected
+- **Authentication** - Ensures the data came from the expected source
+
+### Key Derivation
+
+We use PBKDF2 with 100,000 iterations to derive encryption keys from your master password, making brute force attacks computationally infeasible.
+
+## Zero-Knowledge Architecture
+
+Zero Locker operates on a zero-knowledge principle:
+
+- **We cannot see your passwords** - They're encrypted before leaving your device
+- **We cannot recover your data** - Only you have the encryption keys
+- **We cannot access your vault** - Even with a court order, we cannot provide your data
+
+## Security Best Practices
+
+Here are some tips to maximize your security:
+
+1. **Use a strong master password** - At least 16 characters with mixed case, numbers, and symbols
+2. **Enable MFA** - Add an extra layer of security to your account
+3. **Regular security audits** - Review your passwords and update weak ones
+4. **Keep software updated** - Always use the latest version of Zero Locker
+
+## Conclusion
+
+Zero Locker's advanced security features provide the protection you need in an increasingly dangerous digital world. With military-grade encryption and zero-knowledge architecture, your data remains secure and private.
+
+[Learn more about our security features](/security) or [get started with Zero Locker](/register) today.
