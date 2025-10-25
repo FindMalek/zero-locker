@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { useTestRateLimit } from "@/orpc/hooks/use-test"
 import { toast } from "sonner"
+import { parseRetryTime } from "@/lib/utils/rate-limit"
 
 import { Icons } from "@/components/shared/icons"
 import { Badge } from "@/components/ui/badge"
@@ -45,7 +46,6 @@ export function MarketingArticlesRateLimitTest({
     testMutation.mutate(
       {
         endpoint,
-        timestamp: new Date().toISOString(),
       },
       {
         onSuccess: (data) => {
@@ -66,7 +66,7 @@ export function MarketingArticlesRateLimitTest({
         },
         onError: (error: Error) => {
           setRequestCount((prev) => prev + 1)
-          const retryAfter = error.message.includes("45") ? 45 : undefined
+          const retryAfter = parseRetryTime(error.message)
 
           setRequestLogs((prev) => [
             {
@@ -277,7 +277,13 @@ export function MarketingArticlesRateLimitTest({
                 }`}
               >
                 {isAtLimit
-                  ? "Rate limit reached! Wait 60 seconds before trying again."
+                  ? (() => {
+                      const latestError = requestLogs.find(log => !log.success)
+                      const retryTime = latestError?.retryAfter
+                      return retryTime 
+                        ? `Rate limit reached! Wait ${retryTime} seconds before trying again.`
+                        : "Rate limit reached! Please wait before trying again."
+                    })()
                   : isNearLimit
                     ? "Approaching rate limit. Be careful with your next requests."
                     : "All good! You can continue sending requests."}
