@@ -1,0 +1,100 @@
+/**
+ * Represents a LemonSqueezy product in the system.
+ * @property id - Unique identifier for the product. Type: String. Generated using cuid().
+ * @property productId - LemonSqueezy product ID. Type: String. Must be unique.
+ * @property variantId - LemonSqueezy variant ID. Type: String. Must be unique.
+ * @property name - Product name. Type: String.
+ * @property description - Product description. Type: String. Optional.
+ * @property price - Product price. Type: Decimal.
+ * @property currency - Currency for the product. Type: Currency. Defaults to TND.
+ * @property interval - Billing interval for the product. Type: SubscriptionInterval. Defaults to MONTHLY.
+ * @property isActive - Whether the product is active for new subscriptions. Type: Boolean. Defaults to true.
+ * @property subscriptions - Subscriptions using this product. Type: PaymentSubscription[]. Relation to PaymentSubscription model.
+ * @property createdAt - Timestamp when the product was created. Type: DateTime. Defaults to current time.
+ * @property updatedAt - Timestamp when the product was last updated. Type: DateTime. Updated automatically.
+ * @constraint unique(productId) - Ensures each LemonSqueezy product ID is unique.
+ * @constraint unique(variantId) - Ensures each LemonSqueezy variant ID is unique.
+ */
+model PaymentProduct {
+  id String @id @default(cuid())
+
+  name         String
+  description  String?
+  price        Decimal
+
+  productId   String @unique
+  variantId    String @unique
+
+  currency     Currency @default(TND)
+  interval     SubscriptionInterval @default(MONTHLY)
+  
+  isActive     Boolean @default(true)
+
+  subscriptions PaymentSubscription[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([productId])
+  @@index([variantId])
+  @@index([isActive])
+  @@map("payment_product")
+}
+
+/**
+ * Represents a LemonSqueezy subscription in the system.
+ * @property id - Unique identifier for the subscription. Type: String. Generated using cuid().
+ * @property subscriptionId - LemonSqueezy subscription ID. Type: String. Must be unique.
+ * @property orderId - LemonSqueezy order ID. Type: String.
+ * @property customerId - LemonSqueezy customer ID. Type: String.
+ * @property status - Subscription status. Type: SubscriptionStatus.
+ * @property productId - ID of the product. Type: String.
+ * @property product - Product associated with the subscription. Type: PaymentProduct. Relation to PaymentProduct model.
+ * @property price - Subscription price. Type: Decimal.
+ * @property currency - Currency for the subscription. Type: Currency. Defaults to TND.
+ * @property renewsAt - Next renewal date. Type: DateTime. Optional.
+ * @property endsAt - Subscription end date. Type: DateTime. Optional.
+ * @property trialEndsAt - Trial end date. Type: DateTime. Optional.
+ * @property userId - ID of the user who owns the subscription. Type: String.
+ * @property user - User who owns the subscription. Type: User. Relation to User model.
+ * @property lastWebhookAt - Timestamp of the last webhook received. Type: DateTime. Optional.
+ * @property webhookCount - Number of webhooks received for this subscription. Type: Int. Defaults to 0.
+ * @property createdAt - Timestamp when the subscription was created. Type: DateTime. Defaults to current time.
+ * @property updatedAt - Timestamp when the subscription was last updated. Type: DateTime. Updated automatically.
+ * @constraint unique(subscriptionId) - Ensures each LemonSqueezy subscription ID is unique.
+ */
+model PaymentSubscription {
+  id String @id @default(cuid())
+
+  subscriptionId String @unique
+  orderId        String
+  customerId     String
+
+  status SubscriptionStatus
+
+  productId String
+  product   PaymentProduct @relation(fields: [productId], references: [id])
+
+  price    Decimal
+  currency Currency @default(TND)
+
+  endsAt      DateTime?
+  renewsAt    DateTime?
+  trialEndsAt DateTime?
+
+  userId String
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  lastWebhookAt DateTime?
+  webhookCount  Int @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([subscriptionId])
+  @@index([status])
+  @@index([customerId])
+  @@map("payment_subscription")
+}
+

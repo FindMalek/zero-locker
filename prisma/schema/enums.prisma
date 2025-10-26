@@ -145,3 +145,51 @@ enum UserPlan {
   NORMAL
   PRO
 }
+
+/**
+ * Represents subscription billing intervals.
+ * @property MONTHLY - Monthly billing cycle.
+ * @property YEARLY - Yearly billing cycle.
+ * @property WEEKLY - Weekly billing cycle.
+ * @property DAILY - Daily billing cycle.
+ */
+enum SubscriptionInterval {
+  MONTHLY
+  YEARLY
+  WEEKLY
+  DAILY
+}
+
+/**
+ * Represents supported currencies for payments.
+ * @property TND - Tunisian Dinar.
+ * @property USD - US Dollar.
+ * @property EUR - Euro.
+ * @property GBP - British Pound.
+ */
+enum Currency {
+  TND
+  USD
+  EUR
+  GBP
+}
+
+/**
+ * Represents LemonSqueezy subscription status.
+ * @property ACTIVE - Subscription is active and billing.
+ * @property PAST_DUE - Payment is overdue.
+ * @property UNPAID - Payment failed.
+ * @property CANCELLED - Subscription was cancelled.
+ * @property EXPIRED - Subscription has expired.
+ * @property ON_TRIAL - Currently in trial period.
+ * @property PAUSED - Subscription is paused.
+ */
+enum SubscriptionStatus {
+  ACTIVE
+  PAST_DUE
+  UNPAID
+  CANCELLED
+  EXPIRED
+  ON_TRIAL
+  PAUSED
+}
