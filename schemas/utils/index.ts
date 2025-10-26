@@ -7,6 +7,7 @@ export * as tag from "./tag"
 export * from "./base-key-value-pair"
 export * from "./breadcrumb"
 export * from "./utils"
+export * from "./article"
 
 // Direct exports for commonly used schemas
 export {
