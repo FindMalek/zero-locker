@@ -1,16 +1,15 @@
+import { webhookSignatureMiddleware } from "@/middleware/webhook"
 import { database } from "@/prisma/client"
 import {
+  lemonSqueezyEventTypeEnum,
+  mapLemonSqueezyStatusToInternal,
   webhookInputSchema,
   webhookOutputSchema,
-  mapLemonSqueezyStatusToInternal,
-  lemonSqueezyEventTypeEnum,
+  type LemonSqueezyEventType,
   type WebhookInput,
   type WebhookOutput,
-  type LemonSqueezyEventType,
 } from "@/schemas/utils"
 import { ORPCError, os } from "@orpc/server"
-
-import { webhookSignatureMiddleware } from "@/middleware/webhook"
 
 import type { ORPCContext } from "../types"
 
@@ -77,7 +76,9 @@ async function processSubscriptionEvent(
             productId: product.id,
             price: attributes.price,
             currency: attributes.currency?.toUpperCase() || "USD",
-            renewsAt: attributes.renews_at ? new Date(attributes.renews_at) : null,
+            renewsAt: attributes.renews_at
+              ? new Date(attributes.renews_at)
+              : null,
             endsAt: attributes.ends_at ? new Date(attributes.ends_at) : null,
             trialEndsAt: attributes.trial_ends_at
               ? new Date(attributes.trial_ends_at)
@@ -116,7 +117,9 @@ async function processSubscriptionEvent(
           where: { subscriptionId },
           data: {
             status: mapLemonSqueezyStatusToInternal(attributes.status),
-            renewsAt: attributes.renews_at ? new Date(attributes.renews_at) : null,
+            renewsAt: attributes.renews_at
+              ? new Date(attributes.renews_at)
+              : null,
             endsAt: attributes.ends_at ? new Date(attributes.ends_at) : null,
             trialEndsAt: attributes.trial_ends_at
               ? new Date(attributes.trial_ends_at)
@@ -154,7 +157,9 @@ async function processSubscriptionEvent(
             webhookCount: { increment: 1 },
             // Update renewsAt for successful payments
             ...(eventType === "subscription_payment_success" && {
-              renewsAt: attributes.renews_at ? new Date(attributes.renews_at) : null,
+              renewsAt: attributes.renews_at
+                ? new Date(attributes.renews_at)
+                : null,
             }),
           },
         })
@@ -172,7 +177,10 @@ async function processSubscriptionEvent(
         }
     }
   } catch (error) {
-    console.error(`Error processing ${eventType} for subscription ${subscriptionId}:`, error)
+    console.error(
+      `Error processing ${eventType} for subscription ${subscriptionId}:`,
+      error
+    )
     return {
       success: false,
       message: `Error processing ${eventType}: ${error instanceof Error ? error.message : "Unknown error"}`,
@@ -218,7 +226,7 @@ export const handleWebhook = webhookProcedure
       }
     } catch (error) {
       console.error("Webhook processing error:", error)
-      
+
       // Re-throw ORPC errors to let ORPC handle them
       if (error instanceof ORPCError) {
         throw error

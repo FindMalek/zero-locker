@@ -1,5 +1,5 @@
-import { z } from "zod"
 import { SubscriptionStatus } from "@prisma/client"
+import { z } from "zod"
 
 // Lemon Squeezy webhook event types
 export const lemonSqueezyEventTypeSchema = z.enum([
@@ -21,14 +21,15 @@ export const lemonSqueezyEventTypeEnum = lemonSqueezyEventTypeSchema.enum
 // Lemon Squeezy subscription status values (as received from webhooks)
 export const lemonSqueezySubscriptionStatusSchema = z.enum([
   "active",
-  "on_trial", 
+  "on_trial",
   "paused",
   "past_due",
   "unpaid",
   "cancelled",
   "expired",
 ])
-export const lemonSqueezySubscriptionStatusEnum = lemonSqueezySubscriptionStatusSchema.enum
+export const lemonSqueezySubscriptionStatusEnum =
+  lemonSqueezySubscriptionStatusSchema.enum
 
 // Lemon Squeezy webhook payload schema
 export const lemonSqueezyWebhookPayloadSchema = z.object({
@@ -58,8 +59,12 @@ export const webhookOutputSchema = z.object({
 
 // Type exports
 export type LemonSqueezyEventType = z.infer<typeof lemonSqueezyEventTypeSchema>
-export type LemonSqueezySubscriptionStatus = z.infer<typeof lemonSqueezySubscriptionStatusSchema>
-export type LemonSqueezyWebhookPayload = z.infer<typeof lemonSqueezyWebhookPayloadSchema>
+export type LemonSqueezySubscriptionStatus = z.infer<
+  typeof lemonSqueezySubscriptionStatusSchema
+>
+export type LemonSqueezyWebhookPayload = z.infer<
+  typeof lemonSqueezyWebhookPayloadSchema
+>
 export type WebhookInput = z.infer<typeof webhookInputSchema>
 export type WebhookOutput = z.infer<typeof webhookOutputSchema>
 

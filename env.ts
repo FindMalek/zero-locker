@@ -10,12 +10,12 @@ export const env = createEnv({
     RESEND_API_KEY: z.string().min(20).startsWith("re_"),
     MARKETING_SUBSCRIPTION_EMAIL: z.string().email(),
     LEMON_SQUEEZY_API_KEY: z.string().min(20),
-    LEMON_SQUEEZY_STORE_ID: z.number().min(1),
+    LEMON_SQUEEZY_STORE_ID: z.string().min(1),
     LEMON_SQUEEZY_WEBHOOK_SECRET: z.string().min(32),
   },
   client: {
-    NEXT_PUBLIC_APP_URL: z.string().url().startsWith("https://"),
-    NEXT_PUBLIC_LOGO_DEV_TOKEN: z.string().min(20).startsWith("lgp_"),
+    NEXT_PUBLIC_APP_URL: z.string().url().startsWith("http"),
+    NEXT_PUBLIC_LOGO_DEV_TOKEN: z.string().min(20).startsWith("pk_"),
   },
   runtimeEnv: {
     DATABASE_URL: process.env.DATABASE_URL,

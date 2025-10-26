@@ -232,10 +232,11 @@ Zero Locker integrates with Lemon Squeezy for payment processing. To test webhoo
 ### Prerequisites
 
 1. **Install ngrok**: Download from [ngrok.com](https://ngrok.com/download) or install via package manager:
+
    ```bash
    # macOS with Homebrew
    brew install ngrok
-   
+
    # Or download from https://ngrok.com/download
    ```
 
@@ -249,17 +250,20 @@ Zero Locker integrates with Lemon Squeezy for payment processing. To test webhoo
 ### Running with Webhook Support
 
 #### Option 1: Run Both Services Together
+
 ```bash
 # Start both Next.js dev server and ngrok tunnel
 pnpm webhook:dev
 ```
 
 This will:
+
 - Start Next.js on `http://localhost:3000`
 - Create an ngrok tunnel (e.g., `https://abc123.ngrok.io`)
 - Display both URLs in the terminal
 
 #### Option 2: Run Services Separately
+
 ```bash
 # Terminal 1: Start Next.js development server
 pnpm dev
@@ -271,11 +275,13 @@ pnpm webhook:tunnel
 ### Setting Up Lemon Squeezy Webhooks
 
 1. **Get your ngrok URL**: After running `pnpm webhook:tunnel`, you'll see output like:
+
    ```
    Forwarding  https://abc123.ngrok.io -> http://localhost:3000
    ```
 
 2. **Configure Lemon Squeezy Webhook**:
+
    - Go to your Lemon Squeezy dashboard
    - Navigate to Settings → Webhooks
    - Add a new webhook with URL: `https://abc123.ngrok.io/api/orpc/webhooks.handle`
@@ -299,6 +305,7 @@ pnpm test:webhook
 ```
 
 This will:
+
 - Send a mock `subscription_created` event to your local webhook endpoint
 - Verify the webhook signature validation
 - Test the subscription processing logic
@@ -307,11 +314,13 @@ This will:
 ### Webhook Endpoint
 
 The webhook endpoint is available at:
+
 ```
 POST /api/orpc/webhooks.handle
 ```
 
 This endpoint:
+
 - ✅ **Verifies Lemon Squeezy webhook signatures** (critical security feature)
 - ✅ Processes subscription events (created, updated, cancelled, etc.)
 - ✅ Updates user subscription status in the database

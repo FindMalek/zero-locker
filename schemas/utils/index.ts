@@ -8,6 +8,7 @@ export * from "./base-key-value-pair"
 export * from "./breadcrumb"
 export * from "./utils"
 export * from "./webhook"
+export * from "./article"
 
 // Direct exports for commonly used schemas
 export {
