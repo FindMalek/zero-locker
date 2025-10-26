@@ -48,7 +48,7 @@ function getClientIp(headersList: Headers): string {
   return "UNKNOWN-IP"
 }
 
-export async function createContext(): Promise<ORPCContext> {
+export async function createContext(request?: Request): Promise<ORPCContext> {
   try {
     const headersList = await headers()
     const ip = getClientIp(headersList)
@@ -61,6 +61,7 @@ export async function createContext(): Promise<ORPCContext> {
       session: authResult?.session || null,
       user: authResult?.user || null,
       ip,
+      request,
     }
   } catch (error) {
     console.error("Failed to get session:", error)
@@ -68,6 +69,7 @@ export async function createContext(): Promise<ORPCContext> {
       session: null,
       user: null,
       ip: "UNKNOWN-IP",
+      request,
     }
   }
 }

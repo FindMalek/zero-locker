@@ -25,6 +25,16 @@ export interface ORPCContext {
    * Available after rate limiting middleware is applied
    */
   rateLimit?: RateLimitInfo
+  /**
+   * Raw request object for webhook signature verification
+   * Available for webhook routes that need to verify signatures
+   */
+  request?: Request
+  /**
+   * Parsed request body
+   * Available for webhook routes that need to access the raw body
+   */
+  body?: unknown
 }
 
 export interface AuthenticatedContext extends ORPCContext {

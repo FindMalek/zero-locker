@@ -18,17 +18,17 @@
 model PaymentProduct {
   id String @id @default(cuid())
 
-  name         String
-  description  String?
-  price        Decimal
+  name        String
+  description String?
+  price       Decimal
 
-  productId   String @unique
-  variantId    String @unique
+  productId String @unique
+  variantId String @unique
 
-  currency     Currency @default(TND)
-  interval     SubscriptionInterval @default(MONTHLY)
-  
-  isActive     Boolean @default(true)
+  currency Currency             @default(TND)
+  interval SubscriptionInterval @default(MONTHLY)
+
+  isActive Boolean @default(true)
 
   subscriptions PaymentSubscription[]
 
@@ -83,10 +83,10 @@ model PaymentSubscription {
   trialEndsAt DateTime?
 
   userId String
-  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   lastWebhookAt DateTime?
-  webhookCount  Int @default(0)
+  webhookCount  Int       @default(0)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -97,4 +97,3 @@ model PaymentSubscription {
   @@index([customerId])
   @@map("payment_subscription")
 }
-

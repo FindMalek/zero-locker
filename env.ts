@@ -3,19 +3,19 @@ import { z } from "zod"
 
 export const env = createEnv({
   server: {
-    DATABASE_URL: z.string().min(1).url(),
+    DATABASE_URL: z.string().url().startsWith("postgresql://"),
     NODE_ENV: z.enum(["development", "production"]),
-    BETTER_AUTH_SECRET: z.string().min(10),
-    LOGO_DEV_TOKEN: z.string().min(10),
-    RESEND_API_KEY: z.string().min(10),
+    BETTER_AUTH_SECRET: z.string().min(32).max(64),
+    LOGO_DEV_TOKEN: z.string().min(20).startsWith("sk_"),
+    RESEND_API_KEY: z.string().min(20).startsWith("re_"),
     MARKETING_SUBSCRIPTION_EMAIL: z.string().email(),
-    LEMON_SQUEEZY_API_KEY: z.string().min(10),
-    LEMON_SQUEEZY_STORE_ID: z.string().min(10),
-    LEMON_SQUEEZY_WEBHOOK_SECRET: z.string().min(10),
+    LEMON_SQUEEZY_API_KEY: z.string().min(20),
+    LEMON_SQUEEZY_STORE_ID: z.string().min(1),
+    LEMON_SQUEEZY_WEBHOOK_SECRET: z.string().min(32),
   },
   client: {
-    NEXT_PUBLIC_APP_URL: z.string().url(),
-    NEXT_PUBLIC_LOGO_DEV_TOKEN: z.string().min(10),
+    NEXT_PUBLIC_APP_URL: z.string().url().startsWith("http"),
+    NEXT_PUBLIC_LOGO_DEV_TOKEN: z.string().min(20).startsWith("pk_"),
   },
   runtimeEnv: {
     DATABASE_URL: process.env.DATABASE_URL,
