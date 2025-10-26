@@ -33,9 +33,7 @@
     "docker:clean": "docker compose down -v --rmi all",
     "webhook:tunnel": "ngrok http 3000 --log=stdout",
     "webhook:dev": "concurrently \"pnpm dev\" \"pnpm webhook:tunnel\"",
-    "test:webhook": "node scripts/test-webhook.js",
-    "test:status-mapping": "tsx scripts/test-status-mapping.ts",
-    "test:webhook-security": "tsx scripts/test-webhook-security.ts"
+    "test:webhook": "tsx scripts/test-webhook.ts"
   },
   "dependencies": {
     "@content-collections/core": "^0.11.1",
@@ -128,6 +126,7 @@
     "bcryptjs": "^3.0.2",
     "bufferutil": "^4.0.9",
     "concurrently": "^8.2.2",
+    "dotenv": "^17.2.3",
     "eslint": "^9",
     "eslint-config-next": "15.3.2",
     "eslint-config-prettier": "^9.1.0",

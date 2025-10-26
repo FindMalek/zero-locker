@@ -1,5 +1,3 @@
-import crypto from "crypto"
-
 import { headers } from "next/headers"
 import type { ORPCContext } from "@/orpc/types"
 import { ORPCError } from "@orpc/server"
@@ -28,45 +26,17 @@ export const webhookSignatureMiddleware = async ({
     const signature = headersList.get("x-signature")
 
     if (!signature) {
-      console.error(
-        "Webhook signature verification failed: Missing X-Signature header"
-      )
       throw new ORPCError("UNAUTHORIZED", {
         message: "Missing X-Signature header",
       })
     }
 
-    // Get the raw request body for signature verification
-    const request = context.request
-    if (!request) {
-      console.error(
-        "Webhook signature verification failed: No request object in context"
-      )
-      throw new ORPCError("INTERNAL_SERVER_ERROR", {
-        message: "No request object in context",
+    if (signature !== env.LEMON_SQUEEZY_WEBHOOK_SECRET) {
+      throw new ORPCError("UNAUTHORIZED", {
+        message: "Invalid X-Signature header",
       })
     }
 
-    const payload = await request.text()
-
-    // Generate expected signature
-    const expectedSignature = crypto
-      .createHmac("sha256", env.LEMON_SQUEEZY_WEBHOOK_SECRET)
-      .update(payload)
-      .digest("hex")
-
-    // Verify signature using timing-safe comparison
-    const isValidSignature = crypto.timingSafeEqual(
-      Buffer.from(signature, "hex"),
-      Buffer.from(expectedSignature, "hex")
-    )
-
-    if (!isValidSignature) {
-      console.error("Webhook signature verification failed: Invalid signature")
-      throw new ORPCError("UNAUTHORIZED", { message: "Invalid signature" })
-    }
-
-    console.log("Webhook signature verification successful")
     return next({ context })
   } catch (error) {
     // Re-throw ORPC errors to let oRPC handle them

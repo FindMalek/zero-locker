@@ -244,7 +244,7 @@ Zero Locker integrates with Lemon Squeezy for payment processing. To test webhoo
 
 3. **Authenticate ngrok**:
    ```bash
-   ngrok config add-authtoken YOUR_AUTH_TOKEN
+   ngrok config add-authtoken <YOUR_AUTH_TOKEN>
    ```
 
 ### Running with Webhook Support

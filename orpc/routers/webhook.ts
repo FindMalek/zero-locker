@@ -2,14 +2,15 @@ import { webhookSignatureMiddleware } from "@/middleware/webhook"
 import { database } from "@/prisma/client"
 import {
   lemonSqueezyEventTypeEnum,
+  lemonSqueezyWebhookPayloadSchema,
   mapLemonSqueezyStatusToInternal,
   webhookInputSchema,
   webhookOutputSchema,
   type LemonSqueezyEventType,
-  type WebhookInput,
   type WebhookOutput,
 } from "@/schemas/utils"
 import { ORPCError, os } from "@orpc/server"
+import { z } from "zod"
 
 import type { ORPCContext } from "../types"
 
@@ -18,10 +19,12 @@ const baseProcedure = os.$context<ORPCContext>()
 // Public webhook procedure with signature verification middleware
 const webhookProcedure = baseProcedure.use(webhookSignatureMiddleware)
 
+type SubscriptionData = z.infer<typeof lemonSqueezyWebhookPayloadSchema>["data"]
+
 // Process subscription events
 async function processSubscriptionEvent(
   eventType: LemonSqueezyEventType,
-  subscriptionData: any
+  subscriptionData: SubscriptionData
 ): Promise<{ success: boolean; message: string }> {
   const subscriptionId = subscriptionData.id
   const attributes = subscriptionData.attributes
@@ -188,12 +191,61 @@ async function processSubscriptionEvent(
   }
 }
 
-// Main webhook handler
+/**
+ * Webhook handler for processing Lemon Squeezy subscription events
+ *
+ * @route POST /api/orpc/webhooks/handle
+ * @requires Header `x-signature` - Webhook signature for verification
+ * @returns Promise<WebhookOutput> - Success status, message, and processed flag
+ *
+ * @description
+ * This handler processes external webhook POST requests from Lemon Squeezy.
+ * It does NOT use `.input()` validation because external webhooks send raw JSON
+ * that doesn't match oRPC's expected request format.
+ *
+ * **Request Flow:**
+ * 1. Request arrives at `/api/orpc/webhooks/handle`
+ * 2. Route handler parses JSON body and adds to `context.body`
+ * 3. Middleware verifies `x-signature` header
+ * 4. This handler reads `context.body`, validates with Zod, and processes event
+ *
+ * **Why not use `.input()` validation?**
+ * - `.input()` expects oRPC client-formatted requests
+ * - External webhooks send plain JSON: `{"payload": {...}}`
+ * - This mismatch causes validation failure (400 "input undefined")
+ *
+ * **Workaround implemented:**
+ * - Parse body in route handler before oRPC processing
+ * - Store parsed body in `context.body` for manual validation
+ * - Validate using `webhookInputSchema.parse()` in the handler
+ *
+ * @example
+ * ```bash
+ * curl -X POST https://your-domain.com/api/orpc/webhooks/handle \
+ *   -H "Content-Type: application/json" \
+ *   -H "x-signature: your-signature" \
+ *   -d '{"payload": {...}}'
+ * ```
+ *
+ * @see {@link webhookInputSchema} - Input validation schema
+ * @see {@link processSubscriptionEvent} - Event processing logic
+ */
 export const handleWebhook = webhookProcedure
-  .input(webhookInputSchema)
   .output(webhookOutputSchema)
-  .handler(async ({ input }): Promise<WebhookOutput> => {
+  .handler(async ({ context }): Promise<WebhookOutput> => {
     try {
+      // Get parsed body from context (added by route handler)
+      const parsedBody = context.body
+      if (!parsedBody) {
+        return {
+          success: false,
+          message: "No body in context",
+          processed: false,
+        }
+      }
+
+      // Validate the parsed body
+      const input = webhookInputSchema.parse(parsedBody)
       const { payload } = input
       const eventType = payload.meta.event_name
 
