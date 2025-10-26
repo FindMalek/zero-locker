@@ -1,0 +1,155 @@
+---
+id: 4
+title: "Why Your Database Location Matters: The 200ms Lesson"
+description: "Spoiler: it was just geography. Here's how moving the app closer to the database turned 2 second delays into sub-200ms responses."
+publishedAt: "2025-01-15"
+href: "/articles/region-deployment-importance"
+---
+
+So we deployed Zero Locker and users kept complaining about it being slow. Like, really slow. Everything was taking 2-3 seconds. The weird part? It was instant on localhost.
+
+After blaming the database, the queries, the network, the serverless cold starts - we finally found it. The database was in Frankfurt. The app was in Washington D.C.
+
+## What We Actually Saw
+
+- Click on a credential? 2 seconds to load
+- Create new credential? Another 2 seconds
+- Just navigating around? Everything felt laggy
+
+My first thought was "it works fine locally, so the code is good. Must be something else."
+
+Checked the database - Neon hosted in Frankfurt (eu-central-1).  
+Checked Vercel - deployed to Washington D.C. (us-east-1).
+
+That's 3,900 miles apart. Every request was crossing the Atlantic Ocean.
+
+## The Math
+
+```
+Every request: Washington → Frankfurt → Washington
+Round trip time: ~200-300ms
+One page load: 5-10 requests
+Total delay: 1.5-3 seconds
+```
+
+No wonder it was slow. Each API call was bouncing across continents.
+
+Localhost was fast because everything was on the same machine - network latency was basically zero. Production was slow because physics.
+
+<div className="my-8">
+  <img
+    src="/articles/region-deployment-network-before.gif"
+    alt="Network latency before region fix showing 200-300ms delays"
+    width={1200}
+    height={800}
+    className="w-full rounded-lg border"
+  />
+</div>
+
+## The Fix
+
+We configured Vercel to deploy to Frankfurt:
+
+```json
+{
+  "functions": {
+    "app/api/**/*.ts": {
+      "regions": ["fra1"]
+    }
+  }
+}
+```
+
+One config change. That's it.
+
+## The Results
+
+<div className="my-8">
+  <img
+    src="/articles/region-deployment-network-after.gif"
+    alt="Network latency after region fix showing 5-15ms fast requests"
+    width={1200}
+    height={800}
+    className="w-full rounded-lg border"
+  />
+</div>
+
+**Before:** 200-300ms per request  
+**After:** 5-15ms per request
+
+- API calls dropped from ~760ms to ~120ms
+- Page loads went from 2.5 seconds to under 1 second
+- The app actually feels fast now
+
+<div className="my-8">
+  <img
+    src="/articles/region-deployment-app-before.gif"
+    alt="App performance before region fix showing slow loading and delayed responses"
+    width={1200}
+    height={800}
+    className="w-full rounded-lg border"
+  />
+</div>
+
+<div className="my-8">
+  <img
+    src="/articles/region-deployment-app-after.gif"
+    alt="App performance after region fix showing fast, snappy interactions"
+    width={1200}
+    height={800}
+    className="w-full rounded-lg border"
+  />
+</div>
+
+## What This Actually Means
+
+The "it works on my machine" thing? For us it wasn't a bug in the code. Everything was fine locally because there was no network latency. In production, every request was adding 200ms just to travel.
+
+A query that takes 10ms to run still adds 200ms for the network. So what should be a 10ms operation becomes 210ms. Do that 8 times on a page load and you're at 1.6 seconds before any processing even happens.
+
+## How to Check This
+
+If production feels way slower than localhost, check where everything is deployed:
+
+**Find your database region:**
+
+- **Neon**: Check your project dashboard at [neon.tech](https://neon.tech)
+- **Supabase**: Check your project settings at [supabase.com](https://supabase.com)
+- **AWS RDS**: Check instance details in the console
+- **PlanetScale**: Check region in project settings
+- **Railway/Render**: Check the service details
+
+**Find your app region:**
+
+- **Vercel**: Check deployment settings or run `vercel inspect`
+- **Netlify**: Check site settings
+- **AWS Lambda**: Check function configuration
+- **Railway/Render**: Check service deployment region
+
+**Measure the latency:**
+Open browser DevTools → Network tab. Look at API request timings. If you're seeing 100ms+ on every request, you probably have a geography problem.
+
+**The fix:** Match your app region to your database region. Usually just a config change.
+
+## The Actual Impact
+
+After the fix:
+
+- Average response time: 245ms → 28ms
+- Bounce rate: 18% → 8%
+- Error rate: 2.3% → 0.4%
+
+No code changes. Just moved the functions closer to the database.
+
+## Takeaways
+
+1. **Match your regions** - Database and app should be in the same place
+2. **Network latency adds up** - 200ms × 5 requests = 1 second wasted
+3. **Localhost lies** - It doesn't have this problem, production does
+4. **Check your metrics** - If local is fast but production is slow, it's probably infrastructure
+
+That's the whole story. Geography matters more than you'd think.
+
+---
+
+_Want to check out Zero Locker? [Give it a spin](/register) - everything runs out of Frankfurt now with sub-20ms response times._

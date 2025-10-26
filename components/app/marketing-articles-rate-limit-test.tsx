@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { useTestRateLimit } from "@/orpc/hooks/use-test"
 import { toast } from "sonner"
+
 import { parseRetryTime } from "@/lib/utils/rate-limit"
 
 import { Icons } from "@/components/shared/icons"
@@ -278,9 +279,11 @@ export function MarketingArticlesRateLimitTest({
               >
                 {isAtLimit
                   ? (() => {
-                      const latestError = requestLogs.find(log => !log.success)
+                      const latestError = requestLogs.find(
+                        (log) => !log.success
+                      )
                       const retryTime = latestError?.retryAfter
-                      return retryTime 
+                      return retryTime
                         ? `Rate limit reached! Wait ${retryTime} seconds before trying again.`
                         : "Rate limit reached! Please wait before trying again."
                     })()
