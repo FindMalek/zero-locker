@@ -298,10 +298,10 @@ export function getRateLimitStats(
 /**
  * Parse retry time from error message
  * Extracts the first integer followed by time units (second, sec, s) from error messages
- * 
+ *
  * @param errorMessage - The error message to parse
  * @returns The retry time in seconds, or undefined if no time found
- * 
+ *
  * @example
  * parseRetryTime("Rate limit exceeded. Please try again in 45 seconds.") // Returns 45
  * parseRetryTime("Wait 30 sec before retrying") // Returns 30
