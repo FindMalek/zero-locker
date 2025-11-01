@@ -24,7 +24,7 @@ export class TransactionQuery {
         include: SubscriptionQuery.getSimpleInclude(),
       },
       invoice: {
-        select: InvoiceQuery.getSimpleSelect(),
+        include: InvoiceQuery.getSimpleInclude(),
       },
     } satisfies Prisma.PaymentTransactionInclude
   }
