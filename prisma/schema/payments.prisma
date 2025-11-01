@@ -82,6 +82,9 @@ model PaymentSubscription {
   renewsAt    DateTime?
   trialEndsAt DateTime?
 
+  cancelledReason String?
+  cancelledAt     DateTime?
+
   userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -91,9 +94,163 @@ model PaymentSubscription {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  transactions PaymentTransaction[]
+  invoices     Invoice[]
+  history      PaymentSubscriptionHistory[]
+
   @@index([userId])
   @@index([subscriptionId])
   @@index([status])
   @@index([customerId])
+  @@index([orderId])
   @@map("payment_subscription")
+}
+
+/**
+ * Represents a payment transaction for a subscription.
+ * @property id - Unique identifier for the transaction. Type: String. Generated using cuid().
+ * @property transactionId - LemonSqueezy transaction/invoice ID. Type: String. Must be unique.
+ * @property subscriptionId - ID of the subscription. Type: String.
+ * @property subscription - Subscription associated with this transaction. Type: PaymentSubscription. Relation to PaymentSubscription model.
+ * @property invoiceId - ID of the invoice if this transaction has an invoice. Type: String. Optional.
+ * @property invoice - Invoice associated with this transaction. Type: Invoice. Optional. Relation to Invoice model.
+ * @property amount - Transaction amount. Type: Decimal.
+ * @property currency - Currency for the transaction. Type: Currency. Defaults to TND.
+ * @property status - Transaction status. Type: PaymentTransactionStatus.
+ * @property description - Transaction description. Type: String. Optional.
+ * @property paymentDate - Date when payment was processed. Type: DateTime. Optional.
+ * @property refundedAt - Date when transaction was refunded. Type: DateTime. Optional.
+ * @property refundAmount - Amount refunded (if partial refund). Type: Decimal. Optional.
+ * @property billingPeriodStart - Start date of the billing period this payment covers. Type: DateTime. Optional.
+ * @property billingPeriodEnd - End date of the billing period this payment covers. Type: DateTime. Optional.
+ * @property failureReason - Reason for payment failure. Type: String. Optional.
+ * @property metadata - Additional transaction metadata (JSON). Type: Json. Optional.
+ * @property createdAt - Timestamp when the transaction was created. Type: DateTime. Defaults to current time.
+ * @property updatedAt - Timestamp when the transaction was last updated. Type: DateTime. Updated automatically.
+ * @constraint unique(transactionId) - Ensures each LemonSqueezy transaction ID is unique.
+ */
+model PaymentTransaction {
+  id String @id @default(cuid())
+
+  transactionId  String              @unique
+  subscriptionId String
+  subscription   PaymentSubscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+
+  invoice Invoice?
+
+  amount   Decimal
+  currency Currency                 @default(TND)
+  status   PaymentTransactionStatus
+
+  description  String?
+  paymentDate  DateTime?
+  refundedAt   DateTime?
+  refundAmount Decimal?
+
+  billingPeriodStart DateTime?
+  billingPeriodEnd   DateTime?
+
+  failureReason String?
+
+  metadata Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([subscriptionId])
+  @@index([transactionId])
+  @@index([status])
+  @@index([paymentDate])
+  @@map("payment_transaction")
+}
+
+/**
+ * Represents an invoice for a subscription payment.
+ * @property id - Unique identifier for the invoice. Type: String. Generated using cuid().
+ * @property invoiceNumber - Human-readable invoice number (e.g., "INV-2024-001"). Type: String. Must be unique.
+ * @property subscriptionId - ID of the subscription. Type: String.
+ * @property subscription - Subscription associated with this invoice. Type: PaymentSubscription. Relation to PaymentSubscription model.
+ * @property transactionId - ID of the payment transaction. Type: String. Optional.
+ * @property transaction - Payment transaction associated with this invoice. Type: PaymentTransaction. Optional. Relation to PaymentTransaction model.
+ * @property amount - Invoice amount. Type: Decimal.
+ * @property currency - Currency for the invoice. Type: Currency. Defaults to TND.
+ * @property status - Invoice status. Type: InvoiceStatus.
+ * @property dueDate - Date when invoice is due. Type: DateTime. Optional.
+ * @property paidAt - Date when invoice was paid. Type: DateTime. Optional.
+ * @property billingPeriodStart - Start date of the billing period. Type: DateTime. Optional.
+ * @property billingPeriodEnd - End date of the billing period. Type: DateTime. Optional.
+ * @property notes - Additional notes on the invoice. Type: String. Optional.
+ * @property createdAt - Timestamp when the invoice was created. Type: DateTime. Defaults to current time.
+ * @property updatedAt - Timestamp when the invoice was last updated. Type: DateTime. Updated automatically.
+ * @constraint unique(invoiceNumber) - Ensures each invoice number is unique.
+ */
+model Invoice {
+  id String @id @default(cuid())
+
+  invoiceNumber  String              @unique
+  subscriptionId String
+  subscription   PaymentSubscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+
+  transactionId String             @unique
+  transaction   PaymentTransaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+
+  amount   Decimal
+  currency Currency      @default(TND)
+  status   InvoiceStatus
+
+  dueDate DateTime?
+  paidAt  DateTime?
+
+  billingPeriodStart DateTime?
+  billingPeriodEnd   DateTime?
+
+  notes String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([subscriptionId])
+  @@index([invoiceNumber])
+  @@index([status])
+  @@index([dueDate])
+  @@index([transactionId])
+  @@map("invoice")
+}
+
+/**
+ * Represents the history of changes to a subscription.
+ * @property id - Unique identifier for the history entry. Type: String. Generated using cuid().
+ * @property subscriptionId - ID of the subscription. Type: String.
+ * @property subscription - Subscription associated with this history entry. Type: PaymentSubscription. Relation to PaymentSubscription model.
+ * @property previousStatus - Previous subscription status. Type: SubscriptionStatus. Optional.
+ * @property newStatus - New subscription status. Type: SubscriptionStatus.
+ * @property previousPrice - Previous subscription price. Type: Decimal. Optional.
+ * @property newPrice - New subscription price. Type: Decimal. Optional.
+ * @property reason - Reason for the change (e.g., "user_cancelled", "payment_failed", "plan_upgrade"). Type: String. Optional.
+ * @property metadata - Additional change metadata (JSON). Type: Json. Optional.
+ * @property changedAt - Timestamp when the change occurred. Type: DateTime. Defaults to current time.
+ * @property changedBy - Who/what triggered the change (e.g., "user", "system", "webhook"). Type: String. Optional.
+ */
+model PaymentSubscriptionHistory {
+  id String @id @default(cuid())
+
+  subscriptionId String
+  subscription   PaymentSubscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+
+  previousStatus SubscriptionStatus?
+  newStatus      SubscriptionStatus
+
+  previousPrice Decimal?
+  newPrice      Decimal?
+
+  reason   String?
+  metadata Json?
+
+  changedAt DateTime                  @default(now())
+  changedBy SubscriptionChangeSource?
+
+  @@index([subscriptionId])
+  @@index([newStatus])
+  @@index([changedAt])
+  @@map("payment_subscription_history")
 }
