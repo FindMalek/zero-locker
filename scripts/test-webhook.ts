@@ -1,6 +1,14 @@
 import * as readline from "readline"
 
-import { webhookInputSchema, type WebhookInput } from "@/schemas/utils"
+import {
+  webhookInputSchema,
+  type WebhookInput,
+} from "@/schemas/subscription/webhook"
+import {
+  Currency,
+  SubscriptionInterval,
+  SubscriptionStatus,
+} from "@prisma/client"
 import { config } from "dotenv"
 
 // Load environment variables from .env file
@@ -124,9 +132,9 @@ const subscriptionCreatedPayload: WebhookInput = {
         product_description: "Pro plan with monthly billing",
         variant_id: "pro-plan-variant", // Seeded PRO plan variant ID
         price: 999, // $9.99 in cents (Lemon Squeezy format)
-        currency: "usd",
-        renewal_interval: "monthly",
-        status: "active",
+        currency: Currency.USD,
+        renewal_interval: SubscriptionInterval.MONTHLY,
+        status: SubscriptionStatus.ACTIVE,
         renews_at: new Date(
           Date.now() + 30 * 24 * 60 * 60 * 1000
         ).toISOString(),

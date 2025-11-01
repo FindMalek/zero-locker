@@ -3,6 +3,9 @@ import { webhookSignatureMiddleware } from "@/middleware/webhook"
 import {
   Currency,
   database,
+  InvoiceStatus,
+  PaymentTransactionStatus,
+  SubscriptionChangeSource,
   SubscriptionInterval,
   UserPlan,
 } from "@/prisma/client"
@@ -67,8 +70,10 @@ async function processSubscriptionEvent(
        * 1. Finds user by email or custom_data.userId
        * 2. Finds or creates payment product
        * 3. Creates subscription record
-       * 4. Updates user plan to PRO (if applicable)
-       * 5. Sends welcome email to user (TODO: implement)
+       * 4. Creates subscription history entry
+       * 5. Updates user plan to PRO (if applicable)
+       *
+       * Deferred: Send welcome email to user (see LINEAR_ISSUE_WEBHOOK_IMPROVEMENTS.md)
        */
       case lemonSqueezyEventTypeEnum.subscription_created: {
         // Find the user by email or custom_data.userId
@@ -118,7 +123,7 @@ async function processSubscriptionEvent(
         }
 
         // Create subscription
-        await database.paymentSubscription.create({
+        const createdSubscription = await database.paymentSubscription.create({
           data: {
             subscriptionId,
             orderId: attributes.order_id,
@@ -143,20 +148,32 @@ async function processSubscriptionEvent(
           },
         })
 
-        // Update user plan to PRO when subscription is created
-        if (
+        // Create subscription history entry for initial creation
+        const newStatus =
           SubscriptionEntity.convertLemonSqueezyStatusToInternal(
             attributes.status
-          ) === subscriptionStatusEnum.ACTIVE
-        ) {
+          )
+        await database.paymentSubscriptionHistory.create({
+          data: {
+            subscriptionId: createdSubscription.id,
+            newStatus,
+            newPrice: priceInDollars,
+            reason: "Initial subscription creation",
+            changedBy: SubscriptionChangeSource.WEBHOOK,
+            metadata: {
+              eventType: "subscription_created",
+              webhookSubscriptionId: subscriptionId,
+            },
+          },
+        })
+
+        // Update user plan to PRO when subscription is created
+        if (newStatus === subscriptionStatusEnum.ACTIVE) {
           await database.user.update({
             where: { id: user.id },
             data: { plan: UserPlan.PRO },
           })
         }
-
-        // TODO: Send welcome email to user
-        // await sendSubscriptionWelcomeEmail({ to: user.email, subscriptionId })
 
         return {
           success: true,
@@ -169,8 +186,9 @@ async function processSubscriptionEvent(
        *
        * Actions performed:
        * 1. Updates subscription status and metadata
-       * 2. Updates user plan if status changes (TODO: implement conditional logic)
-       * 3. Sends update notification email (TODO: implement)
+       * 2. Creates subscription history entry if status/price changed
+       *
+       * Deferred: Update user plan based on status changes, send update notification email (see LINEAR_ISSUE_WEBHOOK_IMPROVEMENTS.md)
        */
       case lemonSqueezyEventTypeEnum.subscription_updated: {
         const subscription = await database.paymentSubscription.findUnique({
@@ -185,13 +203,15 @@ async function processSubscriptionEvent(
           }
         }
 
+        const previousStatus = subscription.status
+        const previousPrice = subscription.price
         const newStatus =
           SubscriptionEntity.convertLemonSqueezyStatusToInternal(
             attributes.status
           )
 
         // Update subscription status and metadata
-        await database.paymentSubscription.update({
+        const updatedSubscription = await database.paymentSubscription.update({
           where: { subscriptionId },
           data: {
             status: newStatus,
@@ -207,8 +227,26 @@ async function processSubscriptionEvent(
           },
         })
 
-        // TODO: Update user plan based on new status if needed
-        // TODO: Send subscription update email
+        // Create subscription history entry for status/price change
+        if (
+          previousStatus !== newStatus ||
+          Number(previousPrice) !== Number(updatedSubscription.price)
+        ) {
+          await database.paymentSubscriptionHistory.create({
+            data: {
+              subscriptionId: updatedSubscription.id,
+              previousStatus,
+              newStatus,
+              previousPrice: Number(previousPrice),
+              newPrice: Number(updatedSubscription.price),
+              reason: "Subscription updated via webhook",
+              changedBy: SubscriptionChangeSource.WEBHOOK,
+              metadata: {
+                eventType: "subscription_updated",
+              },
+            },
+          })
+        }
 
         return {
           success: true,
@@ -221,11 +259,13 @@ async function processSubscriptionEvent(
        *
        * Actions performed:
        * 1. Updates subscription status to CANCELLED
-       * 2. Sets endsAt date (subscription remains active until period ends)
-       * 3. Keeps user plan as PRO until subscription period ends
-       * 4. Sends cancellation confirmation email (TODO: implement)
+       * 2. Sets cancelledReason and cancelledAt fields
+       * 3. Sets endsAt date (subscription remains active until period ends)
+       * 4. Creates subscription history entry
+       * 5. Keeps user plan as PRO until subscription period ends
        *
        * Note: User plan should be downgraded when subscription actually ends (on expires_at date)
+       * Deferred: Send cancellation confirmation email (see LINEAR_ISSUE_WEBHOOK_IMPROVEMENTS.md)
        */
       case lemonSqueezyEventTypeEnum.subscription_cancelled: {
         const subscription = await database.paymentSubscription.findUnique({
@@ -240,13 +280,17 @@ async function processSubscriptionEvent(
           }
         }
 
+        const previousStatus = subscription.status
+        const cancelledStatus =
+          SubscriptionEntity.convertLemonSqueezyStatusToInternal(
+            attributes.status
+          )
+
         // Update subscription status and metadata
-        await database.paymentSubscription.update({
+        const updatedSubscription = await database.paymentSubscription.update({
           where: { subscriptionId },
           data: {
-            status: SubscriptionEntity.convertLemonSqueezyStatusToInternal(
-              attributes.status
-            ),
+            status: cancelledStatus,
             renewsAt: attributes.renews_at
               ? new Date(attributes.renews_at)
               : null,
@@ -254,13 +298,27 @@ async function processSubscriptionEvent(
             trialEndsAt: attributes.trial_ends_at
               ? new Date(attributes.trial_ends_at)
               : null,
+            cancelledReason: "User cancelled subscription",
+            cancelledAt: new Date(),
             lastWebhookAt: new Date(),
             webhookCount: { increment: 1 },
           },
         })
 
-        // TODO: Send cancellation confirmation email
-        // await sendSubscriptionCancellationEmail({ to: subscription.user.email, endsAt: attributes.ends_at })
+        // Create subscription history entry for cancellation
+        await database.paymentSubscriptionHistory.create({
+          data: {
+            subscriptionId: updatedSubscription.id,
+            previousStatus,
+            newStatus: cancelledStatus,
+            reason: "Subscription cancelled by user",
+            changedBy: SubscriptionChangeSource.WEBHOOK,
+            metadata: {
+              eventType: "subscription_cancelled",
+              endsAt: attributes.ends_at,
+            },
+          },
+        })
 
         return {
           success: true,
@@ -273,9 +331,11 @@ async function processSubscriptionEvent(
        *
        * Actions performed:
        * 1. Updates subscription status back to ACTIVE
-       * 2. Updates user plan to PRO
-       * 3. Clears endsAt date if present
-       * 4. Sends reactivation welcome email (TODO: implement)
+       * 2. Clears cancelledReason and cancelledAt fields
+       * 3. Creates subscription history entry
+       * 4. Updates user plan to PRO
+       *
+       * Deferred: Send reactivation welcome email (see LINEAR_ISSUE_WEBHOOK_IMPROVEMENTS.md)
        */
       case lemonSqueezyEventTypeEnum.subscription_resumed: {
         const subscription = await database.paymentSubscription.findUnique({
@@ -290,13 +350,14 @@ async function processSubscriptionEvent(
           }
         }
 
+        const previousStatus = subscription.status
         const newStatus =
           SubscriptionEntity.convertLemonSqueezyStatusToInternal(
             attributes.status
           )
 
         // Update subscription status and metadata
-        await database.paymentSubscription.update({
+        const updatedSubscription = await database.paymentSubscription.update({
           where: { subscriptionId },
           data: {
             status: newStatus,
@@ -307,21 +368,34 @@ async function processSubscriptionEvent(
             trialEndsAt: attributes.trial_ends_at
               ? new Date(attributes.trial_ends_at)
               : null,
+            cancelledReason: null,
+            cancelledAt: null,
             lastWebhookAt: new Date(),
             webhookCount: { increment: 1 },
           },
         })
 
+        // Create subscription history entry for resume
+        await database.paymentSubscriptionHistory.create({
+          data: {
+            subscriptionId: updatedSubscription.id,
+            previousStatus,
+            newStatus,
+            reason: "Subscription resumed by user",
+            changedBy: SubscriptionChangeSource.WEBHOOK,
+            metadata: {
+              eventType: "subscription_resumed",
+            },
+          },
+        })
+
         // Update user plan back to PRO when subscription is resumed
-        if (newStatus === "ACTIVE") {
+        if (newStatus === subscriptionStatusEnum.ACTIVE) {
           await database.user.update({
             where: { id: subscription.userId },
             data: { plan: UserPlan.PRO },
           })
         }
-
-        // TODO: Send reactivation welcome email
-        // await sendSubscriptionReactivationEmail({ to: subscription.user.email, subscriptionId })
 
         return {
           success: true,
@@ -334,8 +408,10 @@ async function processSubscriptionEvent(
        *
        * Actions performed:
        * 1. Updates subscription status to EXPIRED
-       * 2. Downgrades user plan from PRO to NORMAL
-       * 3. Sends expiration notification email (TODO: implement)
+       * 2. Creates subscription history entry
+       * 3. Downgrades user plan from PRO to NORMAL
+       *
+       * Deferred: Send expiration notification email (see LINEAR_ISSUE_WEBHOOK_IMPROVEMENTS.md)
        */
       case lemonSqueezyEventTypeEnum.subscription_expired: {
         const subscription = await database.paymentSubscription.findUnique({
@@ -350,13 +426,17 @@ async function processSubscriptionEvent(
           }
         }
 
+        const previousStatus = subscription.status
+        const expiredStatus =
+          SubscriptionEntity.convertLemonSqueezyStatusToInternal(
+            attributes.status
+          )
+
         // Update subscription status and metadata
-        await database.paymentSubscription.update({
+        const updatedSubscription = await database.paymentSubscription.update({
           where: { subscriptionId },
           data: {
-            status: SubscriptionEntity.convertLemonSqueezyStatusToInternal(
-              attributes.status
-            ),
+            status: expiredStatus,
             renewsAt: attributes.renews_at
               ? new Date(attributes.renews_at)
               : null,
@@ -369,14 +449,25 @@ async function processSubscriptionEvent(
           },
         })
 
+        // Create subscription history entry for expiration
+        await database.paymentSubscriptionHistory.create({
+          data: {
+            subscriptionId: updatedSubscription.id,
+            previousStatus,
+            newStatus: expiredStatus,
+            reason: "Subscription expired",
+            changedBy: SubscriptionChangeSource.WEBHOOK,
+            metadata: {
+              eventType: "subscription_expired",
+            },
+          },
+        })
+
         // Downgrade user plan to NORMAL when subscription expires
         await database.user.update({
           where: { id: subscription.userId },
           data: { plan: UserPlan.NORMAL },
         })
-
-        // TODO: Send expiration notification email
-        // await sendSubscriptionExpirationEmail({ to: subscription.user.email, subscriptionId })
 
         return {
           success: true,
@@ -389,8 +480,9 @@ async function processSubscriptionEvent(
        *
        * Actions performed:
        * 1. Updates subscription status to PAUSED
-       * 2. Optionally pauses user plan benefits (TODO: implement)
-       * 3. Sends pause notification email (TODO: implement)
+       * 2. Creates subscription history entry
+       *
+       * Deferred: Pause user plan benefits logic, send pause notification email (see LINEAR_ISSUE_WEBHOOK_IMPROVEMENTS.md)
        */
       case lemonSqueezyEventTypeEnum.subscription_paused: {
         const subscription = await database.paymentSubscription.findUnique({
@@ -405,13 +497,17 @@ async function processSubscriptionEvent(
           }
         }
 
+        const previousStatus = subscription.status
+        const pausedStatus =
+          SubscriptionEntity.convertLemonSqueezyStatusToInternal(
+            attributes.status
+          )
+
         // Update subscription status and metadata
-        await database.paymentSubscription.update({
+        const updatedSubscription = await database.paymentSubscription.update({
           where: { subscriptionId },
           data: {
-            status: SubscriptionEntity.convertLemonSqueezyStatusToInternal(
-              attributes.status
-            ),
+            status: pausedStatus,
             renewsAt: attributes.renews_at
               ? new Date(attributes.renews_at)
               : null,
@@ -424,8 +520,19 @@ async function processSubscriptionEvent(
           },
         })
 
-        // TODO: Optionally pause user plan benefits or keep PRO access during pause
-        // TODO: Send pause notification email
+        // Create subscription history entry for pause
+        await database.paymentSubscriptionHistory.create({
+          data: {
+            subscriptionId: updatedSubscription.id,
+            previousStatus,
+            newStatus: pausedStatus,
+            reason: "Subscription paused",
+            changedBy: SubscriptionChangeSource.WEBHOOK,
+            metadata: {
+              eventType: "subscription_paused",
+            },
+          },
+        })
 
         return {
           success: true,
@@ -438,8 +545,10 @@ async function processSubscriptionEvent(
        *
        * Actions performed:
        * 1. Updates subscription status back to ACTIVE
-       * 2. Restores user plan benefits to PRO
-       * 3. Sends unpause notification email (TODO: implement)
+       * 2. Creates subscription history entry
+       * 3. Restores user plan benefits to PRO
+       *
+       * Deferred: Send unpause notification email (see LINEAR_ISSUE_WEBHOOK_IMPROVEMENTS.md)
        */
       case lemonSqueezyEventTypeEnum.subscription_unpaused: {
         const subscription = await database.paymentSubscription.findUnique({
@@ -454,13 +563,14 @@ async function processSubscriptionEvent(
           }
         }
 
+        const previousStatus = subscription.status
         const newStatus =
           SubscriptionEntity.convertLemonSqueezyStatusToInternal(
             attributes.status
           )
 
         // Update subscription status and metadata
-        await database.paymentSubscription.update({
+        const updatedSubscription = await database.paymentSubscription.update({
           where: { subscriptionId },
           data: {
             status: newStatus,
@@ -476,15 +586,27 @@ async function processSubscriptionEvent(
           },
         })
 
+        // Create subscription history entry for unpause
+        await database.paymentSubscriptionHistory.create({
+          data: {
+            subscriptionId: updatedSubscription.id,
+            previousStatus,
+            newStatus,
+            reason: "Subscription unpaused",
+            changedBy: SubscriptionChangeSource.WEBHOOK,
+            metadata: {
+              eventType: "subscription_unpaused",
+            },
+          },
+        })
+
         // Restore user plan to PRO when subscription is unpaused
-        if (newStatus === "ACTIVE") {
+        if (newStatus === subscriptionStatusEnum.ACTIVE) {
           await database.user.update({
             where: { id: subscription.userId },
             data: { plan: UserPlan.PRO },
           })
         }
-
-        // TODO: Send unpause notification email
 
         return {
           success: true,
@@ -496,10 +618,13 @@ async function processSubscriptionEvent(
        * Handles successful subscription payment event
        *
        * Actions performed:
-       * 1. Updates renewsAt date with next billing date
-       * 2. Updates webhook metadata
-       * 3. Sends payment receipt email (TODO: implement)
-       * 4. Ensures user plan remains PRO
+       * 1. Creates payment transaction record
+       * 2. Creates invoice for the transaction
+       * 3. Updates renewsAt date with next billing date
+       * 4. Updates webhook metadata
+       * 5. Ensures user plan remains PRO
+       *
+       * Deferred: Send payment receipt email (see LINEAR_ISSUE_WEBHOOK_IMPROVEMENTS.md)
        */
       case lemonSqueezyEventTypeEnum.subscription_payment_success: {
         const subscription = await database.paymentSubscription.findUnique({
@@ -513,6 +638,50 @@ async function processSubscriptionEvent(
             message: `Subscription ${subscriptionId} not found`,
           }
         }
+
+        // Calculate billing period dates
+        const now = new Date()
+        const billingPeriodStart = subscription.renewsAt
+          ? new Date(subscription.renewsAt)
+          : new Date(now.getFullYear(), now.getMonth(), 1)
+        const billingPeriodEnd = attributes.renews_at
+          ? new Date(attributes.renews_at)
+          : new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59)
+
+        // Create payment transaction for successful payment
+        const transaction = await database.paymentTransaction.create({
+          data: {
+            transactionId: `txn-${subscriptionId}-${now.getTime()}`,
+            subscriptionId: subscription.id,
+            amount: subscription.price,
+            currency: subscription.currency,
+            status: PaymentTransactionStatus.SUCCESS,
+            description: "Monthly subscription payment",
+            paymentDate: now,
+            billingPeriodStart,
+            billingPeriodEnd,
+          },
+        })
+
+        // Create invoice for the transaction
+        const invoiceNumber = `INV-${now.getFullYear()}-${String(
+          now.getMonth() + 1
+        ).padStart(2, "0")}-${String(transaction.id.slice(-6)).toUpperCase()}`
+        await database.invoice.create({
+          data: {
+            invoiceNumber,
+            subscriptionId: subscription.id,
+            transactionId: transaction.id,
+            amount: subscription.price,
+            currency: subscription.currency,
+            status: InvoiceStatus.PAID,
+            dueDate: billingPeriodStart,
+            paidAt: now,
+            billingPeriodStart,
+            billingPeriodEnd,
+            notes: "Monthly subscription invoice",
+          },
+        })
 
         // Update webhook metadata and renewsAt date
         await database.paymentSubscription.update({
@@ -534,9 +703,6 @@ async function processSubscriptionEvent(
           })
         }
 
-        // TODO: Send payment receipt email
-        // await sendPaymentReceiptEmail({ to: subscription.user.email, subscriptionId, amount: subscription.price })
-
         return {
           success: true,
           message: `Payment success event processed for subscription ${subscriptionId}`,
@@ -547,10 +713,12 @@ async function processSubscriptionEvent(
        * Handles failed subscription payment event
        *
        * Actions performed:
-       * 1. Updates webhook metadata
+       * 1. Creates payment transaction record (FAILED status)
        * 2. Updates subscription status to PAST_DUE or UNPAID
-       * 3. Sends payment failure notification email (TODO: implement)
-       * 4. Optionally downgrades user plan if payment fails repeatedly (TODO: implement)
+       * 3. Creates subscription history entry if status changed
+       * 4. Updates webhook metadata
+       *
+       * Deferred: Send payment failure notification email, implement automatic downgrade after multiple failures (see LINEAR_ISSUE_WEBHOOK_IMPROVEMENTS.md)
        */
       case lemonSqueezyEventTypeEnum.subscription_payment_failed: {
         const subscription = await database.paymentSubscription.findUnique({
@@ -580,18 +748,50 @@ async function processSubscriptionEvent(
             )
         }
 
-        await database.paymentSubscription.update({
+        const updatedSubscription = await database.paymentSubscription.update({
           where: { subscriptionId },
           data: updateData,
         })
 
-        // TODO: Send payment failure notification email
-        // await sendPaymentFailureEmail({ to: subscription.user.email, subscriptionId, retryDate: attributes.renews_at })
+        // Create payment transaction for failed payment
+        const now = new Date()
+        await database.paymentTransaction.create({
+          data: {
+            transactionId: `txn-failed-${subscriptionId}-${now.getTime()}`,
+            subscriptionId: subscription.id,
+            amount: subscription.price,
+            currency: subscription.currency,
+            status: PaymentTransactionStatus.FAILED,
+            description: "Subscription payment failed",
+            paymentDate: null,
+            failureReason: "Payment processing failed",
+            metadata: {
+              retryDate: attributes.renews_at,
+            },
+          },
+        })
 
-        // TODO: Implement logic to downgrade user plan after multiple failed payments
-        // if (subscription.webhookCount > 3 && subscription.status === "UNPAID") {
-        //   await database.user.update({ where: { id: subscription.userId }, data: { plan: "NORMAL" } })
-        // }
+        // Create subscription history entry if status changed
+        if (attributes.status) {
+          const newStatus =
+            SubscriptionEntity.convertLemonSqueezyStatusToInternal(
+              attributes.status
+            )
+          if (subscription.status !== newStatus) {
+            await database.paymentSubscriptionHistory.create({
+              data: {
+                subscriptionId: updatedSubscription.id,
+                previousStatus: subscription.status,
+                newStatus,
+                reason: "Payment failed - status updated",
+                changedBy: SubscriptionChangeSource.WEBHOOK,
+                metadata: {
+                  eventType: "subscription_payment_failed",
+                },
+              },
+            })
+          }
+        }
 
         return {
           success: true,
@@ -603,10 +803,13 @@ async function processSubscriptionEvent(
        * Handles recovered subscription payment event (failed payment was later successful)
        *
        * Actions performed:
-       * 1. Updates webhook metadata
-       * 2. Updates subscription status back to ACTIVE
-       * 3. Restores user plan to PRO
-       * 4. Sends payment recovered confirmation email (TODO: implement)
+       * 1. Creates payment transaction record (SUCCESS status)
+       * 2. Creates invoice for the recovered transaction
+       * 3. Creates subscription history entry
+       * 4. Updates subscription status back to ACTIVE
+       * 5. Restores user plan to PRO
+       *
+       * Deferred: Send payment recovered confirmation email (see LINEAR_ISSUE_WEBHOOK_IMPROVEMENTS.md)
        */
       case lemonSqueezyEventTypeEnum.subscription_payment_recovered: {
         const subscription = await database.paymentSubscription.findUnique({
@@ -621,13 +824,17 @@ async function processSubscriptionEvent(
           }
         }
 
+        const previousStatus = subscription.status
+        const recoveredStatus =
+          SubscriptionEntity.convertLemonSqueezyStatusToInternal(
+            attributes.status
+          )
+
         // Update subscription status and metadata
-        await database.paymentSubscription.update({
+        const updatedSubscription = await database.paymentSubscription.update({
           where: { subscriptionId },
           data: {
-            status: SubscriptionEntity.convertLemonSqueezyStatusToInternal(
-              attributes.status
-            ),
+            status: recoveredStatus,
             renewsAt: attributes.renews_at
               ? new Date(attributes.renews_at)
               : null,
@@ -636,14 +843,71 @@ async function processSubscriptionEvent(
           },
         })
 
+        // Create payment transaction for recovered payment
+        const now = new Date()
+        const billingPeriodStart = subscription.renewsAt
+          ? new Date(subscription.renewsAt)
+          : new Date(now.getFullYear(), now.getMonth(), 1)
+        const billingPeriodEnd = attributes.renews_at
+          ? new Date(attributes.renews_at)
+          : new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59)
+
+        const transaction = await database.paymentTransaction.create({
+          data: {
+            transactionId: `txn-recovered-${subscriptionId}-${now.getTime()}`,
+            subscriptionId: subscription.id,
+            amount: subscription.price,
+            currency: subscription.currency,
+            status: PaymentTransactionStatus.SUCCESS,
+            description: "Recovered subscription payment",
+            paymentDate: now,
+            billingPeriodStart,
+            billingPeriodEnd,
+            metadata: {
+              recovered: true,
+            },
+          },
+        })
+
+        // Create invoice for recovered transaction
+        const invoiceNumber = `INV-${now.getFullYear()}-${String(
+          now.getMonth() + 1
+        ).padStart(2, "0")}-${String(transaction.id.slice(-6)).toUpperCase()}`
+        await database.invoice.create({
+          data: {
+            invoiceNumber,
+            subscriptionId: subscription.id,
+            transactionId: transaction.id,
+            amount: subscription.price,
+            currency: subscription.currency,
+            status: InvoiceStatus.PAID,
+            dueDate: billingPeriodStart,
+            paidAt: now,
+            billingPeriodStart,
+            billingPeriodEnd,
+            notes: "Recovered subscription payment invoice",
+          },
+        })
+
+        // Create subscription history entry for recovery
+        await database.paymentSubscriptionHistory.create({
+          data: {
+            subscriptionId: updatedSubscription.id,
+            previousStatus,
+            newStatus: recoveredStatus,
+            reason: "Payment recovered after failure",
+            changedBy: SubscriptionChangeSource.WEBHOOK,
+            metadata: {
+              eventType: "subscription_payment_recovered",
+            },
+          },
+        })
+
         // Restore user plan to PRO when payment is recovered
         await database.user.update({
           where: { id: subscription.userId },
           data: { plan: UserPlan.PRO },
         })
-
-        // TODO: Send payment recovered confirmation email
-        // await sendPaymentRecoveredEmail({ to: subscription.user.email, subscriptionId })
 
         return {
           success: true,
