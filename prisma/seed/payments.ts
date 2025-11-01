@@ -1,6 +1,10 @@
 import {
   Currency,
+  InvoiceStatus,
+  PaymentTransactionStatus,
+  Prisma,
   PrismaClient,
+  SubscriptionChangeSource,
   SubscriptionInterval,
   SubscriptionStatus,
 } from "@prisma/client"
@@ -51,37 +55,148 @@ async function seedPayments(prisma: PrismaClient) {
   // the subscription_created webhook event is meant to CREATE it.
   // However, we can create other subscriptions for testing other webhook events.
 
+  // Prepare arrays for batch operations
+  const subscriptionsToCreate: Prisma.PaymentSubscriptionCreateManyInput[] = []
+  const transactionsToCreate: Prisma.PaymentTransactionCreateManyInput[] = []
+  const invoicesToCreate: Prisma.InvoiceCreateManyInput[] = []
+  const subscriptionHistoryToCreate: Prisma.PaymentSubscriptionHistoryCreateManyInput[] =
+    []
+
   // Create subscriptions for testing other webhook events (updated, cancelled, etc.)
   // Use the second user (user_2 / jane.smith@example.com) for testing subscription updates
   if (users.length > 1) {
     const secondUser = users[1]
+    const now = new Date()
+    const subscriptionId = `subscription-${secondUser.id}`
+    const subscriptionInternalId = `sub_${secondUser.id}`
+    const renewsAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
 
-    const proSubscription = await prisma.paymentSubscription.upsert({
-      where: { subscriptionId: `subscription-${secondUser.id}` },
-      update: {
-        status: SubscriptionStatus.ACTIVE,
-        renewsAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-      },
-      create: {
-        subscriptionId: `subscription-${secondUser.id}`,
-        orderId: `order-${secondUser.id}`,
-        customerId: `customer-${secondUser.id}`,
-        status: SubscriptionStatus.ACTIVE,
-        productId: proProduct.id,
-        price: 9.99,
-        currency: Currency.USD,
-        renewsAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-        endsAt: null,
-        trialEndsAt: null,
-        userId: secondUser.id,
-        lastWebhookAt: new Date(),
-        webhookCount: 0,
+    // Prepare subscription data (using pre-generated ID for foreign key references)
+    subscriptionsToCreate.push({
+      id: subscriptionInternalId,
+      subscriptionId,
+      orderId: `order-${secondUser.id}`,
+      customerId: `customer-${secondUser.id}`,
+      status: SubscriptionStatus.ACTIVE,
+      productId: proProduct.id,
+      price: 9.99,
+      currency: Currency.USD,
+      renewsAt,
+      endsAt: null,
+      trialEndsAt: null,
+      userId: secondUser.id,
+      lastWebhookAt: now,
+      webhookCount: 0,
+    })
+
+    // Prepare transaction data (pre-generate ID for invoice reference)
+    const billingPeriodStart = new Date(now.getFullYear(), now.getMonth(), 1)
+    const billingPeriodEnd = new Date(
+      now.getFullYear(),
+      now.getMonth() + 1,
+      0,
+      23,
+      59,
+      59
+    )
+    const transactionInternalId = `txn_${secondUser.id}_${now.getTime()}`
+    const transactionExternalId = `transaction-${secondUser.id}-${now.getTime()}`
+
+    transactionsToCreate.push({
+      id: transactionInternalId,
+      transactionId: transactionExternalId,
+      subscriptionId: subscriptionInternalId,
+      amount: 9.99,
+      currency: Currency.USD,
+      status: PaymentTransactionStatus.SUCCESS,
+      description: "Monthly subscription payment",
+      paymentDate: now,
+      billingPeriodStart,
+      billingPeriodEnd,
+    })
+
+    // Prepare invoice data (using pre-generated transaction ID)
+    const invoiceNumber = `INV-${now.getFullYear()}-${String(
+      now.getMonth() + 1
+    ).padStart(
+      2,
+      "0"
+    )}-${String(transactionInternalId.slice(-6)).toUpperCase()}`
+
+    invoicesToCreate.push({
+      invoiceNumber,
+      subscriptionId: subscriptionInternalId,
+      transactionId: transactionInternalId,
+      amount: 9.99,
+      currency: Currency.USD,
+      status: InvoiceStatus.PAID,
+      dueDate: billingPeriodStart,
+      paidAt: now,
+      billingPeriodStart,
+      billingPeriodEnd,
+      notes: "Monthly subscription invoice",
+    })
+
+    // Prepare subscription history data
+    subscriptionHistoryToCreate.push({
+      subscriptionId: subscriptionInternalId,
+      newStatus: SubscriptionStatus.ACTIVE,
+      newPrice: 9.99,
+      reason: "Initial subscription creation",
+      changedBy: SubscriptionChangeSource.SYSTEM,
+      metadata: {
+        source: "seed",
+        createdAt: now.toISOString(),
       },
     })
-    console.log(
-      `✅ Created/Updated subscription: ${proSubscription.subscriptionId} for user ${secondUser.email} (for testing webhook events)`
-    )
   }
+
+  // Use a transaction to batch all operations
+  await prisma.$transaction(async (tx) => {
+    // Create all subscriptions first
+    if (subscriptionsToCreate.length > 0) {
+      await tx.paymentSubscription.createMany({
+        data: subscriptionsToCreate,
+        skipDuplicates: true,
+      })
+      console.log(
+        `✅ Created ${subscriptionsToCreate.length} subscription(s) via createMany`
+      )
+    }
+
+    // Then create all transactions
+    if (transactionsToCreate.length > 0) {
+      await tx.paymentTransaction.createMany({
+        data: transactionsToCreate,
+        skipDuplicates: true,
+      })
+      console.log(
+        `✅ Created ${transactionsToCreate.length} transaction(s) via createMany`
+      )
+    }
+
+    // Then create all invoices
+    if (invoicesToCreate.length > 0) {
+      await tx.invoice.createMany({
+        data: invoicesToCreate,
+        skipDuplicates: true,
+      })
+      console.log(
+        `✅ Created ${invoicesToCreate.length} invoice(s) via createMany`
+      )
+    }
+
+    // Finally create all subscription history entries
+    if (subscriptionHistoryToCreate.length > 0) {
+      await tx.paymentSubscriptionHistory.createMany({
+        data: subscriptionHistoryToCreate,
+        skipDuplicates: true,
+      })
+      console.log(
+        `✅ Created ${subscriptionHistoryToCreate.length} subscription history entry/entries via createMany`
+      )
+    }
+  })
 
   console.log("✅ Payment products seeded successfully")
 }
