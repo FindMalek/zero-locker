@@ -54,6 +54,9 @@ async function processSubscriptionEvent(
           where: { variantId: attributes.variant_id },
         })
 
+        // Convert price from cents to dollars (Lemon Squeezy sends price in cents)
+        const priceInDollars = attributes.price / 100
+
         if (!product) {
           // Create product if it doesn't exist
           product = await database.paymentProduct.create({
@@ -62,7 +65,7 @@ async function processSubscriptionEvent(
               variantId: attributes.variant_id,
               name: attributes.product_name || "Unknown Product",
               description: attributes.product_description,
-              price: attributes.price,
+              price: priceInDollars,
               currency: attributes.currency?.toUpperCase() || "USD",
               interval: attributes.renewal_interval?.toUpperCase() || "MONTHLY",
             },
@@ -77,7 +80,7 @@ async function processSubscriptionEvent(
             customerId: attributes.customer_id,
             status: mapLemonSqueezyStatusToInternal(attributes.status),
             productId: product.id,
-            price: attributes.price,
+            price: priceInDollars,
             currency: attributes.currency?.toUpperCase() || "USD",
             renewsAt: attributes.renews_at
               ? new Date(attributes.renews_at)

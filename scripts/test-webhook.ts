@@ -103,12 +103,13 @@ const sendWebhook = async (ngrokUrl: string, webhookData: WebhookPayload) => {
 
 // Example webhook payload for subscription_created
 // This should match webhookInputSchema structure
+// Uses seeded user data from prisma/seed/users.ts (user_1 / john.doe@example.com)
 const subscriptionCreatedPayload: WebhookInput = {
   payload: {
     meta: {
       event_name: "subscription_created",
       custom_data: {
-        userId: "test-user-id",
+        userId: "user_1", // Seeded user ID from users.ts
       },
     },
     data: {
@@ -116,13 +117,13 @@ const subscriptionCreatedPayload: WebhookInput = {
       id: "test-subscription-123",
       attributes: {
         customer_id: "test-customer-123",
-        user_email: "test@example.com",
+        user_email: "john.doe@example.com", // Seeded user email from users.ts
         order_id: "test-order-123",
-        product_id: "123",
-        product_name: "Test Product",
-        product_description: "A test product",
-        variant_id: "456",
-        price: 999,
+        product_id: "pro-plan", // Seeded PRO plan product ID
+        product_name: "PRO Plan",
+        product_description: "Pro plan with monthly billing",
+        variant_id: "pro-plan-variant", // Seeded PRO plan variant ID
+        price: 999, // $9.99 in cents (Lemon Squeezy format)
         currency: "usd",
         renewal_interval: "monthly",
         status: "active",

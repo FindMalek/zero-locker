@@ -3,6 +3,7 @@ import { PrismaClient } from "@prisma/client"
 import { seedCards } from "./cards"
 import { seedContainers } from "./containers"
 import { seedCredentials } from "./credentials"
+import { seedPayments } from "./payments"
 import { seedPlatforms } from "./platforms"
 import { seedSecrets } from "./secrets"
 import { seedTags } from "./tags"
@@ -21,6 +22,7 @@ async function main() {
   await seedCredentials(prisma)
   await seedCards(prisma)
   await seedSecrets(prisma)
+  await seedPayments(prisma)
 
   console.log("✅ Database seeding completed")
 }
