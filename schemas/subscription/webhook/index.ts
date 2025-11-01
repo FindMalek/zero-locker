@@ -1,4 +1,3 @@
-// User Schemas
-export * from "./enums"
+// Subscription Webhook Schemas
 export * from "./input"
 export * from "./output"

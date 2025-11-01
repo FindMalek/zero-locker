@@ -193,3 +193,49 @@ enum SubscriptionStatus {
   ON_TRIAL
   PAUSED
 }
+
+/**
+ * Represents payment transaction status.
+ * @property PENDING - Payment is pending processing.
+ * @property SUCCESS - Payment was successful.
+ * @property FAILED - Payment failed.
+ * @property REFUNDED - Payment was refunded.
+ * @property PARTIALLY_REFUNDED - Payment was partially refunded.
+ */
+enum PaymentTransactionStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  REFUNDED
+  PARTIALLY_REFUNDED
+}
+
+/**
+ * Represents invoice status.
+ * @property DRAFT - Invoice is a draft.
+ * @property PENDING - Invoice is pending payment.
+ * @property PAID - Invoice has been paid.
+ * @property OVERDUE - Invoice is overdue.
+ * @property CANCELLED - Invoice has been cancelled.
+ */
+enum InvoiceStatus {
+  DRAFT
+  PENDING
+  PAID
+  OVERDUE
+  CANCELLED
+}
+
+/**
+ * Represents who or what triggered a subscription change.
+ * @property USER - Change was initiated by the user (e.g., user cancelled subscription).
+ * @property SYSTEM - Change was initiated by the system (e.g., automated process, cron job).
+ * @property WEBHOOK - Change was initiated by a webhook event from Lemon Squeezy.
+ * @property ADMIN - Change was initiated by an administrator.
+ */
+enum SubscriptionChangeSource {
+  USER
+  SYSTEM
+  WEBHOOK
+  ADMIN
+}
