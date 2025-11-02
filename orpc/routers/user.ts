@@ -1,7 +1,6 @@
 import { authMiddleware } from "@/middleware/auth"
 import {
   lenientRateLimit,
-  moderateRateLimit,
   strictRateLimit,
 } from "@/middleware/rate-limit"
 import { database } from "@/prisma/client"
@@ -10,9 +9,7 @@ import {
   roadmapSubscribeOutputSchema,
   subscriptionInputSchema,
   subscriptionOutputSchema,
-  type RoadmapSubscribeInput,
   type RoadmapSubscribeOutput,
-  type SubscriptionInput,
   type SubscriptionOutput,
 } from "@/schemas/user/roadmap"
 import {
@@ -30,7 +27,6 @@ import {
   waitlistInputSchema,
   waitlistJoinOutputSchema,
   type WaitlistCountOutput,
-  type WaitlistInput,
   type WaitlistJoinOutput,
 } from "@/schemas/user/waitlist"
 import { emptyInputSchema } from "@/schemas/utils"
