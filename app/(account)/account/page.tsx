@@ -9,7 +9,7 @@ import { auth } from "@/lib/auth/server"
 import { AccountOverviewClient } from "@/components/app/account-overview-client"
 
 export const metadata: Metadata = {
-  title: "Account Overview",
+  title: "Account",
 }
 
 export default async function AccountOverviewPage() {

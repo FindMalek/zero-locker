@@ -1,5 +1,6 @@
 "use client"
 
+import { useMemo } from "react"
 import { orpc } from "@/orpc/client"
 import type {
   GetSubscriptionHistoryInput,
@@ -12,7 +13,11 @@ import type {
   ListTransactionsOutput,
   SubscriptionIncludeOutput,
 } from "@/schemas/subscription"
-import { useQuery, type UseQueryOptions } from "@tanstack/react-query"
+import {
+  useQueries,
+  useQuery,
+  type UseQueryOptions,
+} from "@tanstack/react-query"
 
 // Query keys factory
 export const subscriptionKeys = {
@@ -108,4 +113,46 @@ export function useSubscriptionHistory(
     placeholderData: (previousData) => previousData,
     ...options,
   })
+}
+
+// Get all invoices from all subscriptions
+export function useAllSubscriptionInvoices(
+  subscriptionIds: string[],
+  options?: {
+    page?: number
+    limit?: number
+  }
+) {
+  const { page = 1, limit = 100 } = options ?? {}
+
+  const invoiceQueries = useQueries({
+    queries: subscriptionIds.map((subscriptionId) => ({
+      queryKey: subscriptionKeys.invoices(subscriptionId),
+      queryFn: () =>
+        orpc.subscriptions.getInvoices.call({
+          subscriptionId,
+          page,
+          limit,
+        }),
+      enabled: !!subscriptionId,
+    })),
+  })
+
+  const allInvoices = useMemo(() => {
+    return invoiceQueries
+      .flatMap((query) => query.data?.invoices ?? [])
+      .sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      )
+  }, [invoiceQueries])
+
+  const isLoading = invoiceQueries.some((query) => query.isLoading)
+  const isError = invoiceQueries.some((query) => query.isError)
+
+  return {
+    invoices: allInvoices,
+    isLoading,
+    isError,
+  }
 }

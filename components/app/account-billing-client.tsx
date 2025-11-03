@@ -2,9 +2,11 @@
 
 import { useEffect } from "react"
 import Link from "next/link"
-import { useSubscriptions } from "@/orpc/hooks/use-subscriptions"
+import {
+  useAllSubscriptionInvoices,
+  useSubscriptions,
+} from "@/orpc/hooks/use-subscriptions"
 import type { ListSubscriptionsOutput } from "@/schemas/subscription"
-import type { UserSimpleOutput } from "@/schemas/user/user"
 import { useQueryClient } from "@tanstack/react-query"
 
 import { AccountInvoiceList } from "@/components/app/account-invoice-list"
@@ -22,12 +24,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 interface AccountBillingClientProps {
   initialSubscriptions: ListSubscriptionsOutput
-  initialUser: UserSimpleOutput
 }
 
 export function AccountBillingClient({
   initialSubscriptions,
-  initialUser: _initialUser,
 }: AccountBillingClientProps) {
   const queryClient = useQueryClient()
 
@@ -45,12 +45,12 @@ export function AccountBillingClient({
 
   const subscriptions = subscriptionsData?.subscriptions ?? []
 
-  // Get all invoices from all subscriptions
-  const allInvoices = subscriptions.flatMap((_sub) => {
-    // This would need to be fetched separately or passed from server
-    // For now, we'll just show the subscriptions
-    return []
-  })
+  // Fetch invoices for all subscriptions in parallel
+  const { invoices: allInvoices, isLoading: isLoadingInvoices } =
+    useAllSubscriptionInvoices(
+      subscriptions.map((subscription) => subscription.id),
+      { page: 1, limit: 100 }
+    )
 
   return (
     <div className="space-y-6">
@@ -144,7 +144,10 @@ export function AccountBillingClient({
                   </p>
                 </div>
               ) : (
-                <AccountInvoiceList invoices={allInvoices} isLoading={false} />
+                <AccountInvoiceList
+                  invoices={allInvoices}
+                  isLoading={isLoadingInvoices}
+                />
               )}
             </CardContent>
           </Card>

@@ -24,18 +24,10 @@ export default async function BillingPage() {
   const context = await createContext()
   const serverClient = createServerClient(context)
 
-  const [subscriptionsResponse, userResponse] = await Promise.all([
-    serverClient.subscriptions.list({
-      page: 1,
-      limit: 100,
-    }),
-    serverClient.users.getCurrentUser({}),
-  ])
+  const subscriptionsResponse = await serverClient.subscriptions.list({
+    page: 1,
+    limit: 100,
+  })
 
-  return (
-    <AccountBillingClient
-      initialSubscriptions={subscriptionsResponse}
-      initialUser={userResponse}
-    />
-  )
+  return <AccountBillingClient initialSubscriptions={subscriptionsResponse} />
 }
