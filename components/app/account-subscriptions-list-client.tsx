@@ -2,7 +2,10 @@
 
 import { useState } from "react"
 import { useSubscriptions } from "@/orpc/hooks/use-subscriptions"
-import type { ListSubscriptionsOutput, SubscriptionStatusInfer } from "@/schemas/subscription"
+import type {
+  ListSubscriptionsOutput,
+  SubscriptionStatusInfer,
+} from "@/schemas/subscription"
 import { subscriptionStatusEnum } from "@/schemas/subscription/subscription/enums"
 
 import { AccountSubscriptionCard } from "@/components/app/account-subscription-card"
@@ -24,7 +27,9 @@ interface AccountSubscriptionsListClientProps {
 export function AccountSubscriptionsListClient({
   initialSubscriptions,
 }: AccountSubscriptionsListClientProps) {
-  const [statusFilter, setStatusFilter] = useState<SubscriptionStatusInfer | undefined>()
+  const [statusFilter, setStatusFilter] = useState<
+    SubscriptionStatusInfer | undefined
+  >()
   const [page, setPage] = useState(1)
 
   const { data, isLoading } = useSubscriptions(
@@ -34,7 +39,8 @@ export function AccountSubscriptionsListClient({
       status: statusFilter,
     },
     {
-      initialData: page === 1 && !statusFilter ? initialSubscriptions : undefined,
+      initialData:
+        page === 1 && !statusFilter ? initialSubscriptions : undefined,
     }
   )
 
@@ -45,7 +51,9 @@ export function AccountSubscriptionsListClient({
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">My Subscriptions</h1>
+          <h1 className="text-3xl font-bold tracking-tight">
+            My Subscriptions
+          </h1>
           <p className="text-muted-foreground">
             Manage your subscriptions and view billing history
           </p>
@@ -53,7 +61,9 @@ export function AccountSubscriptionsListClient({
         <Select
           value={statusFilter ?? "all"}
           onValueChange={(value) => {
-            setStatusFilter(value === "all" ? undefined : (value as SubscriptionStatusInfer))
+            setStatusFilter(
+              value === "all" ? undefined : (value as SubscriptionStatusInfer)
+            )
             setPage(1)
           }}
         >
@@ -116,4 +126,3 @@ export function AccountSubscriptionsListClient({
     </div>
   )
 }
-

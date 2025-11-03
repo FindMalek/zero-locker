@@ -1,12 +1,21 @@
 "use client"
 
 import Link from "next/link"
-import { subscriptionStatusEnum, type SubscriptionStatusInfer } from "@/schemas/subscription"
+import {
+  subscriptionStatusEnum,
+  type SubscriptionStatusInfer,
+} from "@/schemas/subscription"
 import type { SubscriptionIncludeOutput } from "@/schemas/subscription"
 
 import { Badge } from "@/components/ui/badge"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
 
 interface AccountSubscriptionCardProps {
   subscription: SubscriptionIncludeOutput
@@ -90,4 +99,3 @@ export function AccountSubscriptionCard({
     </Card>
   )
 }
-

@@ -1,10 +1,10 @@
 import { Metadata } from "next"
 import { headers } from "next/headers"
 import { redirect } from "next/navigation"
-
-import { auth } from "@/lib/auth/server"
 import { createServerClient } from "@/orpc/client/server"
 import { createContext } from "@/orpc/context"
+
+import { auth } from "@/lib/auth/server"
 
 import { AccountBillingClient } from "@/components/app/account-billing-client"
 
@@ -30,7 +30,6 @@ export default async function BillingPage() {
       limit: 100,
     }),
     serverClient.users.getCurrentUser({}),
-    
   ])
 
   return (
@@ -40,4 +39,3 @@ export default async function BillingPage() {
     />
   )
 }
-

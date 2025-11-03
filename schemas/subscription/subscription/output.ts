@@ -1,3 +1,5 @@
+import { z } from "zod"
+
 import {
   currencySchema,
   invoiceStatusSchema,
@@ -6,7 +8,6 @@ import {
   subscriptionIntervalSchema,
   subscriptionStatusSchema,
 } from "./enums"
-import { z } from "zod"
 
 // ============================================================================
 // Product Output Schemas
@@ -142,6 +143,16 @@ export const invoiceSimpleOutputSchema = z.object({
 })
 
 export type InvoiceSimpleOutput = z.infer<typeof invoiceSimpleOutputSchema>
+
+export const transactionIncludeOutputSchema =
+  transactionSimpleOutputSchema.extend({
+    subscription: subscriptionSimpleOutputSchema,
+    invoice: invoiceSimpleOutputSchema.nullable(),
+  })
+
+export type TransactionIncludeOutput = z.infer<
+  typeof transactionIncludeOutputSchema
+>
 
 export const listInvoicesOutputSchema = z.object({
   invoices: z.array(invoiceSimpleOutputSchema),

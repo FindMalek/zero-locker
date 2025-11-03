@@ -1,18 +1,24 @@
 "use client"
 
+import { useEffect } from "react"
 import Link from "next/link"
 import { useSubscriptions } from "@/orpc/hooks/use-subscriptions"
 import type { ListSubscriptionsOutput } from "@/schemas/subscription"
 import type { UserSimpleOutput } from "@/schemas/user/user"
 import { useQueryClient } from "@tanstack/react-query"
-import { useEffect } from "react"
 
 import { AccountInvoiceList } from "@/components/app/account-invoice-list"
 import { AccountSubscriptionCard } from "@/components/app/account-subscription-card"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Icons } from "@/components/shared/icons"
+import { Button } from "@/components/ui/button"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 interface AccountBillingClientProps {
   initialSubscriptions: ListSubscriptionsOutput
@@ -21,7 +27,7 @@ interface AccountBillingClientProps {
 
 export function AccountBillingClient({
   initialSubscriptions,
-  initialUser,
+  initialUser: _initialUser,
 }: AccountBillingClientProps) {
   const queryClient = useQueryClient()
 
@@ -40,7 +46,7 @@ export function AccountBillingClient({
   const subscriptions = subscriptionsData?.subscriptions ?? []
 
   // Get all invoices from all subscriptions
-  const allInvoices = subscriptions.flatMap((sub) => {
+  const allInvoices = subscriptions.flatMap((_sub) => {
     // This would need to be fetched separately or passed from server
     // For now, we'll just show the subscriptions
     return []
@@ -72,7 +78,9 @@ export function AccountBillingClient({
             <CardContent>
               {subscriptions.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-12">
-                  <p className="text-muted-foreground">No subscriptions found</p>
+                  <p className="text-muted-foreground">
+                    No subscriptions found
+                  </p>
                   <Button asChild className="mt-4">
                     <Link href="/account/subscriptions">
                       View Subscriptions
@@ -102,7 +110,7 @@ export function AccountBillingClient({
             </CardHeader>
             <CardContent>
               <div className="flex flex-col items-center justify-center py-12">
-                <Icons.creditCard className="size-12 text-muted-foreground mb-4" />
+                <Icons.creditCard className="text-muted-foreground mb-4 size-12" />
                 <p className="text-muted-foreground mb-4">
                   Payment methods are managed through LemonSqueezy
                 </p>
@@ -131,7 +139,7 @@ export function AccountBillingClient({
               {allInvoices.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-12">
                   <p className="text-muted-foreground">No invoices found</p>
-                  <p className="text-sm text-muted-foreground mt-2">
+                  <p className="text-muted-foreground mt-2 text-sm">
                     Invoices will appear here once you have active subscriptions
                   </p>
                 </div>
@@ -154,4 +162,3 @@ export function AccountBillingClient({
     </div>
   )
 }
-

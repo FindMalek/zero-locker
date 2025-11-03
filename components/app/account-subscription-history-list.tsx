@@ -1,10 +1,13 @@
 "use client"
 
-import { subscriptionStatusEnum, type SubscriptionStatusInfer } from "@/schemas/subscription"
+import {
+  subscriptionStatusEnum,
+  type SubscriptionStatusInfer,
+} from "@/schemas/subscription"
 import type { SubscriptionHistorySimpleOutput } from "@/schemas/subscription"
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 
 interface AccountSubscriptionHistoryListProps {
@@ -24,11 +27,6 @@ export function AccountSubscriptionHistoryList({
       hour: "2-digit",
       minute: "2-digit",
     })
-  }
-
-  const formatPrice = (price: number | null, currency: string) => {
-    if (price === null) return "N/A"
-    return `${price} ${currency}`
   }
 
   const getStatusColor = (status: SubscriptionStatusInfer | null) => {
@@ -86,9 +84,7 @@ export function AccountSubscriptionHistoryList({
         <Card key={entry.id}>
           <CardHeader>
             <div className="flex items-center justify-between">
-              <CardTitle className="text-lg">
-                Status Change
-              </CardTitle>
+              <CardTitle className="text-lg">Status Change</CardTitle>
               <div className="flex gap-2">
                 {entry.previousStatus && (
                   <Badge variant="outline">{entry.previousStatus}</Badge>
@@ -101,7 +97,7 @@ export function AccountSubscriptionHistoryList({
             </div>
           </CardHeader>
           <CardContent className="space-y-2">
-            <div className="grid gap-4 md:grid-cols-2 text-sm">
+            <div className="grid gap-4 text-sm md:grid-cols-2">
               <div>
                 <p className="text-muted-foreground">Changed At</p>
                 <p className="font-medium">{formatDate(entry.changedAt)}</p>
@@ -131,7 +127,7 @@ export function AccountSubscriptionHistoryList({
             </div>
             {entry.reason && (
               <div className="mt-2">
-                <p className="text-sm text-muted-foreground">Reason</p>
+                <p className="text-muted-foreground text-sm">Reason</p>
                 <p className="text-sm">{entry.reason}</p>
               </div>
             )}
@@ -141,4 +137,3 @@ export function AccountSubscriptionHistoryList({
     </div>
   )
 }
-

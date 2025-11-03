@@ -1,10 +1,19 @@
 "use client"
 
-import { invoiceStatusEnum, type InvoiceStatusInfer } from "@/schemas/subscription"
+import {
+  invoiceStatusEnum,
+  type InvoiceStatusInfer,
+} from "@/schemas/subscription"
 import type { InvoiceSimpleOutput } from "@/schemas/subscription"
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 
 interface AccountInvoiceListProps {
@@ -89,7 +98,7 @@ export function AccountInvoiceList({
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-2">
-            <div className="grid gap-4 md:grid-cols-2 text-sm">
+            <div className="grid gap-4 text-sm md:grid-cols-2">
               <div>
                 <p className="text-muted-foreground">Due Date</p>
                 <p className="font-medium">{formatDate(invoice.dueDate)}</p>
@@ -111,13 +120,15 @@ export function AccountInvoiceList({
               {invoice.billingPeriodEnd && (
                 <div>
                   <p className="text-muted-foreground">Billing Period End</p>
-                  <p className="font-medium">{formatDate(invoice.billingPeriodEnd)}</p>
+                  <p className="font-medium">
+                    {formatDate(invoice.billingPeriodEnd)}
+                  </p>
                 </div>
               )}
             </div>
             {invoice.notes && (
               <div className="mt-4">
-                <p className="text-sm text-muted-foreground">Notes</p>
+                <p className="text-muted-foreground text-sm">Notes</p>
                 <p className="text-sm">{invoice.notes}</p>
               </div>
             )}
@@ -127,4 +138,3 @@ export function AccountInvoiceList({
     </div>
   )
 }
-

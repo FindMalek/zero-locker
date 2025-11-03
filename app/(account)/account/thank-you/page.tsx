@@ -1,7 +1,7 @@
+import { Suspense } from "react"
 import { Metadata } from "next"
 import { headers } from "next/headers"
 import { redirect } from "next/navigation"
-import { Suspense } from "react"
 
 import { auth } from "@/lib/auth/server"
 
@@ -26,4 +26,3 @@ export default async function ThankYouPage() {
     </Suspense>
   )
 }
-

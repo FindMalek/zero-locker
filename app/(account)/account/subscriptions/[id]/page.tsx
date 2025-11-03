@@ -1,14 +1,14 @@
+import { Suspense } from "react"
 import { Metadata } from "next"
 import { headers } from "next/headers"
 import { notFound, redirect } from "next/navigation"
-import { Suspense } from "react"
-
-import { auth } from "@/lib/auth/server"
 import { createServerClient } from "@/orpc/client/server"
 import { createContext } from "@/orpc/context"
 
-import { AccountSubscriptionDetailSkeleton } from "@/components/app/account-subscription-detail-skeleton"
+import { auth } from "@/lib/auth/server"
+
 import { AccountSubscriptionDetailClient } from "@/components/app/account-subscription-detail-client"
+import { AccountSubscriptionDetailSkeleton } from "@/components/app/account-subscription-detail-skeleton"
 
 interface SubscriptionDetailPageProps {
   params: Promise<{ id: string }>
@@ -87,4 +87,3 @@ export default async function SubscriptionDetailPage({
     </div>
   )
 }
-

@@ -1,10 +1,10 @@
 import { Metadata } from "next"
 import { headers } from "next/headers"
 import { redirect } from "next/navigation"
-
-import { auth } from "@/lib/auth/server"
 import { createServerClient } from "@/orpc/client/server"
 import { createContext } from "@/orpc/context"
+
+import { auth } from "@/lib/auth/server"
 
 import { AccountSubscriptionsListClient } from "@/components/app/account-subscriptions-list-client"
 
@@ -35,4 +35,3 @@ export default async function SubscriptionsListPage() {
     />
   )
 }
-

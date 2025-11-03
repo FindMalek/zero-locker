@@ -1,24 +1,33 @@
+import {
+  SubscriptionHistoryEntity,
+  SubscriptionHistoryQuery,
+} from "@/entities/subscription/history"
 import { InvoiceEntity, InvoiceQuery } from "@/entities/subscription/invoice"
-import { SubscriptionHistoryEntity, SubscriptionHistoryQuery } from "@/entities/subscription/history"
-import { SubscriptionEntity, SubscriptionQuery } from "@/entities/subscription/subscription"
-import { TransactionEntity, TransactionQuery } from "@/entities/subscription/transaction"
+import {
+  SubscriptionEntity,
+  SubscriptionQuery,
+} from "@/entities/subscription/subscription"
+import {
+  TransactionEntity,
+  TransactionQuery,
+} from "@/entities/subscription/transaction"
 import { authMiddleware } from "@/middleware/auth"
 import { database } from "@/prisma/client"
 import {
   getSubscriptionHistoryInputSchema,
-  getSubscriptionInvoicesInputSchema,
   getSubscriptionInputSchema,
+  getSubscriptionInvoicesInputSchema,
   getSubscriptionTransactionsInputSchema,
+  listInvoicesOutputSchema,
+  listSubscriptionHistoryOutputSchema,
   listSubscriptionsInputSchema,
   listSubscriptionsOutputSchema,
-  listInvoicesOutputSchema,
   listTransactionsOutputSchema,
-  listSubscriptionHistoryOutputSchema,
   subscriptionIncludeOutputSchema,
-  type ListSubscriptionsOutput,
   type ListInvoicesOutput,
-  type ListTransactionsOutput,
   type ListSubscriptionHistoryOutput,
+  type ListSubscriptionsOutput,
+  type ListTransactionsOutput,
   type SubscriptionIncludeOutput,
 } from "@/schemas/subscription"
 import { ORPCError, os } from "@orpc/server"
@@ -180,47 +189,49 @@ export const getSubscriptionTransactions = authProcedure
 export const getSubscriptionHistory = authProcedure
   .input(getSubscriptionHistoryInputSchema)
   .output(listSubscriptionHistoryOutputSchema)
-  .handler(async ({ input, context }): Promise<ListSubscriptionHistoryOutput> => {
-    const { subscriptionId, page, limit } = input
-    const skip = (page - 1) * limit
+  .handler(
+    async ({ input, context }): Promise<ListSubscriptionHistoryOutput> => {
+      const { subscriptionId, page, limit } = input
+      const skip = (page - 1) * limit
 
-    // Verify subscription ownership
-    const subscription = await database.paymentSubscription.findFirst({
-      where: {
-        id: subscriptionId,
-        userId: context.user.id,
-      },
-    })
+      // Verify subscription ownership
+      const subscription = await database.paymentSubscription.findFirst({
+        where: {
+          id: subscriptionId,
+          userId: context.user.id,
+        },
+      })
 
-    if (!subscription) {
-      throw new ORPCError("NOT_FOUND")
+      if (!subscription) {
+        throw new ORPCError("NOT_FOUND")
+      }
+
+      const where: Prisma.PaymentSubscriptionHistoryWhereInput = {
+        subscriptionId,
+      }
+
+      const [history, total] = await Promise.all([
+        database.paymentSubscriptionHistory.findMany({
+          where,
+          skip,
+          take: limit,
+          orderBy: { changedAt: "desc" },
+          include: SubscriptionHistoryQuery.getSimpleInclude(),
+        }),
+        database.paymentSubscriptionHistory.count({ where }),
+      ])
+
+      return {
+        history: history.map((entry) =>
+          SubscriptionHistoryEntity.getSimpleRo(entry)
+        ),
+        total,
+        hasMore: skip + history.length < total,
+        page,
+        limit,
+      }
     }
-
-    const where: Prisma.PaymentSubscriptionHistoryWhereInput = {
-      subscriptionId,
-    }
-
-    const [history, total] = await Promise.all([
-      database.paymentSubscriptionHistory.findMany({
-        where,
-        skip,
-        take: limit,
-        orderBy: { changedAt: "desc" },
-        include: SubscriptionHistoryQuery.getSimpleInclude(),
-      }),
-      database.paymentSubscriptionHistory.count({ where }),
-    ])
-
-    return {
-      history: history.map((entry) =>
-        SubscriptionHistoryEntity.getSimpleRo(entry)
-      ),
-      total,
-      hasMore: skip + history.length < total,
-      page,
-      limit,
-    }
-  })
+  )
 
 // Export the subscription router
 export const subscriptionRouter = {
@@ -230,4 +241,3 @@ export const subscriptionRouter = {
   getTransactions: getSubscriptionTransactions,
   getHistory: getSubscriptionHistory,
 }
-

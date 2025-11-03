@@ -2,20 +2,17 @@
 
 import { orpc } from "@/orpc/client"
 import type {
+  GetSubscriptionHistoryInput,
   GetSubscriptionInvoicesInput,
   GetSubscriptionTransactionsInput,
-  GetSubscriptionHistoryInput,
+  ListInvoicesOutput,
+  ListSubscriptionHistoryOutput,
   ListSubscriptionsInput,
   ListSubscriptionsOutput,
-  ListInvoicesOutput,
   ListTransactionsOutput,
-  ListSubscriptionHistoryOutput,
   SubscriptionIncludeOutput,
 } from "@/schemas/subscription"
-import {
-  useQuery,
-  type UseQueryOptions,
-} from "@tanstack/react-query"
+import { useQuery, type UseQueryOptions } from "@tanstack/react-query"
 
 // Query keys factory
 export const subscriptionKeys = {
@@ -52,7 +49,10 @@ export function useSubscription(
 // List subscriptions with pagination
 export function useSubscriptions(
   input: ListSubscriptionsInput = { page: 1, limit: 10 },
-  options?: Omit<UseQueryOptions<ListSubscriptionsOutput>, "queryKey" | "queryFn">
+  options?: Omit<
+    UseQueryOptions<ListSubscriptionsOutput>,
+    "queryKey" | "queryFn"
+  >
 ) {
   return useQuery({
     queryKey: subscriptionKeys.list(input),
@@ -79,7 +79,10 @@ export function useSubscriptionInvoices(
 // Get transactions for a subscription
 export function useSubscriptionTransactions(
   input: GetSubscriptionTransactionsInput,
-  options?: Omit<UseQueryOptions<ListTransactionsOutput>, "queryKey" | "queryFn">
+  options?: Omit<
+    UseQueryOptions<ListTransactionsOutput>,
+    "queryKey" | "queryFn"
+  >
 ) {
   return useQuery({
     queryKey: subscriptionKeys.transactions(input.subscriptionId),
@@ -93,7 +96,10 @@ export function useSubscriptionTransactions(
 // Get subscription history
 export function useSubscriptionHistory(
   input: GetSubscriptionHistoryInput,
-  options?: Omit<UseQueryOptions<ListSubscriptionHistoryOutput>, "queryKey" | "queryFn">
+  options?: Omit<
+    UseQueryOptions<ListSubscriptionHistoryOutput>,
+    "queryKey" | "queryFn"
+  >
 ) {
   return useQuery({
     queryKey: subscriptionKeys.history(input.subscriptionId),
@@ -103,4 +109,3 @@ export function useSubscriptionHistory(
     ...options,
   })
 }
-

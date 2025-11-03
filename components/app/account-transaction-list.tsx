@@ -1,10 +1,19 @@
 "use client"
 
-import { paymentTransactionStatusEnum, type PaymentTransactionStatusInfer } from "@/schemas/subscription"
+import {
+  paymentTransactionStatusEnum,
+  type PaymentTransactionStatusInfer,
+} from "@/schemas/subscription"
 import type { TransactionSimpleOutput } from "@/schemas/subscription"
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 
 interface AccountTransactionListProps {
@@ -89,22 +98,27 @@ export function AccountTransactionList({
             <CardDescription>
               {formatPrice(transaction.amount, transaction.currency)}
               {transaction.refundAmount && (
-                <span className="ml-2 text-destructive">
-                  (Refunded: {formatPrice(transaction.refundAmount, transaction.currency)})
+                <span className="text-destructive ml-2">
+                  (Refunded:{" "}
+                  {formatPrice(transaction.refundAmount, transaction.currency)})
                 </span>
               )}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-2">
-            <div className="grid gap-4 md:grid-cols-2 text-sm">
+            <div className="grid gap-4 text-sm md:grid-cols-2">
               <div>
                 <p className="text-muted-foreground">Payment Date</p>
-                <p className="font-medium">{formatDate(transaction.paymentDate)}</p>
+                <p className="font-medium">
+                  {formatDate(transaction.paymentDate)}
+                </p>
               </div>
               {transaction.refundedAt && (
                 <div>
                   <p className="text-muted-foreground">Refunded At</p>
-                  <p className="font-medium">{formatDate(transaction.refundedAt)}</p>
+                  <p className="font-medium">
+                    {formatDate(transaction.refundedAt)}
+                  </p>
                 </div>
               )}
               {transaction.billingPeriodStart && (
@@ -126,16 +140,18 @@ export function AccountTransactionList({
             </div>
             {transaction.description && (
               <div className="mt-2">
-                <p className="text-sm text-muted-foreground">Description</p>
+                <p className="text-muted-foreground text-sm">Description</p>
                 <p className="text-sm">{transaction.description}</p>
               </div>
             )}
             {transaction.failureReason && (
               <div className="mt-2">
-                <p className="text-sm text-destructive font-medium">
+                <p className="text-destructive text-sm font-medium">
                   Failure Reason
                 </p>
-                <p className="text-sm text-destructive">{transaction.failureReason}</p>
+                <p className="text-destructive text-sm">
+                  {transaction.failureReason}
+                </p>
               </div>
             )}
           </CardContent>
@@ -144,4 +160,3 @@ export function AccountTransactionList({
     </div>
   )
 }
-

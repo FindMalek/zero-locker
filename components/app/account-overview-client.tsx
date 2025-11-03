@@ -1,16 +1,22 @@
 "use client"
 
+import { useEffect } from "react"
 import Link from "next/link"
-import { subscriptionStatusEnum } from "@/schemas/subscription"
 import { useSubscriptions } from "@/orpc/hooks/use-subscriptions"
+import { subscriptionStatusEnum } from "@/schemas/subscription"
 import type { ListSubscriptionsOutput } from "@/schemas/subscription"
 import type { UserSimpleOutput } from "@/schemas/user/user"
 import { useQueryClient } from "@tanstack/react-query"
-import { useEffect } from "react"
 
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Icons } from "@/components/shared/icons"
+import { Button } from "@/components/ui/button"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
 
 interface AccountOverviewClientProps {
   initialSubscriptions: ListSubscriptionsOutput
@@ -24,7 +30,10 @@ export function AccountOverviewClient({
   const queryClient = useQueryClient()
 
   useEffect(() => {
-    queryClient.setQueryData(["subscriptions", "list", { page: 1, limit: 10 }], initialSubscriptions)
+    queryClient.setQueryData(
+      ["subscriptions", "list", { page: 1, limit: 10 }],
+      initialSubscriptions
+    )
   }, [initialSubscriptions, queryClient])
 
   const { data: subscriptionsData } = useSubscriptions(
@@ -33,7 +42,9 @@ export function AccountOverviewClient({
   )
 
   const activeSubscription = subscriptionsData?.subscriptions.find(
-    (sub) => sub.status === subscriptionStatusEnum.ACTIVE || sub.status === subscriptionStatusEnum.ON_TRIAL
+    (sub) =>
+      sub.status === subscriptionStatusEnum.ACTIVE ||
+      sub.status === subscriptionStatusEnum.ON_TRIAL
   )
 
   return (
@@ -53,15 +64,15 @@ export function AccountOverviewClient({
           </CardHeader>
           <CardContent className="space-y-2">
             <div className="flex justify-between">
-              <span className="text-sm text-muted-foreground">Email</span>
+              <span className="text-muted-foreground text-sm">Email</span>
               <span className="text-sm font-medium">{initialUser.email}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-sm text-muted-foreground">Name</span>
+              <span className="text-muted-foreground text-sm">Name</span>
               <span className="text-sm font-medium">{initialUser.name}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-sm text-muted-foreground">Plan</span>
+              <span className="text-muted-foreground text-sm">Plan</span>
               <span className="text-sm font-medium">{initialUser.plan}</span>
             </div>
           </CardContent>
@@ -76,32 +87,40 @@ export function AccountOverviewClient({
             {activeSubscription ? (
               <div className="space-y-2">
                 <div className="flex justify-between">
-                  <span className="text-sm text-muted-foreground">Product</span>
+                  <span className="text-muted-foreground text-sm">Product</span>
                   <span className="text-sm font-medium">
                     {activeSubscription.product.name}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-sm text-muted-foreground">Price</span>
+                  <span className="text-muted-foreground text-sm">Price</span>
                   <span className="text-sm font-medium">
                     {activeSubscription.price} {activeSubscription.currency}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-sm text-muted-foreground">Status</span>
-                  <span className="text-sm font-medium">{activeSubscription.status}</span>
+                  <span className="text-muted-foreground text-sm">Status</span>
+                  <span className="text-sm font-medium">
+                    {activeSubscription.status}
+                  </span>
                 </div>
                 {activeSubscription.renewsAt && (
                   <div className="flex justify-between">
-                    <span className="text-sm text-muted-foreground">Next Billing</span>
+                    <span className="text-muted-foreground text-sm">
+                      Next Billing
+                    </span>
                     <span className="text-sm font-medium">
-                      {new Date(activeSubscription.renewsAt).toLocaleDateString()}
+                      {new Date(
+                        activeSubscription.renewsAt
+                      ).toLocaleDateString()}
                     </span>
                   </div>
                 )}
               </div>
             ) : (
-              <p className="text-sm text-muted-foreground">No active subscription</p>
+              <p className="text-muted-foreground text-sm">
+                No active subscription
+              </p>
             )}
           </CardContent>
         </Card>
@@ -124,4 +143,3 @@ export function AccountOverviewClient({
     </div>
   )
 }
-

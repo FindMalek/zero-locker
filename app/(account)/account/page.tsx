@@ -1,10 +1,10 @@
 import { Metadata } from "next"
 import { headers } from "next/headers"
 import { redirect } from "next/navigation"
-
-import { auth } from "@/lib/auth/server"
 import { createServerClient } from "@/orpc/client/server"
 import { createContext } from "@/orpc/context"
+
+import { auth } from "@/lib/auth/server"
 
 import { AccountOverviewClient } from "@/components/app/account-overview-client"
 
@@ -39,4 +39,3 @@ export default async function AccountOverviewPage() {
     />
   )
 }
-

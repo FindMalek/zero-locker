@@ -1,5 +1,6 @@
-import { subscriptionStatusSchema } from "./enums"
 import { z } from "zod"
+
+import { subscriptionStatusSchema } from "./enums"
 
 // ============================================================================
 // Get Subscription Input Schema
@@ -66,4 +67,3 @@ export const getSubscriptionHistoryInputSchema = z.object({
 export type GetSubscriptionHistoryInput = z.infer<
   typeof getSubscriptionHistoryInputSchema
 >
-
