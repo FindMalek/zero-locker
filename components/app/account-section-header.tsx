@@ -11,9 +11,8 @@ export function AccountSectionHeader({
     <div>
       <h2 className="text-xl font-semibold sm:text-2xl">{title}</h2>
       {description && (
-        <p className="mt-1.5 text-sm text-muted-foreground">{description}</p>
+        <p className="text-muted-foreground mt-1.5 text-sm">{description}</p>
       )}
     </div>
   )
 }
-

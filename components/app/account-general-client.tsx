@@ -1,16 +1,18 @@
 "use client"
 
 import { useState } from "react"
-import { useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { z } from "zod"
-
 import { useCurrentUser } from "@/orpc/hooks/use-users"
 import type { UserSimpleOutput } from "@/schemas/user/user"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm } from "react-hook-form"
+import { toast } from "sonner"
+import { z } from "zod"
 
-import { AccountField } from "@/components/shared/account-field"
 import { AccountPageHeader } from "@/components/app/account-page-header"
 import { AccountSectionHeader } from "@/components/app/account-section-header"
+import { AccountField } from "@/components/shared/account-field"
+import { Icons } from "@/components/shared/icons"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import {
   Form,
@@ -21,9 +23,6 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Icons } from "@/components/shared/icons"
-import { toast } from "sonner"
 
 interface AccountGeneralClientProps {
   initialUser: UserSimpleOutput
@@ -37,14 +36,18 @@ const emailSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
 })
 
-const passwordSchema = z.object({
-  currentPassword: z.string().min(1, "Current password is required"),
-  newPassword: z.string().min(8, "Password must be at least 8 characters"),
-  confirmPassword: z.string().min(8, "Password must be at least 8 characters"),
-}).refine((data) => data.newPassword === data.confirmPassword, {
-  message: "Passwords don't match",
-  path: ["confirmPassword"],
-})
+const passwordSchema = z
+  .object({
+    currentPassword: z.string().min(1, "Current password is required"),
+    newPassword: z.string().min(8, "Password must be at least 8 characters"),
+    confirmPassword: z
+      .string()
+      .min(8, "Password must be at least 8 characters"),
+  })
+  .refine((data) => data.newPassword === data.confirmPassword, {
+    message: "Passwords don't match",
+    path: ["confirmPassword"],
+  })
 
 export function AccountGeneralClient({
   initialUser,
@@ -404,4 +407,3 @@ export function AccountGeneralClient({
     </div>
   )
 }
-

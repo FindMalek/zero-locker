@@ -4,6 +4,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 
 import { cn } from "@/lib/utils"
+
 import { Icons } from "@/components/shared/icons"
 import { Sidebar } from "@/components/ui/sidebar"
 
@@ -43,8 +44,7 @@ function AccountSidebarContent({ onNavigate }: AccountSidebarProps) {
       <ul className="space-y-1">
         {accountNavItems.map((item) => {
           const isActive =
-            pathname === item.href ||
-            pathname.startsWith(`${item.href}/`)
+            pathname === item.href || pathname.startsWith(`${item.href}/`)
           return (
             <li key={item.href}>
               <Link
@@ -70,10 +70,10 @@ function AccountSidebarContent({ onNavigate }: AccountSidebarProps) {
 
 export function AccountSidebar({ onNavigate }: AccountSidebarProps) {
   return (
-    <Sidebar 
-      variant="inset" 
-      collapsible="offcanvas" 
-      className="hidden md:block" 
+    <Sidebar
+      variant="inset"
+      collapsible="offcanvas"
+      className="hidden md:block"
       style={
         {
           "--sidebar-width": "28rem",
@@ -86,4 +86,3 @@ export function AccountSidebar({ onNavigate }: AccountSidebarProps) {
 }
 
 export { AccountSidebarContent }
-
