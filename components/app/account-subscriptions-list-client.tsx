@@ -10,6 +10,7 @@ import { subscriptionStatusEnum } from "@/schemas/subscription/subscription/enum
 
 import { AccountPageHeader } from "@/components/app/account-page-header"
 import { AccountSubscriptionCard } from "@/components/app/account-subscription-card"
+import { Icons } from "@/components/shared/icons"
 import { Button } from "@/components/ui/button"
 import {
   Select,
@@ -49,7 +50,7 @@ export function AccountSubscriptionsListClient({
 
   return (
     <div className="space-y-8">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <AccountPageHeader
           title="My Subscriptions"
           description="Manage your subscriptions and view billing history"
@@ -63,7 +64,7 @@ export function AccountSubscriptionsListClient({
             setPage(1)
           }}
         >
-          <SelectTrigger className="w-[180px]">
+          <SelectTrigger className="w-full sm:w-[180px]">
             <SelectValue placeholder="Filter by status" />
           </SelectTrigger>
           <SelectContent>
@@ -111,7 +112,10 @@ export function AccountSubscriptionsListClient({
                 onClick={() => setPage((p) => p + 1)}
                 disabled={isLoading}
               >
-                {isLoading ? "Loading..." : "Load More"}
+                {isLoading && (
+                  <Icons.spinner className="mr-2 size-4 animate-spin" />
+                )}
+                Load More
               </Button>
             </div>
           )}

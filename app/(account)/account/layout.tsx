@@ -3,7 +3,9 @@ import { redirect } from "next/navigation"
 
 import { auth } from "@/lib/auth/server"
 
+import { AccountMobileHeader } from "@/components/layout/account-mobile-header"
 import { AccountSidebar } from "@/components/layout/account-sidebar"
+import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 
 export default async function AccountLayout({
   children,
@@ -19,13 +21,22 @@ export default async function AccountLayout({
   }
 
   return (
-    <div className="flex min-h-screen w-full">
+    <SidebarProvider
+      style={
+        {
+          "--sidebar-width": "28rem",
+        } as React.CSSProperties
+      }
+    >
+      <AccountMobileHeader />
       <AccountSidebar />
-      <main className="flex-1 bg-card">
-        <div className="mx-auto max-w-4xl px-10 py-12">
-          {children}
-        </div>
-      </main>
-    </div>
+      <SidebarInset>
+        <main className="flex flex-1 flex-col">
+          <div className="mx-auto w-full max-w-4xl flex-1 px-4 py-6 md:px-8 md:py-10 lg:px-10 lg:py-12">
+            {children}
+          </div>
+        </main>
+      </SidebarInset>
+    </SidebarProvider>
   )
 }

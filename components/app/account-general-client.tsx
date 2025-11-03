@@ -8,6 +8,8 @@ import { z } from "zod"
 import { useCurrentUser } from "@/orpc/hooks/use-users"
 import type { UserSimpleOutput } from "@/schemas/user/user"
 
+import { AccountField } from "@/components/shared/account-field"
+import { AccountPageHeader } from "@/components/app/account-page-header"
 import { AccountSectionHeader } from "@/components/app/account-section-header"
 import { Button } from "@/components/ui/button"
 import {
@@ -19,7 +21,6 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
-import { Separator } from "@/components/ui/separator"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Icons } from "@/components/shared/icons"
 import { toast } from "sonner"
@@ -120,6 +121,11 @@ export function AccountGeneralClient({
 
   return (
     <div className="space-y-8">
+      <AccountPageHeader
+        title="General Settings"
+        description="Manage your account settings and personal information"
+      />
+
       {/* Profile Section */}
       <div className="space-y-6">
         <AccountSectionHeader
@@ -128,289 +134,271 @@ export function AccountGeneralClient({
         />
 
         <div className="space-y-6">
-              {/* Profile Picture */}
-              <div className="flex items-center justify-between">
-                <div className="space-y-1">
-                  <p className="text-sm font-medium text-foreground">Profile Picture</p>
-                  <div className="flex items-center gap-4">
-                    <Avatar className="size-16">
-                      <AvatarImage
-                        src={currentUser.image ?? undefined}
-                        alt={currentUser.name}
-                      />
-                      <AvatarFallback>
-                        {getInitials(currentUser.name)}
-                      </AvatarFallback>
-                    </Avatar>
-                    <Button variant="outline" size="sm" type="button">
-                      Change
-                    </Button>
-                  </div>
+          {/* Profile Picture */}
+          <AccountField
+            label="Profile Picture"
+            value={
+              <div className="flex items-center gap-4">
+                <Avatar className="size-12 sm:size-16">
+                  <AvatarImage
+                    src={currentUser.image ?? undefined}
+                    alt={currentUser.name}
+                  />
+                  <AvatarFallback>
+                    {getInitials(currentUser.name)}
+                  </AvatarFallback>
+                </Avatar>
+              </div>
+            }
+            action={
+              <Button variant="outline" size="sm" type="button">
+                Change
+              </Button>
+            }
+          />
+
+          {/* Full Name */}
+          {isEditingName ? (
+            <Form {...profileForm}>
+              <form
+                onSubmit={profileForm.handleSubmit(onProfileSubmit)}
+                className="space-y-4"
+              >
+                <FormField
+                  control={profileForm.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Full name</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          className="w-full sm:max-w-sm"
+                          autoFocus
+                          onKeyDown={(e) => {
+                            if (e.key === "Escape") {
+                              setIsEditingName(false)
+                              profileForm.reset()
+                            }
+                          }}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <div className="flex gap-2">
+                  <Button
+                    type="submit"
+                    size="sm"
+                    disabled={profileForm.formState.isSubmitting}
+                  >
+                    {profileForm.formState.isSubmitting && (
+                      <Icons.spinner className="mr-2 size-4 animate-spin" />
+                    )}
+                    Save
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setIsEditingName(false)
+                      profileForm.reset()
+                    }}
+                  >
+                    Cancel
+                  </Button>
                 </div>
-              </div>
+              </form>
+            </Form>
+          ) : (
+            <AccountField
+              label="Full name"
+              value={currentUser.name}
+              action={
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setIsEditingName(true)}
+                >
+                  Update
+                </Button>
+              }
+            />
+          )}
 
-              <Separator />
-
-              {/* Full Name */}
-              <div className="flex items-center justify-between">
-                {isEditingName ? (
-                  <Form {...profileForm}>
-                    <form
-                      onSubmit={profileForm.handleSubmit(onProfileSubmit)}
-                      className="flex-1"
-                    >
-                      <FormField
-                        control={profileForm.control}
-                        name="name"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="sr-only">Full name</FormLabel>
-                            <FormControl>
-                              <Input
-                                {...field}
-                                className="max-w-sm"
-                                autoFocus
-                                onKeyDown={(e) => {
-                                  if (e.key === "Escape") {
-                                    setIsEditingName(false)
-                                    profileForm.reset()
-                                  }
-                                }}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <div className="mt-2 flex gap-2">
-                        <Button
-                          type="submit"
-                          size="sm"
-                          disabled={profileForm.formState.isSubmitting}
-                        >
-                          {profileForm.formState.isSubmitting && (
-                            <Icons.spinner className="mr-2 size-4 animate-spin" />
-                          )}
-                          Save
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => {
-                            setIsEditingName(false)
-                            profileForm.reset()
+          {/* Email Address */}
+          {isEditingEmail ? (
+            <Form {...emailForm}>
+              <form
+                onSubmit={emailForm.handleSubmit(onEmailSubmit)}
+                className="space-y-4"
+              >
+                <FormField
+                  control={emailForm.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email address</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          type="email"
+                          className="w-full sm:max-w-sm"
+                          autoFocus
+                          onKeyDown={(e) => {
+                            if (e.key === "Escape") {
+                              setIsEditingEmail(false)
+                              emailForm.reset()
+                            }
                           }}
-                        >
-                          Cancel
-                        </Button>
-                      </div>
-                    </form>
-                  </Form>
-                ) : (
-                  <>
-                    <div className="space-y-1">
-                      <p className="text-sm font-medium text-foreground">Full name</p>
-                      <p className="text-muted-foreground text-sm">
-                        {currentUser.name}
-                      </p>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setIsEditingName(true)}
-                    >
-                      Update
-                    </Button>
-                  </>
-                )}
-              </div>
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <div className="flex gap-2">
+                  <Button
+                    type="submit"
+                    size="sm"
+                    disabled={emailForm.formState.isSubmitting}
+                  >
+                    {emailForm.formState.isSubmitting && (
+                      <Icons.spinner className="mr-2 size-4 animate-spin" />
+                    )}
+                    Save
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setIsEditingEmail(false)
+                      emailForm.reset()
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </form>
+            </Form>
+          ) : (
+            <AccountField
+              label="Email address"
+              value={currentUser.email}
+              action={
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setIsEditingEmail(true)}
+                >
+                  Update
+                </Button>
+              }
+            />
+          )}
 
-              <Separator />
-
-              {/* Email Address */}
-              <div className="flex items-center justify-between">
-                {isEditingEmail ? (
-                  <Form {...emailForm}>
-                    <form
-                      onSubmit={emailForm.handleSubmit(onEmailSubmit)}
-                      className="flex-1"
-                    >
-                      <FormField
-                        control={emailForm.control}
-                        name="email"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="sr-only">
-                              Email address
-                            </FormLabel>
-                            <FormControl>
-                              <Input
-                                {...field}
-                                type="email"
-                                className="max-w-sm"
-                                autoFocus
-                                onKeyDown={(e) => {
-                                  if (e.key === "Escape") {
-                                    setIsEditingEmail(false)
-                                    emailForm.reset()
-                                  }
-                                }}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <div className="mt-2 flex gap-2">
-                        <Button
-                          type="submit"
-                          size="sm"
-                          disabled={emailForm.formState.isSubmitting}
-                        >
-                          {emailForm.formState.isSubmitting && (
-                            <Icons.spinner className="mr-2 size-4 animate-spin" />
-                          )}
-                          Save
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => {
-                            setIsEditingEmail(false)
-                            emailForm.reset()
-                          }}
-                        >
-                          Cancel
-                        </Button>
-                      </div>
-                    </form>
-                  </Form>
-                ) : (
-                  <>
-                    <div className="space-y-1">
-                      <p className="text-sm font-medium text-foreground">Email address</p>
-                      <p className="text-muted-foreground text-sm">
-                        {currentUser.email}
-                      </p>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setIsEditingEmail(true)}
-                    >
-                      Update
-                    </Button>
-                  </>
-                )}
-              </div>
-
-              <Separator />
-
-              {/* Password */}
-              <div className="flex items-center justify-between">
-                {isEditingPassword ? (
-                  <Form {...passwordForm}>
-                    <form
-                      onSubmit={passwordForm.handleSubmit(onPasswordSubmit)}
-                      className="flex-1 space-y-4"
-                    >
-                      <FormField
-                        control={passwordForm.control}
-                        name="currentPassword"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Current password</FormLabel>
-                            <FormControl>
-                              <Input
-                                {...field}
-                                type="password"
-                                className="max-w-sm"
-                                autoFocus
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={passwordForm.control}
-                        name="newPassword"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>New password</FormLabel>
-                            <FormControl>
-                              <Input
-                                {...field}
-                                type="password"
-                                className="max-w-sm"
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={passwordForm.control}
-                        name="confirmPassword"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Confirm password</FormLabel>
-                            <FormControl>
-                              <Input
-                                {...field}
-                                type="password"
-                                className="max-w-sm"
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <div className="flex gap-2">
-                        <Button
-                          type="submit"
-                          size="sm"
-                          disabled={passwordForm.formState.isSubmitting}
-                        >
-                          {passwordForm.formState.isSubmitting && (
-                            <Icons.spinner className="mr-2 size-4 animate-spin" />
-                          )}
-                          Save
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => {
-                            setIsEditingPassword(false)
-                            passwordForm.reset()
-                          }}
-                        >
-                          Cancel
-                        </Button>
-                      </div>
-                    </form>
-                  </Form>
-                ) : (
-                  <>
-                    <div className="space-y-1">
-                      <p className="text-sm font-medium text-foreground">Password</p>
-                      <p className="text-muted-foreground text-sm">
-                        •••••••••••••••
-                      </p>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setIsEditingPassword(true)}
-                    >
-                      Update
-                    </Button>
-                  </>
-                )}
-              </div>
+          {/* Password */}
+          {isEditingPassword ? (
+            <Form {...passwordForm}>
+              <form
+                onSubmit={passwordForm.handleSubmit(onPasswordSubmit)}
+                className="space-y-4"
+              >
+                <FormField
+                  control={passwordForm.control}
+                  name="currentPassword"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Current password</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          type="password"
+                          className="w-full sm:max-w-sm"
+                          autoFocus
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={passwordForm.control}
+                  name="newPassword"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>New password</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          type="password"
+                          className="w-full sm:max-w-sm"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={passwordForm.control}
+                  name="confirmPassword"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Confirm password</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          type="password"
+                          className="w-full sm:max-w-sm"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <div className="flex gap-2">
+                  <Button
+                    type="submit"
+                    size="sm"
+                    disabled={passwordForm.formState.isSubmitting}
+                  >
+                    {passwordForm.formState.isSubmitting && (
+                      <Icons.spinner className="mr-2 size-4 animate-spin" />
+                    )}
+                    Save
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setIsEditingPassword(false)
+                      passwordForm.reset()
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </form>
+            </Form>
+          ) : (
+            <AccountField
+              label="Password"
+              value="••••••••••••••••"
+              action={
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setIsEditingPassword(true)}
+                >
+                  Update
+                </Button>
+              }
+            />
+          )}
         </div>
       </div>
     </div>

@@ -55,10 +55,16 @@ export function AccountBillingClient({
       />
 
       <Tabs defaultValue="subscriptions" className="w-full">
-        <TabsList>
-          <TabsTrigger value="subscriptions">Subscriptions</TabsTrigger>
-          <TabsTrigger value="payment-methods">Payment Methods</TabsTrigger>
-          <TabsTrigger value="invoices">All Invoices</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="subscriptions" className="text-xs sm:text-sm">
+            Subscriptions
+          </TabsTrigger>
+          <TabsTrigger value="payment-methods" className="text-xs sm:text-sm">
+            Payment Methods
+          </TabsTrigger>
+          <TabsTrigger value="invoices" className="text-xs sm:text-sm">
+            All Invoices
+          </TabsTrigger>
         </TabsList>
         <TabsContent value="subscriptions" className="space-y-6">
           <AccountSectionHeader
@@ -135,11 +141,11 @@ export function AccountBillingClient({
         </TabsContent>
       </Tabs>
 
-      <div className="flex gap-4">
-        <Button variant="outline" asChild>
+      <div className="flex flex-col gap-2 sm:flex-row sm:gap-4">
+        <Button variant="outline" asChild className="w-full sm:w-auto">
           <Link href="/account">Back to Account</Link>
         </Button>
-        <Button variant="outline" asChild>
+        <Button variant="outline" asChild className="w-full sm:w-auto">
           <Link href="/account/subscriptions">View All Subscriptions</Link>
         </Button>
       </div>

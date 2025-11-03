@@ -9,9 +9,9 @@ export function AccountPageHeader({
 }: AccountPageHeaderProps) {
   return (
     <div>
-      <h1 className="text-2xl font-semibold">{title}</h1>
+      <h1 className="text-2xl font-semibold sm:text-3xl">{title}</h1>
       {description && (
-        <p className="text-muted-foreground text-sm mt-1">{description}</p>
+        <p className="mt-1.5 text-sm text-muted-foreground">{description}</p>
       )}
     </div>
   )
