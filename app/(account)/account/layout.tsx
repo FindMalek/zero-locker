@@ -3,9 +3,7 @@ import { redirect } from "next/navigation"
 
 import { auth } from "@/lib/auth/server"
 
-import { DashboardSidebar } from "@/components/layout/dashboard-sidebar"
-import { DashboardSiteHeader } from "@/components/layout/dashboard-site-header"
-import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
+import { AccountSidebar } from "@/components/layout/account-sidebar"
 
 export default async function AccountLayout({
   children,
@@ -20,21 +18,14 @@ export default async function AccountLayout({
     redirect("/login")
   }
 
-  const user = session.user
-
   return (
-    <SidebarProvider>
-      <DashboardSidebar variant="inset" user={user} />
-      <SidebarInset>
-        <DashboardSiteHeader />
-        <div className="flex flex-1 flex-col">
-          <div className="@container/main flex flex-1 flex-col gap-2">
-            <div className="flex flex-col gap-4 p-4 py-4 md:gap-6 md:py-6">
-              {children}
-            </div>
-          </div>
+    <div className="flex min-h-screen w-full">
+      <AccountSidebar />
+      <main className="flex-1 bg-card">
+        <div className="mx-auto max-w-4xl px-10 py-12">
+          {children}
         </div>
-      </SidebarInset>
-    </SidebarProvider>
+      </main>
+    </div>
   )
 }

@@ -9,17 +9,12 @@ import {
 import type { ListSubscriptionsOutput } from "@/schemas/subscription"
 import { useQueryClient } from "@tanstack/react-query"
 
+import { AccountPageHeader } from "@/components/app/account-page-header"
+import { AccountSectionHeader } from "@/components/app/account-section-header"
 import { AccountInvoiceList } from "@/components/app/account-invoice-list"
 import { AccountSubscriptionCard } from "@/components/app/account-subscription-card"
 import { Icons } from "@/components/shared/icons"
 import { Button } from "@/components/ui/button"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 interface AccountBillingClientProps {
@@ -53,13 +48,11 @@ export function AccountBillingClient({
     )
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Billing Settings</h1>
-        <p className="text-muted-foreground">
-          Manage your payment methods, invoices, and subscription billing
-        </p>
-      </div>
+    <div className="space-y-8">
+      <AccountPageHeader
+        title="Billing Settings"
+        description="Manage your payment methods, invoices, and subscription billing"
+      />
 
       <Tabs defaultValue="subscriptions" className="w-full">
         <TabsList>
@@ -67,15 +60,12 @@ export function AccountBillingClient({
           <TabsTrigger value="payment-methods">Payment Methods</TabsTrigger>
           <TabsTrigger value="invoices">All Invoices</TabsTrigger>
         </TabsList>
-        <TabsContent value="subscriptions" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Your Subscriptions</CardTitle>
-              <CardDescription>
-                Manage and view all your active and past subscriptions
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
+        <TabsContent value="subscriptions" className="space-y-6">
+          <AccountSectionHeader
+            title="Your Subscriptions"
+            description="Manage and view all your active and past subscriptions"
+          />
+          <div>
               {subscriptions.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-12">
                   <p className="text-muted-foreground">
@@ -97,18 +87,14 @@ export function AccountBillingClient({
                   ))}
                 </div>
               )}
-            </CardContent>
-          </Card>
+          </div>
         </TabsContent>
-        <TabsContent value="payment-methods" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Payment Methods</CardTitle>
-              <CardDescription>
-                Manage your payment methods for subscriptions
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
+        <TabsContent value="payment-methods" className="space-y-6">
+          <AccountSectionHeader
+            title="Payment Methods"
+            description="Manage your payment methods for subscriptions"
+          />
+          <div>
               <div className="flex flex-col items-center justify-center py-12">
                 <Icons.creditCard className="text-muted-foreground mb-4 size-12" />
                 <p className="text-muted-foreground mb-4">
@@ -124,18 +110,14 @@ export function AccountBillingClient({
                   </a>
                 </Button>
               </div>
-            </CardContent>
-          </Card>
+          </div>
         </TabsContent>
-        <TabsContent value="invoices" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Invoice History</CardTitle>
-              <CardDescription>
-                View and download all your invoices
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
+        <TabsContent value="invoices" className="space-y-6">
+          <AccountSectionHeader
+            title="Invoice History"
+            description="View and download all your invoices"
+          />
+          <div>
               {allInvoices.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-12">
                   <p className="text-muted-foreground">No invoices found</p>
@@ -149,8 +131,7 @@ export function AccountBillingClient({
                   isLoading={isLoadingInvoices}
                 />
               )}
-            </CardContent>
-          </Card>
+          </div>
         </TabsContent>
       </Tabs>
 

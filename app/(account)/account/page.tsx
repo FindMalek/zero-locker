@@ -6,13 +6,13 @@ import { createContext } from "@/orpc/context"
 
 import { auth } from "@/lib/auth/server"
 
-import { AccountOverviewClient } from "@/components/app/account-overview-client"
+import { AccountGeneralClient } from "@/components/app/account-general-client"
 
 export const metadata: Metadata = {
-  title: "Account",
+  title: "General",
 }
 
-export default async function AccountOverviewPage() {
+export default async function AccountGeneralPage() {
   const session = await auth.api.getSession({
     headers: await headers(),
   })
@@ -24,18 +24,7 @@ export default async function AccountOverviewPage() {
   const context = await createContext()
   const serverClient = createServerClient(context)
 
-  const [subscriptionsResponse, userResponse] = await Promise.all([
-    serverClient.subscriptions.list({
-      page: 1,
-      limit: 10,
-    }),
-    serverClient.users.getCurrentUser({}),
-  ])
+  const userResponse = await serverClient.users.getCurrentUser({})
 
-  return (
-    <AccountOverviewClient
-      initialSubscriptions={subscriptionsResponse}
-      initialUser={userResponse}
-    />
-  )
+  return <AccountGeneralClient initialUser={userResponse} />
 }

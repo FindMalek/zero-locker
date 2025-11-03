@@ -8,9 +8,9 @@ import type {
 } from "@/schemas/subscription"
 import { subscriptionStatusEnum } from "@/schemas/subscription/subscription/enums"
 
+import { AccountPageHeader } from "@/components/app/account-page-header"
 import { AccountSubscriptionCard } from "@/components/app/account-subscription-card"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import {
   Select,
   SelectContent,
@@ -48,16 +48,12 @@ export function AccountSubscriptionsListClient({
   const hasMore = data?.hasMore ?? false
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">
-            My Subscriptions
-          </h1>
-          <p className="text-muted-foreground">
-            Manage your subscriptions and view billing history
-          </p>
-        </div>
+        <AccountPageHeader
+          title="My Subscriptions"
+          description="Manage your subscriptions and view billing history"
+        />
         <Select
           value={statusFilter ?? "all"}
           onValueChange={(value) => {
@@ -84,15 +80,13 @@ export function AccountSubscriptionsListClient({
       {isLoading && page === 1 ? (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {[...Array(6)].map((_, i) => (
-            <Card key={i} className="space-y-4">
-              <CardHeader>
+            <div key={i} className="space-y-4 rounded-lg border p-6">
+              <div className="space-y-2">
                 <Skeleton className="h-6 w-3/4" />
                 <Skeleton className="h-4 w-1/2" />
-              </CardHeader>
-              <CardContent>
-                <Skeleton className="h-20 w-full" />
-              </CardContent>
-            </Card>
+              </div>
+              <Skeleton className="h-20 w-full" />
+            </div>
           ))}
         </div>
       ) : subscriptions.length === 0 ? (
