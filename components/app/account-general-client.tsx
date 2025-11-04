@@ -17,7 +17,6 @@ import { AccountPageHeader } from "@/components/app/account-page-header"
 import { AccountSectionHeader } from "@/components/app/account-section-header"
 import { AccountField } from "@/components/shared/account-field"
 import { Icons } from "@/components/shared/icons"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import {
   Form,
@@ -103,15 +102,6 @@ export function AccountGeneralClient({
     }
   }
 
-  const getInitials = (name: string) => {
-    return name
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase()
-      .slice(0, 2)
-  }
-
   return (
     <div className="space-y-8">
       <AccountPageHeader
@@ -121,35 +111,7 @@ export function AccountGeneralClient({
 
       {/* Profile Section */}
       <div className="space-y-6">
-        <AccountSectionHeader
-          title="Profile"
-          description="This information will be displayed publicly so be careful what you share."
-        />
-
         <div className="space-y-6">
-          {/* Profile Picture */}
-          <AccountField
-            label="Profile Picture"
-            value={
-              <div className="flex items-center gap-4">
-                <Avatar className="size-12 sm:size-16">
-                  <AvatarImage
-                    src={currentUser.image ?? undefined}
-                    alt={currentUser.name}
-                  />
-                  <AvatarFallback>
-                    {getInitials(currentUser.name)}
-                  </AvatarFallback>
-                </Avatar>
-              </div>
-            }
-            action={
-              <Button variant="outline" size="sm" type="button">
-                Change
-              </Button>
-            }
-          />
-
           {/* Full Name */}
           {isEditingName ? (
             <Form {...profileForm}>
@@ -166,13 +128,13 @@ export function AccountGeneralClient({
                       <FormControl>
                         <Input
                           {...field}
-                          className="w-full sm:max-w-sm"
+                          variant="editable"
                           autoFocus
-                          onKeyDown={(e) => {
-                            if (e.key === "Escape") {
-                              setIsEditingName(false)
-                              profileForm.reset()
-                            }
+                          isSaving={profileForm.formState.isSubmitting}
+                          onSave={profileForm.handleSubmit(onProfileSubmit)}
+                          onCancel={() => {
+                            setIsEditingName(false)
+                            profileForm.reset()
                           }}
                         />
                       </FormControl>
@@ -180,29 +142,6 @@ export function AccountGeneralClient({
                     </FormItem>
                   )}
                 />
-                <div className="flex gap-2">
-                  <Button
-                    type="submit"
-                    size="sm"
-                    disabled={profileForm.formState.isSubmitting}
-                  >
-                    {profileForm.formState.isSubmitting && (
-                      <Icons.spinner className="mr-2 size-4 animate-spin" />
-                    )}
-                    Save
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => {
-                      setIsEditingName(false)
-                      profileForm.reset()
-                    }}
-                  >
-                    Cancel
-                  </Button>
-                </div>
               </form>
             </Form>
           ) : (
@@ -238,13 +177,13 @@ export function AccountGeneralClient({
                         <Input
                           {...field}
                           type="email"
-                          className="w-full sm:max-w-sm"
+                          variant="editable"
                           autoFocus
-                          onKeyDown={(e) => {
-                            if (e.key === "Escape") {
-                              setIsEditingEmail(false)
-                              emailForm.reset()
-                            }
+                          isSaving={emailForm.formState.isSubmitting}
+                          onSave={emailForm.handleSubmit(onEmailSubmit)}
+                          onCancel={() => {
+                            setIsEditingEmail(false)
+                            emailForm.reset()
                           }}
                         />
                       </FormControl>
@@ -252,29 +191,6 @@ export function AccountGeneralClient({
                     </FormItem>
                   )}
                 />
-                <div className="flex gap-2">
-                  <Button
-                    type="submit"
-                    size="sm"
-                    disabled={emailForm.formState.isSubmitting}
-                  >
-                    {emailForm.formState.isSubmitting && (
-                      <Icons.spinner className="mr-2 size-4 animate-spin" />
-                    )}
-                    Save
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => {
-                      setIsEditingEmail(false)
-                      emailForm.reset()
-                    }}
-                  >
-                    Cancel
-                  </Button>
-                </div>
               </form>
             </Form>
           ) : (
