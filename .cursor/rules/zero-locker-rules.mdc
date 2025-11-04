@@ -8,7 +8,7 @@ alwaysApply: true
 ### Files
 - **Components**: `kebab-case.tsx` (e.g., `dashboard-credential-form.tsx`)
 - **Pages**: `page.tsx` or `route.ts` for API routes
-- **Schemas**: `kebab-case.ts` (e.g., `credential-form-dto.ts`)
+- **Schemas**: `kebab-case.ts` (e.g., `credential-form-dto.ts`) 
 - **Entities**: `entity.ts`, `query.ts`, `index.ts`
 - **Hooks**: `use-kebab-case.ts` (e.g., `use-copy-to-clipboard.ts`)
 - **Types**: `kebab-case.d.ts` (e.g., `dashboard.d.ts`)
@@ -72,12 +72,14 @@ orpc/
 ```
 schemas/
 ├── credential/
-│   ├── credential.ts           # Entity schemas
-│   ├── credential-metadata.ts  # Metadata schemas
-│   └── dto.ts                  # DTO schemas
+│   ├── enums.ts          
+│   ├── input.ts  
+│   ├── index.ts          
+│   └── output.ts                  
 ├── utils/
-│   ├── base-key-value-pair.ts
-│   └── utils.ts
+│   ├── input.ts  
+│   ├── index.ts          
+│   └── output.ts   
 └── index.ts
 ```
 
@@ -256,6 +258,7 @@ export function createCredential(input: CreateCredentialInput) {
 ### Input Validation
 - **Validate all inputs** with Zod schemas
 - **Sanitize user input** before processing
+- **File structure** all Zod schemas must be stored in the `schemas` folder
 - **Use parameterized queries** for database operations
 
 ```tsx

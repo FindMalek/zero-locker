@@ -2,6 +2,11 @@
 
 import { useState } from "react"
 import { useCurrentUser } from "@/orpc/hooks/use-users"
+import {
+  updateEmailInputSchema,
+  updatePasswordInputSchema,
+  updateProfileInputSchema,
+} from "@/schemas/user"
 import type { UserSimpleOutput } from "@/schemas/user/user"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
@@ -28,27 +33,6 @@ interface AccountGeneralClientProps {
   initialUser: UserSimpleOutput
 }
 
-const profileSchema = z.object({
-  name: z.string().min(2, "Name must be at least 2 characters"),
-})
-
-const emailSchema = z.object({
-  email: z.string().email("Please enter a valid email address"),
-})
-
-const passwordSchema = z
-  .object({
-    currentPassword: z.string().min(1, "Current password is required"),
-    newPassword: z.string().min(8, "Password must be at least 8 characters"),
-    confirmPassword: z
-      .string()
-      .min(8, "Password must be at least 8 characters"),
-  })
-  .refine((data) => data.newPassword === data.confirmPassword, {
-    message: "Passwords don't match",
-    path: ["confirmPassword"],
-  })
-
 export function AccountGeneralClient({
   initialUser,
 }: AccountGeneralClientProps) {
@@ -59,22 +43,22 @@ export function AccountGeneralClient({
   const [isEditingEmail, setIsEditingEmail] = useState(false)
   const [isEditingPassword, setIsEditingPassword] = useState(false)
 
-  const profileForm = useForm<z.infer<typeof profileSchema>>({
-    resolver: zodResolver(profileSchema),
+  const profileForm = useForm<z.infer<typeof updateProfileInputSchema>>({
+    resolver: zodResolver(updateProfileInputSchema),
     defaultValues: {
       name: currentUser.name,
     },
   })
 
-  const emailForm = useForm<z.infer<typeof emailSchema>>({
-    resolver: zodResolver(emailSchema),
+  const emailForm = useForm<z.infer<typeof updateEmailInputSchema>>({
+    resolver: zodResolver(updateEmailInputSchema),
     defaultValues: {
       email: currentUser.email,
     },
   })
 
-  const passwordForm = useForm<z.infer<typeof passwordSchema>>({
-    resolver: zodResolver(passwordSchema),
+  const passwordForm = useForm<z.infer<typeof updatePasswordInputSchema>>({
+    resolver: zodResolver(updatePasswordInputSchema),
     defaultValues: {
       currentPassword: "",
       newPassword: "",
@@ -82,7 +66,9 @@ export function AccountGeneralClient({
     },
   })
 
-  const onProfileSubmit = async (data: z.infer<typeof profileSchema>) => {
+  const onProfileSubmit = async (
+    data: z.infer<typeof updateProfileInputSchema>
+  ) => {
     try {
       // TODO: Implement update user endpoint
       toast.success("Profile updated successfully")
@@ -92,7 +78,9 @@ export function AccountGeneralClient({
     }
   }
 
-  const onEmailSubmit = async (data: z.infer<typeof emailSchema>) => {
+  const onEmailSubmit = async (
+    data: z.infer<typeof updateEmailInputSchema>
+  ) => {
     try {
       // TODO: Implement update email endpoint
       toast.success("Email update request sent. Please check your email.")
@@ -102,7 +90,9 @@ export function AccountGeneralClient({
     }
   }
 
-  const onPasswordSubmit = async (data: z.infer<typeof passwordSchema>) => {
+  const onPasswordSubmit = async (
+    data: z.infer<typeof updatePasswordInputSchema>
+  ) => {
     try {
       // TODO: Implement password update endpoint
       toast.success("Password updated successfully")
