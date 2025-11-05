@@ -128,15 +128,15 @@ export function AccountOverviewClient({
 
       <div className="flex gap-4">
         <Button asChild>
-          <Link href="/account/subscriptions">
-            <Icons.fileList className="mr-2 size-4" />
-            View All Subscriptions
+          <Link href="/account/subscription">
+            <Icons.creditCard className="mr-2 size-4" />
+            Manage Subscription
           </Link>
         </Button>
         <Button variant="outline" asChild>
-          <Link href="/account/billing">
-            <Icons.creditCard className="mr-2 size-4" />
-            Billing Settings
+          <Link href="/account/invoices">
+            <Icons.post className="mr-2 size-4" />
+            View Invoices
           </Link>
         </Button>
       </div>

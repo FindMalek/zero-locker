@@ -6,13 +6,13 @@ import { createContext } from "@/orpc/context"
 
 import { auth } from "@/lib/auth/server"
 
-import { AccountBillingClient } from "@/components/app/account-billing-client"
+import { AccountSubscriptionClient } from "@/components/app/account-subscription-client"
 
 export const metadata: Metadata = {
-  title: "Billing Settings",
+  title: "Subscription",
 }
 
-export default async function BillingPage() {
+export default async function SubscriptionPage() {
   const session = await auth.api.getSession({
     headers: await headers(),
   })
@@ -29,5 +29,7 @@ export default async function BillingPage() {
     limit: 100,
   })
 
-  return <AccountBillingClient initialSubscriptions={subscriptionsResponse} />
+  return (
+    <AccountSubscriptionClient initialSubscriptions={subscriptionsResponse} />
+  )
 }

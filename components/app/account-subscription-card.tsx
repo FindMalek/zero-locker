@@ -91,9 +91,7 @@ export function AccountSubscriptionCard({
           )}
         </div>
         <Button asChild variant="outline" className="w-full">
-          <Link href={`/account/subscriptions/${subscription.id}`}>
-            View Details
-          </Link>
+          <Link href={`/account/subscription`}>Manage Subscription</Link>
         </Button>
       </CardContent>
     </Card>

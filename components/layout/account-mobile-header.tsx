@@ -23,8 +23,8 @@ export function AccountMobileHeader() {
 
   const getPageTitle = () => {
     if (pathname === "/account") return "General"
-    if (pathname.startsWith("/account/billing")) return "Billing"
-    if (pathname.startsWith("/account/subscriptions")) return "Subscriptions"
+    if (pathname.startsWith("/account/subscription")) return "Subscription"
+    if (pathname.startsWith("/account/invoices")) return "Invoices"
     return "Account"
   }
 

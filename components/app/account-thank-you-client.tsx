@@ -75,18 +75,16 @@ function ThankYouContent() {
             Go to Account Dashboard
           </Link>
         </Button>
-        {subscriptionId && (
-          <Button variant="outline" asChild className="flex-1">
-            <Link href={`/account/subscriptions/${subscriptionId}`}>
-              <Icons.fileText className="mr-2 size-4" />
-              View Subscription Details
-            </Link>
-          </Button>
-        )}
         <Button variant="outline" asChild className="flex-1">
-          <Link href="/account/billing">
+          <Link href="/account/subscription">
             <Icons.creditCard className="mr-2 size-4" />
-            Billing Settings
+            View Subscription
+          </Link>
+        </Button>
+        <Button variant="outline" asChild className="flex-1">
+          <Link href="/account/invoices">
+            <Icons.post className="mr-2 size-4" />
+            View Invoices
           </Link>
         </Button>
       </div>

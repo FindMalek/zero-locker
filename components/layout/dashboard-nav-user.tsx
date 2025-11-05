@@ -138,9 +138,9 @@ export function DashboardNavUser({ user }: DashboardNavUserProps) {
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
-                <Link href="/account/billing">
+                <Link href="/account/subscription">
                   <Icons.creditCard />
-                  Billing
+                  Subscription
                 </Link>
               </DropdownMenuItem>
             </DropdownMenuGroup>

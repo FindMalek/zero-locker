@@ -272,10 +272,10 @@ export function AccountSubscriptionDetailClient({
 
       <div className="flex gap-4">
         <Button variant="outline" asChild>
-          <Link href="/account/subscriptions">Back to Subscriptions</Link>
+          <Link href="/account/subscription">Back to Subscription</Link>
         </Button>
         <Button variant="outline" asChild>
-          <Link href="/account/billing">Billing Settings</Link>
+          <Link href="/account/invoices">View Invoices</Link>
         </Button>
       </div>
     </div>

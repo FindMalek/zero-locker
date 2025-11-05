@@ -6,13 +6,13 @@ import { createContext } from "@/orpc/context"
 
 import { auth } from "@/lib/auth/server"
 
-import { AccountSubscriptionsListClient } from "@/components/app/account-subscriptions-list-client"
+import { AccountInvoicesClient } from "@/components/app/account-invoices-client"
 
 export const metadata: Metadata = {
-  title: "My Subscriptions",
+  title: "Invoices",
 }
 
-export default async function SubscriptionsListPage() {
+export default async function InvoicesPage() {
   const session = await auth.api.getSession({
     headers: await headers(),
   })
@@ -26,12 +26,8 @@ export default async function SubscriptionsListPage() {
 
   const subscriptionsResponse = await serverClient.subscriptions.list({
     page: 1,
-    limit: 20,
+    limit: 100,
   })
 
-  return (
-    <AccountSubscriptionsListClient
-      initialSubscriptions={subscriptionsResponse}
-    />
-  )
+  return <AccountInvoicesClient initialSubscriptions={subscriptionsResponse} />
 }
