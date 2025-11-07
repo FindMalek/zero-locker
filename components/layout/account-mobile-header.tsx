@@ -14,7 +14,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet"
 
-import { AccountSidebar, AccountSidebarContent } from "./account-sidebar"
+import { AccountSidebarContent } from "./account-sidebar"
 
 export function AccountMobileHeader() {
   const [isOpen, setIsOpen] = useState(false)

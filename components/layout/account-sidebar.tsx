@@ -107,7 +107,7 @@ function AccountSidebarContent({ onNavigate }: AccountSidebarProps) {
         </nav>
       </SidebarContent>
       <SidebarSeparator className="my-4" />
-      <SidebarFooter className="p-6">
+      <SidebarFooter className="px-6">
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton

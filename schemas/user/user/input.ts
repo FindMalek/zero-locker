@@ -1,4 +1,3 @@
-import { UserPlan } from "@prisma/client"
 import { z } from "zod"
 
 // ============================================================================
@@ -79,12 +78,6 @@ export const updateProfileInputSchema = z.object({
 })
 
 export type UpdateProfileInput = z.infer<typeof updateProfileInputSchema>
-
-export const updateEmailInputSchema = z.object({
-  email: z.string().email("Please enter a valid email address"),
-})
-
-export type UpdateEmailInput = z.infer<typeof updateEmailInputSchema>
 
 export const updatePasswordInputSchema = z
   .object({

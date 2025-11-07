@@ -109,3 +109,33 @@ export function useSubscribeToRoadmap() {
     },
   })
 }
+
+// Update profile mutation
+export function useUpdateProfile() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: orpc.users.updateProfile.call,
+    onSuccess: (data) => {
+      // Invalidate current user query to refetch updated data
+      queryClient.invalidateQueries({
+        queryKey: userKeys.currentUser(),
+      })
+      // Optionally update the query data directly
+      queryClient.setQueryData(userKeys.currentUser(), data)
+    },
+    onError: (error) => {
+      console.error("Failed to update profile:", error)
+    },
+  })
+}
+
+// Change password mutation
+export function useChangePassword() {
+  return useMutation({
+    mutationFn: orpc.users.changePassword.call,
+    onError: (error) => {
+      console.error("Failed to change password:", error)
+    },
+  })
+}
