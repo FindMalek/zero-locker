@@ -32,7 +32,7 @@ export default async function AccountLayout({
       <AccountSidebar />
       <SidebarInset>
         <main className="flex flex-1 flex-col">
-          <div className="mx-auto w-full max-w-4xl flex-1 px-4 py-6 md:px-8 md:py-10 lg:px-10 lg:py-12">
+          <div className="mx-auto w-full max-w-7xl flex-1 px-4 py-6 md:py-10 lg:py-12">
             {children}
           </div>
         </main>

@@ -2,16 +2,14 @@
 
 import { useEffect } from "react"
 import { useSubscriptions } from "@/orpc/hooks/use-subscriptions"
-import { useCurrentUser } from "@/orpc/hooks/use-users"
 import type { ListSubscriptionsOutput } from "@/schemas/subscription"
 import { subscriptionStatusEnum } from "@/schemas/subscription"
-import { UserPlan } from "@prisma/client"
 import { useQueryClient } from "@tanstack/react-query"
 
-import { AccountCurrentPlanCard } from "@/components/app/account-current-plan-card"
 import { AccountPageHeader } from "@/components/app/account-page-header"
 import { AccountPaymentMethodsCard } from "@/components/app/account-payment-methods-card"
-import { AccountPlanComparisonCard } from "@/components/app/account-plan-comparison-card"
+import { AccountSubscriptionCurrentPlan } from "@/components/app/account-subscription-current-plan"
+import { AccountSubscriptionPlansGrid } from "@/components/app/account-subscription-plans-grid"
 
 interface AccountSubscriptionClientProps {
   initialSubscriptions: ListSubscriptionsOutput
@@ -21,7 +19,6 @@ export function AccountSubscriptionClient({
   initialSubscriptions,
 }: AccountSubscriptionClientProps) {
   const queryClient = useQueryClient()
-  const { data: currentUser } = useCurrentUser()
 
   useEffect(() => {
     queryClient.setQueryData(
@@ -42,21 +39,18 @@ export function AccountSubscriptionClient({
       sub.status === subscriptionStatusEnum.ON_TRIAL
   )
 
-  const userPlan = currentUser?.plan ?? UserPlan.NORMAL
-  const isPro = userPlan === UserPlan.PRO
-
   return (
-    <div className="space-y-8">
+    <div className="space-y-16 pb-12">
       <AccountPageHeader
-        title="Subscription"
-        description="Manage your subscription plan and billing"
+        title="Plans & Billing"
+        description="Manage your subscription and choose the perfect plan for your needs"
       />
 
-      <AccountCurrentPlanCard activeSubscription={activeSubscription} />
+      <AccountSubscriptionCurrentPlan activeSubscription={activeSubscription} />
 
-      {isPro && <AccountPaymentMethodsCard />}
+      <AccountSubscriptionPlansGrid />
 
-      <AccountPlanComparisonCard />
+      {activeSubscription && <AccountPaymentMethodsCard />}
     </div>
   )
 }
