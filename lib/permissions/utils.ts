@@ -397,6 +397,7 @@ export function getPlanInfo(
         cta: {
           text: "Learn More",
           variant: "outline",
+          href: "/articles/self-host",
         },
       }
     }

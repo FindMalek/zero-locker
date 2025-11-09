@@ -7,4 +7,5 @@ export const articleSchema = z.object({
   publishedAt: z.string(),
   image: z.string().optional(),
   href: z.string(),
+  isPublished: z.boolean().default(true),
 })

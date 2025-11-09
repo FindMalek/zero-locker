@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import { InvoiceEntity } from "@/entities/subscription/invoice/entity"
 import type { InvoiceSimpleOutput } from "@/schemas/subscription"
 
 import { getInvoiceStatusColor } from "@/config/converter"
@@ -8,7 +9,6 @@ import { DateFormatter } from "@/lib/date-utils"
 import { formatCurrency } from "@/lib/utils"
 
 import { Badge } from "@/components/ui/badge"
-import { InvoiceEntity } from "@/entities/subscription/invoice/entity"
 
 interface AccountInvoiceCardProps {
   invoice: InvoiceSimpleOutput
