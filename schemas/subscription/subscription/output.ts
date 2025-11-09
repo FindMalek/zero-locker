@@ -145,7 +145,7 @@ export const invoiceSimpleOutputSchema = z.object({
 export type InvoiceSimpleOutput = z.infer<typeof invoiceSimpleOutputSchema>
 
 export const invoiceIncludeOutputSchema = invoiceSimpleOutputSchema.extend({
-  subscription: subscriptionSimpleOutputSchema,
+  subscription: subscriptionIncludeOutputSchema,
   transaction: transactionSimpleOutputSchema.nullable(),
 })
 

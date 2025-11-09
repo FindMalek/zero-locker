@@ -6,6 +6,7 @@ import type {
   GetSubscriptionHistoryInput,
   GetSubscriptionInvoicesInput,
   GetSubscriptionTransactionsInput,
+  InvoiceIncludeOutput,
   ListInvoicesOutput,
   ListSubscriptionHistoryOutput,
   ListSubscriptionsInput,
@@ -28,7 +29,8 @@ export const subscriptionKeys = {
   details: () => [...subscriptionKeys.all, "detail"] as const,
   detail: (id: string) => [...subscriptionKeys.details(), id] as const,
   invoiceDetails: () => [...subscriptionKeys.all, "invoice"] as const,
-  invoiceDetail: (id: string) => [...subscriptionKeys.invoiceDetails(), id] as const,
+  invoiceDetail: (id: string) =>
+    [...subscriptionKeys.invoiceDetails(), id] as const,
   invoices: (subscriptionId: string) =>
     [...subscriptionKeys.detail(subscriptionId), "invoices"] as const,
   transactions: (subscriptionId: string) =>
@@ -72,10 +74,7 @@ export function useSubscriptions(
 // Get single invoice by ID
 export function useInvoice(
   id: string,
-  options?: Omit<
-    UseQueryOptions<InvoiceIncludeOutput>,
-    "queryKey" | "queryFn"
-  >
+  options?: Omit<UseQueryOptions<InvoiceIncludeOutput>, "queryKey" | "queryFn">
 ) {
   return useQuery({
     queryKey: subscriptionKeys.invoiceDetail(id),

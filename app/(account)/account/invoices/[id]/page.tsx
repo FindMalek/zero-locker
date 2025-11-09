@@ -8,14 +8,9 @@ import { auth } from "@/lib/auth/server"
 
 import { AccountInvoiceDetailClient } from "@/components/app/account-invoice-detail-client"
 
-export async function generateMetadata({
-  params,
-}: {
-  params: Promise<{ id: string }>
-}): Promise<Metadata> {
-  const { id } = await params
+export async function generateMetadata(): Promise<Metadata> {
   return {
-    title: `Invoice ${id}`,
+    title: `Invoice Details`,
   }
 }
 
@@ -50,4 +45,3 @@ export default async function InvoiceDetailPage({
     notFound()
   }
 }
-

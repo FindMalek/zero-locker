@@ -8,7 +8,7 @@ export function AccountInvoiceListSkeleton() {
       {[...Array(5)].map((_, i) => (
         <div
           key={i}
-          className="rounded-lg border border-muted-foreground/20 p-4"
+          className="border-muted-foreground/20 rounded-lg border p-4"
         >
           <div className="flex items-center justify-between gap-4">
             <div className="flex-1 space-y-2">
@@ -22,4 +22,3 @@ export function AccountInvoiceListSkeleton() {
     </div>
   )
 }
-

@@ -101,11 +101,70 @@ export function mapItem(
   }
 }
 
+/**
+ * Check if a pathname is active for a given link href.
+ * Handles both exact matches and nested routes.
+ *
+ * @param currentPathname - The current pathname (e.g., "/account/invoices/123")
+ * @param linkHref - The link href to check against (e.g., "/account/invoices")
+ * @returns true if the pathname matches the href exactly or is a nested route
+ *
+ * @example
+ * ```ts
+ * checkIsActive("/account/invoices/123", "/account/invoices") // true (nested)
+ * checkIsActive("/account/invoices", "/account/invoices") // true (exact)
+ * checkIsActive("/account/invoices", "/account") // false (parent route)
+ * checkIsActive("/account", "/account") // true (exact)
+ * ```
+ */
 export function checkIsActive(
   currentPathname: string,
   linkHref: string
 ): boolean {
-  return currentPathname === linkHref
+  // Exact match
+  if (currentPathname === linkHref) {
+    return true
+  }
+
+  // Check if pathname is a nested route (starts with href + "/")
+  // This ensures we match nested routes like /account/invoices/[id]
+  // but don't match partial matches like /account/invoices-something
+  if (!currentPathname.startsWith(`${linkHref}/`)) {
+    return false
+  }
+
+  // Prevent parent routes from matching sibling routes
+  // For example: /account should not match /account/invoices
+  // But /account/invoices should match /account/invoices/123
+  const pathnameSegments = currentPathname.split("/").filter(Boolean)
+  const hrefSegments = linkHref.split("/").filter(Boolean)
+
+  // Verify that all href segments match the corresponding pathname segments
+  // This ensures we're matching a true nested route, not just a similar path
+  for (let i = 0; i < hrefSegments.length; i++) {
+    if (pathnameSegments[i] !== hrefSegments[i]) {
+      return false
+    }
+  }
+
+  // If all segments match, check if it's a nested route
+  // The pathname must have more segments than the href (it's deeper)
+  const depthDifference = pathnameSegments.length - hrefSegments.length
+
+  // Only match if the pathname is deeper (has more segments)
+  // This allows /account/invoices to match /account/invoices/123
+  // But we need to prevent /account from matching /account/invoices or /account/invoices/ID
+
+  // Special case: if href is a single segment (like /account), don't match nested routes
+  // This prevents /account from matching /account/invoices (sibling) or /account/invoices/ID (nested)
+  // Single-segment routes should only match exactly
+  if (hrefSegments.length === 1) {
+    return false
+  }
+
+  // For multi-segment hrefs, if all segments match and pathname is deeper, it's nested
+  // This allows /account/invoices to match /account/invoices/123
+  return depthDifference > 0
 }
 
 /**

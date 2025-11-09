@@ -20,4 +20,3 @@ export function formatCurrency(
     currency: currency,
   }).format(amount)
 }
-

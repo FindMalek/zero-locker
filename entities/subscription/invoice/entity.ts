@@ -32,7 +32,7 @@ export class InvoiceEntity {
     const base = this.getSimpleRo(entity)
     return {
       ...base,
-      subscription: SubscriptionEntity.getSimpleRo(entity.subscription),
+      subscription: SubscriptionEntity.getRo(entity.subscription),
       transaction: entity.transaction
         ? TransactionEntity.getSimpleRo(entity.transaction)
         : null,
