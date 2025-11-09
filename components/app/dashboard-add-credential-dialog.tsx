@@ -221,8 +221,9 @@ export function DashboardAddCredentialDialog({
               CredentialKeyValuePairEntity.convertGenericToCredential(p)
             )
             metadataForm.setValue("keyValuePairs", credentialPairs)
-          } catch {
-            toast("Failed to encrypt additional information", "error")
+          } catch (error) {
+            const { message } = handleErrors(error, "Failed to encrypt additional information")
+            toast(message, "error")
             return
           }
         }

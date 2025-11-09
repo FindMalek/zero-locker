@@ -10,6 +10,8 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { toast } from "sonner"
 
+import { handleErrors } from "@/lib/utils"
+
 import { Icons } from "@/components/shared/icons"
 import { Button } from "@/components/ui/button"
 import {
@@ -81,9 +83,9 @@ export function MarketingSubscription({
           }
         },
         onError: (error) => {
+          const { message } = handleErrors(error, "Something went wrong. Please try again.")
           toast.error("Subscription failed", {
-            description:
-              error.message || "Something went wrong. Please try again.",
+            description: message,
           })
         },
       }

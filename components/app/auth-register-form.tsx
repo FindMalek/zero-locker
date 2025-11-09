@@ -8,7 +8,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 
 import { signUp } from "@/lib/auth/client"
-import { cn } from "@/lib/utils"
+import { cn, handleErrors } from "@/lib/utils"
 
 import { Icons } from "@/components/shared/icons"
 import { Button } from "@/components/ui/button"
@@ -63,27 +63,27 @@ export function AuthRegisterForm({
             router.push("/dashboard")
           },
           onError: (ctx) => {
+            const { message } = handleErrors(ctx.error, "Something went wrong. Please try again.")
             toast("Something went wrong. Please try again.", {
               variant: "destructive",
-              description:
-                ctx.error instanceof Error
-                  ? ctx.error.message
-                  : "Unknown error",
+              description: message,
             })
           },
         }
       )
 
       if (error) {
+        const { message } = handleErrors(error, "Something went wrong. Please try again.")
         toast("Something went wrong. Please try again.", {
           variant: "destructive",
-          description: error.message,
+          description: message,
         })
       }
     } catch (error) {
+      const { message } = handleErrors(error, "Something went wrong. Please try again.")
       toast("Something went wrong. Please try again.", {
         variant: "destructive",
-        description: error instanceof Error ? error.message : "Unknown error",
+        description: message,
       })
     } finally {
       setIsLoading(false)

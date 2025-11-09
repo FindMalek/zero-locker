@@ -8,6 +8,8 @@ import { useForm } from "react-hook-form"
 import { toast } from "sonner"
 import { z } from "zod"
 
+import { handleErrors } from "@/lib/utils"
+
 import { AccountField } from "@/components/shared/account-field"
 import { Button } from "@/components/ui/button"
 import {
@@ -50,11 +52,8 @@ export function AccountNameField({ initialName }: AccountNameFieldProps) {
       toast.success("Profile updated successfully")
       setIsEditing(false)
     } catch (error) {
-      const errorMessage =
-        error instanceof Error
-          ? error.message
-          : "Failed to update profile. Please try again."
-      toast.error(errorMessage)
+      const { message } = handleErrors(error, "Failed to update profile. Please try again.")
+      toast.error(message)
     }
   }
 

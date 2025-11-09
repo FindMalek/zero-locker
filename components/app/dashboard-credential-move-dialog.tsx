@@ -14,7 +14,11 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 
 import { useUserPermissions } from "@/lib/permissions"
-import { getLogoDevUrlWithToken, getPlaceholderImage } from "@/lib/utils"
+import {
+  getLogoDevUrlWithToken,
+  getPlaceholderImage,
+  handleErrors,
+} from "@/lib/utils"
 import { useToast } from "@/hooks/use-toast"
 
 import { ContainerSelector } from "@/components/shared/container-selector"
@@ -103,8 +107,8 @@ export function DashboardMoveCredentialDialog({
       onOpenChange(false)
       form.reset()
     } catch (error) {
-      console.error("Failed to move credential:", error)
-      toast("Failed to move credential. Please try again later.", "error")
+      const { message } = handleErrors(error, "Failed to move credential. Please try again later.")
+      toast(message, "error")
     }
   }
 

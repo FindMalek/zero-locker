@@ -8,6 +8,8 @@ import { useForm } from "react-hook-form"
 import { toast } from "sonner"
 import { z } from "zod"
 
+import { handleErrors } from "@/lib/utils"
+
 import { AccountField } from "@/components/shared/account-field"
 import { Icons } from "@/components/shared/icons"
 import { Button } from "@/components/ui/button"
@@ -50,11 +52,8 @@ export function AccountPasswordField() {
         toast.error(result.message || "Failed to update password")
       }
     } catch (error) {
-      const errorMessage =
-        error instanceof Error
-          ? error.message
-          : "Failed to update password. Please try again."
-      toast.error(errorMessage)
+      const { message } = handleErrors(error, "Failed to update password. Please try again.")
+      toast.error(message)
     }
   }
 

@@ -25,12 +25,10 @@ export function AccountGeneralClient({
         description="Manage your account settings and personal information"
       />
 
-      <div className="space-y-6">
         <div className="space-y-6">
           <AccountField label="Email address" value={currentUser.email} />
           <AccountNameField initialName={currentUser.name} />
           <AccountPasswordField />
-        </div>
       </div>
     </div>
   )
