@@ -144,6 +144,13 @@ export const invoiceSimpleOutputSchema = z.object({
 
 export type InvoiceSimpleOutput = z.infer<typeof invoiceSimpleOutputSchema>
 
+export const invoiceIncludeOutputSchema = invoiceSimpleOutputSchema.extend({
+  subscription: subscriptionSimpleOutputSchema,
+  transaction: transactionSimpleOutputSchema.nullable(),
+})
+
+export type InvoiceIncludeOutput = z.infer<typeof invoiceIncludeOutputSchema>
+
 export const transactionIncludeOutputSchema =
   transactionSimpleOutputSchema.extend({
     subscription: subscriptionSimpleOutputSchema,
@@ -183,6 +190,15 @@ export const subscriptionHistorySimpleOutputSchema = z.object({
 
 export type SubscriptionHistorySimpleOutput = z.infer<
   typeof subscriptionHistorySimpleOutputSchema
+>
+
+export const subscriptionHistoryIncludeOutputSchema =
+  subscriptionHistorySimpleOutputSchema.extend({
+    subscription: subscriptionSimpleOutputSchema,
+  })
+
+export type SubscriptionHistoryIncludeOutput = z.infer<
+  typeof subscriptionHistoryIncludeOutputSchema
 >
 
 export const listSubscriptionHistoryOutputSchema = z.object({
