@@ -67,3 +67,13 @@ export const getSubscriptionHistoryInputSchema = z.object({
 export type GetSubscriptionHistoryInput = z.infer<
   typeof getSubscriptionHistoryInputSchema
 >
+
+// ============================================================================
+// Get Invoice Input Schema
+// ============================================================================
+
+export const getInvoiceInputSchema = z.object({
+  id: z.string().min(1, "Invoice ID is required"),
+})
+
+export type GetInvoiceInput = z.infer<typeof getInvoiceInputSchema>

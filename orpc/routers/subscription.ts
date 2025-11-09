@@ -14,16 +14,19 @@ import {
 import { authMiddleware } from "@/middleware/auth"
 import { database } from "@/prisma/client"
 import {
+  getInvoiceInputSchema,
   getSubscriptionHistoryInputSchema,
   getSubscriptionInputSchema,
   getSubscriptionInvoicesInputSchema,
   getSubscriptionTransactionsInputSchema,
+  invoiceIncludeOutputSchema,
   listInvoicesOutputSchema,
   listSubscriptionHistoryOutputSchema,
   listSubscriptionsInputSchema,
   listSubscriptionsOutputSchema,
   listTransactionsOutputSchema,
   subscriptionIncludeOutputSchema,
+  type InvoiceIncludeOutput,
   type ListInvoicesOutput,
   type ListSubscriptionHistoryOutput,
   type ListSubscriptionsOutput,
@@ -93,6 +96,28 @@ export const listSubscriptions = authProcedure
       page,
       limit,
     }
+  })
+
+// Get single invoice by ID
+export const getInvoice = authProcedure
+  .input(getInvoiceInputSchema)
+  .output(invoiceIncludeOutputSchema)
+  .handler(async ({ input, context }): Promise<InvoiceIncludeOutput> => {
+    const invoice = await database.invoice.findFirst({
+      where: {
+        id: input.id,
+        subscription: {
+          userId: context.user.id,
+        },
+      },
+      include: InvoiceQuery.getInclude(),
+    })
+
+    if (!invoice) {
+      throw new ORPCError("NOT_FOUND")
+    }
+
+    return InvoiceEntity.getRo(invoice)
   })
 
 // Get invoices for a subscription
@@ -237,6 +262,7 @@ export const getSubscriptionHistory = authProcedure
 export const subscriptionRouter = {
   get: getSubscription,
   list: listSubscriptions,
+  getInvoice: getInvoice,
   getInvoices: getSubscriptionInvoices,
   getTransactions: getSubscriptionTransactions,
   getHistory: getSubscriptionHistory,

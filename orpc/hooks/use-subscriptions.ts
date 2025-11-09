@@ -27,6 +27,8 @@ export const subscriptionKeys = {
     [...subscriptionKeys.lists(), filters] as const,
   details: () => [...subscriptionKeys.all, "detail"] as const,
   detail: (id: string) => [...subscriptionKeys.details(), id] as const,
+  invoiceDetails: () => [...subscriptionKeys.all, "invoice"] as const,
+  invoiceDetail: (id: string) => [...subscriptionKeys.invoiceDetails(), id] as const,
   invoices: (subscriptionId: string) =>
     [...subscriptionKeys.detail(subscriptionId), "invoices"] as const,
   transactions: (subscriptionId: string) =>
@@ -63,6 +65,22 @@ export function useSubscriptions(
     queryKey: subscriptionKeys.list(input),
     queryFn: () => orpc.subscriptions.list.call(input),
     placeholderData: (previousData) => previousData,
+    ...options,
+  })
+}
+
+// Get single invoice by ID
+export function useInvoice(
+  id: string,
+  options?: Omit<
+    UseQueryOptions<InvoiceIncludeOutput>,
+    "queryKey" | "queryFn"
+  >
+) {
+  return useQuery({
+    queryKey: subscriptionKeys.invoiceDetail(id),
+    queryFn: () => orpc.subscriptions.getInvoice.call({ id }),
+    enabled: !!id,
     ...options,
   })
 }
