@@ -40,6 +40,7 @@
     "@content-collections/mdx": "^0.2.2",
     "@content-collections/next": "^0.2.8",
     "@hookform/resolvers": "^5.0.1",
+    "@lemonsqueezy/lemonsqueezy.js": "^4.0.0",
     "@neondatabase/serverless": "^0.10.4",
     "@orpc/client": "^1.5.2",
     "@orpc/next": "^0.27.0",
