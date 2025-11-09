@@ -68,6 +68,22 @@ export type SubscriptionIncludeOutput = z.infer<
 >
 
 // ============================================================================
+// List Subscriptions Output Schema
+// ============================================================================
+
+export const listSubscriptionsOutputSchema = z.object({
+  subscriptions: z.array(subscriptionIncludeOutputSchema),
+  total: z.number().int(),
+  hasMore: z.boolean(),
+  page: z.number().int(),
+  limit: z.number().int(),
+})
+
+export type ListSubscriptionsOutput = z.infer<
+  typeof listSubscriptionsOutputSchema
+>
+
+// ============================================================================
 // Transaction Output Schemas
 // ============================================================================
 
@@ -94,19 +110,16 @@ export type TransactionSimpleOutput = z.infer<
   typeof transactionSimpleOutputSchema
 >
 
-export const transactionIncludeOutputSchema =
-  transactionSimpleOutputSchema.extend({
-    subscription: subscriptionSimpleOutputSchema,
-    invoice: z
-      .object({
-        id: z.string(),
-        invoiceNumber: z.string(),
-      })
-      .nullable(),
-  })
+export const listTransactionsOutputSchema = z.object({
+  transactions: z.array(transactionSimpleOutputSchema),
+  total: z.number().int(),
+  hasMore: z.boolean(),
+  page: z.number().int(),
+  limit: z.number().int(),
+})
 
-export type TransactionIncludeOutput = z.infer<
-  typeof transactionIncludeOutputSchema
+export type ListTransactionsOutput = z.infer<
+  typeof listTransactionsOutputSchema
 >
 
 // ============================================================================
@@ -132,11 +145,31 @@ export const invoiceSimpleOutputSchema = z.object({
 export type InvoiceSimpleOutput = z.infer<typeof invoiceSimpleOutputSchema>
 
 export const invoiceIncludeOutputSchema = invoiceSimpleOutputSchema.extend({
-  subscription: subscriptionSimpleOutputSchema,
+  subscription: subscriptionIncludeOutputSchema,
   transaction: transactionSimpleOutputSchema.nullable(),
 })
 
 export type InvoiceIncludeOutput = z.infer<typeof invoiceIncludeOutputSchema>
+
+export const transactionIncludeOutputSchema =
+  transactionSimpleOutputSchema.extend({
+    subscription: subscriptionSimpleOutputSchema,
+    invoice: invoiceSimpleOutputSchema.nullable(),
+  })
+
+export type TransactionIncludeOutput = z.infer<
+  typeof transactionIncludeOutputSchema
+>
+
+export const listInvoicesOutputSchema = z.object({
+  invoices: z.array(invoiceSimpleOutputSchema),
+  total: z.number().int(),
+  hasMore: z.boolean(),
+  page: z.number().int(),
+  limit: z.number().int(),
+})
+
+export type ListInvoicesOutput = z.infer<typeof listInvoicesOutputSchema>
 
 // ============================================================================
 // Subscription History Output Schemas
@@ -166,4 +199,16 @@ export const subscriptionHistoryIncludeOutputSchema =
 
 export type SubscriptionHistoryIncludeOutput = z.infer<
   typeof subscriptionHistoryIncludeOutputSchema
+>
+
+export const listSubscriptionHistoryOutputSchema = z.object({
+  history: z.array(subscriptionHistorySimpleOutputSchema),
+  total: z.number().int(),
+  hasMore: z.boolean(),
+  page: z.number().int(),
+  limit: z.number().int(),
+})
+
+export type ListSubscriptionHistoryOutput = z.infer<
+  typeof listSubscriptionHistoryOutputSchema
 >

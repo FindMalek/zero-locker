@@ -7,7 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 
 import { signIn } from "@/lib/auth/client"
-import { cn } from "@/lib/utils"
+import { cn, handleErrors } from "@/lib/utils"
 
 import { Icons } from "@/components/shared/icons"
 import { Button } from "@/components/ui/button"
@@ -57,7 +57,8 @@ export function AuthLoginForm({
             router.push("/dashboard")
           },
           onError: (ctx) => {
-            toast(ctx.error.message, {
+            const { message } = handleErrors(ctx.error, "Failed to sign in. Please try again.")
+            toast(message, {
               variant: "destructive",
             })
           },
@@ -65,12 +66,14 @@ export function AuthLoginForm({
       )
 
       if (error) {
-        toast(error.message, {
+        const { message } = handleErrors(error, "Failed to sign in. Please try again.")
+        toast(message, {
           variant: "destructive",
         })
       }
-    } catch {
-      toast("Something went wrong. Please try again.", {
+    } catch (error) {
+      const { message } = handleErrors(error, "Something went wrong. Please try again.")
+      toast(message, {
         variant: "destructive",
       })
     } finally {

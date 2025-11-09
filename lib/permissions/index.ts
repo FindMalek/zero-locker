@@ -5,6 +5,9 @@ export {
   hasPermission,
   getUpgradeMessage,
   canPerformAction,
+  getPlanFeatures,
+  getPlanInfo,
+  getAllPlansInfo,
 } from "./utils"
 
 export type {
@@ -12,6 +15,9 @@ export type {
   UseUserPermissionsReturn,
   PermissionConfig,
   FeatureFlags,
+  PlanFeature,
+  PlanInfo,
+  PlanPricing,
 } from "./types"
 
 export { PermissionLevel, Feature, Action } from "./types"

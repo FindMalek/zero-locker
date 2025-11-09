@@ -132,15 +132,21 @@ export function DashboardNavUser({ user }: DashboardNavUserProps) {
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
               <DropdownMenuItem asChild>
-                <Link href="/dashboard/account">
+                <Link href="/account">
                   <Icons.user />
                   Account
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
-                <Link href="/dashboard/billing">
+                <Link href="/account/subscription">
                   <Icons.creditCard />
-                  Billing
+                  Subscription
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href="/account/invoices">
+                  <Icons.post />
+                  Invoices
                 </Link>
               </DropdownMenuItem>
             </DropdownMenuGroup>

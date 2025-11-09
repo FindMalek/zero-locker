@@ -75,3 +75,44 @@ export interface FeatureFlags {
   apiAccess: boolean
   teamCollaboration: boolean
 }
+
+// ============================================================================
+// Plan Feature Types
+// ============================================================================
+
+/**
+ * Represents a single feature in a plan
+ */
+export interface PlanFeature {
+  name: string
+  description?: string
+  available: boolean
+}
+
+/**
+ * Plan pricing information
+ */
+export interface PlanPricing {
+  monthly: number | null // null means custom pricing
+  currency?: string
+}
+
+/**
+ * Complete plan information for display
+ */
+export interface PlanInfo {
+  id: string
+  name: string
+  description: string
+  plan: UserPlan | "SELF_HOST" | "ENTERPRISE" // Virtual plans for UI
+  pricing: PlanPricing
+  features: PlanFeature[]
+  isAvailable: boolean
+  isComingSoon: boolean
+  cta: {
+    text: string
+    variant: "default" | "outline" | "ghost"
+    href?: string
+    onClick?: () => void
+  }
+}

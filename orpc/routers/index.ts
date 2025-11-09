@@ -3,6 +3,7 @@ import { containerRouter } from "./container"
 import { credentialRouter } from "./credential"
 import { platformRouter } from "./platform"
 import { secretRouter } from "./secret"
+import { subscriptionRouter } from "./subscription"
 import { tagRouter } from "./tag"
 import { testRouter } from "./test"
 import { userRouter } from "./user"
@@ -14,6 +15,7 @@ export const appRouter = {
   secrets: secretRouter,
   containers: containerRouter,
   platforms: platformRouter,
+  subscriptions: subscriptionRouter,
   tags: tagRouter,
   users: userRouter,
   webhooks: webhookRouter,

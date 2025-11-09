@@ -11,6 +11,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { ContainerType } from "@prisma/client"
 import { useForm } from "react-hook-form"
 
+import { handleErrors } from "@/lib/utils"
 import { useToast } from "@/hooks/use-toast"
 
 import { Button } from "@/components/ui/button"
@@ -91,8 +92,9 @@ export function DashboardCreateContainerDialog({
       if (onContainerCreated) {
         onContainerCreated(result.id)
       }
-    } catch {
-      toast("Failed to create container. Please try again.", "error")
+    } catch (error) {
+      const { message } = handleErrors(error, "Failed to create container. Please try again.")
+      toast(message, "error")
     }
   }
 

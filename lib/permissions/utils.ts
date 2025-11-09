@@ -1,6 +1,6 @@
 import { UserPlan } from "@prisma/client"
 
-import type { PermissionConfig } from "./types"
+import type { PermissionConfig, PlanFeature, PlanInfo } from "./types"
 import { Action, Feature, PermissionLevel } from "./types"
 
 /**
@@ -238,4 +238,228 @@ export function canPerformAction(
     default:
       return false
   }
+}
+
+/**
+ * Get user-friendly features list for a plan based on permission config
+ *
+ * @param plan - The user plan to get features for
+ * @returns Array of plan features with descriptions
+ */
+export function getPlanFeatures(plan: UserPlan): PlanFeature[] {
+  const config = getPermissionConfig(plan)
+
+  const features: PlanFeature[] = []
+
+  // Container features
+  if (config.features.containers.unlimited) {
+    features.push({
+      name: "Unlimited containers",
+      available: true,
+    })
+  } else {
+    features.push({
+      name: `${config.features.containers.maxCount} default containers`,
+      available: true,
+    })
+    features.push({
+      name: "No custom containers",
+      available: false,
+    })
+  }
+
+  // Container management features
+  if (config.features.containers.create) {
+    features.push({
+      name: "Create custom containers",
+      available: true,
+    })
+  }
+  if (config.features.containers.update) {
+    features.push({
+      name: "Update containers",
+      available: true,
+    })
+  }
+  if (config.features.containers.delete) {
+    features.push({
+      name: "Delete containers",
+      available: true,
+    })
+  }
+
+  // Basic features available to all
+  features.push({
+    name: "Basic features",
+    available: true,
+  })
+
+  // Pro-specific features
+  if (plan === UserPlan.PRO) {
+    features.push({
+      name: "All premium features",
+      available: true,
+    })
+    features.push({
+      name: "Priority support",
+      available: true,
+    })
+  }
+
+  return features
+}
+
+/**
+ * Get plan information for a specific plan
+ *
+ * @param plan - The user plan or virtual plan identifier
+ * @returns Complete plan information
+ */
+export function getPlanInfo(
+  plan: UserPlan | "SELF_HOST" | "ENTERPRISE"
+): PlanInfo {
+  switch (plan) {
+    case UserPlan.NORMAL: {
+      const features = getPlanFeatures(UserPlan.NORMAL)
+      return {
+        id: "free",
+        name: "Free",
+        description: "Perfect for getting started",
+        plan: UserPlan.NORMAL,
+        pricing: {
+          monthly: 0,
+          currency: "USD",
+        },
+        features,
+        isAvailable: true,
+        isComingSoon: false,
+        cta: {
+          text: "Get Started",
+          variant: "outline",
+        },
+      }
+    }
+
+    case UserPlan.PRO: {
+      const features = getPlanFeatures(UserPlan.PRO)
+      return {
+        id: "pro",
+        name: "Pro",
+        description: "For growing teams",
+        plan: UserPlan.PRO,
+        pricing: {
+          // TODO: Replace with actual subscription pricing from Lemon Squeezy
+          monthly: 9,
+          currency: "USD",
+        },
+        features,
+        isAvailable: true,
+        isComingSoon: false,
+        cta: {
+          text: "Upgrade to Pro",
+          variant: "default",
+          href: "https://app.lemonsqueezy.com/checkout",
+        },
+      }
+    }
+
+    case "SELF_HOST": {
+      // Self Host has all Pro features plus on-premise deployment
+      const proFeatures = getPlanFeatures(UserPlan.PRO)
+      const features: PlanFeature[] = [
+        ...proFeatures,
+        {
+          name: "On-premise deployment",
+          available: true,
+        },
+        {
+          name: "Complete source code access",
+          available: true,
+        },
+        {
+          name: "Perpetual license option",
+          available: true,
+        },
+      ]
+
+      return {
+        id: "self-host",
+        name: "Self Host",
+        description: "Full control and privacy",
+        plan: "SELF_HOST",
+        pricing: {
+          monthly: null, // Custom pricing
+          currency: "USD",
+        },
+        features,
+        isAvailable: true,
+        isComingSoon: false,
+        cta: {
+          text: "Learn More",
+          variant: "outline",
+          href: "/articles/self-host",
+        },
+      }
+    }
+
+    case "ENTERPRISE": {
+      // Enterprise has all Self Host features plus enterprise features
+      const selfHostFeatures = getPlanInfo("SELF_HOST").features
+      const features: PlanFeature[] = [
+        ...selfHostFeatures,
+        {
+          name: "Dedicated support",
+          available: true,
+        },
+        {
+          name: "SSO & advanced security",
+          available: true,
+        },
+        {
+          name: "Custom SLAs",
+          available: true,
+        },
+        {
+          name: "Audit logs",
+          available: true,
+        },
+      ]
+
+      return {
+        id: "enterprise",
+        name: "Enterprise",
+        description: "For large organizations",
+        plan: "ENTERPRISE",
+        pricing: {
+          // TODO: Replace with actual subscription pricing from Lemon Squeezy
+          monthly: 99,
+          currency: "USD",
+        },
+        features,
+        isAvailable: false,
+        isComingSoon: true,
+        cta: {
+          text: "Contact Sales",
+          variant: "outline",
+        },
+      }
+    }
+
+    default:
+      return getPlanInfo(UserPlan.NORMAL)
+  }
+}
+
+/**
+ * Get all available plans information
+ *
+ * @returns Array of all plan information
+ */
+export function getAllPlansInfo(): PlanInfo[] {
+  return [
+    getPlanInfo(UserPlan.NORMAL),
+    getPlanInfo(UserPlan.PRO),
+    getPlanInfo("SELF_HOST"),
+    getPlanInfo("ENTERPRISE"),
+  ]
 }

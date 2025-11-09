@@ -27,7 +27,7 @@ export class InvoiceQuery {
     return {
       ...this.getSimpleInclude(),
       subscription: {
-        include: SubscriptionQuery.getSimpleInclude(),
+        include: SubscriptionQuery.getInclude(),
       },
       transaction: {
         include: TransactionQuery.getSimpleInclude(),
