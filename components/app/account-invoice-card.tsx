@@ -8,6 +8,7 @@ import { DateFormatter } from "@/lib/date-utils"
 import { formatCurrency } from "@/lib/utils"
 
 import { Badge } from "@/components/ui/badge"
+import { InvoiceEntity } from "@/entities/subscription/invoice/entity"
 
 interface AccountInvoiceCardProps {
   invoice: InvoiceSimpleOutput
@@ -41,7 +42,7 @@ export function AccountInvoiceCard({ invoice }: AccountInvoiceCardProps) {
           variant={getInvoiceStatusColor(invoice.status)}
           className="shrink-0"
         >
-          {invoice.status}
+          {InvoiceEntity.getStatusLabel(invoice.status)}
         </Badge>
       </div>
     </Link>
