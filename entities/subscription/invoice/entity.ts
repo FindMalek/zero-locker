@@ -7,6 +7,8 @@ import { TransactionEntity } from "@/entities/subscription/transaction/entity"
 import {
   InvoiceIncludeOutput,
   InvoiceSimpleOutput,
+  invoiceStatusEnum,
+  type InvoiceStatusInfer,
 } from "@/schemas/subscription"
 
 export class InvoiceEntity {
@@ -36,6 +38,26 @@ export class InvoiceEntity {
       transaction: entity.transaction
         ? TransactionEntity.getSimpleRo(entity.transaction)
         : null,
+    }
+  }
+
+  /**
+   * Get formatted label for invoice status
+   * @param status - The invoice status
+   * @returns Formatted status label string
+   */
+  static getStatusLabel(status: InvoiceStatusInfer): string {
+    switch (status) {
+      case invoiceStatusEnum.PAID:
+        return "Paid"
+      case invoiceStatusEnum.PENDING:
+        return "Pending"
+      case invoiceStatusEnum.OVERDUE:
+        return "Overdue"
+      case invoiceStatusEnum.CANCELLED:
+        return "Cancelled"
+      case invoiceStatusEnum.DRAFT:
+        return "Draft"
     }
   }
 }

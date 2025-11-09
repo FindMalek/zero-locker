@@ -1,5 +1,7 @@
 "use client"
 
+import { InvoiceEntity } from "@/entities/subscription/invoice/entity"
+import { TransactionEntity } from "@/entities/subscription/transaction/entity"
 import type { InvoiceIncludeOutput } from "@/schemas/subscription"
 
 import {
@@ -44,7 +46,7 @@ export function AccountInvoiceDetailInfo({
               variant={getInvoiceStatusColor(invoice.status)}
               className="text-sm"
             >
-              {invoice.status}
+              {InvoiceEntity.getStatusLabel(invoice.status)}
             </Badge>
           </div>
         </CardHeader>
@@ -115,26 +117,24 @@ export function AccountInvoiceDetailInfo({
             <CardTitle>Transaction Details</CardTitle>
             <CardDescription>Payment transaction information</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent>
             <div className="space-y-1">
               <p className="text-muted-foreground text-xs font-medium">
                 Transaction ID
               </p>
-              <p className="font-mono text-sm font-medium">
-                {invoice.transaction.transactionId}
-              </p>
-            </div>
-            <Separator />
-            <div className="space-y-1">
-              <p className="text-muted-foreground text-xs font-medium">
-                Status
-              </p>
-              <Badge
-                variant={getTransactionStatusColor(invoice.transaction.status)}
-                className="text-sm"
-              >
-                {invoice.transaction.status}
-              </Badge>
+              <div className="flex items-center justify-between gap-2">
+                <p className="font-mono text-sm font-medium">
+                  {invoice.transaction.transactionId}
+                </p>
+                <Badge
+                  variant={getTransactionStatusColor(
+                    invoice.transaction.status
+                  )}
+                  className="text-sm"
+                >
+                  {TransactionEntity.getStatusLabel(invoice.transaction.status)}
+                </Badge>
+              </div>
             </div>
           </CardContent>
         </Card>

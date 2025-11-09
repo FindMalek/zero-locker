@@ -5,8 +5,10 @@ import {
   TransactionEntitySimpleDbData,
 } from "@/entities/subscription/transaction/query"
 import {
+  paymentTransactionStatusEnum,
   TransactionIncludeOutput,
   TransactionSimpleOutput,
+  type PaymentTransactionStatusInfer,
 } from "@/schemas/subscription"
 
 export class TransactionEntity {
@@ -43,6 +45,26 @@ export class TransactionEntity {
       invoice: entity.invoice
         ? InvoiceEntity.getSimpleRo(entity.invoice)
         : null,
+    }
+  }
+
+  /**
+   * Get formatted label for payment transaction status
+   * @param status - The payment transaction status
+   * @returns Formatted status label string
+   */
+  static getStatusLabel(status: PaymentTransactionStatusInfer): string {
+    switch (status) {
+      case paymentTransactionStatusEnum.SUCCESS:
+        return "Success"
+      case paymentTransactionStatusEnum.PENDING:
+        return "Pending"
+      case paymentTransactionStatusEnum.FAILED:
+        return "Failed"
+      case paymentTransactionStatusEnum.REFUNDED:
+        return "Refunded"
+      case paymentTransactionStatusEnum.PARTIALLY_REFUNDED:
+        return "Partially Refunded"
     }
   }
 }
