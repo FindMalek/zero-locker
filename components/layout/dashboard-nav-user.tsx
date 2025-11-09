@@ -143,6 +143,12 @@ export function DashboardNavUser({ user }: DashboardNavUserProps) {
                   Subscription
                 </Link>
               </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href="/account/invoices">
+                  <Icons.post />
+                  Invoices
+                </Link>
+              </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuItem variant="destructive" onClick={handleSignOut}>
