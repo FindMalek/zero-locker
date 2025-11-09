@@ -26,8 +26,18 @@ export function AccountSubscriptionPlanCard({
     return "/month"
   }
 
+  const getCtaText = () => {
+    if (isCurrent) {
+      return "Current Plan"
+    }
+    return plan.cta.text
+  }
+
   const renderCtaButton = () => {
-    if (plan.cta.href) {
+    const ctaText = getCtaText()
+    const isDisabled = isCurrent || plan.isComingSoon || !plan.isAvailable
+
+    if (plan.cta.href && !isCurrent) {
       const isExternal = plan.cta.href.startsWith("http")
 
       if (isExternal) {
@@ -41,10 +51,10 @@ export function AccountSubscriptionPlanCard({
             }`}
             size="sm"
             asChild
-            disabled={plan.isComingSoon || !plan.isAvailable}
+            disabled={isDisabled}
           >
             <a href={plan.cta.href} target="_blank" rel="noopener noreferrer">
-              {plan.cta.text}
+              {ctaText}
             </a>
           </Button>
         )
@@ -60,9 +70,9 @@ export function AccountSubscriptionPlanCard({
           }`}
           size="sm"
           asChild
-          disabled={plan.isComingSoon || !plan.isAvailable}
+          disabled={isDisabled}
         >
-          <Link href={plan.cta.href}>{plan.cta.text}</Link>
+          <Link href={plan.cta.href}>{ctaText}</Link>
         </Button>
       )
     }
@@ -77,9 +87,9 @@ export function AccountSubscriptionPlanCard({
         }`}
         size="sm"
         onClick={plan.cta.onClick}
-        disabled={plan.isComingSoon || !plan.isAvailable}
+        disabled={isDisabled}
       >
-        {plan.cta.text}
+        {ctaText}
       </Button>
     )
   }

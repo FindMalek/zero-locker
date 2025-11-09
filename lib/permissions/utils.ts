@@ -334,7 +334,7 @@ export function getPlanInfo(
         isAvailable: true,
         isComingSoon: false,
         cta: {
-          text: "Current Plan",
+          text: "Get Started",
           variant: "outline",
         },
       }
