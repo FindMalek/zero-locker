@@ -6,6 +6,7 @@ import type { PlanInfo } from "@/lib/permissions"
 
 import { Icons } from "@/components/shared/icons"
 import { Button } from "@/components/ui/button"
+import {cn} from "@/lib/utils"
 
 interface AccountSubscriptionPlanCardProps {
   plan: PlanInfo
@@ -44,11 +45,9 @@ export function AccountSubscriptionPlanCard({
         return (
           <Button
             variant={isCurrent ? "default" : plan.cta.variant}
-            className={`mb-6 w-full ${
-              isCurrent
-                ? "bg-primary text-primary-foreground hover:bg-primary/90"
-                : ""
-            }`}
+            className={cn("mb-6 w-full", {
+              "bg-primary text-primary-foreground hover:bg-primary/90": isCurrent,
+            })}
             size="sm"
             asChild
             disabled={isDisabled}
@@ -63,11 +62,9 @@ export function AccountSubscriptionPlanCard({
       return (
         <Button
           variant={isCurrent ? "default" : plan.cta.variant}
-          className={`mb-6 w-full ${
-            isCurrent
-              ? "bg-primary text-primary-foreground hover:bg-primary/90"
-              : ""
-          }`}
+          className={cn("mb-6 w-full", {
+            "bg-primary text-primary-foreground hover:bg-primary/90": isCurrent,
+            })}
           size="sm"
           asChild
           disabled={isDisabled}
@@ -80,11 +77,9 @@ export function AccountSubscriptionPlanCard({
     return (
       <Button
         variant={isCurrent ? "default" : plan.cta.variant}
-        className={`mb-6 w-full ${
-          isCurrent
-            ? "bg-primary text-primary-foreground hover:bg-primary/90"
-            : ""
-        }`}
+        className={cn("mb-6 w-full", {
+          "bg-primary text-primary-foreground hover:bg-primary/90": isCurrent,
+        })}
         size="sm"
         onClick={plan.cta.onClick}
         disabled={isDisabled}
@@ -96,13 +91,11 @@ export function AccountSubscriptionPlanCard({
 
   return (
     <div
-      className={`relative flex flex-col rounded-lg border p-4 transition-all ${
-        isCurrent
-          ? "border-primary/40 ring-primary/20 bg-primary/5 ring-2"
-          : plan.isComingSoon
-            ? "border-muted-foreground/10 opacity-60"
-            : "border-muted-foreground/20 hover:border-foreground/20"
-      }`}
+      className={cn("relative flex flex-col rounded-lg border p-4 transition-all", {
+          "border-primary/40 ring-primary/20 bg-primary/5 ring-2": isCurrent,
+          "border-muted-foreground/10 opacity-60": plan.isComingSoon,
+          "border-muted-foreground/20 hover:border-foreground/20": !isCurrent && !plan.isComingSoon,
+        })}
     >
       {/* Current Plan Badge - Top Right */}
       {isCurrent && (
@@ -125,9 +118,10 @@ export function AccountSubscriptionPlanCard({
       {/* Plan Name & Price */}
       <div className="mb-6">
         <h3
-          className={`mb-1 text-xl font-semibold ${
-            isCurrent ? "text-primary" : "text-foreground"
-          }`}
+          className={cn("mb-1 text-xl font-semibold", {
+            "text-primary": isCurrent,
+            "text-foreground": !isCurrent,
+          })}
         >
           {plan.name}
         </h3>
@@ -136,9 +130,10 @@ export function AccountSubscriptionPlanCard({
         </p>
         <div className="flex items-baseline gap-1">
           <span
-            className={`text-3xl font-bold ${
-              isCurrent ? "text-primary" : "text-foreground"
-            }`}
+            className={cn("text-3xl font-bold", {
+              "text-primary": isCurrent,
+              "text-foreground": !isCurrent,
+            })}
           >
             {getPrice()}
           </span>
@@ -159,21 +154,19 @@ export function AccountSubscriptionPlanCard({
           <div key={idx} className="flex items-start gap-2.5">
             {feature.available ? (
               <Icons.check
-                className={`mt-0.5 h-4 w-4 flex-shrink-0 ${
-                  isCurrent ? "text-success" : "text-success/70"
-                }`}
+                className={cn("mt-0.5 h-4 w-4 flex-shrink-0", {
+                  "text-success": isCurrent,
+                  "text-success/70": !isCurrent,
+                })}
               />
             ) : (
               <span className="h-4 w-4 flex-shrink-0" />
             )}
             <span
-              className={`leading-snug ${
-                feature.available
-                  ? isCurrent
-                    ? "text-foreground"
-                    : "text-foreground/75"
-                  : "text-muted-foreground"
-              }`}
+              className={cn("leading-snug", {
+                "text-foreground/75": feature.available && isCurrent,
+                "text-muted-foreground": !feature.available,
+              })}
             >
               {feature.name}
             </span>
