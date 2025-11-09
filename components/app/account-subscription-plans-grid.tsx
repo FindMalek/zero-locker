@@ -3,7 +3,7 @@
 import { useCurrentUser } from "@/orpc/hooks/use-users"
 import { UserPlan } from "@prisma/client"
 
-import { getAllPlansInfo } from "@/lib/permissions"
+import { getAllPlansInfo, getPlanInfo } from "@/lib/permissions"
 
 import { AccountSubscriptionPlanCard } from "@/components/app/account-subscription-plan-card"
 
@@ -12,12 +12,7 @@ export function AccountSubscriptionPlansGrid() {
   const userPlan = currentUser?.plan ?? UserPlan.NORMAL
 
   const plans = getAllPlansInfo()
-  const currentPlanId =
-    userPlan === UserPlan.PRO
-      ? "pro"
-      : userPlan === UserPlan.NORMAL
-        ? "free"
-        : null
+  const currentPlanId = getPlanInfo(userPlan).id
 
   return (
     <div className="space-y-8">

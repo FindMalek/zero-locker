@@ -86,7 +86,7 @@ export function AccountSubscriptionPlanCard({
 
   return (
     <div
-      className={`relative flex flex-col rounded-lg border p-7 transition-all ${
+      className={`relative flex flex-col rounded-lg border p-4 transition-all ${
         isCurrent
           ? "border-primary/40 ring-primary/20 bg-primary/5 ring-2"
           : plan.isComingSoon
