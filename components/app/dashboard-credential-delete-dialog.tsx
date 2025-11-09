@@ -13,7 +13,7 @@ import type { PlatformSimpleOutput } from "@/schemas/utils"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 
-import { getLogoDevUrlWithToken, getPlaceholderImage } from "@/lib/utils"
+import { getLogoDevUrlWithToken, getPlaceholderImage, handleErrors } from "@/lib/utils"
 import { useToast } from "@/hooks/use-toast"
 
 import { Icons } from "@/components/shared/icons"
@@ -96,8 +96,9 @@ export function DashboardDeleteCredentialDialog({
       if (shouldRedirect) {
         router.push("/dashboard/accounts")
       }
-    } catch {
-      toast("Failed to delete credential. Please try again later.", "error")
+    } catch (error) {
+      const { message } = handleErrors(error, "Failed to delete credential. Please try again later.")
+      toast(message, "error")
     }
   }
 

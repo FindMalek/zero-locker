@@ -1,18 +1,13 @@
+import { UserEntity, UserQuery } from "@/entities/user"
 import { authMiddleware } from "@/middleware/auth"
-import {
-  lenientRateLimit,
-  moderateRateLimit,
-  strictRateLimit,
-} from "@/middleware/rate-limit"
+import { lenientRateLimit, strictRateLimit } from "@/middleware/rate-limit"
 import { database } from "@/prisma/client"
 import {
   roadmapSubscribeInputSchema,
   roadmapSubscribeOutputSchema,
   subscriptionInputSchema,
   subscriptionOutputSchema,
-  type RoadmapSubscribeInput,
   type RoadmapSubscribeOutput,
-  type SubscriptionInput,
   type SubscriptionOutput,
 } from "@/schemas/user/roadmap"
 import {
@@ -22,7 +17,11 @@ import {
   type UserCountOutput,
 } from "@/schemas/user/statistics"
 import {
+  changePasswordOutputSchema,
+  updatePasswordInputSchema,
+  updateProfileInputSchema,
   userSimpleOutputSchema,
+  type ChangePasswordOutput,
   type UserSimpleOutput,
 } from "@/schemas/user/user"
 import {
@@ -30,7 +29,6 @@ import {
   waitlistInputSchema,
   waitlistJoinOutputSchema,
   type WaitlistCountOutput,
-  type WaitlistInput,
   type WaitlistJoinOutput,
 } from "@/schemas/user/waitlist"
 import { emptyInputSchema } from "@/schemas/utils"
@@ -41,6 +39,7 @@ import {
 import { ORPCError, os } from "@orpc/server"
 import { Prisma } from "@prisma/client"
 
+import { saltAndHashPassword, verifyPassword } from "@/lib/auth/password"
 import { sendSubscriptionEmail, sendWaitlistEmail } from "@/lib/email"
 import { createDefaultContainers } from "@/lib/utils/default-containers"
 
@@ -202,21 +201,14 @@ export const getCurrentUser = authProcedure
   .handler(async ({ context }): Promise<UserSimpleOutput> => {
     const user = await database.user.findUnique({
       where: { id: context.user.id },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        plan: true,
-        image: true,
-        createdAt: true,
-      },
+      include: UserQuery.getSimpleInclude(),
     })
 
     if (!user) {
       throw new ORPCError("NOT_FOUND")
     }
 
-    return user
+    return UserEntity.getSimpleRo(user)
   })
 
 // Subscribe to roadmap updates - strict rate limit due to email sending
@@ -456,6 +448,95 @@ export const initializeDefaultContainers = authProcedure
     }
   })
 
+// Update profile (name)
+export const updateProfile = authProcedure
+  .input(updateProfileInputSchema)
+  .output(userSimpleOutputSchema)
+  .handler(async ({ input, context }): Promise<UserSimpleOutput> => {
+    try {
+      const updatedUser = await database.user.update({
+        where: { id: context.user.id },
+        data: {
+          name: input.name,
+          updatedAt: new Date(),
+        },
+        include: UserQuery.getSimpleInclude(),
+      })
+
+      return UserEntity.getSimpleRo(updatedUser)
+    } catch (error) {
+      console.error("Error updating profile:", error)
+      throw new ORPCError("INTERNAL_SERVER_ERROR", {
+        message: "Failed to update profile",
+      })
+    }
+  })
+
+// Change password
+export const changePassword = authProcedure
+  .input(updatePasswordInputSchema)
+  .output(changePasswordOutputSchema)
+  .handler(async ({ input, context }): Promise<ChangePasswordOutput> => {
+    try {
+      // Get user's account with credential provider
+      const account = await database.account.findFirst({
+        where: {
+          userId: context.user.id,
+          providerId: "credential",
+        },
+      })
+
+      if (!account || !account.password) {
+        throw new ORPCError("NOT_FOUND", {
+          message: "Password account not found",
+        })
+      }
+
+      // Verify current password
+      const isCurrentPasswordValid = await verifyPassword({
+        password: input.currentPassword,
+        hash: account.password,
+      })
+
+      if (!isCurrentPasswordValid) {
+        throw new ORPCError("UNAUTHORIZED", {
+          message: "Current password is incorrect",
+        })
+      }
+
+      // Hash new password
+      const hashedNewPassword = await saltAndHashPassword(input.newPassword)
+
+      // Update account password
+      await database.account.update({
+        where: { id: account.id },
+        data: {
+          password: hashedNewPassword,
+          updatedAt: new Date(),
+        },
+      })
+
+      // Optionally revoke other sessions (Better Auth handles this through session management)
+      // For now, we'll just update the password
+      // If revokeOtherSessions is needed, we can add session invalidation here
+
+      return {
+        success: true,
+        message: "Password updated successfully",
+      }
+    } catch (error) {
+      // Re-throw ORPC errors
+      if (error instanceof ORPCError) {
+        throw error
+      }
+
+      console.error("Error changing password:", error)
+      throw new ORPCError("INTERNAL_SERVER_ERROR", {
+        message: "Failed to change password",
+      })
+    }
+  })
+
 // Export the user router
 export const userRouter = {
   joinWaitlist,
@@ -466,4 +547,6 @@ export const userRouter = {
   subscribeToRoadmap,
   subscribeToUpdates,
   initializeDefaultContainers,
+  updateProfile,
+  changePassword,
 }

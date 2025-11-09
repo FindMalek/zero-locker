@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { Eye, EyeOff, Copy, Check, RefreshCw } from "lucide-react"
+import { Eye, EyeOff, Copy, Check, RefreshCw, X } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { generatePassword } from "@/lib/utils/password-helpers"
@@ -9,15 +9,18 @@ import { Button } from "@/components/ui/button"
 import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard"
 
 export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
-variant?: "default" | "password" | "password-copyable" | "password-full"
+variant?: "default" | "password" | "password-copyable" | "password-full" | "editable"
 onEyeClick?: () => void
 onGenerate?: (password: string) => void
 showGenerateButton?: boolean
 isLoading?: boolean
+onSave?: () => void
+onCancel?: () => void
+isSaving?: boolean
 }
 
 const Input = React.forwardRef<HTMLInputElement, InputProps>(
-  ({ className, type, variant = "default", onEyeClick, onGenerate, showGenerateButton = false, isLoading = false, ...props }, ref) => {
+  ({ className, type, variant = "default", onEyeClick, onGenerate, showGenerateButton = false, isLoading = false, onSave, onCancel, isSaving = false, ...props }, ref) => {
     const [isVisible, setIsVisible] = React.useState(false)
     const { isCopied, copy } = useCopyToClipboard()
     
@@ -192,6 +195,63 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
               ) : (
                 <Eye className="size-4" aria-hidden="true" />
               )}
+            </Button>
+          </div>
+        </div>
+      )
+    }
+
+    if (variant === "editable") {
+      const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === "Enter" && !e.shiftKey) {
+          e.preventDefault()
+          onSave?.()
+        } else if (e.key === "Escape") {
+          e.preventDefault()
+          onCancel?.()
+        }
+        props.onKeyDown?.(e)
+      }
+
+      return (
+        <div className="relative w-full">
+          <input
+            type={type}
+            className={cn(
+              "border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring flex h-10 w-full rounded-md border px-3 py-2 pe-20 text-sm file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
+              className,
+            )}
+            ref={ref}
+            disabled={props.disabled || isSaving}
+            onKeyDown={handleKeyDown}
+            {...props}
+          />
+          <div className="absolute inset-y-0 right-0 flex items-center gap-1 pr-1">
+            <Button
+              type="button"
+              onClick={onSave}
+              disabled={props.disabled || isSaving}
+              variant="ghost"
+              size="icon"
+              className="size-8"
+              aria-label="Save"
+            >
+              {isSaving ? (
+                <div className="border-muted-foreground size-4 animate-spin rounded-full border border-t-transparent" />
+              ) : (
+                <Check className="size-4 text-success" aria-hidden="true" />
+              )}
+            </Button>
+            <Button
+              type="button"
+              onClick={onCancel}
+              disabled={props.disabled || isSaving}
+              variant="ghost"
+              size="icon"
+              className="size-8"
+              aria-label="Cancel"
+            >
+              <X className="size-4 text-muted-foreground" aria-hidden="true" />
             </Button>
           </div>
         </div>

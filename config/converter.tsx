@@ -1,6 +1,12 @@
 import { CredentialEntity } from "@/entities/credential"
 import { accountStatusEnum } from "@/schemas/credential/enums"
 import {
+  invoiceStatusEnum,
+  paymentTransactionStatusEnum,
+  type InvoiceStatusInfer,
+  type PaymentTransactionStatusInfer,
+} from "@/schemas/subscription"
+import {
   ActivityType,
   ActivityTypeEnum,
   RecentItemType,
@@ -83,4 +89,48 @@ export const roadmapStatusConfig: Record<
     bgColor: "bg-gray-600",
     textColor: "text-muted-foreground",
   },
+}
+
+/**
+ * Get badge variant color for invoice status
+ * @param status - The invoice status
+ * @returns Badge variant string for UI components
+ */
+export function getInvoiceStatusColor(
+  status: InvoiceStatusInfer
+): "default" | "secondary" | "destructive" | "outline" {
+  switch (status) {
+    case invoiceStatusEnum.PAID:
+      return "default"
+    case invoiceStatusEnum.PENDING:
+      return "secondary"
+    case invoiceStatusEnum.OVERDUE:
+      return "destructive"
+    case invoiceStatusEnum.CANCELLED:
+      return "outline"
+    case invoiceStatusEnum.DRAFT:
+      return "outline"
+  }
+}
+
+/**
+ * Get badge variant color for payment transaction status
+ * @param status - The payment transaction status
+ * @returns Badge variant string for UI components
+ */
+export function getTransactionStatusColor(
+  status: PaymentTransactionStatusInfer
+): "default" | "secondary" | "destructive" | "outline" {
+  switch (status) {
+    case paymentTransactionStatusEnum.SUCCESS:
+      return "default"
+    case paymentTransactionStatusEnum.PENDING:
+      return "secondary"
+    case paymentTransactionStatusEnum.FAILED:
+      return "destructive"
+    case paymentTransactionStatusEnum.REFUNDED:
+      return "outline"
+    case paymentTransactionStatusEnum.PARTIALLY_REFUNDED:
+      return "outline"
+  }
 }

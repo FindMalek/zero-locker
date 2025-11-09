@@ -17,9 +17,11 @@ interface ArticlePageProps {
 }
 
 export async function generateStaticParams() {
-  return allArticles.map((article) => ({
-    slug: article.href.split("/").pop(),
-  }))
+  return allArticles
+    .filter((article) => article.isPublished)
+    .map((article) => ({
+      slug: article.href.split("/").pop(),
+    }))
 }
 
 export async function generateMetadata({ params }: ArticlePageProps) {

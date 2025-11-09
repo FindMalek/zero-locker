@@ -7,3 +7,5 @@ next-env.d.ts
 next.config.ts
 yarn.lock
 components/ui
+data/**/*.mdx
+lib/.content-collections

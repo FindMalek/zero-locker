@@ -290,6 +290,7 @@ export const Icons = {
   rocket: RocketIcon,
   twitter: FaTwitter,
   twitterLucide: XIcon,
+  fileList: ListIcon,
 }
 
 export const getEntityIcon = (itemType: RecentItemType) => {
