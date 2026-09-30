@@ -1,9 +1,5 @@
 import { authMiddleware } from "@/middleware/auth"
-import {
-  lenientRateLimit,
-  moderateRateLimit,
-  strictRateLimit,
-} from "@/middleware/rate-limit"
+import { lenientRateLimit, strictRateLimit } from "@/middleware/rate-limit"
 import { database } from "@/prisma/client"
 import {
   roadmapSubscribeInputSchema,

@@ -4,7 +4,7 @@ import { useState } from "react"
 import { useTestRateLimit } from "@/orpc/hooks/use-test"
 import { toast } from "sonner"
 
-import { parseRetryTime } from "@/lib/utils/rate-limit"
+import { handleORPCError } from "@/lib/utils"
 
 import { Icons } from "@/components/shared/icons"
 import { Badge } from "@/components/ui/badge"
@@ -67,7 +67,7 @@ export function MarketingArticlesRateLimitTest({
         },
         onError: (error: Error) => {
           setRequestCount((prev) => prev + 1)
-          const retryAfter = parseRetryTime(error.message)
+          const { retryAfter } = handleORPCError(error)
 
           setRequestLogs((prev) => [
             {
